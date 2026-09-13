@@ -151,6 +151,12 @@ jstring to_jstring(JNIEnv * env, const std::string & text) {
 }
 
 void throw_engine_exception(JNIEnv * env, const std::string & message) {
+    // A failed JNI lookup leaves its own exception pending, and FindClass with an exception
+    // pending is not an error JNI reports: it aborts the process. So the one path meant to
+    // turn a missing callback into a readable failure ("TokenSink.onToken not found") was
+    // itself the abort, on 2026-09-14, when R8 had renamed the callback. Clearing first
+    // lets the message below replace the pending one.
+    if (env->ExceptionCheck() == JNI_TRUE) env->ExceptionClear();
     jclass clazz = env->FindClass("io/github/alpharomercoma/openweights/core/engine/LlamaException");
     if (clazz == nullptr) return;
     // Built through the String constructor rather than ThrowNew, which has the same

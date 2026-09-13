@@ -1,3 +1,5 @@
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.Properties
 import java.util.zip.ZipFile
 
@@ -277,6 +279,14 @@ dependencies {
  * So it is a build step now. Dex stores method names as plain UTF-8, so this reads the
  * shipped artifact rather than the rules that were meant to protect it: it fails on what
  * actually got built, not on what was intended.
+ *
+ * A name is not enough, and that was learned in production. From version code 604 the
+ * native side asked for `onToken(Ljava/lang/String;F)Z` while the keep rule still named the
+ * one-argument method, R8 dropped the method, and the string "onToken" was still somewhere
+ * in the dex, so this check passed on every build that aborted on every GGUF reply
+ * (2026-09-14). The callbacks are therefore also checked by name and signature against
+ * the dex's own method table, and the pairs are read out of llama_jni.cpp rather than
+ * typed here, so a signature changed in C++ is a signature checked in the next build.
  */
 val jniSymbols = listOf(
     // Resolved by GetMethodID during generation. The class names are free to change,
@@ -322,15 +332,69 @@ tasks.register("verifyJniSymbols") {
         include("**/*.aab")
     }
     val symbols = jniSymbols
+    val jniSource = rootProject.layout.projectDirectory.file(
+        "core/engine/src/main/cpp/llama_jni.cpp",
+    )
+    val jniSourceText = providers.fileContents(jniSource).asText
     inputs.files(artifacts)
+    inputs.file(jniSource)
 
     doLast {
         val built = artifacts.files.filter { it.isFile }
         check(built.isNotEmpty()) {
             "Nothing to check. Run assembleRelease or bundleRelease first."
         }
+        // Every instance method the native library resolves with GetMethodID, as the
+        // (name, JNI signature) pair it passes. Constructors are left out: `<init>` with a
+        // String argument exists on half the classes in the dex and proves nothing.
+        val lookups = Regex(
+            """GetMethodID\(\s*[^,]+,\s*"([^"]+)"\s*,\s*"([^"]+)"\s*\)""",
+        ).findAll(jniSourceText.get())
+            .map { it.groupValues[1] to it.groupValues[2] }
+            .filter { (name, _) -> name != "<init>" }
+            .toSet()
+        check(lookups.isNotEmpty()) {
+            "verifyJniSymbols found no GetMethodID lookups in llama_jni.cpp; the pattern " +
+                "no longer matches the source, so the signature check would pass on nothing."
+        }
+
+        // The dex method table, read directly: every method_id is a name, a prototype and
+        // a class, and a method R8 renamed or removed is absent from it under its old
+        // name and prototype. Offsets are the dex header's (DEX format, "header_item").
+        fun dexMethods(dex: ByteArray): Set<Pair<String, String>> {
+            val buffer = ByteBuffer.wrap(dex).order(ByteOrder.LITTLE_ENDIAN)
+            fun u4(at: Int) = buffer.getInt(at)
+            fun u2(at: Int) = buffer.getShort(at).toInt() and 0xFFFF
+            fun string(index: Int): String {
+                var at = u4(u4(0x3C) + index * 4)
+                while ((dex[at].toInt() and 0x80) != 0) at++ // skip the ULEB128 length
+                val start = at + 1
+                var end = start
+                while (dex[end].toInt() != 0) end++
+                // Modified UTF-8; every name and descriptor compared here is ASCII.
+                return String(dex, start, end - start, Charsets.UTF_8)
+            }
+            fun type(index: Int) = string(u4(u4(0x44) + index * 4))
+            fun proto(index: Int): String {
+                val at = u4(0x4C) + index * 12
+                val parameters = u4(at + 8)
+                val arguments = if (parameters == 0) {
+                    ""
+                } else {
+                    (0 until u4(parameters)).joinToString("") { type(u2(parameters + 4 + it * 2)) }
+                }
+                return "($arguments)" + type(u4(at + 4))
+            }
+            val methods = u4(0x5C)
+            return (0 until u4(0x58)).map { index ->
+                val at = methods + index * 8
+                string(u4(at + 4)) to proto(u2(at + 2))
+            }.toSet()
+        }
+
         built.forEach { artifact ->
             val found = mutableSetOf<String>()
+            val methods = mutableSetOf<Pair<String, String>>()
             ZipFile(artifact).use { zip ->
                 zip.entries().asSequence()
                     // An AAB keeps its dex under base/dex/ rather than at the root, so
@@ -338,6 +402,7 @@ tasks.register("verifyJniSymbols") {
                     .filter { it.name.endsWith(".dex") }
                     .forEach { entry ->
                         val bytes = zip.getInputStream(entry).readBytes()
+                        methods += dexMethods(bytes)
                         val text = String(bytes, Charsets.ISO_8859_1)
                         // A bare name is a method or a simple class name, stored as is. A
                         // qualified class name is stored as a descriptor, slashes and all:
@@ -363,8 +428,17 @@ tasks.register("verifyJniSymbols") {
                     "${artifact.name}: $missing. Generation would abort the process at " +
                     "runtime. Check core/engine/consumer-rules.pro."
             }
+            val lost = lookups - methods
+            check(lost.isEmpty()) {
+                "No method in ${artifact.name} has the name and signature llama_jni.cpp " +
+                    "asks GetMethodID for: ${lost.joinToString { (n, d) -> "$n$d" }}. R8 " +
+                    "renamed or removed it, or the Kotlin signature no longer matches the " +
+                    "native one; generation would abort the process at runtime. Check " +
+                    "core/engine/consumer-rules.pro."
+            }
             logger.lifecycle(
-                "verifyJniSymbols: all ${symbols.size} names survived R8 in ${artifact.name}",
+                "verifyJniSymbols: all ${symbols.size} names and ${lookups.size} native " +
+                    "method signatures survived R8 in ${artifact.name}",
             )
         }
     }

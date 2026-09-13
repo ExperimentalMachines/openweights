@@ -244,6 +244,14 @@ androidComponents {
     }
 }
 
+// JniCallbackContractTest reads these two files beside the classes it tests. Undeclared,
+// Gradle calls the test up to date after a keep rule changes, and the one check that
+// would have caught the 2026-09-14 release abort does not run.
+tasks.withType<Test>().configureEach {
+    inputs.file("consumer-rules.pro")
+    inputs.file("src/main/cpp/llama_jni.cpp")
+}
+
 dependencies {
     api(project(":core:common"))
     implementation(libs.kotlinx.coroutines.android)

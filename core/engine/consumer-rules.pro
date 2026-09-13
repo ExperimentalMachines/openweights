@@ -38,19 +38,30 @@
 # asks for "onToken" as a string. Granting permission to rename that method granted
 # permission to break every generation, in a way no debug build can show, because R8 does
 # not run there.
+#
+# The members are matched by name with any arguments, not by signature. On 2026-09-10 the
+# token callback gained a second argument, the token's log-probability, for the confidence
+# gate. The rule still spelled `onToken(java.lang.String)`, which no longer matched
+# anything, so R8 kept the interface's name, dropped its method, and folded the lambda
+# into a shared synthetic class. Every GGUF reply in every release from version code 604
+# on aborted the process at its first token with the message above, now reading
+# `"Li02;.onToken(Ljava/lang/String;F)Z"`. A signature in a keep rule is a second copy of
+# the one in llama_jni.cpp that nothing kept in step; the name is the part that has to
+# survive, and `verifyJniSymbols` in app/build.gradle.kts checks the full signature against
+# the built dex.
 -keep interface io.github.alpharomercoma.openweights.core.engine.LlamaBridge$TokenSink {
-    boolean onToken(java.lang.String);
+    *** onToken(...);
 }
 -keep interface io.github.alpharomercoma.openweights.core.engine.LlamaBridge$ReplySink {
-    void onReply(java.lang.String, java.lang.String, java.lang.String[]);
+    *** onReply(...);
 }
 -keepclassmembers class * implements
     io.github.alpharomercoma.openweights.core.engine.LlamaBridge$TokenSink {
-    boolean onToken(java.lang.String);
+    *** onToken(...);
 }
 -keepclassmembers class * implements
     io.github.alpharomercoma.openweights.core.engine.LlamaBridge$ReplySink {
-    void onReply(java.lang.String, java.lang.String, java.lang.String[]);
+    *** onReply(...);
 }
 
 # fbjni, kept whole.
