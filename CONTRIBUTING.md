@@ -6,7 +6,7 @@ in the open for the same reason those models are.
 ## Getting set up
 
 ```sh
-git clone --recurse-submodules https://github.com/alpharomercoma/openweights.git
+git clone --recurse-submodules https://github.com/ExperimentalMachines/openweights.git
 cd openweights
 ./gradlew :app:assembleDebug
 ```

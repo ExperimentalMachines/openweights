@@ -189,8 +189,8 @@ def endcard(out: Path) -> Path:
     # thing making these claims is readable source, and because the full description already
     # carries the same address.
     repo = weighted(MONO, 27, 500)
-    draw.text(((W - draw.textlength("github.com/alpharomercoma/openweights", font=repo)) / 2,
-               H / 2 + 250), "github.com/alpharomercoma/openweights", font=repo, fill=LIME)
+    draw.text(((W - draw.textlength("github.com/ExperimentalMachines/openweights", font=repo)) / 2,
+               H / 2 + 250), "github.com/ExperimentalMachines/openweights", font=repo, fill=LIME)
     image.save(out)
     return out
 

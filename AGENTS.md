@@ -51,7 +51,7 @@ index of research notes at `docs/research/README.md`.
   and why (`watch: a fast watch sleeps on an alarm, because ...`). The body says what was
   measured or found. Agents append their own attribution trailer.
 - Push with the GitHub CLI's credentials on this machine:
-  `git -c credential.helper='!gh auth git-credential' push https://github.com/alpharomercoma/openweights.git main`
+  `git -c credential.helper='!gh auth git-credential' push https://github.com/ExperimentalMachines/openweights.git main`
 - The version code is the commit count on `main`. Never rewrite published history; a
   version code that goes down cannot be uploaded. Force pushes to `main` are denied by hook.
 - CI (`.github/workflows/ci.yml`) runs lint, unit tests and a debug assembly on every push.

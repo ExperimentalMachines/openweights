@@ -1,14 +1,14 @@
 # The public site
 
-Five pages, live at **<https://alpharomercoma.github.io/openweights/>**:
+Five pages, live at **<https://experimentalmachines.github.io/openweights/>**:
 
 | Page | URL | What it is for |
 |---|---|---|
-| Privacy policy | <https://alpharomercoma.github.io/openweights/privacy.html> | The URL the Play listing must link to |
-| Landing | <https://alpharomercoma.github.io/openweights/> | Somewhere for that link to sit, and the repository link |
-| Latency chart | <https://alpharomercoma.github.io/openweights/latency.html> | TTFT and TPOT for five models on five chips, llama.cpp against ExecuTorch |
-| Window study | <https://alpharomercoma.github.io/openweights/window.html> | Does the exported ExecuTorch context window matter: charts and every table |
-| Reruns | <https://alpharomercoma.github.io/openweights/reruns.html> | What the second pass over the window matrix changed: the 2.6B under two caps, window cuts, controls, the 6 GB kill rule |
+| Privacy policy | <https://experimentalmachines.github.io/openweights/privacy.html> | The URL the Play listing must link to |
+| Landing | <https://experimentalmachines.github.io/openweights/> | Somewhere for that link to sit, and the repository link |
+| Latency chart | <https://experimentalmachines.github.io/openweights/latency.html> | TTFT and TPOT for five models on five chips, llama.cpp against ExecuTorch |
+| Window study | <https://experimentalmachines.github.io/openweights/window.html> | Does the exported ExecuTorch context window matter: charts and every table |
+| Reruns | <https://experimentalmachines.github.io/openweights/reruns.html> | What the second pass over the window matrix changed: the 2.6B under two caps, window cuts, controls, the 6 GB kill rule |
 
 `latency.html`, `window.html` and `reruns.html` are hand-written and self-contained (data inline); the build
 copies them unchanged. `window.html`'s `DATA` constant is the JSON form of the tables in

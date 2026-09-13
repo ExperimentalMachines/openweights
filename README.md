@@ -57,7 +57,7 @@ model families whose prompt formats the app implements.
 model families. The app routes on the file format, and both ship in the same 28.8 MB
 release bundle. On the phones measured, the compiled LFM2.5 1.2B decoded a token in 46 ms
 against 106 for its GGUF on the Tensor G5 and 38 against 59 on the Exynos 2400, and reached
-its first token faster on every chip ([latency](https://alpharomercoma.github.io/openweights/latency.html)).
+its first token faster on every chip ([latency](https://experimentalmachines.github.io/openweights/latency.html)).
 
 **Honest about your device, before the download.** The GGUF header is read over HTTP range
 requests, so the app can say what a file needs at your context length and whether it will
@@ -75,9 +75,9 @@ it was given.
 
 **Numbers you can check.** Speed, quality and backend parity were measured on real phones
 and published with their methods, caveats and raw results. Each report states its own device
-set: [latency on five chips](https://alpharomercoma.github.io/openweights/latency.html),
-[the exported-window study on four](https://alpharomercoma.github.io/openweights/window.html),
-[its reruns](https://alpharomercoma.github.io/openweights/reruns.html).
+set: [latency on five chips](https://experimentalmachines.github.io/openweights/latency.html),
+[the exported-window study on four](https://experimentalmachines.github.io/openweights/window.html),
+[its reruns](https://experimentalmachines.github.io/openweights/reruns.html).
 
 **Private by construction.** No accounts, no analytics, no crash reporter, backups off the
 device disabled, and a Hugging Face token that lives in the hardware-backed Keystore and goes
@@ -191,7 +191,7 @@ field on the screen, steers the next step or answers the question. The reasoning
 export JAVA_HOME=/path/to/jdk21
 export ANDROID_HOME=/path/to/android-sdk
 
-git clone --recurse-submodules https://github.com/alpharomercoma/openweights.git
+git clone --recurse-submodules https://github.com/ExperimentalMachines/openweights.git
 cd openweights
 ./gradlew :app:assembleDebug
 ```
@@ -235,10 +235,10 @@ the raw tables.
 
 | Report | What it asks |
 |---|---|
-| [Does the exported window matter?](docs/research/executorch-window-matrix.md) · [page](https://alpharomercoma.github.io/openweights/window.html) · [tables](docs/research/window-matrix.md) | The same weights exported at 2k to 32k on four chips: does the window change answers, speed or memory? |
-| [What the reruns changed](https://alpharomercoma.github.io/openweights/reruns.html) | A second pass over that matrix: the 2.6B under two reply caps, same-file repeats, and why a 32k full-attention export dies on 12 GB phones |
+| [Does the exported window matter?](docs/research/executorch-window-matrix.md) · [page](https://experimentalmachines.github.io/openweights/window.html) · [tables](docs/research/window-matrix.md) | The same weights exported at 2k to 32k on four chips: does the window change answers, speed or memory? |
+| [What the reruns changed](https://experimentalmachines.github.io/openweights/reruns.html) | A second pass over that matrix: the 2.6B under two reply caps, same-file repeats, and why a 32k full-attention export dies on 12 GB phones |
 | [Public benchmarks on six phones](docs/research/public-benchmarks.md) · [tables](docs/research/benchmark-matrix.md) | GSM8K, IFEval and BFCL on both runtimes, same prompts, same graders |
-| [Five chips, two runtimes](https://alpharomercoma.github.io/openweights/latency.html) | Time to first token and time per output token, five models, five chips |
+| [Five chips, two runtimes](https://experimentalmachines.github.io/openweights/latency.html) | Time to first token and time per output token, five models, five chips |
 | [Parity on five SoCs](docs/research/parity-five-socs.md) · [tables](docs/research/backend-parity.md) | Do the two runtimes grade the same agentic prompts the same way across silicon? |
 | [The first turn](docs/research/first-turn-latency.md) | Where a 25-second cold first turn went, 18.5 s of it before the first token, and how warming removed most of it |
 
@@ -275,7 +275,7 @@ test tiers, is [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 | [docs/research/README.md](docs/research/README.md) | Every research note with its date, question and finding |
 | [docs/design/visual-language.md](docs/design/visual-language.md) | The design rules every screen follows |
 | [docs/design/goal-surface.md](docs/design/goal-surface.md) | What the chat shows while a goal or research runs, and why nothing but one strip is pinned |
-| [docs/privacy-policy.md](docs/privacy-policy.md) | What stays on the device and what leaves; published at [the policy page](https://alpharomercoma.github.io/openweights/privacy.html) |
+| [docs/privacy-policy.md](docs/privacy-policy.md) | What stays on the device and what leaves; published at [the policy page](https://experimentalmachines.github.io/openweights/privacy.html) |
 | [docs/play-store.md](docs/play-store.md) · [docs/store-listing.md](docs/store-listing.md) | The release checklist and the listing copy, data safety rows and rating answers |
 | [play/site/README.md](play/site/README.md) | How the public pages are built and published |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Setting up, running the test tiers, what reviewers look for |

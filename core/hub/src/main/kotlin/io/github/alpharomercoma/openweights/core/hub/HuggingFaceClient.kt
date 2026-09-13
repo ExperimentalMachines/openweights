@@ -671,7 +671,7 @@ class HuggingFaceClient @Inject constructor(
  *
  * **Reset on 2026-09-07 to six rows, four of them our own ExecuTorch exports at a 32k
  * window** (`docs/research/executorch-window-matrix.md`, charted at
- * https://alpharomercoma.github.io/openweights/window.html). The window matrix showed the
+ * https://experimentalmachines.github.io/openweights/window.html). The window matrix showed the
  * exported window changes memory at load and nothing else that could be told from run-to-run
  * variation, so the 2k publisher exports lost their reason to be here: 2k is smaller than
  * this app's tool prefix. The GGUF rows of the same family went with them, since the compiled
@@ -746,7 +746,7 @@ class HuggingFaceClient @Inject constructor(
  * than on anybody's card: the five-chip latency report (Dimensity 9400, Snapdragon 8 Gen 3,
  * Snapdragon 8 Elite, Tensor G5, Exynos 2400; 60 to 90 benchmark prompts per cell;
  * `docs/research/public-benchmarks.md`, charted at
- * https://alpharomercoma.github.io/openweights/latency.html) and the GSM8K, IFEval and
+ * https://experimentalmachines.github.io/openweights/latency.html) and the GSM8K, IFEval and
  * BFCL scores from the same runs. Five families were compiled and run; three are listed.
  *
  * - **Qwen3 1.7B compiled**: first token in 0.75 to 0.89 s on every chip, where its Q8_0
@@ -762,7 +762,7 @@ class HuggingFaceClient @Inject constructor(
  *   the same speed on a paired probe, but compiled for a 32k window where the publisher's
  *   file has 2k, which is smaller than this app's tool prefix. The window costs memory at
  *   load and nothing else that could be measured (`docs/research/executorch-window-matrix.md`,
- *   https://alpharomercoma.github.io/openweights/window.html): 1.77 GB resident against
+ *   https://experimentalmachines.github.io/openweights/window.html): 1.77 GB resident against
  *   1.05 GB at 2k on a Dimensity 9400.
  * - **LFM2.5 2.6B compiled**, our export, 32k window: the only ExecuTorch build of this
  *   model there is. 2.94 GB resident after load, 149 tok/s prefill and 18 tok/s decode on
@@ -785,10 +785,17 @@ class HuggingFaceClient @Inject constructor(
  */
 val RECOMMENDED = listOf(
     // Liquid AI's own GGUF repositories. Each lists eight files; the Q4_K_M is the file the
-    // decision suite and the public benchmarks graded, and the QAD-Q4_0 is a distinct
-    // checkpoint (Liquid's quantisation-aware one) that has only been timed: 324 tok/s
-    // prefill and 54 tok/s decode for the 1.2B on a Dimensity 9400. Its grades, and a paired
-    // grade for the 2.6B against its compiled export, are the measurements still owed.
+    // public benchmarks graded, and the QAD-Q4_0 is a distinct checkpoint (Liquid's
+    // quantisation-aware one) that the decision suite has now graded twice on the Dimensity
+    // 9400 and found ahead: on 2026-09-13, all 160 rows in one session, it searched when
+    // needed on 60% against the Q4_K_M's 44%, was correct on 39% against 40%, prefilled at
+    // 227 against 157 tok/s and decoded at 36 against 31, at 731 MB against 697
+    // (`docs/research/executorch-tool-calling-qad.md`). Its GSM8K, IFEval and BFCL grades
+    // are still owed, so the Q4_K_M stays the marked file until they land. The same night
+    // settled the compiled question for this family: the 8da4w recipe removes the
+    // tool-call decision (int4 on the feed-forward alone does it), the one mixed export
+    // that calls is 1.7 times the GGUF's size at 2.3 times its resident memory, and
+    // activation-aware scaling did not rescue the int4 file. A compiled LFM2.5 needs QAT.
     "LiquidAI/LFM2.5-1.2B-Instruct-GGUF",
     "LiquidAI/LFM2.5-2.6B-GGUF",
     // The family with eyes, from Liquid AI's own GGUF repository: ships its mmproj
@@ -805,10 +812,11 @@ val RECOMMENDED = listOf(
  * A row is a repository, and a GGUF repository lists eight quantisations sorted by size.
  * Every grade behind the row (`docs/research/recommended-runtime.md`) was earned by one of
  * them, and a person who opens the row and takes the smallest file takes one the numbers
- * do not cover: Liquid's QAD-Q4_0 is a distinct checkpoint that has only been timed, and
- * the plain Q4_0 has neither. Codex named that the principal user-facing risk of the
- * 2026-09-10 reversal, so the card says which file was measured and lists it first. A
- * repository with no entry here has no such file, and its cards say nothing.
+ * do not cover: Liquid's QAD-Q4_0 is a distinct checkpoint graded on the decision suite and
+ * not yet on the public sets, and the plain Q4_0 has neither. Codex named that the
+ * principal user-facing risk of the 2026-09-10 reversal, so the card says which file was
+ * measured and lists it first. A repository with no entry here has no such file, and its
+ * cards say nothing.
  */
 val GRADED: Map<String, String> = mapOf(
     "LiquidAI/LFM2.5-1.2B-Instruct-GGUF" to "LFM2.5-1.2B-Instruct-Q4_K_M.gguf",

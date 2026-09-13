@@ -19,7 +19,7 @@ import markdown
 
 ROOT = Path(__file__).resolve().parents[2]
 POLICY = ROOT / "docs" / "privacy-policy.md"
-REPO = "https://github.com/alpharomercoma/openweights"
+REPO = "https://github.com/ExperimentalMachines/openweights"
 
 # The app's own palette, from docs/design/visual-language.md. A policy page that looks like
 # the product is a small thing, but the alternative is a Play listing whose one outbound

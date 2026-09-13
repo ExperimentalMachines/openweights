@@ -180,7 +180,7 @@ and fetch pages on the user's behalf. Every row, with the reasoning behind it, i
 declaration. The policy those link to is [privacy-policy.md](privacy-policy.md).
 
 The upload key exists, the graphics are made and checked against the spec in `play/graphics`,
-and the policy is published at <https://alpharomercoma.github.io/openweights/privacy.html>.
+and the policy is published at <https://experimentalmachines.github.io/openweights/privacy.html>.
 The content rating answers are written out question by question in
 [store-listing.md](store-listing.md#content-rating-questionnaire).
 

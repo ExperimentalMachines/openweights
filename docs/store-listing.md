@@ -7,7 +7,7 @@ code decides, the code was read rather than remembered.
 
 The checklist of what has been verified in the build is in [play-store.md](play-store.md).
 The policy this listing has to link to is [privacy-policy.md](privacy-policy.md), published at
-<https://alpharomercoma.github.io/openweights/privacy.html>. That is the URL to paste into the
+<https://experimentalmachines.github.io/openweights/privacy.html>. That is the URL to paste into the
 Console; how the page is built and republished is in `play/site/README.md`.
 
 ## Store listing
@@ -107,7 +107,7 @@ Android 12 or newer, a 64-bit ARM device, and enough memory for the model you ch
 will tell you before you download.
 
 Models come from third parties. You choose which one to run, and what it says is its
-publisher's work rather than ours. Open source, at github.com/alpharomercoma/openweights.
+publisher's work rather than ours. Open source, at github.com/ExperimentalMachines/openweights.
 ```
 
 **Category**: Productivity, as filed. Tools was the other candidate and is the better fit for
@@ -126,7 +126,7 @@ Nothing else on the list is true of this app.
 **Contact email**: the address on the GitHub account. It is shown publicly on the listing,
 which is the reason to use one that can absorb it.
 
-**Website**: <https://alpharomercoma.github.io/openweights/>, the same site the privacy
+**Website**: <https://experimentalmachines.github.io/openweights/>, the same site the privacy
 policy is served from.
 
 **External marketing**: left on. It is Google advertising the listing off-Play and involves

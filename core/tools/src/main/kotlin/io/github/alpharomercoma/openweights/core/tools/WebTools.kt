@@ -617,7 +617,7 @@ class FetchUrlTool @Inject constructor(
  *
  * `toHttpUrlOrNull` insists on a scheme and answers null without one, and that null was
  * reaching the user as "That is not an address that can be read". People do not paste
- * schemes. Asked "what do you think of github.com/alpharomercoma/openweights", a model
+ * schemes. Asked "what do you think of github.com/ExperimentalMachines/openweights", a model
  * passes on the address exactly as it was given, which is exactly the form the parser
  * refuses, so the tool declined the one call it most obviously should have made and the
  * reply explained that the page could not be read.

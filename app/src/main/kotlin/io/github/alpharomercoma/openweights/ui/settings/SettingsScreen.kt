@@ -200,7 +200,7 @@ private fun AboutSection() {
 }
 
 /** The claim above it is only worth making if this is one tap away. */
-private const val SOURCE_URL = "https://github.com/alpharomercoma/openweights"
+private const val SOURCE_URL = "https://github.com/ExperimentalMachines/openweights"
 
 /** Where the people building and using this talk; beside the source, for the same reason. */
 private const val DISCORD_URL = "https://discord.gg/rAwu3MU5j3"

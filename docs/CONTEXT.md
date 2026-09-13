@@ -141,7 +141,7 @@ Single source of truth: `gradle/libs.versions.toml`.
       API 36, 16 KB alignment, the AAB and the JNI-survives-R8 guard are verified in the
       build; the listing, data safety answers, generative AI declaration and privacy policy
       are in [store-listing.md](store-listing.md) and [privacy-policy.md](privacy-policy.md),
-      the policy published at <https://alpharomercoma.github.io/openweights/privacy.html>.
+      the policy published at <https://experimentalmachines.github.io/openweights/privacy.html>.
 
 ## Multimodal: what libmtmd gives us, and what it does not
 

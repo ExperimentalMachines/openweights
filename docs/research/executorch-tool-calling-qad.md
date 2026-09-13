@@ -255,6 +255,71 @@ the norm weights, and which is the one untried path to a file under 800 MB; then
 that fails, QAT on the mixed layout. Nothing about the per-family hook belongs in the
 app; the shipped recipe, if there is one, is a checked-in export script.
 
+## On the phone, and the AWQ attempt (2026-09-13, late)
+
+**Activation-aware scaling did not rescue int4 on the feed-forward.** `awq.py` folds
+per-channel scales into the gate and up projections (through `ffn_norm`), the down
+projection (through the rows of `w3`) and the conv input projections (through
+`operator_norm`), from activation maxima over 64 seed-8 prompts; the fold is exact in
+fp32 (Hanover 0.8521 before and after). Then the shipped recipe:
+
+| AWQ variant, then the shipped 8da4w recipe | tool-token probability on the 9 named rows | greedy calls |
+|---|---|---|
+| all folds, alpha 0.5 | 0.06 to 0.31 | 0 of 9 |
+| all folds, alpha 0.3 | 0.01 to 0.63 | 2 of 9 |
+| all folds, alpha 0.7 | 0.01 to 0.30 | 0 of 9 |
+| all folds, alpha 0.2 | 0.00 to 0.30 | 0 of 9 |
+| gate, up and conv folds, no down fold, alpha 0.5 | 0.00 to 0.02 | 0 of 9 |
+| gate and up folds only, alpha 0.5 | 0.00 to 0.03 | 0 of 9 |
+| down fold only, alpha 0.3 | 0.03 to 0.12 | 0 of 9 |
+| down fold only, alpha 0.2 | 0.00 to 0.10 | 0 of 9 |
+| down and conv folds, alpha 0.3 | 0.03 to 0.41 | 0 of 9 |
+
+The best variant lifts the tool token from under 0.09 to 0.2 to 0.6 on a few rows and
+calls on two; the down-projection fold is what helps and only together with the others;
+stronger scaling hurts. Outlier redistribution is not the mechanism, or not enough of
+it. QAT is what is left for a file under 800 MB.
+
+**The phone, all 160 rows, four artifacts** (`prod-decisions-*` in
+`tools/eval/results/decisions/`, `phone_stats.py` for the speed columns):
+
+| Artifact (Poco X8 Pro Max, 160 rows, driven-search, greedy, one session, on battery) | Searched when needed (75) | of the 42 noted rows | of the 54 unnoted rows that need one | Unnecessary (60) | Correct (117 non-stale) | Narrated a search with no call | Prefill tok/s | Decode tok/s | Time to first token | Resident memory | Size |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| shipped 8da4w export | 3% (2) | 0 | 2 | 0% | 34% | 22% | 285 | 36.7 | 2.1 s | 1.85 GB | 789 MB |
+| int4-attention export (rest int8) | 32% (24) | 35 | 6 | 15% | 38% | 3% | 362 | 30.1 | 1.7 s | 2.33 GB | 1253 MB |
+| QAD Q4_0 GGUF | 60% (45) | 42 | 24 | 23% | 39% | 1% | 227 | 35.7 | 2.4 s | 1.03 GB | 731 MB |
+| Q4_K_M GGUF | 44% (33) | 41 | 13 | 25% | 40% | 0% | 157 | 31.1 | 3.6 s | 1.06 GB | 697 MB |
+
+Read: the mixed export calls where the app's note tells it to (35 of 42) and rarely
+on the model's own judgement (6 of 54 against the QAD file's 24), so it recovers most
+of the note-driven recall and little of the rest; its narrated searches fall from 22
+to 3 percent; it prefills 1.6 times faster than the QAD file and 2.3 times faster than
+Q4_K_M, decodes about 15 percent slower, and holds 2.3 GB resident against the GGUFs'
+1.0 GB, which on a 12 GB phone is the number that matters. The QAD Q4_0 GGUF is the
+best artifact on every quality column and is 731 MB.
+
+**Public benchmarks, same phone, same night** (`prod-*.bench.graded.json`):
+
+| Public benchmarks, same phone, same night, 30 prompts each | GSM8K | IFEval | BFCL |
+|---|---|---|---|
+| shipped 8da4w export | 17 | 18 | 25 |
+| int4-attention export | 19 | 21 | 27 |
+| Q4_K_M GGUF, five-phone mean from September 10 | 19.6 | 21.6 | 26.0 |
+
+On this phone the mixed export is two to three points of thirty above the shipped
+export on every set and level with the GGUF's five-phone means. The shipped export
+scores higher here than its own five-phone means (13.0, 15.6, 22.4), on a stronger
+phone and through the fixed schema spelling; whether the spelling moved BFCL was still
+not isolated.
+
+**Decision.** Not shipped. The mixed export is the first compiled LFM2.5 that calls
+tools on a phone and its benchmarks are level with the GGUF, but it recalls half of
+what the QAD GGUF recalls, is 1.7 times its size and 2.3 times its resident memory, and
+decodes slower; the one thing it wins is prefill. The QAD Q4_0 GGUF is the artifact to
+recommend for LFM2.5, ahead of Q4_K_M, on this run. This was one phone, one session,
+on battery, without the seed-8 pass; a second phone and the held-out draw are owed
+before any of it is a number in a README.
+
 ## What this changes
 
 Nothing ships from this. It is the first export of LFM2.5 that calls a tool on the

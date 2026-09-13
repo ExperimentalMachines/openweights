@@ -264,7 +264,7 @@ private class MemoryCookieJar : CookieJar {
 
 /** Identifies the client, which is what Wikimedia asks for and what Brave logs. */
 const val SEARCH_USER_AGENT =
-    "OpenWeights/0.1 (https://github.com/alpharomercoma/openweights)"
+    "OpenWeights/0.1 (https://github.com/ExperimentalMachines/openweights)"
 
 /**
  * A browser's agent, sent only to DuckDuckGo's no-JavaScript endpoint.
