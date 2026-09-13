@@ -19,16 +19,63 @@ package io.github.alpharomercoma.openweights.core.common.model
 /**
  * The JSON spellings the prompt templates share.
  *
- * Each template splices [ToolDefinition.parametersJson] in verbatim rather than
- * re-encoding it — re-encoding would reorder keys, and the schema is the model's only
- * description of what the arguments mean. What varies per family is the wrapping, and
- * that stays in each family's own file.
+ * Each template splices [ToolDefinition.parametersJson] in with only its whitespace
+ * changed, never re-encoded: re-encoding would reorder keys, and the schema is the
+ * model's only description of what the arguments mean. What varies per family is the
+ * wrapping, and that stays in each family's own file.
  */
 
-/** A tool as the OpenAI-shaped object most templates were trained to read. */
-internal fun ToolDefinition.asToolJson(): String =
-    """{"type": "function", "function": {"name": ${name.jsonQuoted()}, """ +
-        """"description": ${description.jsonQuoted()}, "parameters": $parametersJson}}"""
+/**
+ * A tool as the OpenAI-shaped object most templates were trained to read.
+ *
+ * The schema goes in on one line, spelled as Jinja's `tojson` spells it, because that is
+ * the text every chat template on file writes and so the text these models saw in
+ * training. The tools themselves declare their schemas as indented literals, and splicing
+ * those in verbatim was measured to matter: on the phone's own prompt for "What is
+ * Hanover the capital of?", LFM2.5 1.2B Q4_K_M (greedy, Mac, 2026-09-13) put 0.84 on the
+ * tool-call token with the one-line spelling and 0.48 with the indented one.
+ */
+internal fun ToolDefinition.asToolJson(): String {
+    val schema = parametersJson.canonicalJson()
+    return """{"type": "function", "function": {"name": ${name.jsonQuoted()}, """ +
+        """"description": ${description.jsonQuoted()}, "parameters": $schema}}"""
+}
+
+/**
+ * [this] JSON with its whitespace laid out the way `json.dumps` does by default: nothing
+ * between tokens except `", "` after a member and `": "` after a key.
+ *
+ * Walked character by character rather than parsed, for the same reason [reindentJson]
+ * is: nothing but whitespace outside string literals may change, so key order, number
+ * spellings and escapes all come out exactly as they went in. Nothing is validated: a
+ * schema that is not JSON comes out not JSON, as it went in before; [ToolDefinition]
+ * refuses a blank one at construction.
+ */
+internal fun String.canonicalJson(): String = buildString {
+    var inString = false
+    var escaped = false
+    this@canonicalJson.forEach { character ->
+        when {
+            inString -> {
+                append(character)
+                when {
+                    escaped -> escaped = false
+                    character == '\\' -> escaped = true
+                    character == '"' -> inString = false
+                }
+            }
+            character == '"' -> {
+                append(character)
+                inString = true
+            }
+            character == ',' -> append(", ")
+            character == ':' -> append(": ")
+            // JSON's own four; anything else outside a string is the schema's problem, kept.
+            character == ' ' || character == '\n' || character == '\r' || character == '\t' -> Unit
+            else -> append(character)
+        }
+    }
+}
 
 /** [this] as a JSON string literal, escaped the way `json.dumps` writes one. */
 internal fun String.jsonQuoted(): String = buildString {

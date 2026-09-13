@@ -759,6 +759,48 @@ class ExecuTorchEngineTest {
     }
 
     /**
+     * A piece cut after a space changes the tokens: LFM2.5's pre-tokenizer keeps a space
+     * with the word after it, so " not" is one token in the whole prompt and two (" ",
+     * "not") when the cut lands between them. Measured with the tokenizer on the search-only
+     * prompt (2026-09-13): one to nineteen tokens differed from the whole-prompt reading,
+     * every one of them at a piece cut. The cut goes before the space instead, so the next
+     * piece opens with it and the runtime reads the same tokens the model was trained on.
+     */
+    @Test
+    fun `a piece cut at a space leaves the space to the next piece`() = runTest {
+        engine.load(installed(MODEL), PARAMS)
+        val oneLine = ChatMessage.text(ChatRole.SYSTEM, LONG_RULES.replace('\n', ' '))
+
+        engine.warm(listOf(oneLine), params = NO_THINKING)
+
+        assertThat(bridge.prefills.size).isGreaterThan(1)
+        // The template's own line breaks still cut after the break; every other cut lands
+        // before a space, so the space opens the next piece.
+        bridge.prefills.zipWithNext().forEach { (piece, next) ->
+            if (!piece.endsWith("\n")) {
+                assertThat(piece).doesNotMatch("(?s).* $")
+                assertThat(next).startsWith(" ")
+            }
+        }
+        assertThat(bridge.prefills.joinToString("")).contains(oneLine.text)
+    }
+
+    /** A blank line at a cut stays whole: "\n\n" is one token, and a piece may not end inside it. */
+    @Test
+    fun `a piece never ends inside a run of line breaks`() = runTest {
+        engine.load(installed(MODEL), PARAMS)
+        val paragraphs = ChatMessage.text(ChatRole.SYSTEM, LONG_RULES.replace("\n", "\n\n"))
+
+        engine.warm(listOf(paragraphs), params = NO_THINKING)
+
+        assertThat(bridge.prefills.size).isGreaterThan(1)
+        bridge.prefills.zipWithNext().forEach { (piece, next) ->
+            if (piece.endsWith("\n")) assertThat(next).doesNotMatch("(?s)^\\s.*")
+        }
+        assertThat(bridge.prefills.joinToString("")).contains(paragraphs.text)
+    }
+
+    /**
      * The exporter bounds one prefill at `max_seq_len - 1` tokens and the runtime chunks
      * at `max_seq_len`, so a generate call carrying a whole long prompt fails on the
      * phone. The engine feeds the head in pieces and hands generate only a short tail.

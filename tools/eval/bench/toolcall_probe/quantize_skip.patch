@@ -1,0 +1,21 @@
+--- /Users/alpha/ow-models/etexport/.venv/lib/python3.12/site-packages/executorch/examples/models/llama/source_transformation/quantize.py.orig	2026-09-13 14:46:03
++++ /Users/alpha/ow-models/etexport/.venv/lib/python3.12/site-packages/executorch/examples/models/llama/source_transformation/quantize.py	2026-09-13 15:13:50
+@@ -1,3 +1,4 @@
++import os
+ # Copyright (c) Meta Platforms, Inc. and affiliates.
+ # All rights reserved.
+ #
+@@ -148,6 +149,13 @@
+                 return False
+             parts = fqn.split(".")
+             if "lora_a" in parts or "lora_b" in parts:
++                return False
++            # OpenWeights bisection: keep the tied LM head out of int4 (OW_SKIP_OUTPUT=1).
++            if os.environ.get("OW_SKIP_OUTPUT") == "1" and fqn == "output":
++                return False
++            # OpenWeights bisection: leave every Linear whose name matches out of int4.
++            skip = os.environ.get("OW_SKIP_REGEX")
++            if skip and __import__("re").search(skip, fqn):
+                 return False
+             if group_size == 0:
+                 return True

@@ -778,17 +778,35 @@ class ExecuTorchEngine(
 
     /**
      * The next piece to feed: at most [WARM_PIECE_CHARS] and never more than [limit],
-     * preferring to end at a line break, then at a space, so the cut re-tokenizes no more
-     * oddly than it must.
+     * preferring to end at a line break, then just before a space.
+     *
+     * Before a space and not after it, because the tokenizer keeps a space with the word
+     * that follows: " not" is one token in the whole prompt, and a piece that ended with
+     * the space handed the runtime " " and "not" instead. Measured with LFM2.5's tokenizer
+     * on the search-only prompt (2026-09-13): every token that differed between the whole
+     * prompt and its pieces sat at a cut made after a space, one to nineteen a prompt.
+     * Fuzzed on 156 texts against six tokenizers (`tools/eval/bench/toolcall_probe/
+     * fuzz_all.py`): no token differs for LFM2.5, Qwen3, Gemma 3, Llama 3.2 or gpt-oss.
+     * SmolLM2's GPT-2 pattern reads a run of line breaks differently at the end of a
+     * string than before a word, so a cut after one still differs there (two tokens on
+     * the real prompts) under this rule and under the old one alike; no single cut
+     * satisfies both patterns, and the runtime offers no tokenizer to cut by.
      */
     private fun warmPiece(text: String, limit: Int): String {
         val most = minOf(WARM_PIECE_CHARS, limit)
         if (text.length <= most) return text
         val window = text.substring(0, most)
-        val newline = window.lastIndexOf('\n')
+        // A line break followed by more whitespace is one token with it ("\n\n", "\n    "),
+        // so the cut goes after a break that ends its run. Fuzzed against the tokenizer
+        // on code, tables, URLs and whitespace runs (2026-09-13): the plain rule left 36 of
+        // 303 texts with differing tokens, this one none.
+        var newline = window.lastIndexOf('\n')
+        while (newline > 0 && newline + 1 < text.length && text[newline + 1].isWhitespace()) {
+            newline = window.lastIndexOf('\n', newline - 1)
+        }
         if (newline > 0) return window.substring(0, newline + 1)
         val space = window.lastIndexOf(' ')
-        if (space > 0) return window.substring(0, space + 1)
+        if (space > 0) return window.substring(0, space)
         return window
     }
 

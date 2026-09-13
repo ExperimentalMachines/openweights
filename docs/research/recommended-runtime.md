@@ -9,6 +9,10 @@ verdict, what was reverted, and what was kept. The tables it reads are
 [executorch-window-matrix.md](executorch-window-matrix.md) and
 [retrieve-or-answer.md](retrieve-or-answer.md); nothing here is a new measurement.
 
+> 2026-09-13: what the tool-calling rows in this note were measuring is now known, and
+> the recommendation holds for a narrower reason. See
+> [executorch-tool-calling.md](executorch-tool-calling.md).
+
 ## What the matrix says
 
 **Accuracy.** Of the fourteen family-and-set cells both runtimes attempted, one is an
