@@ -84,6 +84,48 @@ The phone runs used the method in `.claude/skills/phone-deploy/SKILL.md` plus a 
 a second package; HyperOS asks for an on-screen "Install via USB" confirmation that
 `pm install` reports as `INSTALL_FAILED_USER_RESTRICTED` if nobody taps it.
 
+## The 07:54 report: the fixed build had not reached the phone
+
+At 07:54 the same day the Poco closed again on "hi", recorded on screen with HyperOS's
+crash details. The abort message was word for word the one above,
+`"Li02;.onToken(Ljava/lang/String;F)Z"` from `nativeGenerate+2304`. Version 613 cannot
+produce that line: its `throw_engine_exception` clears the pending exception, so a
+failed lookup ends as an error in the chat, never as `SIGABRT`.
+
+The crash frame names the native library's GNU build ID, and that settles which build ran.
+The frame reads `libopenweights_llama.so (BuildId: 74e6551c5c34bd1246f089df94067cba3435732f)`,
+the library compiled from the 2026-09-10 to 09-13 source, which is versions 604 to 612.
+The library inside the 613 bundle is `504bab288b85a6e05ff5f1544860ec6822d17429`. The
+Play Store page in the same recording showed the app as Installed with no update offered:
+Play was still serving 612 to the phone.
+
+Every release says `versionName = "2.0.0"`, so the crash dialog's "Version: 2.0.0" could
+not tell the two apart. Read the build ID from the crash instead:
+`file libopenweights_llama.so` on the bundle's `base/lib/arm64-v8a/` copy prints it.
+
+**What Play serves, checked at the store.** A locally built bundle says nothing about what
+Play delivers, so `PlayProductionProbe` (an instrumentation in `:app`, driven by
+`tools/release/probe_play_ftl.sh`) installs the production package through the Play Store
+app on a signed-in Firebase Test Lab phone, the way a user does, then opens the QAD-Q4_0
+file in that install and sends "hi". At 10:43 (UTC+8) on the Pixel 10 Pro XL (Android 16):
+
+| What | Result |
+|---|---|
+| version code Play installed | 613, installer `com.android.vending` |
+| `libopenweights_llama.so` in Play's `split_config.arm64_v8a.apk` | build ID `504bab288b85...`, the fixed build |
+| "hi" to LFM2.5 1.2B QAD-Q4_0 in that install | "Hello! How can I assist you today?", 172 tok/s prefill, 25 tok/s decode |
+| process after the reply, crash buffer | alive, empty |
+
+The arm64 split is one file for every arm64 phone, so the build ID also answers for the
+Poco's chip. The same probe on a Galaxy Tab S10+ never reached Install: that tablet's Play
+window is not in the accessibility tree the probe reads, a harness limit and not a result.
+
+So production is fixed, and the 07:54 install predates 613 reaching the phone. A phone
+that already holds 604 to 612 keeps crashing until Play updates it; Play showing
+"Installed" with no Update button is a stale Play cache, and uninstalling and reinstalling
+from Play, or Update once it appears, replaces it. If the release is on a staged rollout,
+phones outside the percentage are still served 612 until it goes to 100%.
+
 ## What to take from it
 
 A debug build cannot show an R8 fault, and no phone run this week used a release build.
