@@ -3,6 +3,7 @@
 #
 #   tools/release/probe_play_ftl.sh [model file in the eval bucket] [device ...]
 #     tools/release/probe_play_ftl.sh LFM2.5-1.2B-Instruct-QAD-Q4_0.gguf mustang:36 gts10pwifi:36
+#     PROMPT="Explain how a bicycle gear works" (no commas or colons) sends that instead of hi
 #
 # The question a local bundle cannot answer is what Play actually serves. PlayProductionProbe
 # installs through the Play Store app on a signed-in lab phone, logs the version code, copies
@@ -34,7 +35,7 @@ done
 gcloud firebase test android run --quiet --type instrumentation \
   --app "$APP" --test "$APK" $DEVICE_FLAGS \
   --test-targets "class io.github.alpharomercoma.openweights.release.PlayProductionProbe" \
-  --timeout 20m --environment-variables "model=$EVAL/$MODEL" \
+  --timeout 20m --environment-variables "^:^model=$EVAL/$MODEL${PROMPT:+:prompt=$PROMPT}" \
   --other-files "$EVAL/$MODEL=$BUCKET/$MODEL" \
   --results-bucket "$BUCKET" --results-dir "play-probe/$(basename "$OUT")" \
   --directories-to-pull /sdcard/probe \

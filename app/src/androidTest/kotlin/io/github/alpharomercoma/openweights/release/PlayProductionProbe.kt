@@ -38,8 +38,9 @@ import org.junit.runner.RunWith
  * is signed in to Play, this installs the production package through the Play Store app
  * exactly as a user would, logs the version code and installer Play recorded, copies the
  * installed APKs to [OUT] for the host to read the native library's build ID, then opens
- * the model given as the `model` argument in that install, sends "hi", and fails if the
- * process dies or the crash buffer names the package. Driven by
+ * the model given as the `model` argument in that install, sends the `prompt` argument
+ * ("hi" if none), waits for the reply to finish, logs the screen with its tok/s line, and
+ * fails if the process dies or the crash buffer names the package. Driven by
  * `tools/release/probe_play_ftl.sh`; everything it learns is logged on tag [TAG].
  */
 @RunWith(AndroidJUnit4::class)
@@ -64,12 +65,19 @@ class PlayProductionProbe {
         }
         if (model == null) return
 
+        val prompt = InstrumentationRegistry.getArguments().getString("prompt") ?: "hi"
         sh("logcat -b crash -c")
         sh("am start -W -n $PKG/.MainActivity --es $EXTRA_OPEN_MODEL $model")
-        sendHi()
-        // Long enough for a 1.2 B model to finish a greeting; the abort this exists for
-        // happened at the first token.
-        SystemClock.sleep(REPLY_MS)
+        send(prompt)
+        // Until Send is back, which is the reply finished; a slow decode is the thing a
+        // run may be looking for, so the wait is long and the stats line says the rate.
+        val deadline = SystemClock.uptimeMillis() + REPLY_MS
+        SystemClock.sleep(POLL_MS)
+        while (SystemClock.uptimeMillis() < deadline) {
+            val root = automation.rootInActiveWindow
+            if (root != null && find(root) { it.labelled("Stop generating") } == null) break
+            SystemClock.sleep(POLL_MS)
+        }
         sh("screencap -p $OUT/reply.png")
         val texts = mutableListOf<String>()
         automation.rootInActiveWindow?.let { collect(it, texts) }
@@ -113,8 +121,8 @@ class PlayProductionProbe {
         Log.i(TAG, "Play installed $PKG")
     }
 
-    /** Waits for the model to load, which is when Send enables, then sends "hi". */
-    private fun sendHi() {
+    /** Waits for the model to load, which is when Send enables, then sends [prompt]. */
+    private fun send(prompt: String) {
         val deadline = SystemClock.uptimeMillis() + LOAD_MS
         while (SystemClock.uptimeMillis() < deadline) {
             val root = automation.rootInActiveWindow
@@ -125,20 +133,20 @@ class PlayProductionProbe {
                     ?.let(::tap)
                 val field = find(root) { it.className?.toString() == "android.widget.EditText" }
                 val send = find(root) { it.contentDescription?.toString() == "Send message" }
-                if (field != null && field.text?.toString() != "hi") {
+                if (field != null && field.text?.toString() != prompt) {
                     field.performAction(
                         AccessibilityNodeInfo.ACTION_SET_TEXT,
                         Bundle().apply {
                             putCharSequence(
                                 AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
-                                "hi",
+                                prompt,
                             )
                         },
                     )
                 } else if (send != null && send.isEnabled) {
                     sh("screencap -p $OUT/loaded.png")
                     tap(send)
-                    Log.i(TAG, "SENT hi")
+                    Log.i(TAG, "SENT $prompt")
                     return
                 }
             }
@@ -193,7 +201,7 @@ class PlayProductionProbe {
         const val OUT = "/sdcard/probe"
         const val INSTALL_MS = 6 * 60_000L
         const val LOAD_MS = 4 * 60_000L
-        const val REPLY_MS = 60_000L
+        const val REPLY_MS = 5 * 60_000L
         const val POLL_MS = 5_000L
         const val MAX_SHOTS = 24
         const val LOG_CHARS = 3_000
