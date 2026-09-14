@@ -934,6 +934,7 @@ void Session::reset() {
     llama_memory_clear(llama_get_memory(ctx_), true);
     cached_.clear();
     media_spans_.clear();
+    rollback_points_.clear();
     n_past_ = 0;
     media_cell_gap_ = 0;
     cached_covers_context_ = true;
@@ -1792,10 +1793,12 @@ bool Session::render_prompt(
 bool Session::ingest_prompt(
     const std::vector<llama_token> & tokens,
     size_t from,
-    std::string & error) {
+    std::string & error,
+    size_t until) {
     const int32_t n_batch = static_cast<int32_t>(llama_n_batch(ctx_));
+    const size_t end = std::min(until, tokens.size());
 
-    for (size_t offset = from; offset < tokens.size(); offset += n_batch) {
+    for (size_t offset = from; offset < end; offset += n_batch) {
         // Between batches, because prefill is the one part of a turn that can run for
         // seconds without producing a token. Cancellation used to be read only once the
         // sampling loop began, so Stop on a long prompt did nothing at all: the phone kept
@@ -1805,7 +1808,7 @@ bool Session::ingest_prompt(
             return false;
         }
         const int32_t chunk =
-            std::min<int32_t>(n_batch, static_cast<int32_t>(tokens.size() - offset));
+            std::min<int32_t>(n_batch, static_cast<int32_t>(end - offset));
         llama_batch batch =
             llama_batch_get_one(const_cast<llama_token *>(tokens.data() + offset), chunk);
         const int ret = llama_decode(ctx_, batch);
@@ -1849,6 +1852,59 @@ size_t Session::common_prefix(
         if (have != want) return at;
         ++at;
     }
+    return at;
+}
+
+/** See Session::rollback_points_. A turn's passes are rarely more than this. */
+constexpr size_t MAX_ROLLBACK_POINTS = 4;
+
+void Session::save_rollback_point(size_t n_tokens) {
+    const llama_state_seq_flags flags = LLAMA_STATE_SEQ_FLAGS_PARTIAL_ONLY;
+    const size_t size = llama_state_seq_get_size_ext(ctx_, 0, flags);
+    if (size == 0) return;
+    RollbackPoint point;
+    point.n_tokens = n_tokens;
+    point.state.resize(size);
+    if (llama_state_seq_get_data_ext(ctx_, point.state.data(), size, 0, flags) != size) return;
+    // A point at or past this one describes a cache this prompt has just replaced.
+    rollback_points_.erase(
+        std::remove_if(rollback_points_.begin(), rollback_points_.end(),
+                       [n_tokens](const RollbackPoint & p) { return p.n_tokens >= n_tokens; }),
+        rollback_points_.end());
+    if (rollback_points_.size() >= MAX_ROLLBACK_POINTS) {
+        rollback_points_.erase(rollback_points_.begin());
+    }
+    rollback_points_.push_back(std::move(point));
+}
+
+size_t Session::restore_rollback_point(size_t reusable) {
+    const RollbackPoint * best = nullptr;
+    for (const RollbackPoint & point : rollback_points_) {
+        if (point.n_tokens <= reusable && point.n_tokens > prefix_tokens_.size() &&
+            (best == nullptr || point.n_tokens > best->n_tokens)) {
+            best = &point;
+        }
+    }
+    if (best == nullptr) return 0;
+    const size_t at = best->n_tokens;
+    // The recurrent part comes back as it stood at `at`; the attention part never lost
+    // those rows and only has its tail cut, which it allows once the recurrent memory no
+    // longer holds a position past the cut.
+    const bool restored = llama_state_seq_set_data_ext(
+        ctx_, best->state.data(), best->state.size(), 0,
+        LLAMA_STATE_SEQ_FLAGS_PARTIAL_ONLY) != 0 &&
+        llama_memory_seq_rm(llama_get_memory(ctx_), 0, static_cast<llama_pos>(at), -1);
+    if (!restored) {
+        LOGI("kv: rollback point at %zu would not restore, starting from the warm prefix", at);
+        reset();
+        return 0;
+    }
+    rollback_points_.erase(
+        std::remove_if(rollback_points_.begin(), rollback_points_.end(),
+                       [at](const RollbackPoint & p) { return p.n_tokens > at; }),
+        rollback_points_.end());
+    cached_.resize(at);
+    n_past_ = static_cast<int32_t>(at);
     return at;
 }
 
@@ -1929,6 +1985,18 @@ size_t Session::align_cache(
         // llama-server does exactly this check before trusting a reuse: the smallest
         // position left must reach back a window's width from the cut.
         const bool window_intact = rolled_back && swa_window_reaches(reusable);
+        if (!window_intact && !rolled_back && media_spans_.empty() &&
+            (spans == nullptr || spans->empty())) {
+            // Nearer than the warm prefix whenever the prompt shares more than it: a pass
+            // the loop dropped, a regenerated reply. See rollback_points_.
+            const size_t at = restore_rollback_point(reusable);
+            if (at > 0) {
+                LOGI("kv: rollback refused; restored the point at %zu, reading %zu instead of %zu",
+                     at, tokens.size() - at,
+                     tokens.size() - std::min(prefix_tokens_.size(), tokens.size()));
+                return at;
+            }
+        }
         if (!window_intact) {
             // The families that refuse are the ones the warm snapshot exists for. A new
             // conversation shares its first two thousand tokens with the snapshot, so if
@@ -2540,7 +2608,23 @@ StopReason Session::generate(
 
         const size_t reusable = align_cache(prompt_tokens, /*need_logits=*/true);
 
-        if (!ingest_prompt(prompt_tokens, reusable, error)) {
+        // One token short of the end, so that the same prompt sent again (a regenerated
+        // reply) can use the point as well as a longer one (a dropped pass): align_cache
+        // always keeps the last token back to sample from. The cost is the last token in
+        // a batch of its own.
+        const size_t mark = prompt_tokens.size() - 1;
+        const bool keep_point = llama_model_is_hybrid(model_) || llama_model_is_recurrent(model_);
+        bool ingested = true;
+        if (keep_point && mark > reusable && media_spans_.empty()) {
+            ingested = ingest_prompt(prompt_tokens, reusable, error, mark);
+            if (ingested) {
+                save_rollback_point(mark);
+                ingested = ingest_prompt(prompt_tokens, mark, error);
+            }
+        } else {
+            ingested = ingest_prompt(prompt_tokens, reusable, error);
+        }
+        if (!ingested) {
             // Whatever decoded before the stop is in the cache, and the bookkeeping above says
             // it is not: cached_ and n_past_ still describe the prefix, not the batches that
             // went in after it. Left that way the next turn finds nothing to remove, appends

@@ -374,8 +374,28 @@ private:
         std::string & error,
         bool add_generation_prompt = true);
 
-    /** Decodes `tokens[from..]`, reusing whatever prefix is already cached. */
-    bool ingest_prompt(const std::vector<llama_token> & tokens, size_t from, std::string & error);
+    /**
+     * Decodes `tokens[from..until)`, reusing whatever prefix is already cached. `until`
+     * defaults to the whole prompt.
+     */
+    bool ingest_prompt(
+        const std::vector<llama_token> & tokens,
+        size_t from,
+        std::string & error,
+        size_t until = SIZE_MAX);
+
+    /**
+     * Keeps the memory a hybrid or recurrent model cannot roll back, as it stands after
+     * the first `n_tokens` of [cached_]. See [rollback_points_].
+     */
+    void save_rollback_point(size_t n_tokens);
+
+    /**
+     * Returns the cache to the longest kept point at or before `reusable` that is past the
+     * warm prefix, or 0 when there is none; the cache is untouched on 0, and on any
+     * failure after it has been touched the session is reset and 0 returned.
+     */
+    size_t restore_rollback_point(size_t reusable);
 
     /**
      * One attachment's place in [cached_], and what was there.
@@ -691,6 +711,28 @@ private:
 
     std::vector<llama_token> prefix_tokens_;
     std::vector<uint8_t> prefix_state_;
+
+    /**
+     * Where a hybrid or recurrent cache can go back to without starting over.
+     *
+     * Such a cache refuses to drop its tail, so a prompt that shares everything with the
+     * last one except what came after it (the loop drops a pass and searches instead, the
+     * user regenerates or stops and sends again) used to fall back to the warm prefix and
+     * read the whole conversation after it again: 465 tokens where 63 were new in the
+     * host replay, every search the loop made for the model, at the phone's 100 tok/s.
+     * Each text prompt now records, one token before its end, the part of the memory that
+     * cannot be rolled back (`LLAMA_STATE_SEQ_FLAGS_PARTIAL_ONLY`: the recurrent state,
+     * kilobytes, not the attention cache), which is llama-server's context checkpoint.
+     * Restoring one puts that state back and trims the attention cache to match. A point
+     * is valid while [cached_] still holds the tokens it was taken over: every reset
+     * drops them all, and a restore drops those past it. The oldest go first past
+     * [MAX_ROLLBACK_POINTS].
+     */
+    struct RollbackPoint {
+        size_t n_tokens = 0;
+        std::vector<uint8_t> state;
+    };
+    std::vector<RollbackPoint> rollback_points_;
 
     std::atomic<bool> cancelled_{false};
 };
