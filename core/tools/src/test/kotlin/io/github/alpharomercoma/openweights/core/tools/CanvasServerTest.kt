@@ -24,7 +24,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.net.ConnectException
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.Socket
 import java.net.URL
@@ -397,8 +397,14 @@ class CanvasServerTest {
 
         server.stop()
 
-        val refused = runCatching { get(before) }.exceptionOrNull()
-        assertThat(refused).isInstanceOf(ConnectException::class.java)
+        // Refused, or answered by whatever holds the port now, but never served. The port is
+        // free the moment the socket closes, and Gradle runs every module's tests at once in
+        // separate JVMs: on CI, twice in a row on 2026-09-17, the old port answered instead of
+        // refusing, most likely another test JVM's server on the freed port. What stopping
+        // owes the user is that the old URL reads nothing.
+        val stale = runCatching { get(before) }
+        stale.exceptionOrNull()?.let { assertThat(it).isInstanceOf(IOException::class.java) }
+        stale.getOrNull()?.let { (code, _) -> assertThat(code).isNotEqualTo(200) }
         // The next use starts a fresh server, and nothing that learned the old URL can
         // read from it: the key is new whatever port the socket lands on.
         assertThat(key()).isNotEqualTo(keyBefore)
