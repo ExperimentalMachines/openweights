@@ -3,7 +3,7 @@
 # Results land in tools/eval/results/decisions/ as one JSON line per row.
 #
 #   tools/eval/bench/run_decisions.sh [adb-serial]
-#     MODELS=a.pte,b.gguf   ARMS=driven-search,driven-full   SETS=retrievalqa,popqa   ROWS=40
+#     MODELS=a.pte,b.gguf   ARMS=driven-search,driven-full   SETS=retrievalqa,popqa   FROM=40 ROWS=40
 #     PREFIX=qdc-           names another phone's files
 #     ECHO=1                runs the instruction-echo probe instead of the decisions
 #
@@ -51,7 +51,7 @@ if [ -n "${INSTALL:-}" ]; then
 fi
 $ADB shell "logcat -G 8M" >/dev/null 2>&1 || true
 echo "== $METHOD $(date +%H:%M)"
-$ADB shell "am instrument -w -r ${MODELS:+-e models $MODELS} ${ARMS:+-e arms $ARMS} ${SETS:+-e sets $SETS} ${ROWS:+-e rows $ROWS} -e class io.github.alpharomercoma.openweights.ui.chat.DecisionSuiteOnDeviceTest#$METHOD $TEST/$RUNNER" \
+$ADB shell "am instrument -w -r ${MODELS:+-e models $MODELS} ${ARMS:+-e arms $ARMS} ${SETS:+-e sets $SETS} ${FROM:+-e from $FROM} ${ROWS:+-e rows $ROWS} -e class io.github.alpharomercoma.openweights.ui.chat.DecisionSuiteOnDeviceTest#$METHOD $TEST/$RUNNER" \
   | grep -E "INSTRUMENTATION_(RESULT|STATUS: stack|CODE)|Time:" || true
 for f in $($ADB shell "ls /sdcard/Android/data/$PKG/files/eval-results/decisions-*.jsonl /sdcard/Android/data/$PKG/files/eval-results/echo-*.jsonl" 2>/dev/null); do
   $ADB pull "$f" "$OUT/${PREFIX:-}$(basename "$f")" >/dev/null && echo "   ${PREFIX:-}$(basename "$f")"

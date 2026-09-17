@@ -1,5 +1,14 @@
 # Which runtime the shortlist recommends, read from the whole table
 
+> **Correction, 2026-09-17.** The "correct" figures below were graded with alias containment
+> that was not word-bounded, so a short alias counted inside any word ("CA" in "located",
+> "US" in "focus"). Regraded, every arm is 0 to 8 rows of 160 lower (for example LFM2.5
+> Q4_K_M on the Poco: doubt-search 63 to 58, intent-search 54 to 50; the compiled model's
+> intent-search 46 to 41). Of 76 paired comparisons between arms, 71 keep their direction and
+> the 5 that change are near ties within two wins; the doubt gate against the intent rule
+> holds (15/6 becomes 14/6, held out 5/1 becomes 6/1). The tables are left as written; the
+> regrade and its method are in [typesafe-experiments.md](typesafe-experiments.md).
+
 2026-09-10. The recommended shortlist led with our own ExecuTorch exports of LFM2.5 1.2B and
 2.6B from 2026-09-07, on the sentence "the same weights at the same quality and up to twice
 the speed". On 2026-09-10 the maintainer asked for the whole benchmark matrix to be read,

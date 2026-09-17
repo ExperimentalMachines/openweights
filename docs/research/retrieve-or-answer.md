@@ -1,5 +1,14 @@
 # Retrieve or answer: the decision measured on public rows, and the rule that came out of it
 
+> **Correction, 2026-09-17.** The "correct" figures below were graded with alias containment
+> that was not word-bounded, so a short alias counted inside any word ("CA" in "located",
+> "US" in "focus"). Regraded, every arm is 0 to 8 rows of 160 lower (for example LFM2.5
+> Q4_K_M on the Poco: doubt-search 63 to 58, intent-search 54 to 50; the compiled model's
+> intent-search 46 to 41). Of 76 paired comparisons between arms, 71 keep their direction and
+> the 5 that change are near ties within two wins; the doubt gate against the intent rule
+> holds (15/6 becomes 14/6, held out 5/1 becomes 6/1). The tables are left as written; the
+> regrade and its method are in [typesafe-experiments.md](typesafe-experiments.md).
+
 2026-09-10. The day after a hard-coded "search the name first" route shipped and was
 rejected (`who-is-questions.md`), the question it had been written around was put to
 public rows through the app's own loop on four phones: does a small model on a phone search

@@ -1,6 +1,6 @@
 """Grade the retrieve-or-answer rows a phone wrote, and tabulate them per model and arm.
 
-    python3 tools/eval/bench/grade_decisions.py tools/eval/results/decisions [--against driven-search]
+    python3 tools/eval/bench/grade_decisions.py tools/eval/results/decisions [--against driven-search] [--typesafe]
 
 Each row carries the set's own necessity label (`need`: true when the answer is not in the
 weights, false when it is, null at the boundary) and the set's own answer aliases. What is
@@ -27,7 +27,7 @@ number that says whether a difference is more than noise on this many rows.
 The echo files (`echo-*.jsonl`) are graded for the longest run of words a reply shares
 with the shipped instructions, under the shipped instructions and under none.
 """
-import argparse, collections, json, re, statistics, string, sys
+import argparse, collections, json, re, statistics, string, sys, unicodedata
 from pathlib import Path
 
 ARTICLES = re.compile(r"\b(a|an|the)\b")
@@ -66,13 +66,35 @@ def token_f1(pred, gold):
     return 2 * precision * recall / (precision + recall)
 
 
+# Scripts written without spaces between words. Korean is not one: Hangul is spaced, and a
+# code-point cutoff that swept it in with Chinese left Thai out (Codex, rechecking the fix).
+UNSPACED_SCRIPTS = ("CJK UNIFIED", "CJK COMPATIBILITY IDEOGRAPH", "HIRAGANA", "KATAKANA", "THAI", "LAO",
+                    "KHMER", "MYANMAR", "TIBETAN")
+
+
+def contains(text, alias):
+    """Whether normalised `alias` appears in normalised `text` as whole words.
+
+    Plain substring containment credited an alias inside any word: "ca" (Canada) in "located",
+    "us" in "focus", "s c" across "its capital", "2" inside "2024". Over the 9,060 graded rows
+    of 2026-09-17 that was 276 wrong replies counted right (typesafe-experiments.md). Words are
+    bounded by anything that is not a letter or digit, which `normalize` already reduces to
+    spaces. A script written without spaces between words (Chinese, Japanese, Thai) has no
+    such boundary, so an alias in one keeps plain containment.
+    """
+    if not alias:
+        return False
+    if any(unicodedata.name(c, "").startswith(UNSPACED_SCRIPTS) for c in alias if c.isalpha()):
+        return alias in text
+    return re.search(r"(?<![^\W_])" + re.escape(alias) + r"(?![^\W_])", text) is not None
+
+
 def correct(answer, aliases):
     if len(answer.strip()) < 15 and not any(normalize(answer) == normalize(a) for a in aliases):
         return False
     text = normalize(answer)
     for a in aliases:
-        na = normalize(a)
-        if na and na in text:
+        if contains(text, normalize(a)):
             return True
     # A short answer that is the alias with a word changed, judged as the sets' own
     # readers do by token overlap; only for replies short enough for F1 to mean anything.
@@ -91,7 +113,7 @@ def grade_row(row):
     answer = plain(row["answer"])
     ok = correct(answer, aliases) if aliases else None
     in_results = any(
-        normalize(a) in normalize(c.get("result", "")) for a in aliases for c in row["calls"] if c["name"] == "web_search"
+        contains(normalize(c.get("result", "")), normalize(a)) for a in aliases for c in row["calls"] if c["name"] == "web_search"
     ) if aliases else False
     need = row.get("need")
     return {
@@ -281,6 +303,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("directory")
     ap.add_argument("--against", default="driven-search")
+    ap.add_argument("--typesafe", action="store_true",
+                    help="add TypeSafe's reading beside the pattern grades (typesafe_judge.py)")
     args = ap.parse_args()
     runs = load(args.directory)
     if not runs:
@@ -290,6 +314,10 @@ def main():
     print(strata(runs))
     print(paired(summaries, args.against))
     print(echo(args.directory))
+    if args.typesafe:
+        import typesafe_judge
+        graded = [[grade_row(r) for r in rows] for _, rows in runs.values()]
+        print(typesafe_judge.report(runs, graded, Path(args.directory) / "typesafe-cache.json"))
     (Path(args.directory) / "summary.json").write_text(json.dumps(
         [{k: v for k, v in s.items() if k != "graded"} for s in summaries], indent=1))
 
