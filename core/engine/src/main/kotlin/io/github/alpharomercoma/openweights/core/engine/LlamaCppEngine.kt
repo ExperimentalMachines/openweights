@@ -27,12 +27,16 @@ import io.github.alpharomercoma.openweights.core.common.model.ToolCall
 import io.github.alpharomercoma.openweights.core.common.model.ToolCallParser
 import io.github.alpharomercoma.openweights.core.common.model.ToolDefinition
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -40,6 +44,7 @@ import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit.SECONDS
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.random.Random
 
@@ -256,6 +261,81 @@ class LlamaCppEngine internal constructor(
         )
     }
 
+    override suspend fun judge(
+        messages: List<ChatMessage>,
+        instruction: String,
+        options: List<String>,
+        tools: List<ToolDefinition>,
+        params: SamplerParams,
+    ): Judgement? = coroutineScope {
+        // The native call blocks the engine thread, and a coroutine cancelled while it runs
+        // would otherwise wait out the whole prefill before noticing: Stop pressed during a
+        // judgement has to reach the decode loop the way it does during a chat.
+        val finished = AtomicBoolean(false)
+        val stopper = launch(start = CoroutineStart.UNDISPATCHED) {
+            try {
+                awaitCancellation()
+            } finally {
+                if (!finished.get()) this@LlamaCppEngine.cancel()
+            }
+        }
+        try {
+            withContext(engineThread) {
+                judgeOnEngine(messages, instruction, options, tools, params)
+            }
+        } finally {
+            finished.set(true)
+            stopper.cancel()
+        }
+    }
+
+    private fun judgeOnEngine(
+        messages: List<ChatMessage>,
+        instruction: String,
+        options: List<String>,
+        tools: List<ToolDefinition>,
+        params: SamplerParams,
+    ): Judgement? {
+        val activeHandle = handle.get()
+        // Attachments are embeddings the question cannot re-read as text; see Session::judge.
+        val judgeable = activeHandle != 0L && messages.isNotEmpty() && options.size >= 2
+        if (!judgeable || messages.any { it.files.isNotEmpty() }) return null
+        // A judgement that fails is one that was not made, and every caller has the path it
+        // took before there were judgements. The throw is logged rather than raised for the
+        // same reason warm's is: nothing about a declined question should end a turn.
+        val values = try {
+            bridge.nativeJudge(
+                handle = activeHandle,
+                roles = messages.map { it.role.wireName }.toTypedArray(),
+                contents = messages.map { it.text }.toTypedArray(),
+                toolCallIds = messages.map { it.toolCallId }.toTypedArray(),
+                toolNames = tools.map { it.name }.toTypedArray(),
+                toolDescriptions = tools.map { it.description }.toTypedArray(),
+                toolSchemas = tools.map { it.parametersJson }.toTypedArray(),
+                enableThinking = params.thinking,
+                reasoningEffort = params.reasoningEffort.wireName,
+                instruction = instruction,
+                options = options.toTypedArray(),
+            )
+        } catch (failure: LlamaException) {
+            Log.w("OpenWeights", "judge skipped: ${failure.message}")
+            null
+        } ?: return null
+        val n = options.size
+        if (values.size != n + JUDGE_TRAILER) return null
+        currentModel = currentModel?.copy(
+            contextUsed = (values[n + JUDGE_REUSED] + values[n + JUDGE_PROMPT]).toInt(),
+        )
+        return Judgement(
+            options = options,
+            probabilities = values.take(n),
+            optionMass = values[n],
+            promptTokens = values[n + JUDGE_PROMPT].toInt(),
+            reusedTokens = values[n + JUDGE_REUSED].toInt(),
+            prefillMs = values[n + JUDGE_PREFILL].toLong(),
+        )
+    }
+
     override suspend fun resetContext() {
         withContext(engineThread) {
             val activeHandle = handle.get()
@@ -432,6 +512,16 @@ class LlamaCppEngine internal constructor(
 
         /** Index of the cached-tokens field: how much of this turn's prompt was reused. */
         const val CACHED_TOKENS = 9
+
+        /**
+         * A judgement crosses JNI as one probability per option followed by these fields,
+         * at these offsets past the last option: [optionMass, promptTokens, reusedTokens,
+         * prefillMs].
+         */
+        const val JUDGE_TRAILER = 4
+        const val JUDGE_PROMPT = 1
+        const val JUDGE_REUSED = 2
+        const val JUDGE_PREFILL = 3
 
         /** Long enough for a cancelled decode step to return; short enough not to hang. */
         const val SHUTDOWN_TIMEOUT_SECONDS = 10L

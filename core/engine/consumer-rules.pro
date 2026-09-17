@@ -6,7 +6,7 @@
 # to be spelled out. These rules are consumer rules so they travel with the module: the app
 # should not have to know that the engine has a native half.
 
-# The 14 external functions resolve as Java_io_github_..._LlamaBridge_nativeLoadModel and
+# The external functions resolve as Java_io_github_..._LlamaBridge_nativeLoadModel and
 # friends, so both the class name and the method names have to survive.
 -keep class io.github.alpharomercoma.openweights.core.engine.LlamaBridge {
     native <methods>;

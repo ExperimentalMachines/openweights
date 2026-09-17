@@ -377,6 +377,100 @@ catch (const std::exception & failure) {
     return nullptr;
 }
 
+/**
+ * Returns [probability of each option, in order..., optionMass, promptTokens, reusedTokens,
+ * prefillMs], or null when the question was cancelled.
+ */
+JNIEXPORT jfloatArray JNICALL
+Java_io_github_alpharomercoma_openweights_core_engine_LlamaBridge_nativeJudge(
+    JNIEnv * env,
+    jobject /*thiz*/,
+    jlong handle,
+    jobjectArray roles,
+    jobjectArray contents,
+    jobjectArray tool_call_ids,
+    jobjectArray tool_names,
+    jobjectArray tool_descriptions,
+    jobjectArray tool_schemas,
+    jboolean enable_thinking,
+    jstring reasoning_effort,
+    jstring instruction,
+    jobjectArray options) try {
+    Session * session = as_session(handle);
+
+    // Marshalled as generation marshals a conversation, because the question is only cheap
+    // when the prompt it renders agrees byte for byte with the one a turn renders.
+    const jsize message_count = env->GetArrayLength(roles);
+    std::vector<ChatMessage> messages;
+    messages.reserve(message_count);
+    for (jsize i = 0; i < message_count; ++i) {
+        auto role = static_cast<jstring>(env->GetObjectArrayElement(roles, i));
+        auto content = static_cast<jstring>(env->GetObjectArrayElement(contents, i));
+        auto call_id = static_cast<jstring>(env->GetObjectArrayElement(tool_call_ids, i));
+        messages.push_back({to_utf8(env, role), to_utf8(env, content), to_utf8(env, call_id), {}});
+        env->DeleteLocalRef(call_id);
+        env->DeleteLocalRef(role);
+        env->DeleteLocalRef(content);
+    }
+
+    const jsize tool_count = tool_names != nullptr ? env->GetArrayLength(tool_names) : 0;
+    std::vector<ToolDefinition> tools;
+    tools.reserve(tool_count);
+    for (jsize i = 0; i < tool_count; ++i) {
+        auto name = static_cast<jstring>(env->GetObjectArrayElement(tool_names, i));
+        auto description = static_cast<jstring>(env->GetObjectArrayElement(tool_descriptions, i));
+        auto schema = static_cast<jstring>(env->GetObjectArrayElement(tool_schemas, i));
+        tools.push_back({to_utf8(env, name), to_utf8(env, description), to_utf8(env, schema)});
+        env->DeleteLocalRef(name);
+        env->DeleteLocalRef(description);
+        env->DeleteLocalRef(schema);
+    }
+
+    const jsize option_count = env->GetArrayLength(options);
+    std::vector<std::string> choices;
+    choices.reserve(option_count);
+    for (jsize i = 0; i < option_count; ++i) {
+        auto option = static_cast<jstring>(env->GetObjectArrayElement(options, i));
+        choices.push_back(to_utf8(env, option));
+        env->DeleteLocalRef(option);
+    }
+
+    openweights::ReasoningConfig thinking;
+    thinking.enabled = enable_thinking == JNI_TRUE;
+    thinking.effort =
+        reasoning_effort == nullptr ? std::string() : to_utf8(env, reasoning_effort);
+
+    std::vector<float> probabilities;
+    openweights::JudgeStats stats;
+    std::string error;
+    const bool ok = session->judge(
+        messages, tools, thinking, to_utf8(env, instruction), choices, probabilities, stats, error);
+    if (!ok) {
+        // Stop is the user arriving, not the question failing.
+        if (error == "cancelled") return nullptr;
+        throw_engine_exception(env, error.empty() ? std::string("judge failed") : error);
+        return nullptr;
+    }
+
+    const jsize size = static_cast<jsize>(probabilities.size()) + 4;
+    jfloatArray out = env->NewFloatArray(size);
+    if (out == nullptr) return nullptr;
+    std::vector<jfloat> values(probabilities.begin(), probabilities.end());
+    values.push_back(stats.option_mass);
+    values.push_back(static_cast<jfloat>(stats.prompt_tokens));
+    values.push_back(static_cast<jfloat>(stats.reused_tokens));
+    values.push_back(static_cast<jfloat>(stats.prefill_ms));
+    env->SetFloatArrayRegion(out, 0, size, values.data());
+    return out;
+}
+catch (const std::exception & failure) {
+    throw_engine_exception(env, std::string("nativeJudge failed: ") + failure.what());
+    return nullptr;
+} catch (...) {
+    throw_engine_exception(env, "nativeJudge failed for an unknown reason");
+    return nullptr;
+}
+
 JNIEXPORT void JNICALL
 Java_io_github_alpharomercoma_openweights_core_engine_LlamaBridge_nativeResetContext(
     JNIEnv * env, jobject /*thiz*/, jlong handle) try {

@@ -44,6 +44,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.io.File
 import java.nio.file.Files
+import kotlin.math.ln
 
 /**
  * The two 2026-09-05 additions to the loop: plan mode pushing once for the plan it asked
@@ -209,6 +210,78 @@ class TurnRepairsTest {
         assertThat(engine.prompts[1].last().role).isEqualTo(ChatRole.TOOL)
         assertThat(reply).contains("Hunter x Hunter")
     }
+
+    @Test
+    fun `the doubt is the least likely opening token, not their mean`() = runBlocking<Unit> {
+        // One token at 5% among near-certain ones. Their mean log-probability is a 36%
+        // token, which a mean would have let stand; the least likely alone is under the line.
+        engine.scripted += ScriptedPass(
+            UNSURE_ANSWER,
+            tokenLogprobs = listOf(-0.01f, ln(0.05f), -0.01f),
+        )
+        engine.scripted += ScriptedPass("Killua Zoldyck is from Hunter x Hunter.")
+
+        answering("who is killua zoldyck", withTools = true)
+
+        assertThat(engine.prompts).hasSize(2)
+        assertThat(engine.prompts[1].last().role).isEqualTo(ChatRole.TOOL)
+    }
+
+    @Test
+    fun `a reply left unresolved behind the knowledge cutoff is searched`() = runBlocking<Unit> {
+        // Typed with the model's own apostrophe, which the patterns read through plainQuotes.
+        engine.scripted += ScriptedPass(
+            "As of my knowledge cutoff in September 2024, there hasn\u2019t been any " +
+                "announcement from a team withdrawing from Formula One.",
+        )
+        engine.scripted += ScriptedPass("Audi announced it in March.")
+
+        val reply =
+            answering("which team announced it will leave Formula One", true, unresolved = true)
+
+        assertThat(engine.prompts).hasSize(2)
+        assertThat(engine.prompts[1].last().role).isEqualTo(ChatRole.TOOL)
+        assertThat(reply).contains("Audi")
+    }
+
+    @Test
+    fun `an answer called undocumented is searched`() = runBlocking<Unit> {
+        engine.scripted += ScriptedPass(
+            "The screenwriter for *Hell of the Living Dead* is not widely documented in " +
+                "mainstream sources.",
+        )
+        engine.scripted += ScriptedPass("Claudio Fragasso wrote it.")
+
+        answering("who wrote Hell of the Living Dead", withTools = true, unresolved = true)
+
+        assertThat(engine.prompts).hasSize(2)
+        assertThat(engine.prompts[1].last().role).isEqualTo(ChatRole.TOOL)
+    }
+
+    @Test
+    fun `a knowledge cutoff caveat before an answer is left to stand`() = runBlocking<Unit> {
+        engine.scripted += ScriptedPass(
+            "As of my knowledge cutoff in September 2024, the capital of Australia is Canberra.",
+        )
+
+        answering("what is the capital of Australia", withTools = true, unresolved = true)
+
+        assertThat(engine.prompts).hasSize(1)
+    }
+
+    @Test
+    fun `an unresolved reply stands with the switch off or when it asks the user`() =
+        runBlocking<Unit> {
+            engine.scripted += ScriptedPass("The director of *Glass* (2026) is currently unknown.")
+            answering("who directed Glass", withTools = true)
+            assertThat(engine.prompts).hasSize(1)
+
+            engine.scripted += ScriptedPass(
+                "The director of *Glass* (2026) is currently unknown. Could you tell me more?",
+            )
+            answering("who directed Glass", withTools = true, unresolved = true)
+            assertThat(engine.prompts).hasSize(2)
+        }
 
     @Test
     fun `an answer the model is sure of stands`() = runBlocking<Unit> {
@@ -607,6 +680,7 @@ class TurnRepairsTest {
         honours: Boolean = true,
         tool: Tool = search,
         doubts: Boolean = true,
+        unresolved: Boolean = false,
     ): String {
         engine.load(modelFile(), ModelLoadParams(contextLength = CONTEXT))
         val plans = PlanBoard()
@@ -620,6 +694,7 @@ class TurnRepairsTest {
         ).apply {
             honoursIntent = honours
             honoursDoubt = doubts
+            honoursUnresolved = unresolved
         }
         return runner.run(
             conversation = listOf(ChatMessage.text(ChatRole.USER, question)),

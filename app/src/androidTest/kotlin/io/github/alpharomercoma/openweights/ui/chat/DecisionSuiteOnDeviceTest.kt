@@ -42,14 +42,18 @@ import io.github.alpharomercoma.openweights.core.tools.AgentMode
 import io.github.alpharomercoma.openweights.core.tools.AgentStep
 import io.github.alpharomercoma.openweights.core.tools.AndroidReachability
 import io.github.alpharomercoma.openweights.core.tools.AskBoard
+import io.github.alpharomercoma.openweights.core.tools.FetchUrlTool
 import io.github.alpharomercoma.openweights.core.tools.PlanBoard
 import io.github.alpharomercoma.openweights.core.tools.SearchSettings
 import io.github.alpharomercoma.openweights.core.tools.SecretSealer
+import io.github.alpharomercoma.openweights.core.tools.SessionArtifacts
 import io.github.alpharomercoma.openweights.core.tools.Tool
 import io.github.alpharomercoma.openweights.core.tools.ToolNotes
 import io.github.alpharomercoma.openweights.core.tools.ToolRegistry
 import io.github.alpharomercoma.openweights.core.tools.ToolSwitches
 import io.github.alpharomercoma.openweights.core.tools.WebSearchTool
+import io.github.alpharomercoma.openweights.core.tools.Workspace
+import io.github.alpharomercoma.openweights.core.tools.WorkspaceGrant
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import org.json.JSONArray
@@ -81,6 +85,21 @@ import java.security.MessageDigest
  *   definitions, so the prompt bytes are the ones that catalogue produced).
  * - `intent-search`, `intent-full`: the same, with the search the app makes when the
  *   model announced one, claimed one or lamented and called nothing (`honoursIntent`).
+ * - `doubt-search`, `doubt-full`: the intent rule and the search made when an opening
+ *   token was improbable (`honoursDoubt`).
+ * - `read-base`, `read-search`: the doubt arms holding `fetch_url` as well as the search,
+ *   with the fetch switch on; `read-search` adds the app reading the top result's page when
+ *   the model says the snippets do not state the answer (`readsTopResult`). Both arms carry
+ *   the same two tools, so the prompts are the same bytes and only the read differs.
+ * - `lament-search`, `lament-full`: the doubt arms, and the search made for a reply that
+ *   leaves the question unresolved behind its knowledge cutoff (`honoursUnresolved`).
+ * - `gate-search`, `gate-full`: all of that, and the model asked before its first pass
+ *   whether it is sure it knows (`honoursGate`). Offline the gate added six wrong answers
+ *   per 160 rows that the doubt gate missed, on both seeds; the arm prices its prefill.
+ *
+ * The doubt and gate arms are asked for by name (`-e arms`), as the doubt arms always were:
+ * the default stays the 2 x 2 the reviewers asked for, so an unchanged command measures what
+ * it measured before.
  *
  * `driven-search` against `driven-full` on the same model is the maintainer's hypothesis
  * that the tool-list change caused the under-calling; the same pair on the compiled and
@@ -138,6 +157,12 @@ class DecisionSuiteOnDeviceTest {
             AndroidReachability(app),
         )
         val catalogue = stubs(prompt.getJSONArray("tools"), except = search.definition.name)
+        val fetch = FetchUrlTool(
+            OkHttpClient(),
+            AndroidReachability(app),
+            Workspace(app, WorkspaceGrant(app)),
+            SessionArtifacts(),
+        )
         val results = resultsDir()
         Log.i(TAG, "START models=${models.map { it.name }} arms=$arms rows=${rows.size}")
 
@@ -154,18 +179,18 @@ class DecisionSuiteOnDeviceTest {
                     } else {
                         emptySet()
                     }
-                    val tools = if (arm.endsWith(
-                            "-full",
-                        )
-                    ) {
-                        listOf(search) + catalogue
-                    } else {
-                        listOf(search)
+                    val tools = when {
+                        arm.endsWith("-full") -> listOf(search) + catalogue
+                        arm.startsWith("read-") -> listOf(search, fetch)
+                        else -> listOf(search)
                     }
                     val runner = TurnRunner(
                         engine,
                         ToolRegistry(tools),
-                        ToolSwitches(own),
+                        ToolSwitches(own).also {
+                            // Both read arms hold the fetch tool switched on, so their prompts match.
+                            if (arm.startsWith("read-")) it.setEnabled(fetch.definition.name, true)
+                        },
                         PlanBoard(),
                         AskBoard(),
                     )
@@ -174,10 +199,24 @@ class DecisionSuiteOnDeviceTest {
                             // and pushes only); `intent-*` adds the search the app makes
                             // when the model says it will search, says it did, or says
                             // it does not know, and calls nothing.
-                            honoursIntent = arm.startsWith("intent-") || arm.startsWith("doubt-")
+                            honoursIntent = arm.startsWith("intent-") ||
+                                arm.startsWith("doubt-") ||
+                                arm.startsWith("gate-") ||
+                                arm.startsWith("lament-") ||
+                                arm.startsWith("read-")
                             // `doubt-*` adds the search the app makes when the model's own
                             // token probabilities put an answer among its least confident.
-                            honoursDoubt = arm.startsWith("doubt-")
+                            honoursDoubt = arm.startsWith("doubt-") ||
+                                arm.startsWith("gate-") ||
+                                arm.startsWith("lament-") ||
+                                arm.startsWith("read-")
+                            // `read-search` adds the page read when the snippets lack the answer.
+                            readsTopResult = arm == "read-search"
+                            // `lament-*` adds the search for a reply left unresolved behind
+                            // its knowledge cutoff or called undocumented.
+                            honoursUnresolved = arm.startsWith("lament-")
+                            // `gate-*` adds the question put to the model before it answers.
+                            honoursGate = arm.startsWith("gate-")
                         }
                     val withTools = arm != "bare"
                     header(
@@ -220,6 +259,8 @@ class DecisionSuiteOnDeviceTest {
                                 listener,
                                 pssBefore,
                                 runner.lastConfidence,
+                                runner.lastGate.also { runner.lastGate = null },
+                                runner.lastLacking.also { runner.lastLacking = null },
                             )
                         out.appendText(record.toString() + "\n")
                         Log.i(
@@ -424,6 +465,8 @@ class DecisionSuiteOnDeviceTest {
         listener: Recording,
         pssBefore: Long,
         confidence: Float?,
+        gate: Float?,
+        lacking: Float?,
     ): JSONObject {
         val answer = parseAssistantReply(raw).answer.trim()
         val ran = listener.steps.filterIsInstance<AgentStep.Ran>()
@@ -465,6 +508,8 @@ class DecisionSuiteOnDeviceTest {
             .put("ms", ms).put("chars", answer.length)
             .put("passes", passes).put("calls", calls).put("declined", JSONArray(skipped))
             .put("confidence", confidence ?: JSONObject.NULL)
+            .put("gate", gate ?: JSONObject.NULL)
+            .put("lacking", lacking ?: JSONObject.NULL)
             .put("answer", answer).put("raw", raw)
             .put("pss_kb_before", pssBefore).put("pss_kb_after", Debug.getPss())
             .put("thermal", power?.currentThermalStatus ?: -1)

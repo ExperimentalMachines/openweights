@@ -26,6 +26,7 @@ import android.media.AudioAttributes
 import android.net.Uri
 import android.os.BatteryManager
 import android.util.Log
+import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
@@ -37,6 +38,7 @@ import io.github.alpharomercoma.openweights.core.common.context.WatchState
 import io.github.alpharomercoma.openweights.core.common.model.ChatMessage
 import io.github.alpharomercoma.openweights.core.common.model.ChatRole
 import io.github.alpharomercoma.openweights.core.common.model.MessagePart
+import io.github.alpharomercoma.openweights.core.common.model.SamplerParams
 import io.github.alpharomercoma.openweights.core.common.model.ToolCall
 import io.github.alpharomercoma.openweights.core.data.WatchRepository
 import io.github.alpharomercoma.openweights.core.device.ThermalLevel
@@ -44,6 +46,7 @@ import io.github.alpharomercoma.openweights.core.engine.GenerationEvent
 import io.github.alpharomercoma.openweights.core.tools.AgentMode
 import io.github.alpharomercoma.openweights.core.tools.AgentStep
 import io.github.alpharomercoma.openweights.core.tools.ToolNotes
+import io.github.alpharomercoma.openweights.ui.chat.JudgeQuestions
 import io.github.alpharomercoma.openweights.ui.chat.ModelRuntime
 import io.github.alpharomercoma.openweights.ui.chat.TurnListener
 import io.github.alpharomercoma.openweights.ui.chat.TurnRunner
@@ -70,6 +73,10 @@ class WatchRunner @Inject constructor(
     private val turns: TurnRunner,
     @param:ApplicationContext private val appContext: Context,
 ) {
+    /** Whether a check with no verdict line has its news judged. See [judgedChange]. */
+    @VisibleForTesting
+    internal var judgesVerdict: Boolean = false
+
     /**
      * Runs the watch with this id, if it should run at all.
      *
@@ -316,7 +323,37 @@ class WatchRunner @Inject constructor(
             ?: return Checked(WatchOutcome.SKIPPED, "The model was busy with something else.")
 
         val read = WatchVerdict.read(text, watch.lastSummary)
-        return Checked(WatchOutcome.CHECKED, read.summary, read.changed)
+        val changed = judgedChange(watch, read, text, settings.toSamplerParams()) ?: read.changed
+        return Checked(WatchOutcome.CHECKED, read.summary, changed)
+    }
+
+    /**
+     * Whether the check found news, asked of the model when its reply left out the verdict
+     * line, or null where it was not asked or its answer could not be read.
+     *
+     * Without the line the reading falls back to comparing the two summaries byte for
+     * byte, so a model that reworded the same finding notified the user as if the price
+     * had moved. The model that wrote the reply is asked, with both findings in front of
+     * it, rather than the bytes. Off until a phone prices the extra pass against the
+     * notifications it saves; it fails open to the byte reading, as the verdict does.
+     */
+    private suspend fun judgedChange(
+        watch: Watch,
+        read: WatchVerdict.Read,
+        reply: String,
+        params: SamplerParams,
+    ): Boolean? {
+        val previous = watch.lastSummary
+        if (!judgesVerdict || read.decided || previous == null) return null
+        val judgement = turns.tryJudge(
+            following = listOf(ChatMessage.text(ChatRole.ASSISTANT, reply)),
+            instruction = JudgeQuestions.changed(previous, read.summary),
+            options = JudgeQuestions.YES_NO,
+            params = params,
+        ) ?: return null
+        val yes = with(JudgeQuestions) { judgement.readable(YES) } ?: return null
+        Log.i("OpenWeights", "watch ${watch.id} judged changed %.2f".format(yes))
+        return yes > HALF
     }
 
     /** What a tick's check produced: the row to record, and whether it is news. */
@@ -420,6 +457,9 @@ class WatchRunner @Inject constructor(
     }
 
     private companion object {
+        /** A Yes/No answer's even point. */
+        const val HALF = 0.5f
+
         /** The same floor a goal uses. Working unattended is what flattens a phone. */
         const val MIN_BATTERY_PERCENT = 15
 

@@ -114,6 +114,28 @@ internal class LlamaBridge {
         storePath: String?,
     ): LongArray?
 
+    /**
+     * Puts a closed question to the conversation and reads the answer as probabilities.
+     * Blocks like generation; cancellable via [nativeCancel].
+     *
+     * @return the probability of each option in order, then `[optionMass, promptTokens,
+     * reusedTokens, prefillMs]`; null when cancelled.
+     */
+    @Suppress("LongParameterList")
+    external fun nativeJudge(
+        handle: Long,
+        roles: Array<String>,
+        contents: Array<String>,
+        toolCallIds: Array<String>,
+        toolNames: Array<String>,
+        toolDescriptions: Array<String>,
+        toolSchemas: Array<String>,
+        enableThinking: Boolean,
+        reasoningEffort: String?,
+        instruction: String,
+        options: Array<String>,
+    ): FloatArray?
+
     external fun nativeResetContext(handle: Long)
 
     external fun nativeSetThreads(handle: Long, threads: Int, batchThreads: Int)

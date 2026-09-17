@@ -40,7 +40,11 @@ internal object WatchVerdict {
      */
     private val VERDICT = Regex("""(?:^|\n)\s*\*{0,2}(CHANGED|UNCHANGED)\*{0,2}[.!]?\s*$""")
 
-    data class Read(val summary: String, val changed: Boolean)
+    /**
+     * @param decided whether the reply settled it: a verdict line, or no previous check to
+     *   compare with. False means [changed] is the byte comparison, the reading of last resort.
+     */
+    data class Read(val summary: String, val changed: Boolean, val decided: Boolean = true)
 
     fun read(reply: String, previous: String?): Read {
         val trimmed = reply.trim()
@@ -53,6 +57,6 @@ internal object WatchVerdict {
             match != null -> match.groupValues[1] == "CHANGED"
             else -> summary.trim() != previous.trim()
         }
-        return Read(summary, changed)
+        return Read(summary, changed, decided = previous == null || match != null)
     }
 }

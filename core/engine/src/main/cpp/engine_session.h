@@ -178,6 +178,21 @@ struct WarmStats {
     int64_t snapshot_bytes = 0;
 };
 
+/** What one judgement cost, measured the same way generation is. */
+struct JudgeStats {
+    /** Tokens freshly decoded to put the question to the model. */
+    int32_t prompt_tokens = 0;
+    /** Tokens the cache already held, so nothing was done for them. */
+    int32_t reused_tokens = 0;
+    int64_t prefill_ms    = 0;
+    /**
+     * The probability the options held between them before renormalising. Low means the
+     * model wanted to open with something else, and the renormalised answer is a reading of
+     * a distribution the question did not really reach.
+     */
+    float option_mass     = 0.0f;
+};
+
 /**
  * A loaded model plus its context and KV cache.
  *
@@ -282,6 +297,36 @@ public:
         bool snapshot,
         const char * store,
         WarmStats & stats,
+        std::string & error);
+
+    /**
+     * Asks the model a closed question about `messages` and reads its answer as
+     * probabilities instead of text.
+     *
+     * The question rides on the last user message (or becomes one), the prompt is read, and
+     * each option is scored by its probability as the reply's first token, renormalised over
+     * the options into `probabilities`; `stats.option_mass` says how much of the model's
+     * probability they held before that. Nothing is generated. Every option must be a single
+     * token where it would follow the prompt, and an option that is not is an error rather
+     * than a reading of its first piece.
+     *
+     * The loop has spent a year recovering decisions like these from prose with English
+     * patterns, and every pattern has been patched for a phrasing a phone found. Reading the
+     * model's own distribution over a closed set is the same decision with no parsing in it.
+     *
+     * Cheap on the cache by construction: the conversation the question was put to is a
+     * prefix of the judged prompt, and on a model that refuses rollback a point is kept where
+     * the two part, so the turn that follows reads its own few tokens rather than the whole
+     * conversation. Text only: a conversation with attachments is not judged.
+     */
+    bool judge(
+        const std::vector<ChatMessage> & messages,
+        const std::vector<ToolDefinition> & tools,
+        const ReasoningConfig & reasoning,
+        const std::string & instruction,
+        const std::vector<std::string> & options,
+        std::vector<float> & probabilities,
+        JudgeStats & stats,
         std::string & error);
 
     /** True when the loaded chat template understands being told whether to think. */

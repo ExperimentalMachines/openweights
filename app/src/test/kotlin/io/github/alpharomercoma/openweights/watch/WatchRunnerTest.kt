@@ -38,6 +38,7 @@ import io.github.alpharomercoma.openweights.model.ModelStore
 import io.github.alpharomercoma.openweights.ui.chat.ContextWindows
 import io.github.alpharomercoma.openweights.ui.chat.FakeInferenceEngine
 import io.github.alpharomercoma.openweights.ui.chat.ModelRuntime
+import io.github.alpharomercoma.openweights.ui.chat.ScriptedPass
 import io.github.alpharomercoma.openweights.ui.chat.TurnRunner
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -202,6 +203,74 @@ class WatchRunnerTest {
         assertThat(posted).hasSize(1)
         assertThat(posted.single().extras.getString(android.app.Notification.EXTRA_TITLE))
             .isEqualTo("Check the tides")
+    }
+
+    @Test
+    fun `a reworded finding with no verdict line notifies again when nothing judges it`() =
+        runTest {
+            // The byte comparison: the same tide, said the other way round, reads as news.
+            loadedEngine()
+            val watch = requireNotNull(watches.add("Check the tides", everyMinutes = 15, now = NOW))
+            engine.scripted += ScriptedPass("High tide is 1.2 m at noon.")
+            engine.scripted += ScriptedPass("At noon, high tide is 1.2 m.")
+
+            runner.tick(watch.id, now = NOW + 15 * MINUTE)
+            clearNotifications()
+            runner.tick(watch.id, now = NOW + 30 * MINUTE)
+
+            assertThat(engine.judgeCalls).isEmpty()
+            assertThat(postedCount()).isEqualTo(1)
+        }
+
+    @Test
+    fun `a reworded finding the model judges unchanged stays silent`() = runTest {
+        loadedEngine()
+        runner.judgesVerdict = true
+        engine.judgeAnswer = { listOf(0.1f, 0.9f) }
+        val watch = requireNotNull(watches.add("Check the tides", everyMinutes = 15, now = NOW))
+        engine.scripted += ScriptedPass("High tide is 1.2 m at noon.")
+        engine.scripted += ScriptedPass("At noon, high tide is 1.2 m.")
+
+        runner.tick(watch.id, now = NOW + 15 * MINUTE)
+        clearNotifications()
+        runner.tick(watch.id, now = NOW + 30 * MINUTE)
+
+        // Asked once, on the second check only, with both findings in the question and the
+        // reply it wrote as the last thing in the conversation.
+        val asked = engine.judgeCalls.single()
+        assertThat(asked.instruction).contains("High tide is 1.2 m at noon.")
+        assertThat(asked.instruction).contains("At noon, high tide is 1.2 m.")
+        assertThat(asked.messages.last().role).isEqualTo(ChatRole.ASSISTANT)
+        assertThat(postedCount()).isEqualTo(0)
+    }
+
+    @Test
+    fun `a verdict line is read as it was, without asking`() = runTest {
+        loadedEngine()
+        runner.judgesVerdict = true
+        engine.judgeAnswer = { listOf(0.9f, 0.1f) }
+        val watch = requireNotNull(watches.add("Check the tides", everyMinutes = 15, now = NOW))
+        engine.scripted += ScriptedPass("High tide is 1.2 m at noon.")
+        engine.scripted += ScriptedPass("At noon, high tide is 1.2 m.\nUNCHANGED")
+
+        runner.tick(watch.id, now = NOW + 15 * MINUTE)
+        clearNotifications()
+        runner.tick(watch.id, now = NOW + 30 * MINUTE)
+
+        assertThat(engine.judgeCalls).isEmpty()
+        assertThat(postedCount()).isEqualTo(0)
+    }
+
+    /** Alerts for one watch share a notification id, so each second check is read on its own. */
+    private fun clearNotifications() {
+        ApplicationProvider.getApplicationContext<android.app.Application>()
+            .getSystemService(NotificationManager::class.java).cancelAll()
+    }
+
+    private fun postedCount(): Int {
+        val manager = ApplicationProvider.getApplicationContext<android.app.Application>()
+            .getSystemService(NotificationManager::class.java)
+        return org.robolectric.Shadows.shadowOf(manager).allNotifications.size
     }
 
     @Test

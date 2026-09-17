@@ -271,6 +271,32 @@ data class LoadedModelInfo(
  * Implementations hold a single model at a time and are not safe for concurrent
  * generation; [cancel] is the exception and may be called while [chat] is running.
  */
+/**
+ * The model's answer to a closed question, read from its own distribution. See
+ * [InferenceEngine.judge].
+ *
+ * @param probabilities each option's share, renormalised over the options, in the order
+ * they were asked.
+ * @param optionMass how much of the model's probability the options held between them. Low
+ * means it wanted to open with something else, and the shares describe a question it did
+ * not really take up.
+ */
+data class Judgement(
+    val options: List<String>,
+    val probabilities: List<Float>,
+    val optionMass: Float,
+    val promptTokens: Int,
+    val reusedTokens: Int,
+    val prefillMs: Long,
+) {
+    /** The probability given to [option], or 0 for one that was not asked. */
+    fun probabilityOf(option: String): Float =
+        options.indexOf(option).takeIf { it >= 0 }?.let(probabilities::get) ?: 0f
+
+    /** The option the model leaned to. */
+    val choice: String get() = options[probabilities.indices.maxBy { probabilities[it] }]
+}
+
 /** What warming the conversation prefix did. See [InferenceEngine.warm]. */
 data class WarmResult(
     /** Tokens freshly decoded into the cache by this warm. */
@@ -282,6 +308,9 @@ data class WarmResult(
     val snapshotBytes: Long,
 )
 
+// One function per thing a runtime can do for a conversation, behind the one seam the app
+// talks to both runtimes through. Splitting it would make each caller reach for two.
+@Suppress("TooManyFunctions")
 interface InferenceEngine : AutoCloseable {
     /** The model currently loaded, or null. */
     val loadedModel: LoadedModelInfo?
@@ -352,6 +381,29 @@ interface InferenceEngine : AutoCloseable {
          */
         store: String? = null,
     ): WarmResult? = null
+
+    /**
+     * Asks the model a closed question about [messages] and returns how likely it found
+     * each of [options] as its reply, without generating anything.
+     *
+     * [instruction] is added to the last user message (or sent as one), and each option is
+     * scored by its first token, so options must begin differently. Composed like [chat]'s
+     * arguments, because the question is only cheap when the conversation it is put to is
+     * the one already in the cache: then it costs the instruction's tokens, and on a model
+     * that cannot roll back a point is kept so the turn after it does not re-read either.
+     *
+     * Default is null, and null is an answer every caller must take: the runtime exposes no
+     * logits (ExecuTorch), no model is loaded, the conversation carries attachments, or the
+     * question was cancelled. A caller falls back to what it did before judgements existed.
+     */
+    suspend fun judge(
+        messages: List<ChatMessage>,
+        instruction: String,
+        options: List<String>,
+        tools: List<ToolDefinition> = emptyList(),
+        /** Only [SamplerParams.thinking] and [SamplerParams.reasoningEffort] shape the prompt. */
+        params: SamplerParams = SamplerParams(),
+    ): Judgement? = null
 
     /** Stops the running generation. Safe to call from any thread. */
     fun cancel()

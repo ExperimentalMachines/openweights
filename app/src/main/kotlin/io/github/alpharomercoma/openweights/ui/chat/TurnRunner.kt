@@ -25,6 +25,7 @@ import io.github.alpharomercoma.openweights.core.common.model.ChatRole
 import io.github.alpharomercoma.openweights.core.common.model.MessagePart
 import io.github.alpharomercoma.openweights.core.common.model.SamplerParams
 import io.github.alpharomercoma.openweights.core.common.model.ToolCall
+import io.github.alpharomercoma.openweights.core.common.model.ToolDefinition
 import io.github.alpharomercoma.openweights.core.common.model.assistantHistoryText
 import io.github.alpharomercoma.openweights.core.common.model.containsToolMarkup
 import io.github.alpharomercoma.openweights.core.common.model.withoutToolMarkup
@@ -32,6 +33,7 @@ import io.github.alpharomercoma.openweights.core.engine.ContextWindowExceededExc
 import io.github.alpharomercoma.openweights.core.engine.GenerationEvent
 import io.github.alpharomercoma.openweights.core.engine.GenerationStats
 import io.github.alpharomercoma.openweights.core.engine.InferenceEngine
+import io.github.alpharomercoma.openweights.core.engine.Judgement
 import io.github.alpharomercoma.openweights.core.engine.StopReason
 import io.github.alpharomercoma.openweights.core.engine.WarmResult
 import io.github.alpharomercoma.openweights.core.tools.AdvanceTool
@@ -128,6 +130,53 @@ class TurnRunner @Inject constructor(
      */
     @VisibleForTesting
     internal var honoursDoubt: Boolean = true
+
+    /**
+     * Whether, after a search whose results the model says do not state the answer, the app
+     * reads the top result's page before the model answers. See `Turn.readTopResult`. Off
+     * until the decision suite's `read-search` arm prices it on a phone.
+     */
+    @VisibleForTesting
+    internal var readsTopResult: Boolean = false
+
+    /** The last reading of whether search results lacked the answer, for the suite's rows. */
+    @VisibleForTesting
+    internal var lastLacking: Float? = null
+
+    /**
+     * Whether a reply that leaves the question unresolved behind its knowledge cutoff, or
+     * calls the answer undocumented, is searched for the model. See [leavesUnresolved]. Off
+     * until the decision suite's `lament-search` arm prices it on a phone.
+     */
+    @VisibleForTesting
+    internal var honoursUnresolved: Boolean = false
+
+    /**
+     * Whether the model is asked, before its first pass, if it is sure it knows the answer,
+     * and searched for when it says no. See `Turn.honourGate`. Off: offline it lost to the
+     * doubt gate on the recommended model, and on the Poco and a Pixel 10 Pro XL it matched
+     * the doubt gate's answers (58 and 60 correct against 60, 160 rows each).
+     */
+    @VisibleForTesting
+    internal var honoursGate: Boolean = false
+
+    /**
+     * Whether a denial's fitting tool is the model's choice among the offered tools rather
+     * than the keywords of [CapabilityDenial.fitting]. Off until the phone prices it.
+     */
+    @VisibleForTesting
+    internal var judgesDenials: Boolean = false
+
+    /**
+     * Whether a short pronoun query is joined to the earlier question only when the model
+     * says the message leans on it. Off until the phone prices it. See `Turn.appQuery`.
+     */
+    @VisibleForTesting
+    internal var judgesFollowUps: Boolean = false
+
+    /** The last gate's probability that the model was not sure, for the decision suite's rows. */
+    @VisibleForTesting
+    internal var lastGate: Float? = null
 
     /** The last answering pass's draft confidence, for the decision suite's rows. */
     @VisibleForTesting
@@ -346,6 +395,39 @@ class TurnRunner @Inject constructor(
             engineInUse.unlock()
         }
     }
+
+    /**
+     * Puts a closed question to the conversation the last turn left in the engine, extended
+     * by [following], if the engine is free: null when something holds or is waiting for the
+     * engine, when the last turn left no record, or when the engine cannot judge.
+     *
+     * The last turn's own prompt and tools, not a reconstruction of them: the question is
+     * cheap only when its prompt extends what that turn left in the cache, and a model whose
+     * template drops tools had their descriptions written into that prompt, which a rebuilt
+     * conversation would leave out (Codex, reviewing the first version). A caller waiting for
+     * a real turn goes first; a background question is never worth holding one up.
+     */
+    suspend fun tryJudge(
+        following: List<ChatMessage>,
+        instruction: String,
+        options: List<String>,
+        params: SamplerParams,
+    ): Judgement? {
+        if (turnsWaiting.get() > 0 || !engineInUse.tryLock()) return null
+        return try {
+            val record = lastEngineRecord ?: return null
+            engine.judge(record.messages + following, instruction, options, record.tools, params)
+        } finally {
+            engineInUse.unlock()
+        }
+    }
+
+    /** The prompt and tools a finished turn left in the engine. See [tryJudge]. */
+    private class EngineRecord(val messages: List<ChatMessage>, val tools: List<ToolDefinition>)
+
+    /** Written as a turn finishes, cleared as one starts. Read under [engineInUse]. */
+    @Volatile
+    private var lastEngineRecord: EngineRecord? = null
 
     /**
      * The tools a turn in [mode] would offer, exactly as [turn] decides them.
@@ -669,10 +751,11 @@ class TurnRunner @Inject constructor(
         // tool turn re-prefilled 2-3k tokens, and turns grew from 20s to 95s across eight
         // exchanges. See [grounding] for what the block is; the gate for whether there is
         // one is in `turn()`.
+        // Named in [run], after the gate has had its say: the gate is asked about the question
+        // as the user typed it, and a turn the gate searched for has no use for the note.
         private var messages = conversation
             .describing(active, needed = withTools && !native)
             .grounding(question)
-            .naming(subject)
         private var round = 0
         private var lastRaw = ""
 
@@ -684,6 +767,9 @@ class TurnRunner @Inject constructor(
 
         /** Spent at most once a turn. See [honourIntent]. */
         private var appSearched = false
+
+        /** Spent at most once a turn. See [readTopResult]. */
+        private var readTopResult = false
 
         /**
          * Whether a web search, the model's or the app's, has run this turn. "Based on
@@ -715,7 +801,13 @@ class TurnRunner @Inject constructor(
          */
         private var pinned = false
 
+        /** The turn's sampling, which only the judgements read outside a pass. */
+        private var turnParams = SamplerParams()
+
         suspend fun run(params: SamplerParams, mode: AgentMode, listener: TurnListener): String {
+            turnParams = params
+            lastEngineRecord = null
+            open(mode, listener)
             while (true) {
                 // Tools are offered from the first pass, which was tried the other way and
                 // was worse. Withholding them was meant to stop a small model searching for
@@ -781,7 +873,10 @@ class TurnRunner @Inject constructor(
                     // be built as an extension of it rather than a reconstruction — except
                     // for a turn that pinned a plan block, whose cache holds text the
                     // accumulator never carried.
-                    if (!pinned) listener.onEngineHistory(messages)
+                    if (!pinned) {
+                        listener.onEngineHistory(messages)
+                        lastEngineRecord = EngineRecord(messages, renderedTools())
+                    }
                     return lastRaw
                 }
                 listener.onNextPass()
@@ -922,6 +1017,7 @@ class TurnRunner @Inject constructor(
                 ChatMessage.text(ChatRole.ASSISTANT, assistantHistoryText(pass.raw)) +
                 results
             round++
+            readTopResult(steps, mode, listener)
             return true
         }
 
@@ -999,7 +1095,7 @@ class TurnRunner @Inject constructor(
             val intent = searchIntent(pass, mode) ?: return false
             appSearched = true
             Log.i("OpenWeights", "search intent $intent without a call: the app searches")
-            return appSearch(searchQuery(asked, conversation), mode, listener)
+            return appSearch(appQuery(), mode, listener)
         }
 
         /**
@@ -1028,6 +1124,12 @@ class TurnRunner @Inject constructor(
                 pass.announcesSearch(spoken) -> "announced"
                 !pasted && spoken.claimsSearch(asked) -> "claimed"
                 CapabilityDenial.lamentsUnknown(spoken) -> "lamented"
+                // Here and not in [CapabilityDenial.lamentsUnknown], which also sends a
+                // pass to the denial repair: this shape asks for a search, never for the
+                // prose retry, and it answers to the intent rule's guards (Codex, reviewing
+                // the proposal). Not over pasted material, which the model may be saying
+                // is undocumented rather than lamenting its own knowledge.
+                honoursUnresolved && !pasted && spoken.leavesUnresolved() -> "unresolved"
                 else -> null
             }
         }
@@ -1038,8 +1140,11 @@ class TurnRunner @Inject constructor(
          * wifi password" answered with "I don't have that information" is a lament by
          * shape and a private question by any reading; the model may still call.
          */
-        private fun mayAppSearch(mode: AgentMode): Boolean {
-            val allowed = honoursIntent && !appSearched && !webSearched && !proseOnly
+        private fun mayAppSearch(mode: AgentMode): Boolean = honoursIntent && appMaySearch(mode)
+
+        /** [mayAppSearch] without the intent rule's switch, which the gate does not answer to. */
+        private fun appMaySearch(mode: AgentMode): Boolean {
+            val allowed = !appSearched && !webSearched && !proseOnly
             val offered = withTools && active.find(NamedSubject.TOOL) != null && asked.isNotBlank()
             val private = mode == AgentMode.PLAN || ABOUT_THE_USER.containsMatchIn(asked)
             return allowed && offered && !private
@@ -1073,6 +1178,165 @@ class TurnRunner @Inject constructor(
             }
         }
 
+        /**
+         * Asks the model, before it answers, whether it is sure it knows, and searches first
+         * when it says it is not. The decision stays the model's, as the search-first route
+         * that was rejected did not keep it; what is gone is the call syntax a small model
+         * gets wrong, and the prose the intent rule has to parse.
+         *
+         * Measured offline before any of it reached a phone (2026-09-17, LFM2.5 1.2B QAD
+         * Q4_0, the decision suite's 160 public rows, `docs/research/judged-decisions.md`):
+         * the probability of No separates a wrong bare answer at AUROC 0.62 (0.61 held
+         * out), against 0.76 (0.69) for the doubt gate's least likely token on the same
+         * rows. A 1B model's words about its own knowledge carry less than its token
+         * probabilities do, so this does not replace the doubt gate; what it sends is
+         * nearly all wrong answers the doubt gate let stand, six a split, so it is off
+         * until the phone prices it as an addition. The same guards as the intent rule, and not for a
+         * long or pasted message, which is material to work on rather than a fact to know.
+         *
+         * @return whether the app searched, which is also whether the question needs no
+         *   [NamedSubject] note.
+         */
+        private suspend fun honourGate(mode: AgentMode, listener: TurnListener): Boolean {
+            val unsure = gateReading(mode) ?: return false
+            if (unsure <= JudgeQuestions.GATE_PROBABILITY) return false
+            appSearched = true
+            return appSearch(appQuery(), mode, listener)
+        }
+
+        /** The gate's probability that the model is not sure, or null where it was not read. */
+        private suspend fun gateReading(mode: AgentMode): Float? {
+            val pasted = conversation.any {
+                it.role == ChatRole.USER && it.text.length > GROUNDING_MAX_CHARS
+            }
+            val due = honoursGate && round == 0
+            if (!due || pasted || !appMaySearch(mode)) return null
+            val judgement = judged(pinnedPrompt(), JudgeQuestions.UNSURE, JudgeQuestions.YES_NO)
+                ?: return null
+            val unsure = with(JudgeQuestions) { judgement.readable(NO) }
+            Log.i(
+                "OpenWeights",
+                "gate: not sure $unsure, options held ${judgement.optionMass}",
+            )
+            return unsure?.also { lastGate = it }
+        }
+
+        /**
+         * The turn's first move: the gate, and the name note where the gate did not search.
+         * The note would be moot beside results, and the gate is asked about the question as
+         * the user typed it, so the note goes on after.
+         */
+        private suspend fun open(mode: AgentMode, listener: TurnListener) {
+            if (!honourGate(mode, listener)) messages = messages.naming(subject)
+        }
+
+        /**
+         * The query the app searches with, where a short pronoun question is joined to the
+         * earlier one only if the model says it leans on it.
+         *
+         * [searchQuery] joins on the pronoun alone, so "is it going to rain today" after a
+         * question about a film searches for the film and the rain together. The model has
+         * read the conversation and can say whether the message stands alone; where it
+         * cannot be asked, or its answer cannot be read, the join stays, which is what a
+         * real follow-up needs.
+         */
+        private suspend fun appQuery(): String {
+            val joined = searchQuery(asked, conversation)
+            val alone = searchQuery(asked, conversation, joinEarlier = false)
+            if (!judgesFollowUps || alone == joined) return joined
+            val leans = followUpReading() ?: return joined
+            return if (leans < JUDGE_EVEN) alone else joined
+        }
+
+        /** The probability the model says the message leans on an earlier one, or null. */
+        private suspend fun followUpReading(): Float? {
+            val judgement = judged(pinnedPrompt(), JudgeQuestions.FOLLOW_UP, JudgeQuestions.YES_NO)
+                ?: return null
+            val leans = with(JudgeQuestions) { judgement.readable(YES) }
+            Log.i("OpenWeights", "follow-up: leans on the earlier question $leans")
+            return leans
+        }
+
+        /**
+         * The prompt the next pass will send, plan block and all. A judgement asked of any
+         * other prompt parts from the pass earlier than it needs to, and answers about a
+         * conversation the model is not about to continue.
+         */
+        private fun pinnedPrompt(): List<ChatMessage> {
+            val plan = plans.plan.value.takeIf { ownsPlan }
+            pinned = pinned || !plan?.statusBlock().isNullOrEmpty()
+            return messages.pinning(plan)
+        }
+
+        /** The tools the passes of this turn render, which a judgement must render too. */
+        private fun renderedTools(): List<ToolDefinition> =
+            if (renderTools) active.definitions else emptyList()
+
+        private suspend fun judged(
+            prompt: List<ChatMessage>,
+            instruction: String,
+            options: List<String>,
+        ): Judgement? = engine.judge(prompt, instruction, options, renderedTools(), turnParams)
+
+        /**
+         * Reads the top result's page when the search's snippets do not state the answer.
+         *
+         * Snippets are a line or two a page, and on the decision suite's searched rows the
+         * reply was right 43% of the time when TypeSafe's Jev read the snippets as stating
+         * the answer and 7% when it did not (`docs/research/typesafe-experiments.md`). The
+         * model that is about to answer is asked whether they do; when it says no, the app
+         * fetches the first result through `fetch_url`, under that tool's own switch, and the
+         * page goes in beside the snippets. Once a turn, never in plan mode, and never
+         * without the judgement: a runtime that cannot be asked (ExecuTorch) reads nothing.
+         */
+        private suspend fun readTopResult(
+            steps: List<AgentStep>,
+            mode: AgentMode,
+            listener: TurnListener,
+        ) {
+            val search = steps.filterIsInstance<AgentStep.Ran>()
+                .lastOrNull { it.call.name == NamedSubject.TOOL && it.successful }
+            val fetch = tools.find(FETCH_URL)?.takeIf {
+                switches.isEnabled(it) &&
+                    it.isAvailable
+            }
+            val url = search?.result?.let { TOP_RESULT_URL.find(it)?.value }
+            val due = readsTopResult && !readTopResult && mode != AgentMode.PLAN
+            if (!due || fetch == null || url == null) return
+            val lacking = lackingReading() ?: return
+            if (lacking <= JudgeQuestions.LACKING_PROBABILITY) return
+            readTopResult = true
+            val call = ToolCall(
+                id = APP_FETCH_ID,
+                name = FETCH_URL,
+                argumentsJson = org.json.JSONObject().put("url", url).toString(),
+            )
+            // Its own runner, so the page is one step the user can see and approve without
+            // spending a round of the model's: the turn's budget is for the model's calls.
+            val reader = AgentRunner(ToolRegistry(listOf(fetch)), carriesUntrustedText = true)
+            val decision = reader.step(listOf(call), 0, mode, listener::onApproval)
+            val fetched = decision.steps()
+            listener.onSteps(fetched)
+            val page = (decision as? AgentDecision.Continue)?.messages.orEmpty()
+                .map(ToolBudget(headroomTokens())::fit)
+                .spelledOut(readsResults)
+            if (page.isEmpty() || fetched.none { it is AgentStep.Ran && it.successful }) return
+            messages =
+                messages + ChatMessage.text(ChatRole.ASSISTANT, "Reading the top result: $url") +
+                page
+            Log.i(
+                "OpenWeights",
+                "read the top result: the snippets lacked the answer at %.2f".format(lacking),
+            )
+        }
+
+        /** The probability the model gives to the results not stating the answer, or null. */
+        private suspend fun lackingReading(): Float? {
+            val judgement = judged(pinnedPrompt(), JudgeQuestions.SUFFICIENT, JudgeQuestions.YES_NO)
+                ?: return null
+            return with(JudgeQuestions) { judgement.readable(NO) }?.also { lastLacking = it }
+        }
+
         /** The search itself, through the same step a model-made call takes. */
         private suspend fun appSearch(
             query: String,
@@ -1102,6 +1366,7 @@ class TurnRunner @Inject constructor(
                 ChatMessage.text(ChatRole.ASSISTANT, "Searching the web for: $query") +
                 results
             round++
+            readTopResult(steps, mode, listener)
             return true
         }
 
@@ -1163,7 +1428,7 @@ class TurnRunner @Inject constructor(
                 "OpenWeights",
                 "search doubted: an opening token had probability %.2f".format(exp(confidence)),
             )
-            return appSearch(searchQuery(asked, conversation), mode, listener)
+            return appSearch(appQuery(), mode, listener)
         }
 
         private fun doubtable(pass: Pass, mode: AgentMode, confidence: Float): Boolean {
@@ -1182,7 +1447,7 @@ class TurnRunner @Inject constructor(
         }
 
         /** The one push a turn: the tool names handed back, or the denial answered. */
-        private fun push(pass: Pass, mode: AgentMode): Boolean {
+        private suspend fun push(pass: Pass, mode: AgentMode): Boolean {
             if (repaired) return false
             // Denials are classified before announcement salvage: a short denial that
             // happens to name a real tool ("I can't write code; I only have web_search")
@@ -1227,13 +1492,17 @@ class TurnRunner @Inject constructor(
          * mechanism took the shipped prompt from 18 to 30, curing every denial; the four
          * cases still missed are over-eager searches that never denied anything.
          */
-        private fun denialRepair(pass: Pass): Boolean {
+        private suspend fun denialRepair(pass: Pass): Boolean {
             repaired = true
             // The turn's own question, not the conversation's last message: that one is
             // decorated with tool notes whose text can carry an earlier turn's URLs, and
             // a stale address would classify a translation denial as a fetch.
-            val fitting = CapabilityDenial.fitting(pass.spoken(), asked)
-                .firstOrNull { active.find(it) != null }
+            val fitting = when (val chosen = judgedFitting(pass)) {
+                is JudgeQuestions.Choice.Tool -> chosen.name
+                JudgeQuestions.Choice.None -> null
+                JudgeQuestions.Choice.Unread, null -> CapabilityDenial.fitting(pass.spoken(), asked)
+                    .firstOrNull { active.find(it) != null }
+            }
             // proseOnly gates the *parsing*, deliberately not the rendering. The old
             // version also stripped the tool block from the prompt, which reads as free
             // and is the most expensive line this file ever had: the block sits a few
@@ -1254,6 +1523,35 @@ class TurnRunner @Inject constructor(
                 ChatMessage.text(ChatRole.USER, CapabilityDenial.retryRequest(fitting))
             Log.i("OpenWeights", "denial repair fitting=$fitting")
             return true
+        }
+
+        /**
+         * The tool the model says would have done what it denied, chosen among the offered
+         * tools a denial can be repaired towards, or null where it was not asked.
+         *
+         * The keywords in [CapabilityDenial.fitting] read the denial's first sentence for
+         * the capability it named, and every word in them was added for a phrasing a phone
+         * found. The model that wrote the denial can say which tool it meant, described by
+         * the tool's own definition, with "none" as an answer: a denial of something to
+         * write is repaired by writing it, and a tool picked by name for it would be the
+         * haiku that became a web search. Its reply is in the cache, so the question costs
+         * its own tokens.
+         */
+        private suspend fun judgedFitting(pass: Pass): JudgeQuestions.Choice? {
+            if (!judgesDenials) return null
+            val candidates = CapabilityDenial.REPAIRABLE
+                .mapNotNull { name -> active.find(name)?.definition }
+                .ifEmpty { return null }
+            val (question, labels) = JudgeQuestions.fitting(candidates)
+            val judgement = judged(
+                pinnedPrompt() +
+                    ChatMessage.text(ChatRole.ASSISTANT, assistantHistoryText(pass.raw)),
+                question,
+                labels,
+            ) ?: return null
+            return JudgeQuestions.chosenTool(judgement, candidates).also {
+                Log.i("OpenWeights", "denial judged: $it, options held ${judgement.optionMass}")
+            }
         }
 
         /**
@@ -1339,8 +1637,9 @@ class TurnRunner @Inject constructor(
         val raw: String,
         val event: GenerationEvent.Completed,
         /**
-         * The mean log-probability of the [DRAFT_LOWEST] least likely of the first
-         * [DRAFT_TOKENS] tokens, where the engine gave any.
+         * The log-probability of the least likely of the first [DRAFT_TOKENS] tokens, where
+         * the engine gave any; the mean of the [DRAFT_LOWEST] least likely if that is ever
+         * raised above one.
          */
         val confidence: Float? = null,
         /** Whether the loop stopped the model early because it had already announced a search. */
@@ -1457,7 +1756,10 @@ private class DraftConfidence {
         count++
     }
 
-    /** The mean of the [DRAFT_LOWEST] least likely opening tokens, or null where none had a probability. */
+    /**
+     * The least likely opening token's log-probability (the mean of the [DRAFT_LOWEST] least
+     * likely, which is one), or null where none had a probability.
+     */
     fun value(): Float? = if (count > 0) lowest.average().toFloat() else null
 }
 
@@ -1539,6 +1841,9 @@ private const val DOUBT_PROBABILITY = 0.2
  * this is explanation or writing, and the question asked for its length.
  */
 private const val DOUBT_MAX_CHARS = 600
+
+/** A Yes/No answer's even point: above it the model leaned yes. */
+private const val JUDGE_EVEN = 0.5f
 
 /**
  * The model stopped answering and started echoing, so the turn was cut short.
@@ -1895,6 +2200,15 @@ private const val ANNOUNCEMENT_SENTENCES = 2
 /** The id of a call the app made itself; a parsed call carries the model's own. */
 private const val APP_SEARCH_ID = "app-search"
 
+/** The page reader's tool name, as the model sees it; the tool's own constant is module-internal. */
+private const val FETCH_URL = "fetch_url"
+
+/** The id of the page read the app made itself. See `Turn.readTopResult`. */
+private const val APP_FETCH_ID = "app-fetch"
+
+/** The first address in a search result, which is the best match's: one per hit, on its own line. */
+private val TOP_RESULT_URL = Regex("(?m)^https?://\\S+$")
+
 /**
  * Whether a reply reports a search that this turn never made.
  *
@@ -1965,6 +2279,47 @@ private val CLAIMED_SEARCH = Regex(
 )
 
 /**
+ * Whether a reply's opening leaves the question unresolved: a knowledge-cutoff caveat
+ * followed by a negation ("As of my knowledge cutoff in September 2024, there has been no
+ * announcement"), or the answer called undocumented or unknown ("The screenwriter for *Hell
+ * of the Living Dead* is not widely documented").
+ *
+ * Found by TypeSafe's reading of the replies the intent patterns let through
+ * (`docs/research/typesafe-experiments.md`) and checked on replies it was not read from:
+ * on 1,933 held-out no-call replies from the intent, doubt and first-search arms the two
+ * shapes matched 32, 30 of them wrong answers. A cutoff caveat followed by an answer is left
+ * alone (18 held-out replies, all wrong, but a caveat can open a complete answer to a stable
+ * question, and a search there is the model's call to make). Only the first two sentences
+ * are read, where the verdict on the question is given; what follows is often context.
+ */
+internal fun String.leavesUnresolved(): Boolean {
+    val opening = trim().split(Regex("(?<=[.!?])\\s+")).take(UNRESOLVED_SENTENCES).joinToString(" ")
+    return (KNOWLEDGE_CUTOFF.containsMatchIn(opening) && UNRESOLVED.containsMatchIn(opening)) ||
+        UNDOCUMENTED.containsMatchIn(opening)
+}
+
+private const val UNRESOLVED_SENTENCES = 2
+
+private val KNOWLEDGE_CUTOFF = Regex(
+    "\\b(as of|up to|until|since|based on) my (last |latest |most recent )?(knowledge|training)" +
+        "( cutoff| cut-off| update| refresh| data)?\\b|\\bmy knowledge cutoff\\b|\\bas of my last update\\b",
+    RegexOption.IGNORE_CASE,
+)
+
+private val UNRESOLVED = Regex(
+    "\\b(no|not|n't|neither|none|unknown|unclear|unavailable|hasn't|haven't|isn't|aren't|" +
+        "cannot|can't|don't)\\b|n't\\b",
+    RegexOption.IGNORE_CASE,
+)
+
+private val UNDOCUMENTED = Regex(
+    "\\b(is|are|was|were) (currently )?not (widely|definitively|publicly|well|clearly) " +
+        "(reported|recorded|documented|known|available)\\b|\\b(is|are) currently unknown\\b|" +
+        "\\bno widely (reported|recognized|known)\\b",
+    RegexOption.IGNORE_CASE,
+)
+
+/**
  * What the app searches for when it carries out the model's decision: the question as
  * typed, less the wrapping people put round one. "Can you quickly check who directed The
  * Last Word for me please?" is "who directed The Last Word" to a search box, and a
@@ -1972,7 +2327,11 @@ private val CLAIMED_SEARCH = Regex(
  * work before") is the previous turn's subject continued, so that turn's question is put
  * in front of it; a search engine cannot resolve "he".
  */
-internal fun searchQuery(asked: String, conversation: List<ChatMessage>): String {
+internal fun searchQuery(
+    asked: String,
+    conversation: List<ChatMessage>,
+    joinEarlier: Boolean = true,
+): String {
     var query = asked.trim().unwrapped()
     // A long message is preamble and a question: keep the last sentence that asks one,
     // and never send more than a search box would take.
@@ -1990,7 +2349,8 @@ internal fun searchQuery(asked: String, conversation: List<ChatMessage>): String
                 .unwrapped()
                 .take(QUERY_CLAUSE_CHARS)
     }
-    if (QUERY_PRONOUN_ONLY.containsMatchIn(query) &&
+    if (joinEarlier &&
+        QUERY_PRONOUN_ONLY.containsMatchIn(query) &&
         query.count { it == ' ' } < QUERY_SHORT_WORDS
     ) {
         val earlier = conversation.dropLast(1).lastOrNull {

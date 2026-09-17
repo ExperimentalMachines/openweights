@@ -28,6 +28,7 @@ import io.github.alpharomercoma.openweights.core.engine.ContextWindowExceededExc
 import io.github.alpharomercoma.openweights.core.engine.GenerationEvent
 import io.github.alpharomercoma.openweights.core.engine.GenerationStats
 import io.github.alpharomercoma.openweights.core.engine.InferenceEngine
+import io.github.alpharomercoma.openweights.core.engine.Judgement
 import io.github.alpharomercoma.openweights.core.engine.LlamaException
 import io.github.alpharomercoma.openweights.core.engine.LoadedModelInfo
 import io.github.alpharomercoma.openweights.core.engine.MediaSupport
@@ -57,6 +58,11 @@ data class ScriptedPass(
     val reason: StopReason = StopReason.END_OF_TURN,
     /** The model's log-probability for the reply's tokens, as llama.cpp would report it. */
     val logprob: Float? = null,
+    /**
+     * One log-probability per token, when a test needs them to differ: the reply is emitted
+     * as its text on the first token and empty fragments after it. Overrides [logprob].
+     */
+    val tokenLogprobs: List<Float>? = null,
 )
 
 /**
@@ -245,7 +251,14 @@ class FakeInferenceEngine : InferenceEngine {
         if (!hold) {
             val pass = scripted.removeFirstOrNull() ?: ScriptedPass(REPLY)
             return flow {
-                emit(GenerationEvent.Token(pass.text, pass.logprob))
+                val each = pass.tokenLogprobs
+                if (each.isNullOrEmpty()) {
+                    emit(GenerationEvent.Token(pass.text, pass.logprob))
+                } else {
+                    each.forEachIndexed { index, lp ->
+                        emit(GenerationEvent.Token(if (index == 0) pass.text else "", lp))
+                    }
+                }
                 emit(
                     GenerationEvent.Completed(
                         reason = pass.reason,
@@ -347,6 +360,46 @@ class FakeInferenceEngine : InferenceEngine {
             reusedTokens = 0,
             prefillMs = 1,
             snapshotBytes = 0,
+        )
+    }
+
+    /** One question put to the fake, as [judge] received it. */
+    data class JudgeCall(
+        val messages: List<ChatMessage>,
+        val instruction: String,
+        val options: List<String>,
+        val tools: List<ToolDefinition>,
+    )
+
+    val judgeCalls = mutableListOf<JudgeCall>()
+
+    /**
+     * How the fake answers a question: the probability of each option, given the options, or
+     * null to answer the way an engine without logits does. Null by default, so every test
+     * written before judgements existed still measures the fallback it was written against.
+     */
+    var judgeAnswer: ((JudgeCall) -> List<Float>?)? = null
+
+    /** How much of the model's probability the options held, as the engine reports it. */
+    var judgeMass = 1f
+
+    override suspend fun judge(
+        messages: List<ChatMessage>,
+        instruction: String,
+        options: List<String>,
+        tools: List<ToolDefinition>,
+        params: SamplerParams,
+    ): Judgement? = nativeThread.withLock {
+        val call = JudgeCall(messages, instruction, options, tools)
+        judgeCalls += call
+        val probabilities = judgeAnswer?.invoke(call) ?: return null
+        return Judgement(
+            options = options,
+            probabilities = probabilities,
+            optionMass = judgeMass,
+            promptTokens = instruction.length / CHARS_PER_TOKEN,
+            reusedTokens = 0,
+            prefillMs = 1,
         )
     }
 

@@ -2504,6 +2504,194 @@ static float sampled_logprob(const llama_vocab * vocab, llama_context * ctx, lla
     return logits[token] - peak - static_cast<float>(std::log(sum));
 }
 
+/** How far two token sequences agree from the start. */
+static size_t agreeing_prefix(const std::vector<llama_token> & a, const std::vector<llama_token> & b) {
+    const size_t limit = std::min(a.size(), b.size());
+    size_t at = 0;
+    while (at < limit && a[at] == b[at]) {
+        ++at;
+    }
+    return at;
+}
+
+bool Session::judge(
+    const std::vector<ChatMessage> & messages,
+    const std::vector<ToolDefinition> & tools,
+    const ReasoningConfig & reasoning,
+    const std::string & instruction,
+    const std::vector<std::string> & options,
+    std::vector<float> & probabilities,
+    JudgeStats & stats,
+    std::string & error) {
+    cancelled_.store(false, std::memory_order_relaxed);
+    probabilities.clear();
+    if (options.size() < 2) {
+        error = "a judgement needs at least two options";
+        return false;
+    }
+    if (messages.empty()) {
+        error = "there is no conversation to judge";
+        return false;
+    }
+    // Embeddings are not tokens, and a question put to a conversation with a picture in it
+    // would re-read the picture's marker as words and throw away a minute of encoding.
+    for (const auto & message : messages) {
+        if (!message.media_paths.empty()) {
+            error = "a conversation with attachments is not judged";
+            return false;
+        }
+    }
+
+    // What any continuation of this conversation shares: the point the question may part
+    // from it, and where a model that cannot roll back keeps its point.
+    std::string reference;
+    if (!render_prompt(messages, tools, reasoning, reference, error,
+                       /*add_generation_prompt=*/false)) {
+        return false;
+    }
+    const std::vector<llama_token> shared = tokenize_prompt(reference, /*add_special=*/true);
+
+    // On the user's own message rather than after it: templates that insist roles alternate
+    // (Gemma's) raise on a second user message in a row, and the conversation is a prefix of
+    // this either way up to the end of what the user typed.
+    std::vector<ChatMessage> asked = messages;
+    if (!asked.empty() && asked.back().role == "user") {
+        asked.back().content += "\n\n" + instruction;
+    } else {
+        asked.push_back({"user", instruction, std::string(), {}});
+    }
+
+    // Asked with thinking off, so the answer is the reply's first token rather than the
+    // first token of a deliberation. A template can put the switch in the head of the
+    // prompt, though, where turning it off would move the parting point to the top and
+    // re-read everything; then the turn's own setting is kept and the block closed.
+    ReasoningConfig quiet = reasoning;
+    quiet.enabled = false;
+    std::string prompt;
+    if (!render_prompt(asked, tools, quiet, prompt, error)) {
+        return false;
+    }
+    std::vector<llama_token> tokens = tokenize_prompt(prompt, /*add_special=*/true);
+    size_t parting = agreeing_prefix(tokens, shared);
+    if (reasoning.enabled) {
+        std::string thinking;
+        if (render_prompt(asked, tools, reasoning, thinking, error)) {
+            if (thinking_prefilled_ && !thinking_end_tag_.empty()) {
+                thinking += thinking_end_tag_;
+            }
+            std::vector<llama_token> thinking_tokens = tokenize_prompt(thinking, true);
+            const size_t thinking_parting = agreeing_prefix(thinking_tokens, shared);
+            if (thinking_parting > parting) {
+                prompt = std::move(thinking);
+                tokens = std::move(thinking_tokens);
+                parting = thinking_parting;
+            }
+        }
+        error.clear();
+    }
+    if (tokens.empty()) {
+        error = "the model's chat template produced an empty prompt";
+        return false;
+    }
+    if (static_cast<int32_t>(tokens.size()) >= static_cast<int32_t>(llama_n_ctx(ctx_))) {
+        error = "the question does not fit the context window";
+        return false;
+    }
+
+    const llama_vocab * vocab = llama_model_get_vocab(model_);
+    const int n_vocab = llama_vocab_n_tokens(vocab);
+    std::vector<llama_token> firsts;
+    for (const auto & option : options) {
+        // Checked before anything is read, so a question that cannot be scored costs no
+        // prefill. An option counts only as the prompt's own tokens plus exactly one more.
+        // The first token of a longer option is not the option: LFM2.5 spells SEARCH as SE +
+        // ARCH, and the probability of SE says nothing about what follows it. An option that
+        // merges with the prompt's last token has no token of its own there, and its
+        // standalone token would be a continuation the model was never offered. Scoring
+        // either properly means decoding and rolling back per option, which a hybrid model
+        // only does through a snapshot each; a label chosen to be one token costs nothing.
+        llama_token only = LLAMA_TOKEN_NULL;
+        const std::vector<llama_token> whole = tokenize_prompt(prompt + option, true);
+        if (whole.size() == tokens.size() + 1 && agreeing_prefix(whole, tokens) == tokens.size()) {
+            only = whole.back();
+        }
+        if (only == LLAMA_TOKEN_NULL || only < 0 || only >= n_vocab) {
+            error = "an option is not a single token for this model: " + option;
+            return false;
+        }
+        if (std::find(firsts.begin(), firsts.end(), only) != firsts.end()) {
+            error = "two options are the same token";
+            return false;
+        }
+        firsts.push_back(only);
+    }
+
+    const int64_t start = now_ms();
+    const size_t reusable = align_cache(tokens, /*need_logits=*/true);
+    const size_t mark = std::min(parting, tokens.size() - 1);
+    const bool keep_point = llama_model_is_hybrid(model_) || llama_model_is_recurrent(model_);
+    bool ingested = true;
+    if (keep_point && mark > reusable && media_spans_.empty()) {
+        ingested = ingest_prompt(tokens, reusable, error, mark);
+        if (ingested) {
+            save_rollback_point(mark);
+            ingested = ingest_prompt(tokens, mark, error);
+        }
+    } else {
+        ingested = ingest_prompt(tokens, reusable, error);
+    }
+    if (!ingested) {
+        // The same reckoning generate() makes: batches that went in are not in the record.
+        reset();
+        return false;
+    }
+    cached_ = tokens;
+    n_past_ = static_cast<int32_t>(tokens.size());
+    cached_covers_context_ = true;
+    media_spans_.clear();
+
+    const float * logits = llama_get_logits_ith(ctx_, -1);
+    if (logits == nullptr) {
+        // The prompt went in and nothing can be read from it; the record says it went in, so
+        // it stays consistent, but a judgement that failed should not leave its question in
+        // the cache for the next turn to part from.
+        reset();
+        error = "the model produced no logits for the question";
+        return false;
+    }
+    float peak = logits[0];
+    for (int i = 1; i < n_vocab; ++i) {
+        peak = std::max(peak, logits[i]);
+    }
+    double total = 0.0;
+    for (int i = 0; i < n_vocab; ++i) {
+        total += std::exp(static_cast<double>(logits[i] - peak));
+    }
+
+    // Relative to the peak throughout, so the options' share is exact even where every
+    // probability involved is tiny.
+    double mass = 0.0;
+    std::vector<double> shares;
+    for (llama_token first : firsts) {
+        const double share = std::exp(static_cast<double>(logits[first] - peak));
+        shares.push_back(share);
+        mass += share;
+    }
+    for (double share : shares) {
+        probabilities.push_back(mass > 0.0 ? static_cast<float>(share / mass)
+                                           : 1.0f / static_cast<float>(shares.size()));
+    }
+
+    stats.prompt_tokens = static_cast<int32_t>(tokens.size() - reusable);
+    stats.reused_tokens = static_cast<int32_t>(reusable);
+    stats.prefill_ms    = now_ms() - start;
+    stats.option_mass   = static_cast<float>(mass / total);
+    LOGI("judge: read %d (reused %d) in %lld ms, options held %.2f, first %s %.2f",
+         stats.prompt_tokens, stats.reused_tokens, static_cast<long long>(stats.prefill_ms),
+         stats.option_mass, options.front().c_str(), probabilities.front());
+    return true;
+}
+
 StopReason Session::generate(
     const std::vector<ChatMessage> & messages,
     const std::vector<ToolDefinition> & tools,

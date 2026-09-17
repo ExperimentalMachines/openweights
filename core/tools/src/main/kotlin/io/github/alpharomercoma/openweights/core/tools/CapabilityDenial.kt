@@ -114,6 +114,10 @@ object CapabilityDenial {
         }
     }
 
+    /** Every tool [fitting] can name, which is every tool a denial can be repaired towards. */
+    val REPAIRABLE: List<String> =
+        listOf(WebSearchTool.NAME, FetchUrlTool.NAME, RunScriptTool.NAME, WatchTool.NAME)
+
     /** The corrective line for the retry, given the tool that fits or null for none. */
     fun retryRequest(fitting: String?): String = if (fitting == null) {
         "Write the complete answer yourself now, directly, with no apology and no " +
