@@ -22,7 +22,10 @@ import androidx.work.Configuration
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
+import coil3.disk.DiskCache
+import coil3.disk.directory
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
+import coil3.request.CachePolicy
 import coil3.svg.SvgDecoder
 import dagger.hilt.android.HiltAndroidApp
 import io.github.alpharomercoma.openweights.core.tools.PublicOnlyDns
@@ -96,6 +99,13 @@ class OpenWeightsApplication :
      */
     override fun newImageLoader(context: PlatformContext): ImageLoader =
         ImageLoader.Builder(context)
+            .diskCache {
+                DiskCache.Builder()
+                    .directory(context.cacheDir.resolve("image_cache"))
+                    .maxSizeBytes(IMAGE_CACHE_MAX_BYTES)
+                    .build()
+            }
+            .diskCachePolicy(CachePolicy.ENABLED)
             .components {
                 // Search results and avatars are untrusted URLs. Reuse the same DNS
                 // boundary as fetch_url so a public hostname cannot resolve into a LAN,
@@ -132,3 +142,6 @@ class OpenWeightsApplication :
             }
             .build()
 }
+
+/** 100 MB of thumbnails and avatars: large enough for history, bounded on the phone. */
+private const val IMAGE_CACHE_MAX_BYTES = 100L * 1024L * 1024L
