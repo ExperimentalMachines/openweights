@@ -308,7 +308,7 @@ in the app, and the three network tools each have a switch.
 
 **Main contributors:** Alpha Romer Coma and Arjhine Ty.
 
-**Organisation:** [Experimental Machines](http://experimentalmachines.org/), which also
+**Organisation:** [Experimental Machines](https://experimentalmachines.org/), which also
 publishes the models at <https://huggingface.co/experimentalmachines>.
 
 **Contact:** for collaborations or inquiries, write to

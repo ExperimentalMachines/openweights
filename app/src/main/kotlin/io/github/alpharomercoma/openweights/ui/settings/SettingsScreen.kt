@@ -203,7 +203,7 @@ private fun AboutSection() {
 private const val SOURCE_URL = "https://github.com/ExperimentalMachines/openweights"
 
 /** Where the people building and using this talk; beside the source, for the same reason. */
-private const val DISCORD_URL = "https://discord.gg/rAwu3MU5j3"
+private const val DISCORD_URL = "https://discord.com/invite/rAwu3MU5j3"
 
 /**
  * Light, dark, or whatever the phone is doing.

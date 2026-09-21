@@ -142,4 +142,4 @@ leaves the device will say so in the app's release notes.
 
 ## Contact
 
-Open an issue at https://github.com/ExperimentalMachines/openweights.
+[Open an issue](https://github.com/ExperimentalMachines/openweights).
