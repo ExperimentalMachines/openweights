@@ -297,12 +297,136 @@ SMOLLM3_CASES: dict[str, dict] = {
     },
 }
 
+# Qwen3.5 keeps ChatML and drops most of what Qwen3 wrapped around it: the tools come
+# before the system message rather than after it, a call is written as XML parameters
+# rather than a JSON object, every piece of content is trimmed, and the opener always
+# carries a think block, open when reasoning is on and closed empty when it is off. Off is
+# what the template does when nobody says, so every case here says.
+WEATHER_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "get_weather",
+        "description": "Current weather for one city.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "city": {"type": "string", "description": "City name"},
+                "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
+            },
+            "required": ["city"],
+        },
+    },
+}
+MANILA_CELSIUS_CALL = {
+    "type": "function",
+    "function": {"name": "get_weather", "arguments": {"city": "Manila", "unit": "celsius"}},
+}
+TOKYO_SEARCH_CALL = {
+    "type": "function",
+    "function": {"name": "web_search", "arguments": {"query": "Tokyo weather"}},
+}
+QWEN35_CASES: dict[str, dict] = {
+    "plain": {"messages": [USER_Q], "enable_thinking": False},
+    # Reasoning on leaves the block open for the model to write into.
+    "thinkingEnabled": {"messages": [USER_Q], "enable_thinking": True},
+    "withSystem": {"messages": [SYSTEM_TERSE, USER_Q], "enable_thinking": False},
+    "trimsContent": {
+        "messages": [
+            {"role": "system", "content": "\nYou are a terse assistant.\n"},
+            {"role": "user", "content": "  What is the capital of Japan?\n\n"},
+        ],
+        "enable_thinking": False,
+    },
+    "withTools": {
+        "messages": [USER_WEATHER],
+        "tools": [SEARCH_TOOL, WEATHER_TOOL],
+        "enable_thinking": False,
+    },
+    # The system message goes under the tools, the reverse of Qwen3.
+    "withSystemAndTools": {
+        "messages": [SYSTEM_TERSE, USER_WEATHER],
+        "tools": [SEARCH_TOOL],
+        "enable_thinking": False,
+    },
+    "priorThinkingDropped": {
+        "messages": [
+            {"role": "user", "content": "What is 2+2?"},
+            {"role": "assistant", "content": "<think>\nSimple arithmetic.\n</think>\n\nFour."},
+            {"role": "user", "content": "And 3+3?"},
+        ],
+        "enable_thinking": True,
+    },
+    # Mid-run, reasoning on: the call's own thinking is kept because no new question has
+    # arrived since, and the opener is left open for the next thought.
+    "toolRun": {
+        "messages": [
+            USER_WEATHER,
+            {
+                "role": "assistant",
+                "content": "<think>\nI should look this up.\n</think>\n\n",
+                "tool_calls": [WEATHER_CALL],
+            },
+            {"role": "tool", "content": "Manila: 31C, humid."},
+        ],
+        "tools": [SEARCH_TOOL],
+        "enable_thinking": True,
+    },
+    # The same run with reasoning off, which is how the app runs a compiled model: a turn
+    # after the last question gets its empty block written back even though it held nothing.
+    "toolRunNoThinking": {
+        "messages": [
+            USER_WEATHER,
+            {"role": "assistant", "content": "", "tool_calls": [WEATHER_CALL]},
+            {"role": "tool", "content": "Manila: 31C, humid."},
+        ],
+        "tools": [SEARCH_TOOL],
+        "enable_thinking": False,
+    },
+    # A finished run that a new question has turned into history: a call with two
+    # parameters, its result, the answer, and the follow-up. Nothing keeps a think block.
+    "toolRunThenFollowUp": {
+        "messages": [
+            USER_WEATHER,
+            {"role": "assistant", "content": "", "tool_calls": [MANILA_CELSIUS_CALL]},
+            {"role": "tool", "content": "Manila: 31C, humid."},
+            {"role": "assistant", "content": "It is 31C and humid in Manila."},
+            {"role": "user", "content": "And in Tokyo?"},
+        ],
+        "tools": [SEARCH_TOOL, WEATHER_TOOL],
+        "enable_thinking": False,
+    },
+    # Words before the calls are set off by a blank line, the calls from each other by one
+    # newline, and the two results share one user turn.
+    "twoToolCalls": {
+        "messages": [
+            {"role": "user", "content": "Compare Manila and Tokyo."},
+            {
+                "role": "assistant",
+                "content": "Looking both up.",
+                "tool_calls": [WEATHER_CALL, TOKYO_SEARCH_CALL],
+            },
+            {"role": "tool", "content": "Manila: 31C."},
+            {"role": "tool", "content": "Tokyo: 22C."},
+        ],
+        "tools": [SEARCH_TOOL],
+        "enable_thinking": False,
+    },
+}
+
 FAMILIES: dict[str, dict] = {
     "qwen3": {
         "model": "Qwen/Qwen3-1.7B",
         "object": "Qwen3PromptFixtures",
         "test": "Qwen3PromptTest",
         "cases": QWEN3_CASES,
+        "fixed_date": "",
+    },
+    "qwen35": {
+        "model": "Qwen/Qwen3.5-2B",
+        "jinja_file": True,
+        "object": "Qwen35PromptFixtures",
+        "test": "Qwen35PromptTest",
+        "cases": QWEN35_CASES,
         "fixed_date": "",
     },
     "smollm2": {

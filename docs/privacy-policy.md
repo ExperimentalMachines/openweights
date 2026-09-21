@@ -1,6 +1,6 @@
 # OpenWeights privacy policy
 
-Last updated 2026-09-14.
+Last updated 2026-09-21.
 
 OpenWeights runs language models on your phone. There is no OpenWeights account, no
 OpenWeights server, and no analytics or crash reporting of any kind. Nothing in this app
@@ -12,14 +12,15 @@ reach the internet on your behalf. This document says exactly when, and what goe
 ## What stays on your device
 
 - Your conversations: what you typed, what the model replied, and the files you attached.
-- The models you download, and the settings you keep for each one.
+- The models you download, shared generation settings, and model-specific runtime choices.
 - Your usage totals: tokens, speed, and time spent generating.
 - The contents of any folder you share with the app, and anything the assistant reads from
   it.
 
-None of this is uploaded, backed up off the device, or readable by anyone else. Android's
-automatic backup and device-to-device transfer are switched off for this app, so your chats
-do not travel to a new phone. Uninstalling the app deletes all of it.
+OpenWeights does not upload this data on its own. The explicit network and sharing actions
+below can send parts of it. Android's automatic backup and device-to-device transfer are
+switched off for app-private data. Uninstalling removes app-private data, not files in a
+folder you shared through Android's picker or copies you sent to another app.
 
 ## What leaves your device, and when
 
@@ -28,34 +29,34 @@ do not travel to a new phone. Uninstalling the app deletes all of it.
 | A search term you type in Discover | When you search for a model | Hugging Face |
 | A repository or file name | When you open or download a model | Hugging Face, and its content delivery network |
 | Your Hugging Face access token, if you set one | With every Hugging Face request | Hugging Face |
-| A search query the assistant composed | Whenever it uses the `web_search` tool | DuckDuckGo |
-| A web address the assistant chose, and the request for it | Whenever it uses the `fetch_url` tool | Whichever site the address names |
+| A search query the assistant composed | Whenever it uses `web_search` | Enabled search providers: DuckDuckGo, Brave and Yahoo, stopping at the first answer; Context7 when documentation search is enabled |
+| A picture or video search query | Whenever it uses `show_pictures` | DuckDuckGo |
+| Requests for remote thumbnails or publisher avatars | When those images are displayed and not already cached | The public image hosts named by those results |
+| A web address the assistant chose, and the request for it | Whenever it uses `fetch_url` | Whichever public site the address names |
+| Search traffic through a configured proxy | Only when you configure a search proxy | That proxy as well as the selected search provider |
+| A generated canvas page | Only after you confirm Open in browser | Your chosen browser; the page can then navigate to internet sites outside OpenWeights' controls |
 | A report you wrote about a reply | Only if you tap Report and then pick an app to send it to | Wherever you chose to send it |
 
 Every request above also carries the ordinary information any web request carries, including
 your IP address, which the receiving service handles under its own policy.
 
-**The two assistant tools deserve a paragraph of their own.** `web_search` and `fetch_url`
-are switched on when the app is first installed, and the assistant can use either one without
-asking first: it decides when to search and composes the query itself, out of the
-conversation, which means what it sends can contain anything you have said or attached, and
-it decides which page to fetch. You can turn either off at any time in the Tools tab, where
-both are listed under a heading that says they leave the device; the app works without them
-and everything else stays local. What each call sent is not hidden afterwards either, every
-tool call is a row in the reply that used it, naming the tool and what it was given.
+**The three assistant network tools have individual switches.** A fresh install enables
+only `web_search`; `show_pictures` and `fetch_url` are off until you enable them. Existing
+choices are preserved. The assistant composes queries and addresses from the conversation,
+so they can contain what you typed or attached. Every call is recorded in its reply.
+Turning a tool off prevents new calls, but does not erase existing results: displaying a
+previous picture result can still load its thumbnail.
 
-Two narrower situations still ask you before anything runs, in every mode except one
-described below. The first is a page telling the assistant where to go next: `fetch_url` is
-the only tool whose destination is a page's to choose rather than yours, so once something
-the assistant read this turn could have been written by someone other than you, a page it
-fetches on that page's own say-so is held for your approval, otherwise a page could talk
-the assistant into reading its own follow-up address and calling that a fetch you asked for.
-`web_search` is not held on this basis: its destination is the search provider the app is
-configured with, however the query reads, so a page cannot redirect it anywhere by steering
-the query. The second situation is your own data: once something private has been read in a
-turn, from a shared file or otherwise, anything that would carry data off the device in that
-same turn is held for your approval too, regardless of which tool it is, this one does
-cover `web_search`.
+In Auto mode, fetching an address chosen by the model after reading untrusted content needs
+approval. Searches have configured destinations, so untrusted text alone does not impose
+that particular check. Once the conversation carries private tool data, every outbound tool
+call also needs approval. These flags survive later turns, compaction and branches that
+carry the relevant history. Scheduled watches persist their summary's provenance, rather
+than treating earlier tool output as trusted system instructions.
+
+Memory writes and creating a watch always need approval. Durable writes after untrusted
+content also need approval, including a page fetch that saves into your shared folder.
+These safeguards remain in effect in `/yolo` mode.
 
 **Reporting a reply.** Every model reply has a report action. It asks what was wrong,
 takes an optional note, and shows you the whole report before anything happens: the model
@@ -64,28 +65,35 @@ nowhere of its own to send it. Tapping Report hands the text to Android's share 
 where it goes from there is your choice: a mail, an issue, your own notes, or nothing at
 all. Backing out of that sheet sends nothing, and nothing is kept behind.
 
-**Files you share.** If you give the app access to a folder, its contents are read on the
-device and are never uploaded on their own. They can leave only through `web_search` or
-`fetch_url`, and only if you approve it: once the assistant has read a file during a turn,
-any search or page fetch in that same turn asks you first, for the reason above. Answering
-yes is you choosing to send it.
+**Files you share.** The folder is not uploaded automatically. The assistant can include
+private data in a query or address, so Auto asks before outbound calls once it has read
+private tool data. `/yolo` waives that network check. File-edit exemptions apply only to
+matching documents created in the current session and folder. Folder changes, deletion
+and observable document changes invalidate them; Android document providers determine what
+identity and modification metadata the app can observe.
 
-**The one exception, and you have to type it.** Sending `/yolo` puts the conversation in a
-mode where nothing is put to you at all, including that. It is off unless you turn it on, it
-is named in the line under the model's name for as long as it is on, and it is gone the next
-time the app starts. In that mode, a file the assistant has read can leave with a search or a
-fetch without a prompt, and a page the assistant has read can choose the address of the next
-fetch. Nothing else changes: tools you have switched off stay off, and every call is still a
-row in the reply that names it.
+**Opening a canvas elsewhere.** The in-app preview blocks external requests and navigation.
+An external browser is outside those controls. The app warns and asks on every launch
+because a generated page can navigate to the internet and send data from its canvas folder.
+
+**The `/yolo` exception.** This process-only mode waives Auto's two network checks, so private
+data can leave through an enabled tool without another prompt and untrusted content can
+choose a fetched address. It does not enable disabled tools, bypass file-identity checks,
+or waive memory, watch-creation and untrusted durable-write approvals. Every call remains
+visible in the reply.
 
 ## Third parties
 
 - **Hugging Face** ([privacy policy](https://huggingface.co/privacy)) receives your model
   searches and downloads, and your access token if you set one.
-- **DuckDuckGo** ([privacy policy](https://duckduckgo.com/privacy)) receives the assistant's
-  search queries.
-- **Any site the assistant is asked to read.** This cannot be listed in advance, because it
-  is whatever the assistant found. Requests are restricted to public internet addresses.
+- **DuckDuckGo** ([privacy policy](https://duckduckgo.com/privacy)),
+  **Brave Search** ([privacy policy](https://search.brave.com/help/privacy-policy)) and
+  **Yahoo** ([privacy policy](https://legal.yahoo.com/us/en/yahoo/privacy/index.html))
+  receive searches when their enabled provider is reached.
+- **Context7**, when documentation search is enabled, receives the search query. A search
+  proxy you configure can also observe that search traffic.
+- **Public page and image hosts** receive requests for the addresses read or displayed.
+- **Your chosen browser or sharing app** controls data you explicitly hand over to it.
 
 Data these services hold as a result of your requests is subject to their policies, not this
 one.
@@ -105,6 +113,10 @@ Face, is never written to a log, and is deleted when you remove it or uninstall 
 - **Microphone.** For dictation, and only when you tap the microphone. Speech is transcribed
   by the recogniser on your device; the app requests on-device recognition and does not use
   the online kind. No audio is stored or sent by this app.
+- **Read-aloud.** Android text to speech receives the text locally. OpenWeights selects an
+  installed voice that the service reports does not require a network connection and refuses
+  unavailable languages rather than falling back online. This trusts the selected Android
+  speech service's metadata; the app cannot sandbox a third-party speech service.
 - **Foreground service.** So a model download keeps running when you leave the app.
 
 The app asks for no storage permission. Folders and files reach it only through Android's own
@@ -118,9 +130,10 @@ output is not controlled by this app.
 
 ## Deleting your data
 
-Delete a conversation to remove it and the files attached to it. Delete a model to remove its
-weights. Uninstall the app to remove everything, including your token. There is nothing held
-elsewhere for us to delete, because there is nowhere else.
+Delete a conversation to remove it and its app-private attachments. Delete a model to remove
+its weights. Uninstalling removes app-private data, including your token. Shared-folder files,
+exports, and copies sent to other apps remain where you put them. OpenWeights has no server
+copy to delete; third parties handle requests sent to them under their own policies.
 
 ## Changes
 

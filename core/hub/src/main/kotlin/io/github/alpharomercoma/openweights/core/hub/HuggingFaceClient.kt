@@ -25,6 +25,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import okhttp3.HttpUrl
@@ -472,10 +474,18 @@ class HuggingFaceClient @Inject constructor(
             .associateBy { it.substringBeforeLast('/', "") }
         val folders = map { it.path.substringBeforeLast('/', "") }.toSet()
             .filter { it in configs }
+        val reads = Semaphore(MAX_CONFIG_READS)
         val windows = folders.map { folder ->
             async {
                 runCatching {
-                    ExportConfig.windowsIn(get(downloadUrl(repoId, configs.getValue(folder))))
+                    reads.withPermit {
+                        ExportConfig.windowsIn(
+                            get(
+                                downloadUrl(repoId, configs.getValue(folder)),
+                                MAX_EXPORT_CONFIG_BYTES,
+                            ),
+                        )
+                    }
                 }
                     .getOrDefault(emptyMap())
                     .mapKeys { (file, _) -> if (folder.isEmpty()) file else "$folder/$file" }
@@ -592,23 +602,32 @@ class HuggingFaceClient @Inject constructor(
             segments.forEach { addPathSegments(it) }
         }
 
-    private suspend fun get(url: HttpUrl): String = getPaged(url).body
+    private suspend fun get(url: HttpUrl, maxBytes: Long? = null): String =
+        getPaged(url, maxBytes).body
 
     /** One response body, with the cursor its `Link` header offers for the page after it. */
-    private suspend fun getPaged(url: HttpUrl): Fetched = withContext(Dispatchers.IO) {
-        val token = tokenSource.token()
-        val request = Request.Builder()
-            .url(url)
-            .withToken(token)
-            .build()
+    private suspend fun getPaged(url: HttpUrl, maxBytes: Long? = null): Fetched =
+        withContext(Dispatchers.IO) {
+            val token = tokenSource.token()
+            val request = Request.Builder()
+                .url(url)
+                .withToken(token)
+                .build()
 
-        httpClient.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                throw response.toHubException(hasToken = token != null)
+            httpClient.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    throw response.toHubException(hasToken = token != null)
+                }
+                // Configs belong to publishers, not the Hub API. Bound decompressed bytes,
+                // including chunked responses, before String and JSON allocations.
+                if (maxBytes != null) {
+                    require(!response.body.source().request(maxBytes + 1)) {
+                        "Export configuration is too large"
+                    }
+                }
+                Fetched(response.body.string(), response.header("link").nextCursor())
             }
-            Fetched(response.body.string(), response.header("link").nextCursor())
         }
-    }
 
     /** A body and nothing else, plus the one header that says there is more. */
     private data class Fetched(val body: String, val nextCursor: String?)
@@ -791,11 +810,17 @@ val RECOMMENDED = listOf(
     // needed on 60% against the Q4_K_M's 44%, was correct on 39% against 40%, prefilled at
     // 227 against 157 tok/s and decoded at 36 against 31, at 731 MB against 697
     // (`docs/research/executorch-tool-calling-qad.md`). Its GSM8K, IFEval and BFCL grades
-    // are still owed, so the Q4_K_M stays the marked file until they land. The same night
-    // settled the compiled question for this family: the 8da4w recipe removes the
-    // tool-call decision (int4 on the feed-forward alone does it), the one mixed export
-    // that calls is 1.7 times the GGUF's size at 2.3 times its resident memory, and
-    // activation-aware scaling did not rescue the int4 file. A compiled LFM2.5 needs QAT.
+    // are still owed, so the Q4_K_M stays the marked file until they land. That night also
+    // read the compiled question as settled against the family, and the cause given here was
+    // wrong: the 8da4w recipe was losing the tool-call decision to round-to-nearest int4 and
+    // to a conv_state that survived the runner's reset, not to a need for QAT. Both are
+    // fixed at export (`docs/research/executorch-state-and-recipes.md`) and the replacement
+    // exports were published 2026-09-19. The GGUFs stay recommended anyway, because the
+    // evidence does not yet favour the compiled file: offered one tool on held-out
+    // questions it is level with the Q4_K_M on a Snapdragon (49% against 51% searched when
+    // needed) and seven points under it on a Dimensity, while offered the app's sixteen
+    // tools on the Dimensity it leads both GGUFs by fifteen points. The app offers sixteen,
+    // so the deciding run is a sixteen-tool arm on a second phone, which has not been made.
     "LiquidAI/LFM2.5-1.2B-Instruct-GGUF",
     "LiquidAI/LFM2.5-2.6B-GGUF",
     // The family with eyes, from Liquid AI's own GGUF repository: ships its mmproj
@@ -1066,3 +1091,7 @@ private const val MAX_FILES_PER_REPO = 40
 
 /** What Software Mansion calls the file beside each export that describes it. */
 private const val EXPORT_CONFIG = "config.json"
+
+/** Four bounded config bodies in flight, independent of gigabyte model downloads. */
+private const val MAX_CONFIG_READS = 4
+private const val MAX_EXPORT_CONFIG_BYTES = 1024L * 1024

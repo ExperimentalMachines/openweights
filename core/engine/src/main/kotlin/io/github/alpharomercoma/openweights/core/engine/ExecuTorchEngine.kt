@@ -47,19 +47,16 @@ import java.io.File
  * The trade against [LlamaCppEngine] is worth stating plainly, because it is not a matter
  * of one being better written:
  *
- * - **Prefix reuse is unproven.** llama.cpp keeps a KV cache across turns and reports what
- *   it reused, so a follow-up demonstrably pays only for what changed. ExecuTorch does keep
- *   state — `LlmModule` has both `resetContext` and a prefill-without-generating call — but
- *   whether an ordinary generation continues from it, and how much of a turn that saves,
- *   has not been measured. Until it has, [GenerationStats.cachedTokens] reports zero,
- *   which is an admission that this engine cannot yet say rather than a claim that nothing
- *   was reused. On the long multi-turn traffic this app is measured against, the answer
- *   decides whether the engine is viable at all.
+ * - **Append-only prefix reuse.** An unchanged text prefix is kept across turns and
+ *   only its suffix is fed. Edits, pictures and replies without a streamed end marker
+ *   invalidate that reuse record. Runtime token counts cover generation; separate text
+ *   prefills contribute estimates because the Java API exposes no tokenizer.
  * - **A curated catalogue.** A `.pte` is compiled on a desktop for one backend, and for an
  *   NPU one SoC, so models arrive because a build was run for them. That is the constraint
  *   this whole project exists to escape, which is why this engine is the second one and not
  *   the first.
- * - **No projector.** Attachments are llama.cpp's, via libmtmd.
+ * - **Export-specific vision.** Pictures need a compiled encoder and a known processor
+ *   layout. llama.cpp instead loads a separate projector through libmtmd.
  *
  * What it buys is the only path to an accelerator that has no ggml backend. See
  * `docs/research/mediatek-npu.md` for what that is measured to be worth.
@@ -74,11 +71,39 @@ class ExecuTorchEngine(
      * not per call; zero means greedy, which is what a reproducible evaluation loads.
      */
     private val temperature: Float = DEFAULT_TEMPERATURE,
+    /**
+     * The size of one prefill call, in characters: a warm piece and the tail handed to
+     * generate. The defaults are the shipped ones ([WARM_PIECE_CHARS], about two hundred
+     * tokens, the interrupt latency in text; [GENERATE_TAIL_CHARS], measured on the shipped
+     * exports). Characters are a heuristic, not a tokenizer-independent token bound.
+     * Parameters only so a device test can measure what the piece size costs in prefill
+     * throughput (`ExecuTorchOnDeviceTest.prefillByPieceSize`); nothing in the app passes them.
+     */
+    private val warmPieceChars: Int = WARM_PIECE_CHARS,
+    private val generateTailChars: Int = GENERATE_TAIL_CHARS,
 ) : InferenceEngine {
 
     private var info: LoadedModelInfo? = null
     private var template: PromptTemplate? = null
     private var contextSize: Int = 0
+
+    /** What [resetRuntime] needs to open the same file again. */
+    private class Opened(
+        val model: File,
+        val tokenizer: File,
+        val temperature: Float,
+        val stateResetAtZero: Boolean?,
+    )
+
+    private var opened: Opened? = null
+    private var moduleHasRun = false
+
+    private val needsReloadOnReset: Boolean
+        get() {
+            val held = opened ?: return false
+            val normalized = held.model.name.lowercase().filter { it.isLetterOrDigit() }
+            return moduleHasRun && "lfm2" in normalized && held.stateResetAtZero != true
+        }
 
     /**
      * The most characters one call into the runtime may carry, prefill or generate.
@@ -88,11 +113,11 @@ class ExecuTorchEngine(
      * export with "Attempted to resize a bounded tensor with a maximum capacity of 2047
      * elements to 2048 elements" (Poco X8 Pro, 2026-09-08: every research step's prompt
      * with the tool prefix was refused, read as a full window, and retried without tools).
-     * Characters are the only measure this engine has before tokenizing, and one token
-     * per character is the worst case, so a bound in characters below the token bound is
-     * safe for any text.
+     * Characters are the only measure this engine has before tokenizing. This cap avoids
+     * the measured failures on the shipped prompts, but is not a universal token bound:
+     * byte-fallback tokenizers can use more than one token per UTF-16 code unit.
      */
-    private var callChars: Int = GENERATE_TAIL_CHARS
+    private var callChars: Int = generateTailChars
 
     /**
      * What this turn fed through prefill before generate: pieces of the prompt too long
@@ -110,12 +135,11 @@ class ExecuTorchEngine(
     private var tailChars: Int = 0
 
     /**
-     * The text the runtime's KV cache currently holds, prompt and reply together.
+     * The text prefix known to match the runtime's committed state.
      *
-     * Kept as text rather than as a token count because that is what can be compared: the
-     * next turn is an extension of this one exactly when its rendered prompt starts with
-     * this string. Cleared whenever the cache is, since a stale value would claim the
-     * runtime holds something it does not and skip feeding it.
+     * Kept as text because the next prompt can extend it only when its rendering starts
+     * with this string. Empty means reuse is unsafe, not that the context is empty:
+     * a truncated reply or pictures discard this record without erasing [heldTokens].
      */
     private var fedText: String = ""
 
@@ -126,12 +150,12 @@ class ExecuTorchEngine(
     private var bosPrefix: String = ""
 
     /**
-     * How many tokens the runtime is holding, counted rather than guessed.
+     * Occupied context, independently of whether [fedText] permits reuse.
      *
-     * The runtime reports what each call *gave* it, so the conversation's length is the
-     * running sum of every prompt and reply fed since the cache was last cleared. That sum
-     * is what a turn reusing the cache did not have to re-read, which is exactly what
-     * [GenerationStats.cachedTokens] means.
+     * Generation reports token counts; separate text prefills are estimated. A reply
+     * stopped for budget still occupies context even though its final sampled token's
+     * character boundary is unknown and the next turn must reset and replay the prompt.
+     * Only a valid prefix match makes this count [GenerationStats.cachedTokens].
      */
     private var heldTokens: Int = 0
 
@@ -183,20 +207,16 @@ class ExecuTorchEngine(
             )
 
         closeModel()
-        // The window is the file's, not the preference's. A preference above it is clamped
-        // by the runtime anyway, and reporting the preference upstream made every budget
-        // in the app wrong by the difference.
+        // The window is the file's, not the preference's. The runtime cannot resize its
+        // compiled cache, so neither a larger nor a smaller preference changes the limit.
         // A file that cannot be probed is not refused here; the runner's own open below is
         // the authority on whether it can be run, and says so with a message.
         val facts = runCatching { bridge.probe(modelFile.absolutePath) }
             .getOrDefault(ExportFacts(contextLength = null, hasVision = false))
         val exported = facts.contextLength
         callChars = facts.callChars()
-        contextSize = when {
-            exported == null -> params.contextLength
-            params.contextLength <= 0 -> exported
-            else -> minOf(params.contextLength, exported)
-        }
+        // Older text exports without metadata retain the preference as an estimate only.
+        contextSize = exported ?: params.contextLength
         // Pictures need both halves: an encoder in the file and a template that knows
         // the square it takes. A vision export of a family this app cannot feed opens as
         // text, which is honest and still useful.
@@ -208,30 +228,16 @@ class ExecuTorchEngine(
         // The multimodal runner in the AAR this app ships aborts the whole process, not the
         // call, when an export lacks the window method it reads first (measured with an
         // older exporter's SmolVLM2: "Required metadata method get_max_seq_len not found").
-        // A file that cannot say its window is refused before the runner sees it.
-        if (multimodal && exported == null) {
+        // get_max_context_len alone is insufficient: the runner requires get_max_seq_len.
+        if (multimodal && (exported == null || facts.prefillLength == null)) {
             refuse(
                 "${modelFile.name} was exported without the metadata this app's ExecuTorch " +
                     "runtime needs to read pictures. Ask its publisher for a current export.",
             )
         }
-        if (!bridge.load(
-                modelFile.absolutePath,
-                tokenizer.absolutePath,
-                // The publisher's own setting for the vision export: sampled at the text
-                // default it turns generic and repetitive (Software Mansion's model notes,
-                // and their runner's defaults for LFM2.5-VL).
-                if (multimodal) VISION_TEMPERATURE else temperature,
-                contextSize,
-                multimodal,
-            )
-        ) {
-            refuse("ExecuTorch could not open ${modelFile.name}")
-        }
+        open(modelFile, tokenizer, facts.stateResetAtZero)
 
-        // The window is fixed when the model is exported — the runtime reads its own
-        // `get_max_seq_len` and clamps to it — so what is asked for here is a ceiling
-        // rather than a request, and a value above the model's own is quietly ignored.
+        // Publish the fixed export window, not a smaller preference the runner ignores.
         template = rendering
         info = LoadedModelInfo(
             description = modelFile.nameWithoutExtension,
@@ -249,12 +255,13 @@ class ExecuTorchEngine(
             supportsTools = rendering.supportsTools,
             supportsToolResults = rendering.supportsTools,
             modelPath = modelFile.absolutePath,
+            contextSizeIsEstimated = exported == null,
         )
     }
 
     /** The character bound for one runtime call: see [callChars]. */
     private fun ExportFacts.callChars(): Int =
-        minOf(GENERATE_TAIL_CHARS, (prefillLength ?: Int.MAX_VALUE) - 1).coerceAtLeast(1)
+        minOf(generateTailChars, (prefillLength ?: Int.MAX_VALUE) - 1).coerceAtLeast(1)
 
     /** A load refused for a reason the caller can show. */
     private fun refuse(message: String): Nothing = throw LlamaException(message)
@@ -269,6 +276,58 @@ class ExecuTorchEngine(
 
         info = null
         template = null
+        opened = null
+        moduleHasRun = false
+    }
+
+    /** Opens the file and remembers how, so [resetRuntime] can open it again. */
+    private fun open(modelFile: File, tokenizer: File, stateResetAtZero: Boolean?) {
+        // The publisher's own setting for the vision export: sampled at the text default it
+        // turns generic and repetitive (Software Mansion's model notes, and their runner's
+        // defaults for LFM2.5-VL).
+        val heat = if (multimodal) VISION_TEMPERATURE else temperature
+        val held = Opened(modelFile, tokenizer, heat, stateResetAtZero)
+        if (!bridge.load(
+                modelFile.absolutePath,
+                tokenizer.absolutePath,
+                heat,
+                multimodal,
+            )
+        ) {
+            refuse("ExecuTorch could not open ${modelFile.name}")
+        }
+        opened = held
+        moduleHasRun = false
+    }
+
+    /**
+     * The runner's reset rewinds its position and nothing else, and an LFM2 export made
+     * before 2026-09-17 keeps its short-convolution state in a buffer the graph never
+     * clears: the next prompt starts on the last two columns of the previous one.
+     * Measured on the fp32 module, second prompt onward: the tool-call token falls from
+     * 0.94 to 0.68 and from 0.92 to 0.38; on a Galaxy S25 Ultra the same 8da4w recipe
+     * grades 17, 21 and 25 of 30 with the leak and 19, 22 and 26 without
+     * (`docs/research/executorch-state-and-recipes.md`). An export that clears the state
+     * in its own graph says so with `get_state_reset_at_zero`; any other used LFM2 file
+     * is opened again, about a second, and everything else keeps the cheap reset.
+     */
+    private fun resetRuntime() {
+        val held = opened
+        if (held == null || !needsReloadOnReset) {
+            bridge.resetContext()
+            moduleHasRun = false
+            return
+        }
+        bridge.close()
+        val reopened =
+            bridge.load(
+                held.model.absolutePath,
+                held.tokenizer.absolutePath,
+                held.temperature,
+                multimodal,
+            )
+        if (!reopened) throw LlamaException("ExecuTorch could not reopen ${held.model.name}")
+        moduleHasRun = false
     }
 
     override fun chat(
@@ -325,11 +384,9 @@ class ExecuTorchEngine(
         val reply = StreamedReply(rendering)
         var firstTokenAt = 0L
 
-        // Zero means "no limit" to llama.cpp, which stops at the context edge on its own.
-        // Here that becomes "as much as the window still has room for". Passing the number
-        // straight through is only correct because the bridge counts *new* tokens; the
-        // runtime's simpler entry point counts total sequence length, where a 24-token
-        // reply budget behind a 907-token prompt resolved to 1141 and ignored the budget.
+        // Zero means no caller-imposed output budget. Use the exported window as an
+        // upper bound on callbacks; the native runner still owns its remaining capacity.
+        // The AAR ignores maxNewTokens, so StopDiscipline enforces a positive budget here.
         val budget = params.maxTokens.takeIf { it > 0 } ?: contextSize
 
         // Anything thrown below leaves the runtime's position advanced by however much it
@@ -345,6 +402,7 @@ class ExecuTorchEngine(
         // the start of the turn instead, before anything a Stop could be aimed at.
         tailChars = fresh.length
         val outcome = try {
+            moduleHasRun = true
             bridge.generate(fresh, budget) { fragment ->
                 if (firstTokenAt == 0L) firstTokenAt = System.currentTimeMillis()
                 reply.accept(fragment)?.let { trySend(GenerationEvent.Token(it)) }
@@ -359,7 +417,7 @@ class ExecuTorchEngine(
         } catch (failure: Throwable) {
             fedText = ""
             heldTokens = 0
-            runCatching { bridge.resetContext() }
+            runCatching { resetRuntime() }
             throw failure
         }
 
@@ -380,19 +438,13 @@ class ExecuTorchEngine(
         // token is ordinary text this code cannot identify by character position. So that
         // case gives up reuse entirely rather than guess: an empty record forces the next
         // turn to start over, which is slow and correct.
-        if (reply.endedCleanly && pictures.isEmpty()) {
-            fedText = prompt + reply.answer
-            heldTokens = reused + fedAheadTokens(outcome) + outcome.promptTokens +
-                outcome.generatedTokens
-        } else if (reply.endedCleanly) {
-            // Held, but not extendable: the runtime counts the picture's positions in its
-            // prompt figure, so the meter is right even though the text record is empty.
-            fedText = ""
-            heldTokens = outcome.promptTokens + outcome.generatedTokens
-        } else {
-            fedText = ""
-            heldTokens = 0
-        }
+        fedText = if (reply.endedCleanly && pictures.isEmpty()) prompt + reply.answer else ""
+        // Losing prefix reuse does not empty the context. Keep its occupancy for folding
+        // and headroom decisions until the next turn actually resets the runtime.
+        // The multimodal runner reports its full prompt position, including text prefills
+        // and pictures; the text runner reports only the current generate call's tail.
+        heldTokens = outcome.promptTokens + outcome.generatedTokens +
+            if (multimodal) 0 else reused + fedAheadTokens(outcome)
 
         val raw = reply.answer
         val parsed = ToolCallParser.parse(raw)
@@ -400,8 +452,8 @@ class ExecuTorchEngine(
             GenerationEvent.Completed(
                 reason = reasonFor(reply, discipline, outcome.reason),
                 stats = statsFor(outcome, started, firstTokenAt, reused, prompt),
-                content = parsed.text.withoutReasoning(),
-                reasoning = raw.reasoning(),
+                content = parsed.text.underOpener(prompt).withoutReasoning(),
+                reasoning = raw.underOpener(prompt).reasoning(),
                 toolCalls = parsed.calls,
             ),
         )
@@ -529,7 +581,7 @@ class ExecuTorchEngine(
     private fun forgetHeld() {
         fedText = ""
         heldTokens = 0
-        runCatching { bridge.resetContext() }
+        runCatching { resetRuntime() }
     }
 
     /**
@@ -549,7 +601,7 @@ class ExecuTorchEngine(
             prompt.startsWith(fedText) &&
             prompt.length > fedText.length
         if (extending) return feedAhead(prompt.substring(fedText.length), heldTokens)
-        bridge.resetContext()
+        resetRuntime()
         fedText = ""
         heldTokens = 0
         val fresh = if (pictures.isEmpty()) prompt else feedPictures(prompt, pictures, rendering)
@@ -565,12 +617,17 @@ class ExecuTorchEngine(
      * and a Stop is read between them. Everything fed stays in the record: the cache is
      * append-only, so the tail generate extends it exactly as a warmed turn does.
      */
-    private fun feedAhead(fresh: String, held: Int): Pair<String, Int> {
+    private fun feedAhead(fresh: String, held: Int): Pair<String, Int> =
+        feedText(fresh, keepTail = callChars) to held
+
+    /** Bounded text prefills, also used before each picture; returns any reserved tail. */
+    private fun feedText(fresh: String, keepTail: Int): String {
         var rest = fresh
-        while (rest.length > callChars) {
+        while (rest.length > keepTail) {
             if (cancelRequested) throw StoppedWhileFeeding()
             val piece = warmPiece(rest, callChars)
             val before = System.currentTimeMillis()
+            moduleHasRun = true
             bridge.prefill(piece)
             fedAheadMs += System.currentTimeMillis() - before
             fedAheadChars += piece.length
@@ -578,9 +635,9 @@ class ExecuTorchEngine(
             heldTokens += (piece.length / WARM_CHARS_PER_TOKEN).coerceAtLeast(1)
             rest = rest.substring(piece.length)
         }
-        // The pieces are this turn's work, not the cache's: they are reported as prompt
-        // tokens by [statsFor], so what is returned as reused is only what was held before.
-        return rest to held
+        // A stop during the last prefill or picture must not start a generation.
+        if (cancelRequested) throw StoppedWhileFeeding()
+        return rest
     }
 
     /**
@@ -603,8 +660,8 @@ class ExecuTorchEngine(
         var carried = ""
         pictures.forEachIndexed { index, picture ->
             // Each picture is a second or two of encoder; a Stop is honoured between them.
+            feedText(carried + segments[index] + spec.before, keepTail = 0)
             if (cancelRequested) throw StoppedWhileFeeding()
-            bridge.prefill(carried + segments[index] + spec.before)
             feedingPictures = true
             try {
                 bridge.prefillImage(
@@ -738,7 +795,7 @@ class ExecuTorchEngine(
         var fresh = if (extending) {
             prompt.substring(fedText.length)
         } else {
-            bridge.resetContext()
+            resetRuntime()
             fedText = ""
             heldTokens = 0
             prompt
@@ -750,6 +807,7 @@ class ExecuTorchEngine(
         try {
             while (fresh.isNotEmpty() && !warmStopped) {
                 val piece = warmPiece(fresh, callChars)
+                moduleHasRun = true
                 bridge.prefill(piece)
                 fedText += piece
                 val tokens = (piece.length / WARM_CHARS_PER_TOKEN).coerceAtLeast(1)
@@ -765,7 +823,7 @@ class ExecuTorchEngine(
             Log.w(TAG, "warm prefill failed; the next turn starts cold", failure)
             fedText = ""
             heldTokens = 0
-            runCatching { bridge.resetContext() }
+            runCatching { resetRuntime() }
             return@withContext null
         }
         WarmResult(
@@ -793,8 +851,16 @@ class ExecuTorchEngine(
      * satisfies both patterns, and the runtime offers no tokenizer to cut by.
      */
     private fun warmPiece(text: String, limit: Int): String {
-        val most = minOf(WARM_PIECE_CHARS, limit)
+        var most = minOf(warmPieceChars, limit)
         if (text.length <= most) return text
+        if (most > 0 && text[most - 1].isHighSurrogate() && text[most].isLowSurrogate()) {
+            most--
+        }
+        if (most == 0) {
+            throw LlamaException(
+                "The prefill character bound cannot fit a complete Unicode character",
+            )
+        }
         val window = text.substring(0, most)
         // A line break followed by more whitespace is one token with it ("\n\n", "\n    "),
         // so the cut goes after a break that ends its run. Fuzzed against the tokenizer
@@ -804,14 +870,31 @@ class ExecuTorchEngine(
         while (newline > 0 && newline + 1 < text.length && text[newline + 1].isWhitespace()) {
             newline = window.lastIndexOf('\n', newline - 1)
         }
-        if (newline > 0) return window.substring(0, newline + 1)
-        val space = window.lastIndexOf(' ')
-        if (space > 0) return window.substring(0, space)
-        return window
+        var cut = if (newline > 0) {
+            newline + 1
+        } else {
+            window.lastIndexOf(' ').takeIf { it > 0 } ?: most
+        }
+        // Each call is tokenized independently. Splitting an image control token turns
+        // one special ID into ordinary text even when concatenating the pieces is exact.
+        template?.vision?.let { spec ->
+            cut = cutOutsideImageBracket(text, cut, most, spec.before)
+            cut = cutOutsideImageBracket(text, cut, most, spec.after)
+        }
+        return text.substring(0, cut)
+    }
+
+    private fun cutOutsideImageBracket(text: String, cut: Int, limit: Int, bracket: String): Int {
+        if (bracket.isEmpty()) return cut
+        val start = text.lastIndexOf(bracket, cut - 1)
+        if (start < 0 || start + bracket.length <= cut) return cut
+        if (start > 0) return start
+        if (bracket.length <= limit) return bracket.length
+        throw LlamaException("The prefill character bound cannot fit a complete image bracket")
     }
 
     override suspend fun resetContext() = turns.withLock {
-        bridge.resetContext()
+        resetRuntime()
         fedText = ""
         heldTokens = 0
     }
@@ -827,6 +910,8 @@ class ExecuTorchEngine(
         bridge.close()
         fedText = ""
         heldTokens = 0
+        opened = null
+        moduleHasRun = false
 
         info = null
         template = null
@@ -851,13 +936,11 @@ class ExecuTorchEngine(
      * did not, so the two runtimes disagreed about identical work.
      *
      * The pieces fed ahead are prompt, not cache. A prompt longer than one call may carry
-     * goes in as prefill pieces first (see [feedAhead]), and the runtime's figures know
-     * nothing of them. Their time is measured around each call. Their token count is not
-     * measured, because the Java binding exposes no tokenizer, so it is the piece text at
-     * the rate the generate call reported for the tail it did count, which is the same
-     * text in the same template, or four characters a token when there was no tail. The
-     * one estimate in these stats, and named as one; the alternative was two thousand
-     * tokens of prefill reported as a cache hit.
+     * goes in as prefill pieces first (see [feedAhead]). Their time is measured around
+     * each call. The text runner reports only the tail's token count, so the head uses
+     * that tail's character-to-token rate, or four characters per token without a count.
+     * The multimodal runner instead reports its full prompt position, including all
+     * prefills and pictures; subtracting reuse is sufficient and avoids double-counting.
      *
      * Time to first token is wall clock from the start of the turn to the first fragment,
      * pieces included, because that is the wait the user felt.
@@ -871,9 +954,13 @@ class ExecuTorchEngine(
     ): GenerationStats {
         val finished = System.currentTimeMillis()
         val timeToFirst = if (firstTokenAt > 0) firstTokenAt - started else finished - started
-        val fedAhead = fedAheadTokens(outcome)
+        val promptTokens = if (multimodal) {
+            (outcome.promptTokens - reused).coerceAtLeast(0)
+        } else {
+            outcome.promptTokens + fedAheadTokens(outcome)
+        }
         return GenerationStats(
-            promptTokens = outcome.promptTokens + fedAhead,
+            promptTokens = promptTokens,
             generatedTokens = outcome.generatedTokens + if (firstTokenAt > 0) 1 else 0,
             // The runtime's prefill covers the generate call; the pieces before it were
             // timed here. When the runtime reported nothing, the wait to the first token is
@@ -937,6 +1024,17 @@ class ExecuTorchEngine(
     private fun tokenizerFor(model: File): File? =
         File(model.parentFile, ExecuTorchFileName.tokenizerNameFor(model.name))
             .takeIf { it.isFile }
+
+    /**
+     * The reply with the think tag its opener held put back. Qwen3.5 with reasoning on ends
+     * its prompt inside an open block, so the reply starts mid-thought and closes a block it
+     * never opened; read alone, that closer is text and the thinking becomes the answer.
+     * Only when the block did close: a thought cut off by the budget stays as it arrived.
+     */
+    private fun String.underOpener(prompt: String): String {
+        val continuesThought = prompt.endsWith(THINK_OPEN + "\n") && THINK_CLOSE in this
+        return if (continuesThought && !startsWith(THINK_OPEN)) THINK_OPEN + this else this
+    }
 
     private fun String.reasoning(): String {
         val open = indexOf(THINK_OPEN)
@@ -1049,9 +1147,8 @@ private class StreamedReply(private val template: PromptTemplate) {
 private const val WARM_PIECE_CHARS = 800
 
 /**
- * The most characters handed to one generate call, under the 2047-token input bound of
- * every export this app ships or publishes even at one token per character. Anything
- * beyond it is fed ahead in warm pieces. See `callChars`.
+ * The measured character cap for one generate call on the shipped exports. Anything
+ * beyond it is fed ahead in warm pieces. This is not a universal token bound; see `callChars`.
  */
 private const val GENERATE_TAIL_CHARS = 1600
 

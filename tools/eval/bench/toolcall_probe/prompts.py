@@ -1,5 +1,5 @@
 import json, hashlib, os
-R="/Users/alpha/mobile-inference/tools/eval/results/decisions/"
+R=os.path.join(os.path.dirname(os.path.abspath(__file__)),"..","..","results","decisions")+"/"
 def load(f):
     rows=[json.loads(l) for l in open(R+f)]; return rows[0], rows[1:]
 h,et=load("decisions-LFM2.5-1.2B-Instruct-8da4w-32k-driven-search.jsonl")

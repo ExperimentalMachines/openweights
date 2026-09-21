@@ -128,9 +128,6 @@ class SearchSettings @Inject constructor(
     /**
      * The providers to try, in order.
      *
-     * One, for now. A provider that is rate limited says so rather than returning nothing,
-     * which is what will make the order meaningful once there is more than one.
-     *
      * A SearXNG instance used to be second. It went for the same reason Wikipedia did, in
      * reverse: not because it was hardcoded, but because it was a field in a screen that
      * nobody was ever going to fill in, and it has no index of its own anyway, so it moved
@@ -166,9 +163,8 @@ class SearchSettings @Inject constructor(
      * The engines to try, in order, skipping any the user has switched off.
      *
      * Order is fixed rather than configurable, and it is the order of how often each
-     * actually answers from a phone rather than of how good its index is. Google has the
-     * best index and refuses most often, so it is last: putting it first would mean most
-     * searches waited for a refusal before doing anything useful.
+     * actually answers from a phone rather than of how good its index is. Disabled engines
+     * are not contacted, including when every earlier provider fails.
      *
      * Everything on by default. The chain stops at the first engine that answers, so an
      * engine that is never reached costs nothing, and one that is switched off cannot be

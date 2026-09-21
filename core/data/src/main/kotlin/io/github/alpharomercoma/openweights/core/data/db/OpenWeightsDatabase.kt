@@ -33,7 +33,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ToolStepEntity::class,
         EngineHistoryEntity::class,
     ],
-    version = 19,
+    version = 20,
     exportSchema = true,
 )
 abstract class OpenWeightsDatabase : RoomDatabase() {
@@ -50,6 +50,14 @@ abstract class OpenWeightsDatabase : RoomDatabase() {
 
     companion object {
         const val NAME = "openweights.db"
+
+        /** Unknown provenance stays unknown so legacy summaries are treated conservatively. */
+        val MIGRATION_19_20 = object : Migration(19, 20) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE watches ADD COLUMN summaryUntrusted INTEGER")
+                db.execSQL("ALTER TABLE watches ADD COLUMN summaryPrivate INTEGER")
+            }
+        }
 
         /**
          * Adds prefill speed to the reply row alongside the decode speed [MIGRATION_9_10]

@@ -194,6 +194,7 @@ fun OpenWeightsApp(
 
             val state by chatViewModel.uiState.collectAsStateWithLifecycle()
             val isSpeaking by mediaViewModel.isSpeaking.collectAsStateWithLifecycle()
+            val speechError by mediaViewModel.speechError.collectAsStateWithLifecycle()
             val dictation by mediaViewModel.dictationState.collectAsStateWithLifecycle()
             // Collected from the board rather than mirrored into the chat state: it is
             // already a flow, and a second copy would be a second thing to keep in step.
@@ -281,6 +282,7 @@ fun OpenWeightsApp(
                 onRemoveStaged = chatViewModel::removeStaged,
                 onToggleReadAloud = mediaViewModel::toggleReadAloud,
                 isSpeaking = isSpeaking,
+                speechError = speechError,
                 newCaptureUri = mediaViewModel::newCaptureUri,
                 dictation = dictation,
                 canDictate = mediaViewModel.canDictate,

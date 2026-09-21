@@ -139,6 +139,9 @@ interface Tool {
     /** Whether this tool writes data that remains after the current conversation. */
     val writesDurableData: Boolean get() = false
 
+    /** Whether this call writes durable data, for tools that also have read-only forms. */
+    fun writesDurableData(call: ToolCall): Boolean = writesDurableData
+
     /**
      * Whether this tool can do anything at all as things stand.
      *

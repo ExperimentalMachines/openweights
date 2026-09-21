@@ -189,6 +189,7 @@ fun ChatScreen(
     onRemoveStaged: (MessagePart.File) -> Unit = {},
     onToggleReadAloud: (String) -> Unit = {},
     isSpeaking: Boolean = false,
+    speechError: String? = null,
     newCaptureUri: () -> Uri = { Uri.EMPTY },
     dictation: DictationState = DictationState(),
     canDictate: Boolean = false,
@@ -315,6 +316,7 @@ fun ChatScreen(
             onRemoveStaged = onRemoveStaged,
             onToggleReadAloud = onToggleReadAloud,
             isSpeaking = isSpeaking,
+            speechError = speechError,
             newCaptureUri = newCaptureUri,
             dictation = dictation,
             canDictate = canDictate,
@@ -372,6 +374,7 @@ private fun ChatContent(
     onRemoveStaged: (MessagePart.File) -> Unit,
     onToggleReadAloud: (String) -> Unit,
     isSpeaking: Boolean,
+    speechError: String?,
     newCaptureUri: () -> Uri,
     dictation: DictationState,
     canDictate: Boolean,
@@ -504,7 +507,11 @@ private fun ChatContent(
                     )
                 }
 
-                StatusStrip(state = state, dictationError = dictation.error)
+                StatusStrip(
+                    state = state,
+                    dictationError = dictation.error,
+                    speechError = speechError,
+                )
                 // The one pinned thing about a goal. The plan and any question the model
                 // asks are in the transcript above, where the reader's eye already is, and
                 // steering goes through the composer below. See GoalStrip.
@@ -765,8 +772,8 @@ private fun composerHint(goal: Goal?, question: UserQuestion?): String? = when {
  * error is for. Everything that happens during ordinary use is inside a fixed height.
  */
 @Composable
-private fun StatusStrip(state: ChatUiState, dictationError: String?) {
-    (state.error ?: dictationError)?.let { message ->
+private fun StatusStrip(state: ChatUiState, dictationError: String?, speechError: String?) {
+    (state.error ?: speechError ?: dictationError)?.let { message ->
         Text(
             text = message,
             style = MaterialTheme.typography.bodySmall,
@@ -934,12 +941,14 @@ private fun ChatSheets(
             modelName = state.modelName,
             preferences = state.preferences,
             supportsThinking = state.supportsThinking,
+            supportsReasoningEffort = state.supportsReasoningEffort,
             outputModality = state.outputModality,
             hasGpu = state.hasGpu,
             hasNpu = state.hasNpu,
             compiledProcessor = state.compiledProcessor,
             offloadBuffers = state.offloadBuffers,
             loadedContext = state.contextSize,
+            contextSizeIsEstimated = state.contextSizeIsEstimated,
             // Asked of the loaded model rather than guessed from its name. A vision model
             // opened without its projector reads nothing, and offering it an image budget
             // would be a control over a capability it does not have.

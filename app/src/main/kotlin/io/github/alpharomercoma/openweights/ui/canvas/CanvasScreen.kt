@@ -30,18 +30,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.OpenInBrowser
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -66,6 +70,29 @@ import java.io.ByteArrayInputStream
 fun CanvasScreen(onBack: () -> Unit, viewModel: CanvasViewModel = hiltViewModel()) {
     val showing by viewModel.showing.collectAsState()
     val canvas = showing
+    var browserUrl by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+
+    browserUrl?.let { url ->
+        AlertDialog(
+            onDismissRequest = { browserUrl = null },
+            title = { Text(stringResource(R.string.open_in_browser)) },
+            text = { Text(stringResource(R.string.canvas_browser_warning)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        browserUrl = null
+                        context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
+                    },
+                ) { Text(stringResource(R.string.open_in_browser)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { browserUrl = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -88,16 +115,9 @@ fun CanvasScreen(onBack: () -> Unit, viewModel: CanvasViewModel = hiltViewModel(
                 },
                 actions = {
                     if (canvas != null) {
-                        val context = LocalContext.current
                         val url = viewModel.viewerUrlFor(canvas)
                         IconButton(
-                            onClick = {
-                                // The same loopback URL the WebView reads; any browser on
-                                // this phone can open it while the app is running. True
-                                // for all three kinds now: a document and a deck are
-                                // pages the same server serves.
-                                context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
-                            },
+                            onClick = { browserUrl = url },
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.OpenInBrowser,

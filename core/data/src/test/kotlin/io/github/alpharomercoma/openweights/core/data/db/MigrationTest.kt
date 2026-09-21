@@ -69,6 +69,7 @@ class MigrationTest {
         OpenWeightsDatabase.MIGRATION_16_17,
         OpenWeightsDatabase.MIGRATION_17_18,
         OpenWeightsDatabase.MIGRATION_18_19,
+        OpenWeightsDatabase.MIGRATION_19_20,
     )
 
     @Test
@@ -499,6 +500,33 @@ class MigrationTest {
                 .isEqualTo(24.5)
             assertThat(db.intAt("SELECT totalMillis FROM messages WHERE id = 1"))
                 .isEqualTo(4800)
+        }
+    }
+
+    @Test
+    fun `legacy watch summaries keep their rows with unknown provenance`() {
+        helper.createDatabase(19).use { db ->
+            db.execSQL(
+                "INSERT INTO watches " +
+                    "(id, task, everyMinutes, state, createdAt, lastSummary, runs, " +
+                    "consecutiveFailures, nextRunAt) " +
+                    "VALUES (1, 'check the tides', 15, 'ACTIVE', 5, 'Old finding', 2, 0, 900)",
+            )
+            db.execSQL(
+                "INSERT INTO watch_runs (id, watchId, at, outcome, summary) " +
+                    "VALUES (1, 1, 10, 'CHECKED', 'Old finding')",
+            )
+        }
+
+        helper.runMigrationsAndValidate(20, migrations.toList()).use { db ->
+            assertThat(db.textAt("SELECT lastSummary FROM watches WHERE id = 1"))
+                .isEqualTo("Old finding")
+            assertThat(db.textAt("SELECT summary FROM watch_runs WHERE id = 1"))
+                .isEqualTo("Old finding")
+            assertThat(db.intAt("SELECT runs FROM watches WHERE id = 1")).isEqualTo(2)
+            assertThat(db.intAt("SELECT nextRunAt FROM watches WHERE id = 1")).isEqualTo(900)
+            assertThat(db.isNullAt("SELECT summaryUntrusted FROM watches WHERE id = 1")).isTrue()
+            assertThat(db.isNullAt("SELECT summaryPrivate FROM watches WHERE id = 1")).isTrue()
         }
     }
 }

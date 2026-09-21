@@ -40,7 +40,7 @@ class WriteFileToolTest {
         WorkspaceGrant(context).also { it.remember(FakeDocumentsProvider.TREE) },
     )
     private val tool =
-        WriteFileTool(workspace, SessionArtifacts(), CanvasBoard(), CanvasGrader.none())
+        WriteFileTool(workspace, SessionArtifacts(workspace), CanvasBoard(), CanvasGrader.none())
 
     private suspend fun write(arguments: String): ToolExecution =
         tool.execute(ToolCall(id = "1", name = "write_file", argumentsJson = arguments))
@@ -56,6 +56,18 @@ class WriteFileToolTest {
         val entry = checkNotNull(workspace.resolve("notes.txt"))
         assertThat(workspace.readBytes(entry)?.toString(Charsets.UTF_8))
             .isEqualTo("""He said "hi" and left""")
+    }
+
+    @Test
+    fun `a provider rename that changes document id preserves the saved content`() = runTest {
+        provider.nameOnCreate = { "$it.txt" }
+
+        val execution = write("""{"path":"notes","content":"saved text"}""")
+
+        assertThat(execution.successful).isTrue()
+        val entry = checkNotNull(workspace.resolve("notes"))
+        assertThat(workspace.readBytes(entry)?.toString(Charsets.UTF_8)).isEqualTo("saved text")
+        assertThat(workspace.resolve("notes.txt")).isNull()
     }
 
     @Test

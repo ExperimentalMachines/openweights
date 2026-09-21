@@ -82,7 +82,7 @@ interface TurnListener {
     /** A new pass is about to start, so the entry should be cleared for it. */
     fun onNextPass()
 
-    /** Asks the user about one tool. Only reached in [AgentMode.ASK]. */
+    /** Asks before a tool runs, including Auto's provenance and destructive-action gates. */
     suspend fun onApproval(call: ToolCall): Boolean
 
     /**
@@ -365,6 +365,9 @@ class TurnRunner @Inject constructor(
         offerAsk: Boolean? = null,
         question: String = "",
         offerPlan: Boolean = true,
+        /** Watch ownership boundaries must run while this turn owns the engine. */
+        beforeTurn: () -> Unit = {},
+        afterTurn: () -> Unit = {},
     ): String? {
         turnsWaiting.incrementAndGet()
         try {
@@ -380,6 +383,7 @@ class TurnRunner @Inject constructor(
             turnsWaiting.decrementAndGet()
         }
         return try {
+            beforeTurn()
             turn(
                 conversation,
                 params,
@@ -392,7 +396,11 @@ class TurnRunner @Inject constructor(
                 offerPlan,
             )
         } finally {
-            engineInUse.unlock()
+            try {
+                afterTurn()
+            } finally {
+                engineInUse.unlock()
+            }
         }
     }
 

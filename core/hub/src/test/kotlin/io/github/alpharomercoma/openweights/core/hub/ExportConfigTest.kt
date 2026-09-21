@@ -17,6 +17,17 @@
 package io.github.alpharomercoma.openweights.core.hub
 
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.runBlocking
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Protocol
+import okhttp3.Response
+import okhttp3.ResponseBody
+import okhttp3.ResponseBody.Companion.toResponseBody
+import okio.Buffer
+import okio.Source
+import okio.Timeout
+import okio.buffer
 import org.junit.Test
 
 /** The shapes are real: trimmed from the configs Software Mansion publishes. */
@@ -79,5 +90,67 @@ class ExportConfigTest {
 
         assertThat(ExportConfig.windowsIn(config)).isEmpty()
         assertThat(ExportConfig.windowsIn("not json")).isEmpty()
+    }
+
+    @Test
+    fun `opening a compiled repository bounds optional config bytes without hiding its model`() =
+        runBlocking {
+            var bytesRead = 0L
+            var closed = false
+            val oversized = object : Source {
+                override fun read(sink: Buffer, byteCount: Long): Long {
+                    val count = minOf(byteCount, 2L * 1024 * 1024 - bytesRead)
+                    if (count == 0L) return -1
+                    sink.write(ByteArray(count.toInt()) { ' '.code.toByte() })
+                    bytesRead += count
+                    return count
+                }
+
+                override fun timeout(): Timeout = Timeout.NONE
+                override fun close() {
+                    closed = true
+                }
+            }.buffer()
+            val config = object : ResponseBody() {
+                override fun contentType() = "application/json".toMediaType()
+                override fun contentLength(): Long = -1
+                override fun source() = oversized
+            }
+            val client = configClient(config)
+
+            val detail = client.detail("owner/model")
+
+            assertThat(detail.compiled.map { it.path }).containsExactly("model.pte")
+            assertThat(detail.compiled.single().contextWindow).isNull()
+            assertThat(bytesRead).isAtMost(1024L * 1024 + 8192)
+            assertThat(closed).isTrue()
+        }
+
+    @Test
+    fun `opening a compiled repository still reads a normal optional config`() = runBlocking {
+        val config = """
+            {"variants":[{"file":"model.pte","methods":{"get_max_context_len":4096}}]}
+        """.trimIndent().toResponseBody("application/json".toMediaType())
+
+        assertThat(configClient(config).detail("owner/model").compiled.single().contextWindow)
+            .isEqualTo(4096)
+    }
+
+    private fun configClient(config: ResponseBody): HuggingFaceClient {
+        val client = OkHttpClient.Builder().addInterceptor { chain ->
+            val request = chain.request()
+            val body = if (request.url.encodedPath.endsWith("/config.json")) {
+                config
+            } else {
+                """
+                {"id":"owner/model","siblings":[
+                  {"rfilename":"model.pte"},{"rfilename":"config.json"}
+                ]}
+                """.trimIndent().toResponseBody("application/json".toMediaType())
+            }
+            Response.Builder().request(request).protocol(Protocol.HTTP_1_1)
+                .code(200).message("OK").body(body).build()
+        }.build()
+        return HuggingFaceClient(client, HubTokenSource { null })
     }
 }

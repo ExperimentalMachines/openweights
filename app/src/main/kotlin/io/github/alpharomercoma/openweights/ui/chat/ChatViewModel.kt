@@ -51,6 +51,7 @@ import io.github.alpharomercoma.openweights.core.common.model.assistantHistoryTe
 import io.github.alpharomercoma.openweights.core.common.model.parseAssistantReply
 import io.github.alpharomercoma.openweights.core.common.model.withoutToolMarkup
 import io.github.alpharomercoma.openweights.core.data.ArchivedConversations
+import io.github.alpharomercoma.openweights.core.data.ChatRepository
 import io.github.alpharomercoma.openweights.core.data.ComputeTarget
 import io.github.alpharomercoma.openweights.core.data.ConversationFiling
 import io.github.alpharomercoma.openweights.core.data.ModelPreferences
@@ -329,6 +330,7 @@ data class ChatUiState(
     val engineHistory: EngineHistory? = null,
     val contextUsed: Int = 0,
     val contextSize: Int = 0,
+    val contextSizeIsEstimated: Boolean = false,
     /**
      * How this model tokenises this conversation, as the last completed pass reported it.
      *
@@ -1147,6 +1149,7 @@ class ChatViewModel @Inject constructor(
             // spec line, "lfm2 1.2B Q4_K - Medium" reads as a sentence.
             modelQuantization = GgufFileName.quantization(modelFile.name),
             contextSize = info?.contextSize ?: 0,
+            contextSizeIsEstimated = info?.contextSizeIsEstimated == true,
             contextUsed = info?.contextUsed ?: 0,
             preferences = preferences,
             transcript = if (keepConversation) transcript else emptyList(),
@@ -1309,14 +1312,11 @@ class ChatViewModel @Inject constructor(
     private fun restoredToolNotes(
         messages: List<MessageEntity>,
         stepsByMessage: Map<Long, List<ToolStepEntity>>,
-        foldedThrough: Int?,
-    ): ToolNotes = messages.foldIndexed(ToolNotes()) { index, notes, message ->
-        // The fold is replayed where it happened: the suspicion earned before it went
-        // with the pages the fold rewrote, exactly as it does live.
-        val afterFold = foldedThrough != null && index == foldedThrough + 1
-        val current = if (afterFold) notes.folded() else notes
+    ): ToolNotes = messages.fold(ToolNotes()) { notes, message ->
+        // Compaction changes representation, not provenance: its summary can retain
+        // anything the original tool results taught the model.
         val steps = stepsByMessage[message.id].orEmpty().map { it.toAgentStep() }
-        if (steps.isEmpty()) current else current.withSteps(steps, turns::toolNamed)
+        if (steps.isEmpty()) notes else notes.withSteps(steps, turns::toolNamed)
     }
 
     /**
@@ -1368,7 +1368,6 @@ class ChatViewModel @Inject constructor(
                         restoredToolNotes(
                             stored.take(firstDiscarded),
                             toolSteps(id),
-                            state.compaction?.foldedThroughIndex,
                         )
                     }
                 }
@@ -1538,8 +1537,6 @@ class ChatViewModel @Inject constructor(
                         notes = restoredToolNotes(
                             stored,
                             toolSteps(id),
-                            edit.before.compaction?.foldedThroughIndex
-                                ?.takeUnless { edit.invalidatesCompaction },
                         ),
                     )
                 }
@@ -1583,13 +1580,7 @@ class ChatViewModel @Inject constructor(
                     carried.forEach { entry ->
                         val attachments = staging.duplicate(entry.attachments)
                         copiedFiles += attachments
-                        copiedTranscript += entry.copy(attachments = attachments)
-                        addMessage(
-                            conversationId = id,
-                            role = entry.role.wireName,
-                            text = entry.history ?: entry.text,
-                            attachments = attachments,
-                        )
+                        copiedTranscript += persistBranchEntry(id, entry, attachments)
                     }
                     id
                 }
@@ -1605,12 +1596,17 @@ class ChatViewModel @Inject constructor(
             // leak into a reply — what it can do is spare the branch re-reading the turns
             // both conversations share. See newChat, which dropped its reset for the same
             // reason.
-            conversationId = branched
+            switchTo(branched)
             _uiState.update {
                 it.copy(
                     transcript = copiedTranscript,
                     compaction = null,
-                    toolNotes = ToolNotes(),
+                    toolNotes = carried.fold(ToolNotes()) { notes, entry ->
+                        notes.withSteps(
+                            entry.blocks.filterIsInstance<TurnBlock.Step>().map { it.step },
+                            turns::toolNamed,
+                        )
+                    },
                     // Carried only when it describes exactly the carried turns: a branch
                     // from the last reply keeps extending the parent's cache byte for
                     // byte. A branch from earlier has no way to cut the record at the
@@ -1628,6 +1624,31 @@ class ChatViewModel @Inject constructor(
             // are already in the cache.
             warmEngine()
         }
+    }
+
+    private suspend fun ChatRepository.persistBranchEntry(
+        conversationId: Long,
+        entry: TranscriptEntry,
+        attachments: List<MessagePart.File>,
+    ): TranscriptEntry {
+        val storedId = addMessage(
+            conversationId = conversationId,
+            role = entry.role.wireName,
+            text = entry.history ?: entry.text,
+            tokensPerSecond = entry.tokensPerSecond,
+            prefillTokensPerSecond = entry.prefillTokensPerSecond,
+            timeToFirstTokenMs = entry.timeToFirstTokenMs,
+            generatedTokens = entry.generatedTokens,
+            reasoningMs = entry.reasoningMs,
+            attachments = attachments,
+            totalMillis = entry.totalMillis,
+            promptTokens = entry.promptTokens,
+            cachedTokens = entry.cachedTokens,
+            prefillMs = entry.prefillMs,
+            decodeMs = entry.decodeMs,
+            steps = entry.blocks.filterIsInstance<TurnBlock.Step>().map { it.step }.toRecords(),
+        )
+        return entry.copy(attachments = attachments, storedId = storedId, compactionNote = null)
     }
 
     /**
@@ -1803,7 +1824,10 @@ class ChatViewModel @Inject constructor(
                 }
 
                 override fun onIntermediate(text: String) =
-                    updateLastEntry { it.copy(blocks = it.blocks + TurnBlock.Said(text)) }
+                    // The preamble now lives in the work block, including while approval waits.
+                    updateLastEntry {
+                        it.copy(answer = "", blocks = it.blocks + TurnBlock.Said(text))
+                    }
 
                 override fun onNextPass() {
                     // Room for the next pass under the same entry, which is what makes a
@@ -2825,13 +2849,10 @@ class ChatViewModel @Inject constructor(
         // pressure while keeping a stale one in its place. Folding per message is exactly the
         // sequence a live conversation already produces one [TurnRunner] pass at a time.
         //
-        // Whether a note is private or carries a stranger's text is looked up from the
-        // current tool registry rather than stored, so a tool a build no longer ships answers
-        // null here and the note reads as neither rather than the reopen failing over a
-        // conversation from an older version.
-        val foldedThrough = conversation.compactionThroughIndex
-            .takeIf { conversation.compactionSummary != null }
-        val restoredNotes = restoredToolNotes(messages, stepsByMessage, foldedThrough)
+        // The current registry supplies each tool's provenance. A removed tool is unknown,
+        // not trusted or public: its stored results remain in the conversation, so the
+        // restored notes conservatively retain both approval gates.
+        val restoredNotes = restoredToolNotes(messages, stepsByMessage)
 
         _uiState.update { state ->
             val reopened = state.copy(

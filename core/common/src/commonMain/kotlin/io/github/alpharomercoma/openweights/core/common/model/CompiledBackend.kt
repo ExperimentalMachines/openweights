@@ -43,6 +43,16 @@ enum class CompiledBackend(val processor: Processor) {
     /** MediaTek's NPU, through NeuroPilot. No published artifact; a source build only. */
     NEUROPILOT(Processor.NPU),
 
+    /** Samsung's NPU, through ENN. ExecuTorch 1.4.0 has the delegate but no LLM path. */
+    ENN(Processor.NPU),
+
+    /**
+     * Arm's VGF container for the Vulkan ML extensions, which runs on any driver that has
+     * them rather than on one vendor's chip. Named here so it is not read as [UNKNOWN],
+     * which callers treat as worth trying.
+     */
+    VGF(Processor.GPU),
+
     /**
      * Apple silicon, through MLX. Software Mansion publishes these beside the XNNPACK
      * files in the same repository (`1_2b/mlx/…_mlx_int4.pte`), and with the name unread
@@ -56,6 +66,17 @@ enum class CompiledBackend(val processor: Processor) {
 
     /** What kind of silicon this delegate runs on. */
     enum class Processor { CPU, GPU, NPU }
+
+    /**
+     * Whether a file for this delegate is compiled for one chip and refuses every other.
+     *
+     * QNN takes `--soc_model` and MediaTek `--platform`, and the binary that comes out
+     * holds a context compiled for that chip; Samsung's ENN is the same shape. Their files
+     * are therefore published under the chip they were built for (`qnn/sm8750/...`), and a
+     * device that is not that chip must not be offered them however good the model is.
+     * XNNPACK, Vulkan and VGF compile once and run wherever their delegate does.
+     */
+    val isChipLocked: Boolean get() = this == QNN || this == NEUROPILOT || this == ENN
 
     companion object {
         /**
@@ -76,11 +97,32 @@ enum class CompiledBackend(val processor: Processor) {
             return when {
                 "xnnpack" in name -> XNNPACK
                 "vulkan" in name -> VULKAN
+                "vgf" in name -> VGF
                 "qnn" in name || "qualcomm" in name || "htp" in name -> QNN
                 "neuropilot" in name || "mediatek" in name || "mtk" in name -> NEUROPILOT
+                // "enn" is three letters that fall inside ordinary words, so it counts only
+                // as a whole segment of a path or name; "exynos" is safe anywhere.
+                "exynos" in name || ENN_SEGMENT.containsMatchIn(name) -> ENN
                 "mlx" in name -> MLX
                 else -> UNKNOWN
             }
         }
+
+        private val ENN_SEGMENT = Regex("(^|[/_.-])enn([/_.-]|\$)")
+
+        /**
+         * The chip a chip-locked file was compiled for, read from its path, or null.
+         *
+         * The exporter publishes these under the chip (`qnn/sm8750/...`, `mtk/mt6991/...`),
+         * which is also what Android reports as `Build.SOC_MODEL` on those devices: `SM8750`
+         * on a Galaxy S25 Ultra, `MT6991` on a Poco X8 Pro, both measured. Matching the two
+         * is what keeps a Dimensity from being offered a Snapdragon's binary.
+         */
+        fun socIn(path: String): String? = path.split('/')
+            .dropLast(1)
+            .firstOrNull { SOC_SEGMENT.matches(it) }
+            ?.lowercase()
+
+        private val SOC_SEGMENT = Regex("^(sm|mt|e)\\d{3,5}[a-z]?\$", RegexOption.IGNORE_CASE)
     }
 }

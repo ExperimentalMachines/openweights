@@ -285,6 +285,43 @@ class AgentRunnerTest {
     }
 
     @Test
+    fun `only the writing form of a conditional tool invalidates a refusal`() = runTest {
+        val rejects = TypedOutcome(ToolExecution.rejected("There is no page.txt."))
+        val conditional = object : Tool {
+            override val definition = ToolDefinition("fetch_or_save", "d", "{}")
+            override fun writesDurableData(call: ToolCall): Boolean = call.flag("save")
+            override suspend fun run(call: ToolCall): String = "Read."
+        }
+        val runner = AgentRunner(
+            ToolRegistry(listOf(rejects, conditional)),
+            maxRounds = AgentRunner.CHAINED_MAX_ROUNDS,
+        )
+        runner.step(listOf(call("typed")), 0, AgentMode.AUTO, approve = { true })
+
+        val afterRead = runner.step(
+            listOf(
+                call("fetch_or_save", args = """{"save":false}"""),
+                call("typed", id = "read-retry"),
+            ),
+            1,
+            AgentMode.AUTO,
+            approve = { true },
+        ) as AgentDecision.Continue
+        assertThat(afterRead.steps.last()).isInstanceOf(AgentStep.Skipped::class.java)
+
+        val afterWrite = runner.step(
+            listOf(
+                call("fetch_or_save", args = """{"save":true}"""),
+                call("typed", id = "write-retry"),
+            ),
+            2,
+            AgentMode.AUTO,
+            approve = { true },
+        ) as AgentDecision.Continue
+        assertThat(afterWrite.steps.last()).isInstanceOf(AgentStep.Ran::class.java)
+    }
+
+    @Test
     fun `a failure that might not happen twice is asked again`() = runTest {
         // The socket that went away. This is the one case where repeating the identical
         // call is the right move, so it must not be settled alongside the refusals.

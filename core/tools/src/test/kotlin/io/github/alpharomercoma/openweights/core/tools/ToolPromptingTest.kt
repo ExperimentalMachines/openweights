@@ -19,6 +19,9 @@ package io.github.alpharomercoma.openweights.core.tools
 import com.google.common.truth.Truth.assertThat
 import io.github.alpharomercoma.openweights.core.common.model.ToolCall
 import io.github.alpharomercoma.openweights.core.common.model.ToolDefinition
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Test
 
 /**
@@ -210,6 +213,25 @@ class ToolPromptingTest {
         val call = ToolPrompting.parse(reply, registry)
 
         assertThat(call?.argumentsJson).isEqualTo("""{"path": "a.md"}""")
+    }
+
+    @Test
+    fun `single quoted arguments preserve braces and escaped apostrophes`() {
+        val reply = """{'tool': 'web_search', 'arguments': {'query': 'o\'brien } { "cat"'}}"""
+        val call = ToolPrompting.parse(reply, registry)
+
+        assertThat(call).isNotNull()
+        val arguments = Json.parseToJsonElement(call!!.argumentsJson).jsonObject
+        assertThat(
+            arguments.getValue("query").jsonPrimitive.content,
+        ).isEqualTo("""o'brien } { "cat"""")
+    }
+
+    @Test
+    fun `an unfinished single quoted value cannot dispatch a partial call`() {
+        val reply = """{'tool': 'web_search', 'arguments': {'query': 'unfinished }"""
+
+        assertThat(ToolPrompting.parse(reply, registry)).isNull()
     }
 
     @Test

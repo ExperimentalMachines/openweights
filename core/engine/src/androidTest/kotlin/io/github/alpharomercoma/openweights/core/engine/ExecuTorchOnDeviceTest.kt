@@ -212,6 +212,59 @@ class ExecuTorchOnDeviceTest {
     }
 
     /** This process's resident set, in megabytes, as the kernel reports it. */
+    /**
+     * What the size of one prefill call costs. The engine feeds a long prompt in pieces of
+     * about two hundred tokens so a Stop is honoured quickly; on a Snapdragon 8 Elite its
+     * prefill came out behind llama.cpp's where a Dimensity 9400 had it far ahead
+     * (`docs/research/executorch-state-and-recipes.md`), and the piece size was the one
+     * untested suspect. Same prompt, cold each time, three repeats a size, written to
+     * `eval-results/<stem>.pieces.json` so a Test Lab run can pull it. `-e pieces 400,800`
+     * narrows the sizes.
+     */
+    @Test
+    fun prefillByPieceSize(): Unit = runBlocking {
+        val sizes = (arguments.getString("pieces") ?: "400,800,1600,3200,6400")
+            .split(',').map { it.trim().toInt() }
+        val messages = listOf(
+            ChatMessage.text(ChatRole.SYSTEM, LONG_PROMPT),
+            ChatMessage.text(ChatRole.USER, "Acknowledge in one short sentence."),
+        )
+        val rows = StringBuilder()
+        for (size in sizes) {
+            val sized = ExecuTorchEngine(
+                NativeExecuTorchBridge(),
+                warmPieceChars = size,
+                generateTailChars = maxOf(size, PIECE_TAIL_FLOOR),
+            )
+            sized.load(MODEL, PARAMS)
+            repeat(REPEATS) { run ->
+                sized.resetContext()
+                val done = sized.chat(messages, SamplerParams(maxTokens = 24, thinking = false))
+                    .toList().filterIsInstance<GenerationEvent.Completed>().single()
+                val stats = done.stats
+                val rate = stats.promptTokens * 1000.0 / maxOf(stats.prefillMs, 1)
+                val line = "pieces size=$size run=$run prompt=${stats.promptTokens} " +
+                    "prefillMs=${stats.prefillMs} tokS=%.1f".format(rate)
+                Log.i(TAG, line)
+                if (rows.isNotEmpty()) rows.append(",\n")
+                rows.append(
+                    """ {"piece_chars": $size, "run": $run, """ +
+                        """"prompt_tokens": ${stats.promptTokens}, """ +
+                        """"prefill_ms": ${stats.prefillMs}, """ +
+                        """"generated_tokens": ${stats.generatedTokens}, """ +
+                        """"decode_ms": ${stats.decodeMs}}""",
+                )
+            }
+            sized.unload()
+        }
+        val out = InstrumentationRegistry.getInstrumentation().targetContext.getExternalFilesDir(
+            "eval-results",
+        )!!
+        out.mkdirs()
+        File(out, MODEL.nameWithoutExtension + ".pieces.json")
+            .writeText("{\"model\": \"${MODEL.name}\", \"rows\": [\n$rows\n]}\n")
+    }
+
     private fun residentMb(): Long = File("/proc/self/status").readLines()
         .firstOrNull { it.startsWith("VmRSS:") }
         ?.filter { it.isDigit() }?.toLongOrNull()?.div(1024) ?: -1
@@ -365,6 +418,9 @@ class ExecuTorchOnDeviceTest {
         /** The runtime is asked to stop from inside its own token callback: one or two more. */
         const val STOP_SLACK = 4
         const val STOP_WITHIN_MS = 5_000L
+
+        /** The tail handed to generate is never smaller than the shipped one. */
+        const val PIECE_TAIL_FLOOR = 1600
 
         /** Long enough that re-reading it is visibly different from not re-reading it. */
         val LONG_PROMPT = buildString {

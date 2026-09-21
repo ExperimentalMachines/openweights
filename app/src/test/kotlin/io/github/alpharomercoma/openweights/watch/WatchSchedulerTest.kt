@@ -32,8 +32,11 @@ import io.github.alpharomercoma.openweights.core.device.FitEstimator
 import io.github.alpharomercoma.openweights.core.device.ThermalPolicy
 import io.github.alpharomercoma.openweights.core.tools.AskBoard
 import io.github.alpharomercoma.openweights.core.tools.PlanBoard
+import io.github.alpharomercoma.openweights.core.tools.SessionArtifacts
 import io.github.alpharomercoma.openweights.core.tools.ToolRegistry
 import io.github.alpharomercoma.openweights.core.tools.ToolSwitches
+import io.github.alpharomercoma.openweights.core.tools.Workspace
+import io.github.alpharomercoma.openweights.core.tools.WorkspaceGrant
 import io.github.alpharomercoma.openweights.model.ModelStore
 import io.github.alpharomercoma.openweights.runtime.GenerationService
 import io.github.alpharomercoma.openweights.ui.chat.ContextWindows
@@ -107,6 +110,7 @@ class WatchSchedulerTest {
                 PlanBoard(),
                 AskBoard(),
             ),
+            artifacts = SessionArtifacts(Workspace(context, WorkspaceGrant(context))),
             appContext = context,
         )
     }

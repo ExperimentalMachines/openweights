@@ -55,15 +55,13 @@ data class ToolNote(
 data class ToolNotes(
     val notes: List<ToolNote> = emptyList(),
     /**
-     * Whether a stranger's text has entered the prompt since the last fold, whatever the
-     * budget has trimmed since.
+     * Whether a stranger's text has entered this conversation, whatever the note budget
+     * or a compaction has trimmed since.
      *
-     * The notes are a budget, and a budget forgets: a page fetched three calls ago drops
-     * out of them, and with it went the flag that asks before anything leaves the device.
-     * The engine's record does not forget; it replays that page verbatim into every prompt
-     * until a fold rewrites the conversation. So the suspicion is kept here, apart from the
-     * notes, for exactly as long as the text is: set when a tool that returns untrusted
-     * text runs, cleared by [folded].
+     * A summary and the assistant's later replies can retain instructions or private facts
+     * from a tool result after its verbatim text has left the window. Neither trimming nor
+     * summarising establishes a new trust boundary. These flags survive both and are only
+     * rebuilt when turns are removed, or discarded when the conversation is left.
      */
     val readUntrusted: Boolean = false,
     /** The same for the user's own data. See [readUntrusted]. */
@@ -91,6 +89,8 @@ data class ToolNotes(
     fun withSteps(steps: List<AgentStep>, source: (String) -> Tool?): ToolNotes {
         val ran = steps.filterIsInstance<AgentStep.Ran>()
         if (ran.isEmpty()) return this
+        // A restored call can outlive the tool that made it. Missing metadata is not
+        // evidence that its surviving result is trusted or safe to send off-device.
         val tools = ran.map { source(it.call.name) }
         // associateBy keeps the last on a collision, which is what a batch holding the same
         // call twice should leave behind: one note, the newer of the two.
@@ -103,20 +103,10 @@ data class ToolNotes(
         val replaced = fresh.map { it.call }.toSet()
         return ToolNotes(
             notes = (notes.filterNot { it.call in replaced } + fresh).trimmedToBudget(),
-            readUntrusted = readUntrusted || tools.any { it?.returnsUntrustedText == true },
-            readPrivate = readPrivate || tools.any { it?.readsPrivateData == true },
+            readUntrusted = readUntrusted || tools.any { it?.returnsUntrustedText != false },
+            readPrivate = readPrivate || tools.any { it?.readsPrivateData != false },
         )
     }
-
-    /**
-     * The record after a fold.
-     *
-     * The fold rewrote the prompt from the root: what the model reads of the old turns is
-     * now its own summary, and the verbatim page that justified the suspicion is gone from
-     * the window. The notes themselves stay, and any that still carry a stranger's text
-     * still count; only the memory of text the notes no longer hold is released.
-     */
-    fun folded(): ToolNotes = copy(readUntrusted = false, readPrivate = false)
 
     /**
      * The notes as the model reads them, or null when there is nothing to say.
@@ -244,8 +234,8 @@ private fun AgentStep.Ran.asNote(tool: Tool?): ToolNote = ToolNote(
         ToolNotes.PER_NOTE_CHARS,
     ),
     result = result.oneLine().clippedTo(ToolNotes.PER_NOTE_CHARS),
-    untrusted = tool?.returnsUntrustedText == true,
-    private = tool?.readsPrivateData == true,
+    untrusted = tool?.returnsUntrustedText != false,
+    private = tool?.readsPrivateData != false,
 )
 
 /**

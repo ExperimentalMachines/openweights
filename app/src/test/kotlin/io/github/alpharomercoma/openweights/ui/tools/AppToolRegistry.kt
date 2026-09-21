@@ -83,7 +83,7 @@ internal object AppToolRegistry {
         val grant = WorkspaceGrant(context)
         if (sharedFolder) grant.remember(Uri.parse(SHARED_FOLDER))
         val workspace = Workspace(context, grant)
-        val artifacts = SessionArtifacts()
+        val artifacts = SessionArtifacts(workspace)
         val board = CanvasBoard()
         val settings = SearchSettings(context, SecretSealer.Unavailable)
         val memory = Memory(context)

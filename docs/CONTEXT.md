@@ -3,9 +3,32 @@
 > Living state file. Update at every milestone so no information is lost across sessions
 > or context compaction. Newest facts win; keep it accurate rather than exhaustive.
 
-Last updated: 2026-09-10. The dated sections below run from 2026-08-10; newer facts are in
-the research notes under `research/`, and the accurate summary of the app as shipped is the
-top-level `README.md` and `ARCHITECTURE.md`.
+Last updated: 2026-09-21. Older dated sections run from 2026-08-10; detailed findings are in
+the research notes under `research/`. The current capability summary is in the top-level
+`README.md` and `ARCHITECTURE.md`.
+
+## 2026-09-21: security and mobile harness audit
+
+Repaired provenance across branches, compaction and watch summaries; pinned file ownership
+and approval scopes; bounded canvas requests and publisher configs; added external-browser
+consent and offline-only voice selection. Compiled prefills, occupancy and capability UI
+were corrected without changing measured performance defaults or deleting useful tools.
+Room schema is now 20. Full host checks passed, followed by real UI and tool-authorization
+checks on the POCO after wireless discovery succeeded. Failed/skipped write headlines and
+duplicated approval preambles were corrected and verified on the installed build.
+
+A PTE-first startup exposed eight GGUF workers restricted to three CPUs. Restoring the
+process leader's affinity captured during backend initialization reduced the same reply
+from 19.8 seconds at 1 token/s to 1.3-1.4 seconds at 27-29 tokens/s, without changing thread
+counts. Published GPTQ 32k quality remains unapproved: arithmetic, factual extraction,
+compaction and truthful reporting of tool outcomes failed captured acceptance cases.
+The full artifact identity, measurements, approval review and limitations are in
+[`research/repo-audit-2026-09-17.md`](research/repo-audit-2026-09-17.md#on-device-acceptance-follow-up-2026-09-21).
+
+Model-side archives and the verified Hugging Face mirror are now outside the app repository,
+under `~/ow-models/benchmarks/` and `~/ow-models/hf-mirror/`. Commit `e3db3de5` removed the
+tracked Qualcomm artifacts without rewriting published history. Artifact presence or
+checksum agreement proves provenance, not model-quality approval.
 
 ## What this project is
 

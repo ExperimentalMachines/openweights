@@ -117,6 +117,7 @@ class RawReplyProbe {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val client = OkHttpClient()
         val workspace = Workspace(context, WorkspaceGrant(context))
+        val artifacts = SessionArtifacts(workspace)
         return ToolRegistry(
             listOf(
                 WebSearchTool(
@@ -124,10 +125,10 @@ class RawReplyProbe {
                     SearchSettings(context, SecretSealer.Unavailable),
                     Reachability { true },
                 ),
-                FetchUrlTool(client, Reachability { true }, workspace, SessionArtifacts()),
+                FetchUrlTool(client, Reachability { true }, workspace, artifacts),
                 SearchFilesTool(workspace),
                 ReadFileTool(workspace),
-                WriteFileTool(workspace, SessionArtifacts(), CanvasBoard(), CanvasGrader.none()),
+                WriteFileTool(workspace, artifacts, CanvasBoard(), CanvasGrader.none()),
                 RunScriptTool(Sandbox(context), workspace),
             ).filter { it.isAvailable },
         )

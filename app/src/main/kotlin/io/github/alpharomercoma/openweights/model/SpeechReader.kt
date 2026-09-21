@@ -17,8 +17,11 @@
 package io.github.alpharomercoma.openweights.model
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.speech.tts.Voice
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,98 +33,183 @@ import javax.inject.Singleton
 /**
  * Speaks replies aloud.
  *
- * Open-weight models that generate speech directly are far too large for a phone, so
- * spoken output comes from Android's own synthesiser instead. That keeps the promise the
- * rest of the app makes: the text was produced on this device, and so is the voice reading
- * it. Nothing is sent anywhere to be spoken.
+ * Only installed voices advertised by Android as not requiring a network are eligible.
+ * This trusts the TTS service's metadata, not a sandbox or proof that an adversarial
+ * service stays offline. Reply text is withheld until an eligible voice is selected.
  */
 @Singleton
 class SpeechReader @Inject constructor(@param:ApplicationContext private val context: Context) {
     private val _isSpeaking = MutableStateFlow(false)
 
-    /** True while a reply is being read. Drives the stop affordance in the UI. */
+    /** True while starting or reading a reply, so either can be stopped from the UI. */
     val isSpeaking: StateFlow<Boolean> = _isSpeaking.asStateFlow()
 
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
+    private val mainThread = Handler(Looper.getMainLooper())
     private var engine: TextToSpeech? = null
-
-    /** Set once the engine reports it is usable, so a failure is silent rather than fatal. */
     private var isReady = false
-
-    /** Queued while the engine starts up, since the first tap usually arrives before it does. */
     private var pending: String? = null
+    private var generation = 0
+    private var utterance = 0L
+    private var activeUtterance: String? = null
+    private val initTimeout = Runnable { fail("Read aloud could not start. Try again.") }
 
+    /** Called on the main thread, like [stop] and [release]. */
     fun speak(text: String) {
-        // Truncated to what the engine accepts: past its limit `speak` returns ERROR and
-        // never calls back, which would leave the UI showing "Stop reading" forever.
+        // Overlong requests are rejected without a progress callback by some engines.
         val spoken = text.forSpeech().take(TextToSpeech.getMaxSpeechInputLength())
         if (spoken.isBlank()) return
+        _error.value = null
+        _isSpeaking.value = true
 
         val current = engine
         if (current == null) {
             pending = spoken
             start()
-            return
-        }
-        if (!isReady) {
+        } else if (!isReady) {
             pending = spoken
-            return
+        } else {
+            speakReady(current, spoken)
         }
-        _isSpeaking.value = true
-        val queued = current.speak(spoken, TextToSpeech.QUEUE_FLUSH, null, UTTERANCE_ID)
-        // No utterance means no progress callback, so nothing else would ever clear this.
-        if (queued != TextToSpeech.SUCCESS) _isSpeaking.value = false
     }
+
+    private fun speakReady(current: TextToSpeech, spoken: String) {
+        try {
+            val locale = Locale.getDefault()
+            val voice = current.voices.orEmpty()
+                .asSequence()
+                .filter { it.isOfflineFor(locale) }
+                .maxWithOrNull(
+                    compareBy<Voice> { it.locale == locale }
+                        .thenBy { it.locale.country == locale.country }
+                        .thenBy { it.name },
+                )
+            // Never setLanguage here: it can replace an offline voice with the engine's
+            // network default. Recheck both availability and selection for every reply.
+            if (!current.selectOfflineVoice(voice, locale)) {
+                fail(
+                    "No installed offline voice for this language. " +
+                        "Install one in Android's text-to-speech settings. " +
+                        "OpenWeights will not use a network voice.",
+                )
+                return
+            }
+            val id = "openweights-reply-${++utterance}"
+            activeUtterance = id
+            if (current.speak(spoken, TextToSpeech.QUEUE_FLUSH, null, id) != TextToSpeech.SUCCESS) {
+                fail(
+                    "Read aloud could not speak this reply. Check Android's text-to-speech settings.",
+                )
+            }
+        } catch (_: RuntimeException) {
+            fail("Read aloud could not speak this reply. Check Android's text-to-speech settings.")
+        }
+    }
+
+    private fun TextToSpeech.selectOfflineVoice(candidate: Voice?, locale: Locale): Boolean {
+        if (candidate == null || setVoice(candidate) != TextToSpeech.SUCCESS) return false
+        val selected = voice ?: return false
+        return selected.name == candidate.name && selected.isOfflineFor(locale)
+    }
+
+    private fun Voice.isOfflineFor(target: Locale): Boolean = !isNetworkConnectionRequired &&
+        TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED !in features.orEmpty() &&
+        target.language.isNotEmpty() &&
+        locale.language == target.language
 
     fun stop() {
         pending = null
-        engine?.stop()
+        activeUtterance = null
         _isSpeaking.value = false
+        mainThread.removeCallbacks(initTimeout)
+        runCatching { engine?.stop() }
+        // A cancelled startup must not deliver its queued reply or block the next tap.
+        if (!isReady) discardEngine()
     }
 
     /** Releases the synthesiser. The app calls this when it is being torn down. */
     fun release() {
         stop()
-        engine?.shutdown()
+        discardEngine()
+    }
+
+    private fun discardEngine() {
+        generation++
+        val previous = engine
         engine = null
         isReady = false
+        runCatching { previous?.shutdown() }
+    }
+
+    private fun fail(message: String) {
+        stop()
+        discardEngine()
+        _error.value = message
     }
 
     private fun start() {
-        engine = TextToSpeech(context) { status ->
-            isReady = status == TextToSpeech.SUCCESS
-            if (!isReady) {
-                pending = null
-                _isSpeaking.value = false
-                return@TextToSpeech
+        val token = ++generation
+        mainThread.postDelayed(initTimeout, INIT_TIMEOUT_MILLIS)
+        try {
+            engine = TextToSpeech(context) { status ->
+                // Init can arrive before the constructor returns, or on a binder thread.
+                mainThread.post {
+                    if (token != generation) return@post
+                    mainThread.removeCallbacks(initTimeout)
+                    if (status != TextToSpeech.SUCCESS) {
+                        fail("Read aloud could not start. Check Android's text-to-speech settings.")
+                        return@post
+                    }
+                    val current = engine ?: return@post
+                    try {
+                        if (current.setOnUtteranceProgressListener(listener) !=
+                            TextToSpeech.SUCCESS
+                        ) {
+                            fail(
+                                "Read aloud could not start. Check Android's text-to-speech settings.",
+                            )
+                            return@post
+                        }
+                        isReady = true
+                        val queued = pending
+                        pending = null
+                        if (queued != null) speakReady(current, queued)
+                    } catch (_: RuntimeException) {
+                        fail("Read aloud could not start. Check Android's text-to-speech settings.")
+                    }
+                }
             }
-            engine?.language = Locale.getDefault()
-            engine?.setOnUtteranceProgressListener(listener)
-            pending?.let { queued ->
-                pending = null
-                speak(queued)
-            }
+        } catch (_: RuntimeException) {
+            fail("Read aloud could not start. Check Android's text-to-speech settings.")
         }
     }
 
     private val listener = object : UtteranceProgressListener() {
-        override fun onStart(utteranceId: String?) {
-            _isSpeaking.value = true
-        }
+        override fun onStart(utteranceId: String?) = Unit
 
         override fun onDone(utteranceId: String?) {
-            _isSpeaking.value = false
+            mainThread.post {
+                if (activeUtterance == null || utteranceId != activeUtterance) return@post
+                activeUtterance = null
+                _isSpeaking.value = false
+            }
         }
+
+        override fun onStop(utteranceId: String?, interrupted: Boolean) = onDone(utteranceId)
 
         @Deprecated("Required by the framework; the newer overload delegates to it.")
         override fun onError(utteranceId: String?) {
-            _isSpeaking.value = false
+            mainThread.post {
+                if (activeUtterance == null || utteranceId != activeUtterance) return@post
+                fail("Read aloud stopped unexpectedly. Check Android's text-to-speech settings.")
+            }
         }
     }
-
-    private companion object {
-        const val UTTERANCE_ID = "openweights-reply"
-    }
 }
+
+private const val INIT_TIMEOUT_MILLIS = 10_000L
 
 /**
  * A reply as it should be heard rather than read.

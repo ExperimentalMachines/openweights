@@ -59,6 +59,35 @@ class WatchRepositoryTest {
     }
 
     @Test
+    fun `summary provenance survives repository recreation and skipped ticks`() = runBlocking {
+        val watch = requireNotNull(repository.add("check the tide", 15, now = 1_000))
+        repository.record(
+            watch.id,
+            2_000,
+            WatchOutcome.CHECKED,
+            "Private finding",
+            summaryUntrusted = true,
+            summaryPrivate = true,
+        )
+        val reopened = WatchRepository(database)
+        reopened.record(watch.id, 3_000, WatchOutcome.SKIPPED, "busy")
+        val kept = requireNotNull(reopened.byId(watch.id))
+        assertThat(kept.lastSummary).isEqualTo("Private finding")
+        assertThat(kept.summaryUntrusted).isTrue()
+        assertThat(kept.summaryPrivate).isTrue()
+
+        reopened.record(
+            watch.id,
+            4_000,
+            WatchOutcome.CHECKED,
+            "Public finding",
+            summaryUntrusted = true,
+            summaryPrivate = false,
+        )
+        assertThat(repository.byId(watch.id)?.summaryPrivate).isFalse()
+    }
+
+    @Test
     fun `only so many may run at once`() {
         runBlocking {
             repeat(Watch.MAX_ACTIVE) { repository.add("check $it", everyMinutes = 30, now = 1_000) }

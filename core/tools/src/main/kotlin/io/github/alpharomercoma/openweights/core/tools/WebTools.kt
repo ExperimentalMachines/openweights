@@ -304,6 +304,8 @@ class FetchUrlTool @Inject constructor(
     private val workspace: Workspace,
     private val artifacts: SessionArtifacts,
 ) : Tool {
+    private var checkedCall: Pair<ToolCall, SessionArtifacts.Check>? = null
+
     /**
      * Chains for the same reason search does: reading one page is rarely the whole
      * errand — the page names a better one, or the answer needs a second source, or what
@@ -357,6 +359,27 @@ class FetchUrlTool @Inject constructor(
      */
     override val sendsWhereTheModelSays: Boolean = true
 
+    override fun writesDurableData(call: ToolCall): Boolean =
+        call.argument("save_to", "saveTo", "save") != null &&
+            call.argument("find", "pattern", "search", "contains", "grep").isNullOrBlank()
+
+    override fun asksInAuto(call: ToolCall): Boolean {
+        checkedCall = saveCheck(call)?.let { call to it }
+        return alwaysAsks
+    }
+
+    private fun saveCheck(call: ToolCall): SessionArtifacts.Check? = if (writesDurableData(call)) {
+        call.argument("save_to", "saveTo", "save")?.let(artifacts::check)
+    } else {
+        null
+    }
+
+    private fun takeSaveCheck(call: ToolCall): SessionArtifacts.Check? {
+        val checked = checkedCall?.takeIf { it.first == call }?.second ?: saveCheck(call)
+        checkedCall = null
+        return checked
+    }
+
     override val definition = ToolDefinition(
         name = NAME,
         description = "Fetch a public web page and return its readable text, when you were " +
@@ -388,6 +411,12 @@ class FetchUrlTool @Inject constructor(
     override suspend fun run(call: ToolCall): String = execute(call).text
 
     override suspend fun execute(call: ToolCall): ToolExecution = withContext(Dispatchers.IO) {
+        val checked = takeSaveCheck(call)
+        if (checked?.scope?.workspace != null && !artifacts.isCurrent(checked)) {
+            return@withContext ToolExecution.rejected(
+                "The chat or shared folder changed. Try this saved fetch again.",
+            )
+        }
         val url = call.argument("url", "link", "address", "input")
             ?: return@withContext ToolExecution.failure(
                 "No URL was given. Call fetch_url again with a url.",
@@ -426,7 +455,7 @@ class FetchUrlTool @Inject constructor(
 
             when (hop) {
                 is Hop.Read ->
-                    return@withContext readOutcome(hop.page, requested, next, call)
+                    return@withContext readOutcome(hop.page, requested, next, call, checked)
                 is Hop.Moved -> {
                     if (++hops > MAX_HOPS) {
                         return@withContext ToolExecution.failure(
@@ -448,6 +477,7 @@ class FetchUrlTool @Inject constructor(
         requested: String,
         finalUrl: HttpUrl,
         call: ToolCall,
+        checked: SessionArtifacts.Check?,
     ): ToolExecution = when {
         !page.successful -> ToolExecution.failure(page.text)
         // A page that answered and left nothing to read is almost always one that
@@ -471,7 +501,7 @@ class FetchUrlTool @Inject constructor(
             val saveTo = call.argument("save_to", "saveTo", "save")
             if (find != null) {
                 matchOutcome(page.text, find, requested, finalUrl)
-            } else if (saveTo != null && workspace.isReady && workspace.acceptsNewFiles) {
+            } else if (saveTo != null && checked?.scope?.workspace != null) {
                 // Saved whole, summarised briefly: a page can be far larger than the
                 // context window, and the sandbox reading the file is how the model
                 // works through what the conversation could never hold.
@@ -480,9 +510,21 @@ class FetchUrlTool @Inject constructor(
                 // sat at the path, which made a fetch the user approved for its address
                 // — or ran unasked, being the first call of a turn — a way to put a web
                 // page over their notes; write_file asks before that and this did not.
-                val saved = workspace.put(saveTo, page.text, replace = artifacts.isOwn(saveTo))
+                val saved = if (artifacts.isCurrent(checked)) {
+                    workspace.put(
+                        saveTo,
+                        page.text,
+                        replace = checked.own,
+                        scope = checked.scope.workspace,
+                        expected = checked.identity,
+                    )
+                } else {
+                    ToolExecution.rejected(
+                        "The chat or shared folder changed. Try this saved fetch again.",
+                    )
+                }
                 if (saved.successful) {
-                    artifacts.created(saveTo)
+                    artifacts.created(saveTo, checked.scope)
                     ToolExecution(
                         "Saved ${page.text.length} characters of $requested to " +
                             "$saveTo. It starts:" + "\n" + page.text.take(SAVED_PREVIEW),

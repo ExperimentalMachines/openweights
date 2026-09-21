@@ -25,8 +25,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.net.InetAddress
 import java.net.ServerSocket
 import java.net.Socket
@@ -43,7 +41,7 @@ import javax.inject.Singleton
  * Serves the shared folder over loopback so two browsers can read it: the in-app WebView,
  * and whatever real browser the user prefers — a `content://` document can reach neither,
  * and every browser understands `http://127.0.0.1`. Bound to the loopback interface
- * explicitly, so nothing on the network can reach it; the URL never leaves the device.
+ * explicitly, so the server is not reachable from the network.
  *
  * GET only, one request per connection, files resolved through [Workspace.resolve] — the
  * same walk every file tool uses, which is what makes `../` inert here: a path is either
@@ -71,18 +69,16 @@ import javax.inject.Singleton
  * And the server stops with the canvas: [stop] closes the socket and the key is minted
  * afresh next time, so a URL copied out of one session opens nothing in the next.
  *
- * ### Nothing leaves the phone
+ * ### Preview egress
  *
- * The gates above decide who may read the folder. A page the model built could still
- * send it somewhere: a `fetch` to any host, a form posted anywhere, an image whose URL
- * carries the file. Every HTML response therefore carries a Content-Security-Policy, which
- * both the in-app WebView and a real browser enforce: a built page may run its own
- * scripts and load from its own folder, and may connect to nothing but this server. The
- * viewer shells go further, because the Markdown they render is a file the model wrote
- * and Markdown carries raw HTML: their policy runs only scripts marked with a nonce minted
- * per response, so a `<script>` or an `onerror=` inside a document is inert. The cost is
- * that a built site cannot pull fonts, images or scripts from a CDN, and the site tool
- * says so to the model.
+ * HTML and SVG responses carry a Content-Security-Policy that restricts subresources,
+ * scripts and connections to this server. Viewer shells additionally require a script
+ * nonce so raw HTML in a document cannot execute. Generated sites therefore cannot pull
+ * fonts, images or scripts from a CDN.
+ *
+ * CSP does not block top-level navigation. The in-app WebView guards navigation and
+ * requests separately. Opening an external browser requires explicit consent because
+ * that browser is outside these guards and a generated page can navigate off-device.
  */
 @Singleton
 class CanvasServer @Inject constructor(
@@ -202,24 +198,53 @@ class CanvasServer @Inject constructor(
         val now = serving.incrementAndGet()
         peakServing.updateAndGet { most -> maxOf(most, now) }
         try {
-            client.soTimeout = READ_TIMEOUT_MS
-            val reader =
-                BufferedReader(InputStreamReader(client.getInputStream(), Charsets.ISO_8859_1))
-            val request = runCatching { reader.readLine() }.getOrNull() ?: return
-            // The headers are drained; the one that matters is read on the way past.
+            val lines = readHead(client)?.lineSequence()?.iterator() ?: return
+            val request = lines.next()
             var host: String? = null
-            var header = runCatching { reader.readLine() }.getOrNull()
-            while (!header.isNullOrEmpty()) {
+            for (header in lines) {
                 if (header.startsWith("host:", ignoreCase = true)) {
                     host = header.substringAfter(':').trim()
                 }
-                header = runCatching { reader.readLine() }.getOrNull()
             }
             val out = client.getOutputStream()
             out.write(answer(request.split(' '), host, client.localPort))
             out.flush()
         } finally {
             serving.decrementAndGet()
+        }
+    }
+
+    /** Bound both aggregate bytes and elapsed time before an unauthenticated request allocates more. */
+    private fun readHead(client: Socket): String? {
+        val input = client.getInputStream()
+        val bytes = ByteArray(HEADER_READ_BYTES)
+        val head = StringBuilder(bytes.size)
+        val deadline = System.nanoTime() + READ_TIMEOUT_MS * NANOS_PER_MILLI
+        while (true) {
+            val remaining = deadline - System.nanoTime()
+            if (remaining <= 0) return null
+            client.soTimeout = ((remaining + NANOS_PER_MILLI - 1) / NANOS_PER_MILLI).toInt()
+            val count = input.read(bytes)
+            if (count < 0) return null
+            for (index in 0 until count) {
+                if (head.length == MAX_HEADER_BYTES) {
+                    val out = client.getOutputStream()
+                    out.write(
+                        response(
+                            "431 Request Header Fields Too Large",
+                            "text/plain",
+                            byteArrayOf(),
+                        ),
+                    )
+                    out.flush()
+                    return null
+                }
+                val char = (bytes[index].toInt() and UNSIGNED_BYTE_MASK).toChar()
+                head.append(char)
+                if (char == '\n' && (head.endsWith("\r\n\r\n") || head.endsWith("\n\n"))) {
+                    return head.toString()
+                }
+            }
         }
     }
 
@@ -256,7 +281,13 @@ class CanvasServer @Inject constructor(
         // Typed by the file that answered, not by the name asked for: a folder answered by
         // its index page would otherwise go out as a download rather than a page.
         val type = contentTypeFor(served)
-        val policy = if (type.startsWith("text/html")) PAGE_POLICY else null
+        val policy = if (type.startsWith("text/html") ||
+            type == "image/svg+xml"
+        ) {
+            PAGE_POLICY
+        } else {
+            null
+        }
         return response("200 OK", type, body, policy)
     }
 
@@ -404,7 +435,7 @@ class CanvasServer @Inject constructor(
         return head.toByteArray(Charsets.ISO_8859_1) + body
     }
 
-    /** The policy an HTML response carries, and no referrer with it; nothing for the rest. */
+    /** Active documents get an egress policy and no referrer; passive assets need neither. */
     private fun policyHeaders(policy: String?): String = if (policy == null) {
         ""
     } else {
@@ -431,15 +462,19 @@ class CanvasServer @Inject constructor(
         /** Connections served at once; the rest wait in the backlog. See [scope]. */
         internal const val CONNECTIONS = 4
         private const val TAG = "CanvasServer"
+        private const val HEADER_READ_BYTES = 1_024
+        private const val NANOS_PER_MILLI = 1_000_000L
+        private const val UNSIGNED_BYTE_MASK = 0xff
         private const val VIEWER_PREFIX = "__ow__"
         private const val BACKLOG = 8
         private const val READ_TIMEOUT_MS = 10_000
+        private const val MAX_HEADER_BYTES = 32 * 1_024
         private const val KEY_BYTES = 16
 
         /**
-         * What a page the model built may reach: its own folder and this server, nothing
-         * off the phone. Inline scripts and eval stay allowed, because scripts are the
-         * point of previewing a site and a built page is one file more often than not.
+         * Restricts page subresources and connections to this server. Navigation still
+         * needs the WebView guard. Inline scripts and eval stay allowed because scripts
+         * are the point of previewing a generated site.
          */
         const val PAGE_POLICY = "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; " +
             "connect-src 'self'; form-action 'self'; base-uri 'none'; object-src 'none'"

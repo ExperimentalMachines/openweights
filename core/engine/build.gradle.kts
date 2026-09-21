@@ -260,7 +260,14 @@ dependencies {
     // backend and MediaTek is not among the published ones, so reaching the NPU means
     // building this from source against the NeuroPilot SDK. It carries native libraries
     // for arm64-v8a and x86_64.
-    implementation(libs.executorch.android)
+    // -PexecutorchBackend=vulkan swaps in the Vulkan build of the same release, for measuring
+    // an export on the GPU delegate (docs/research/executorch-state-and-recipes.md). The app
+    // ships the XNNPACK artifact; nothing in a release build passes the property.
+    if (providers.gradleProperty("executorchBackend").orNull == "vulkan") {
+        implementation("org.pytorch:executorch-android-vulkan:${libs.versions.executorch.get()}")
+    } else {
+        implementation(libs.executorch.android)
+    }
 
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)

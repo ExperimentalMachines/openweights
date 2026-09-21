@@ -44,10 +44,6 @@ class FakeExecuTorchBridge : ExecuTorchBridge {
     var lastMaxNewTokens: Int = -1
         private set
 
-    /** The window handed over at load, which ExecuTorch needs as a sequence length. */
-    var loadedContextLength: Int = -1
-        private set
-
     var loadedModelPath: String? = null
         private set
 
@@ -55,6 +51,10 @@ class FakeExecuTorchBridge : ExecuTorchBridge {
         private set
 
     var closed: Boolean = false
+        private set
+
+    /** How many times the file was opened: a reload is the engine's other way to start clean. */
+    var loads: Int = 0
         private set
 
     var stopped: Boolean = false
@@ -88,8 +88,15 @@ class FakeExecuTorchBridge : ExecuTorchBridge {
 
     override fun exportedContextLength(modelPath: String): Int? = exportedContextLength
 
-    override fun probe(modelPath: String): ExportFacts =
-        ExportFacts(exportedContextLength, hasVision, prefillLength)
+    /** What the file's `get_state_reset_at_zero` says; null is a file exported without it. */
+    var stateResetAtZero: Boolean? = null
+
+    override fun probe(modelPath: String): ExportFacts = ExportFacts(
+        exportedContextLength,
+        hasVision,
+        prefillLength ?: exportedContextLength,
+        stateResetAtZero,
+    )
 
     /** The smallest and largest channel value of the last picture, as the encoder saw them. */
     var pixelRange: ClosedFloatingPointRange<Float>? = null
@@ -114,14 +121,13 @@ class FakeExecuTorchBridge : ExecuTorchBridge {
         modelPath: String,
         tokenizerPath: String,
         temperature: Float,
-        contextLength: Int,
         multimodal: Boolean,
     ): Boolean {
         loadedMultimodal = multimodal
-        loadedContextLength = contextLength
         loadedModelPath = modelPath
         loadedTokenizerPath = tokenizerPath
         closed = false
+        loads++
         return opens
     }
 

@@ -73,4 +73,58 @@ class CompiledBackendTest {
             CompiledBackend.of("Someone/MODEL-XNNPack.pte"),
         ).isEqualTo(CompiledBackend.XNNPACK)
     }
+
+    @Test
+    fun `reads the two delegates added for the NPU and GPU matrix`() {
+        assertThat(
+            CompiledBackend.of("experimentalmachines/Qwen3-1.7B-ExecuTorch/enn/e9955/model.pte"),
+        )
+            .isEqualTo(CompiledBackend.ENN)
+        assertThat(
+            CompiledBackend.of("someone/Llama-3.2-1B-exynos.pte"),
+        ).isEqualTo(CompiledBackend.ENN)
+        assertThat(
+            CompiledBackend.of("experimentalmachines/Qwen3-1.7B-ExecuTorch/vgf/model-vgf-2k.pte"),
+        )
+            .isEqualTo(CompiledBackend.VGF)
+    }
+
+    @Test
+    fun `three letters inside a word are not the Samsung delegate`() {
+        // The reason "enn" is matched on segment boundaries: it falls inside ordinary words,
+        // and reading one as a Samsung binary would hide a file that runs anywhere.
+        assertThat(CompiledBackend.of("kennedy/Qwen3-1.7B-ExecuTorch-XNNPACK.pte"))
+            .isEqualTo(CompiledBackend.XNNPACK)
+        assertThat(
+            CompiledBackend.of("someone/perennial-model.pte"),
+        ).isEqualTo(CompiledBackend.UNKNOWN)
+    }
+
+    @Test
+    fun `knows which delegates are compiled for one chip`() {
+        assertThat(CompiledBackend.QNN.isChipLocked).isTrue()
+        assertThat(CompiledBackend.NEUROPILOT.isChipLocked).isTrue()
+        assertThat(CompiledBackend.ENN.isChipLocked).isTrue()
+        // Compiled once, run wherever the delegate is.
+        assertThat(CompiledBackend.XNNPACK.isChipLocked).isFalse()
+        assertThat(CompiledBackend.VULKAN.isChipLocked).isFalse()
+        assertThat(CompiledBackend.VGF.isChipLocked).isFalse()
+    }
+
+    @Test
+    fun `reads the chip a locked file was compiled for from its path`() {
+        // The two strings measured on real devices: Build.SOC_MODEL is SM8750 on a Galaxy
+        // S25 Ultra and MT6991 on a Poco X8 Pro, and the exporter publishes under both.
+        assertThat(
+            CompiledBackend.socIn("qnn/sm8750/Qwen3-0.6B-qnn-hybrid-2k.pte"),
+        ).isEqualTo("sm8750")
+        assertThat(
+            CompiledBackend.socIn("mtk/mt6991/Qwen3-0.6B-neuropilot-a16w4-512-chunk1of4.pte"),
+        )
+            .isEqualTo("mt6991")
+        assertThat(CompiledBackend.socIn("enn/e9955/model.pte")).isEqualTo("e9955")
+        // A portable file names no chip, and neither does a bare file name.
+        assertThat(CompiledBackend.socIn("xnnpack/Qwen3-0.6B-8da4w-2k.pte")).isNull()
+        assertThat(CompiledBackend.socIn("model.pte")).isNull()
+    }
 }

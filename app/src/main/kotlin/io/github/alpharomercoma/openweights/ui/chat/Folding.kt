@@ -122,9 +122,8 @@ internal class Folding(
             // valid extension again; clearing here is what lets its presence later
             // mean "captured post-fold" without a marker.
             engineHistory = null,
-            // The pages the old turns fetched are out of the window with them; the
-            // suspicion they earned goes too, except where a note still carries one.
-            toolNotes = toolNotes.folded(),
+            // Tool provenance stays: both the summary and the surviving replies can retain
+            // private facts or injected instructions after the raw observations are gone.
             transcript = transcript.mapIndexed { index, entry ->
                 if (index == compaction.foldedThroughIndex + 1) {
                     entry.copy(compactionNote = COMPACTION_NOTE)
@@ -166,6 +165,8 @@ internal class Folding(
         // record that is mostly conversation would free little and cost the re-read, and
         // the estimate below has to be wrong by a lot before a fold is postponed for it.
         if (observations * OBSERVATION_SHARE < recorded) return false
+        // Only the replay changes. Notes and their provenance still describe the replies
+        // left in the prompt, even where the original observation no longer fits.
         val masked = current.copy(engineHistory = null)
         val estimate = masked.estimatedPromptTokens()
         if (compactor.shouldCompact(masked.copy(contextUsed = estimate))) return false

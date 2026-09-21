@@ -105,20 +105,21 @@ object PromptTemplates {
      * Matched against the name with every separator removed, because the same family is
      * spelled `Qwen3`, `qwen_3` and `qwen-3` across publishers. The order is not free:
      * `Qwen3.5` normalises to a string containing `qwen3`, and it is a different family
-     * with a template nobody here has transcribed, so it is refused before Qwen3 can
-     * claim it — the same reasoning for LFM and any other versioned name.
+     * with a different template, so its branch comes before Qwen3's can claim it. The same
+     * goes for any versioned name whose shorter form is also a family here.
      */
     fun forModel(fileName: String): PromptTemplate? {
         val name = fileName.lowercase().filter { it.isLetterOrDigit() }
         // Variants whose protocol differs from the base family's, refused before the
         // family token can claim them: a vision or coder export is not a text-chat
-        // model wearing a longer name (codex QA). Qwen3.5 normalises onto "qwen3" the
-        // same way, so it sits in the same refusal.
+        // model wearing a longer name (codex QA).
         // LFM2.5-VL before the exclusions: it is the one vision family with a compiled
         // export this app can feed, and "vl" would otherwise refuse it with the rest.
         if ("lfm25vl" in name) return Lfm25Template
         if (EXCLUDED.any { it in name }) return null
         return when {
+            // Ahead of "qwen3", which is a prefix of it and would otherwise win.
+            "qwen35" in name -> Qwen35Template
             "qwen3" in name -> Qwen3Template
             "qwen25" in name -> Qwen25Template
             "smollm2" in name -> SmolLm2Template
@@ -131,11 +132,12 @@ object PromptTemplates {
         }
     }
 
-    private val EXCLUDED = listOf("vl", "vision", "coder", "guard", "qwen35")
+    private val EXCLUDED = listOf("vl", "vision", "coder", "guard")
 
     /** Families this build can render, for an error message that tells the user something. */
     val known: List<String> = listOf(
         "Qwen3",
+        "Qwen3.5",
         "Qwen2.5",
         "SmolLM2",
         "SmolLM3",
@@ -170,6 +172,24 @@ private object Qwen3Template : PromptTemplate {
         tools: List<ToolDefinition>,
         thinking: Boolean,
     ): String = Qwen3Prompt.render(messages, tools, thinking, verbatimHistory = true)
+}
+
+/**
+ * [Qwen35Prompt] as a [PromptTemplate], verbatim for the same reason as [Qwen3Template].
+ *
+ * Verbatim here means the opener as well as the reply. Qwen3.5's opener always carries a
+ * think block, so a turn written back without it never matches what the runtime holds, and
+ * this is a hybrid model that re-reads the whole conversation when that happens.
+ */
+private object Qwen35Template : PromptTemplate {
+    override val stopMarkers: List<String> = listOf(IM_END)
+    override val supportsThinking: Boolean = true
+
+    override fun render(
+        messages: List<ChatMessage>,
+        tools: List<ToolDefinition>,
+        thinking: Boolean,
+    ): String = Qwen35Prompt.render(messages, tools, thinking, verbatimHistory = true)
 }
 
 /** ChatML end-of-turn, shared by every family that speaks it. */

@@ -77,12 +77,10 @@ import io.github.alpharomercoma.openweights.core.designsystem.theme.Radius
 import kotlin.math.roundToInt
 
 /**
- * Per-model generation settings.
+ * Shared generation settings, with model-specific context and offload choices.
  *
- * Each control says what it does in a sentence rather than naming the paper it came from:
- * these knobs are famously opaque, and a local-model app is exactly where someone will
- * meet them for the first time. Values are saved against the model, because the right
- * temperature for one is wrong for another.
+ * Each control says what it does in a sentence rather than naming the paper it came from.
+ * Only settings the active runtime and output modality can use are offered.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -129,6 +127,8 @@ fun ParameterSheet(
      * look at an image, on a model that will refuse the attachment.
      */
     readsImages: Boolean = false,
+    supportsReasoningEffort: Boolean = false,
+    contextSizeIsEstimated: Boolean = false,
     onSave: (ModelPreferences) -> Unit,
     onReset: () -> Unit,
     onDismiss: () -> Unit,
@@ -169,13 +169,14 @@ fun ParameterSheet(
                 if (outputModality == OutputModality.SPEECH) {
                     "shared by every model, and this one reads few of them"
                 } else {
-                    "shared by every model, except the two below that reload it"
+                    "shared settings; context and processor choices are model-specific when supported"
                 },
             )
 
             if (supportsThinking && outputModality.accepts(Tunable.THINKING)) {
                 ThinkingSetting(
                     draft = draft,
+                    adjustableEffort = supportsReasoningEffort,
                     onChange = { commit(it) },
                 )
             }
@@ -209,9 +210,13 @@ fun ParameterSheet(
                 }
             }
 
+            if (compiledProcessor != null) {
+                Caption(stringResource(R.string.compiled_sampling_fixed))
+            }
+
             Setting(
                 label = stringResource(R.string.temperature),
-                shown = outputModality.accepts(Tunable.TEMPERATURE),
+                shown = compiledProcessor == null && outputModality.accepts(Tunable.TEMPERATURE),
                 explanation = stringResource(R.string.lower_steadier_higher_more_varied),
                 value = String.format(locale, "%.2f", draft.temperature),
             ) {
@@ -223,68 +228,20 @@ fun ParameterSheet(
                 )
             }
 
-            val isAutomatic = draft.contextLength == ModelPreferences.AUTOMATIC
-            Setting(
-                label = stringResource(R.string.context_length),
-                // Careful with this sentence. It used to say "as much as the model was
-                // trained for", which is the one thing the number is not: a file states how
-                // far it can address, not how far it was trained, and the two differ by four
-                // times on models this app recommends. Saying the wider thing would be the
-                // app vouching for output it has no way to check.
-                explanation = "How much conversation it keeps in mind. Left alone, as much " +
-                    "as this phone can hold. Models are often poorer near the top of their " +
-                    "range than the file admits. Applies at the next load.",
-                // The loaded window when it is being chosen for you, because a slider reading
-                // zero is not a setting anybody can act on, and the number that matters is
-                // the one the model is actually running with.
-                value = if (isAutomatic) {
-                    "$loadedContext tokens, automatic"
-                } else {
-                    "${draft.contextLength} tokens"
-                },
-                footnote = "Move the slider to fix it, or reset to go back to automatic"
-                    .takeIf { isAutomatic },
-            ) {
-                StepSlider(
-                    value = (draft.contextLength.takeIf { it > 0 } ?: loadedContext).toFloat(),
-                    onValueChange = { commit(draft.copy(contextLength = it.roundToInt())) },
-                    // Up to what this model is actually running with rather than a constant.
-                    // The constant was 32768, and automatic now opens LFM2.5 at 128000, so the
-                    // sheet read "128000 tokens" beside a thumb pinned at the end of a shorter
-                    // scale: one touch dropped the window by three quarters with no drag.
-                    valueRange = contextRange(loadedContext),
-                    steps = ModelLoadParams.CONTEXT_STEPS,
-                )
-            }
+            ContextSetting(
+                draft = draft,
+                loadedContext = loadedContext,
+                compiledProcessor = compiledProcessor,
+                contextSizeIsEstimated = contextSizeIsEstimated,
+                commit = commit,
+            )
 
-            if (readsImages) {
-                Setting(
-                    label = stringResource(R.string.image_detail),
-                    // Said as tokens, because on this projector tokens are the cost and
-                    // the app sets them by how many pixels it sends. It used to be a
-                    // longest edge, which measured the wrong thing: the tiler decides by
-                    // area, so the same edge was one view for a screenshot and ten tiles
-                    // for a photograph. See ModelPreferences.imageTokens.
-                    explanation = stringResource(R.string.image_detail_explanation),
-                    value = imageDetailLabel(draft.imageTokens),
-                    footnote = stringResource(R.string.image_detail_footnote)
-                        .takeIf { draft.imageTokens == ModelPreferences.IMAGE_TOKENS_TILES },
-                ) {
-                    // Three stops, evenly spaced on the slider whatever their token counts
-                    // are: the middle of the travel is the default, not a point a tenth
-                    // of the way along.
-                    val stops = ModelPreferences.IMAGE_TOKEN_STEPS
-                    StepSlider(
-                        value = stops.indexOf(draft.imageTokens).coerceAtLeast(0).toFloat(),
-                        onValueChange = {
-                            val stop = it.roundToInt().coerceIn(0, stops.lastIndex)
-                            commit(draft.copy(imageTokens = stops[stop]))
-                        },
-                        valueRange = 0f..stops.lastIndex.toFloat(),
-                        steps = stops.size - 2,
-                    )
-                }
-            }
+            ImageSetting(
+                draft = draft,
+                readsImages = readsImages,
+                compiledProcessor = compiledProcessor,
+                commit = commit,
+            )
 
             Setting(
                 label = stringResource(R.string.summarise_at),
@@ -338,7 +295,7 @@ fun ParameterSheet(
             AdvancedSettings(open = advancedOpen, onToggle = { advancedOpen = !advancedOpen }) {
                 Setting(
                     label = stringResource(R.string.top_p),
-                    shown = outputModality.accepts(Tunable.TOP_P),
+                    shown = compiledProcessor == null && outputModality.accepts(Tunable.TOP_P),
                     explanation = stringResource(R.string.keeps_likeliest_words_up_share),
                     value = String.format(locale, "%.2f", draft.topP),
                 ) {
@@ -352,7 +309,7 @@ fun ParameterSheet(
 
                 Setting(
                     label = stringResource(R.string.top_k),
-                    shown = outputModality.accepts(Tunable.TOP_K),
+                    shown = compiledProcessor == null && outputModality.accepts(Tunable.TOP_K),
                     explanation = stringResource(R.string.never_weighs_up_more_candidates),
                     value = draft.topK.toString(),
                 ) {
@@ -366,7 +323,8 @@ fun ParameterSheet(
 
                 Setting(
                     label = stringResource(R.string.repeat_penalty),
-                    shown = outputModality.accepts(Tunable.REPEAT_PENALTY),
+                    shown =
+                    compiledProcessor == null && outputModality.accepts(Tunable.REPEAT_PENALTY),
                     explanation = "Discourages repeating itself. Too high and it dodges words " +
                         "it needs.",
                     value = String.format(locale, "%.2f", draft.repeatPenalty),
@@ -490,17 +448,114 @@ fun ParameterSheet(
     }
 }
 
+@Composable
+private fun ImageSetting(
+    draft: ModelPreferences,
+    readsImages: Boolean,
+    compiledProcessor: ComputeTarget?,
+    commit: (ModelPreferences) -> Unit,
+) {
+    if (readsImages && compiledProcessor == null) {
+        Setting(
+            label = stringResource(R.string.image_detail),
+            // Said as tokens, because on this projector tokens are the cost and
+            // the app sets them by how many pixels it sends. It used to be a
+            // longest edge, which measured the wrong thing: the tiler decides by
+            // area, so the same edge was one view for a screenshot and ten tiles
+            // for a photograph. See ModelPreferences.imageTokens.
+            explanation = stringResource(R.string.image_detail_explanation),
+            value = imageDetailLabel(draft.imageTokens),
+            footnote = stringResource(R.string.image_detail_footnote)
+                .takeIf { draft.imageTokens == ModelPreferences.IMAGE_TOKENS_TILES },
+        ) {
+            // Three stops, evenly spaced on the slider whatever their token counts
+            // are: the middle of the travel is the default, not a point a tenth
+            // of the way along.
+            val stops = ModelPreferences.IMAGE_TOKEN_STEPS
+            StepSlider(
+                value = stops.indexOf(draft.imageTokens).coerceAtLeast(0).toFloat(),
+                onValueChange = {
+                    val stop = it.roundToInt().coerceIn(0, stops.lastIndex)
+                    commit(draft.copy(imageTokens = stops[stop]))
+                },
+                valueRange = 0f..stops.lastIndex.toFloat(),
+                steps = stops.size - 2,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ContextSetting(
+    draft: ModelPreferences,
+    loadedContext: Int,
+    compiledProcessor: ComputeTarget?,
+    contextSizeIsEstimated: Boolean,
+    commit: (ModelPreferences) -> Unit,
+) {
+    val fixedContext = compiledProcessor != null && !contextSizeIsEstimated
+    val isAutomatic = draft.contextLength == ModelPreferences.AUTOMATIC
+    Setting(
+        label = stringResource(R.string.context_length),
+        // Careful with this sentence. It used to say "as much as the model was
+        // trained for", which is the one thing the number is not: a file states how
+        // far it can address, not how far it was trained, and the two differ by four
+        // times on models this app recommends. Saying the wider thing would be the
+        // app vouching for output it has no way to check.
+        explanation = if (fixedContext) {
+            stringResource(R.string.context_fixed_at_export)
+        } else if (contextSizeIsEstimated) {
+            stringResource(R.string.context_export_unknown)
+        } else {
+            "How much conversation it keeps in mind. Left alone, as much " +
+                "as this phone can hold. Models are often poorer near the top of their " +
+                "range than the file admits. Applies at the next load."
+        },
+        // The loaded window when it is being chosen for you, because a slider reading
+        // zero is not a setting anybody can act on, and the number that matters is
+        // the one the model is actually running with.
+        value = if (contextSizeIsEstimated) {
+            stringResource(
+                R.string.context_estimated_tokens,
+                draft.contextLength.takeIf { it > 0 } ?: loadedContext,
+            )
+        } else if (fixedContext) {
+            "$loadedContext tokens"
+        } else if (isAutomatic) {
+            "$loadedContext tokens, automatic"
+        } else {
+            "${draft.contextLength} tokens"
+        },
+        footnote = "Move the slider to fix it, or reset to go back to automatic"
+            .takeIf { isAutomatic && compiledProcessor == null },
+    ) {
+        if (!fixedContext) {
+            StepSlider(
+                value = (draft.contextLength.takeIf { it > 0 } ?: loadedContext).toFloat(),
+                onValueChange = { commit(draft.copy(contextLength = it.roundToInt())) },
+                // Match the running model instead of pinning an automatic window
+                // to a shorter slider, which shrinks it on the first touch.
+                valueRange = contextRange(loadedContext),
+                steps = ModelLoadParams.CONTEXT_STEPS,
+            )
+        }
+    }
+}
+
 /**
  * Thinking, and how much of it.
  *
  * Only shown when the loaded chat template understands the flag, which llama.cpp can tell
  * us. Reasoning costs tens of seconds a reply on a phone, so this is a speed control as
- * much as a quality one. The effort level is passed to the template for the models that
- * read one and ignored by the rest, so it stays available whenever thinking is on.
+ * much as a quality one. Effort choices are offered only when the template reads them.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ThinkingSetting(draft: ModelPreferences, onChange: (ModelPreferences) -> Unit) {
+private fun ThinkingSetting(
+    draft: ModelPreferences,
+    onChange: (ModelPreferences) -> Unit,
+    adjustableEffort: Boolean,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -524,7 +579,7 @@ private fun ThinkingSetting(draft: ModelPreferences, onChange: (ModelPreferences
             )
         }
 
-        if (draft.thinking) {
+        if (draft.thinking && adjustableEffort) {
             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                 ReasoningEffort.entries.forEachIndexed { index, effort ->
                     SegmentedButton(

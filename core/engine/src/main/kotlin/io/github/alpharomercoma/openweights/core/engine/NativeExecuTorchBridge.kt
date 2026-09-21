@@ -40,7 +40,6 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
         modelPath: String,
         tokenizerPath: String,
         temperature: Float,
-        contextLength: Int,
         multimodal: Boolean,
     ): Boolean {
         close()
@@ -89,6 +88,7 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
                 contextLength = window,
                 hasVision = VISION_ENCODER_METHOD in methods,
                 prefillLength = read(PREFILL_METHOD),
+                stateResetAtZero = read("get_state_reset_at_zero")?.let { it != 0 },
             )
         } finally {
             program.destroy()
@@ -152,11 +152,8 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
         // engine's StopDiscipline, which counts callbacks and stops the loop itself.
         val config = LlmGenerationConfig.create()
             .maxNewTokens(maxNewTokens)
-            // seqLen is deliberately not set. Setting both makes the runtime resolve the
-            // allowance from the sequence length and ignore maxNewTokens: asking for 24
-            // tokens behind a 907-token prompt produced 1141, which is 2048 - 907. The
-            // model reports its own window through get_max_seq_len and clamps to it, so
-            // leaving this alone is both correct and what makes the budget mean anything.
+            // No seqLen override: the export owns the total window. This AAR ignores
+            // maxNewTokens, so the engine's callback discipline enforces the output budget.
             // Echo replays the prompt through onResult, and the whole conversation would
             // arrive looking like something the model had written.
             .echo(false)
@@ -245,6 +242,11 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
      * number that quietly means something else.
      */
     private fun outcomeFrom(stats: String?): ExecuTorchOutcome {
+        // 1.4.0 stats contain counts and timings, but no EOS id, stop reason or final
+        // position. TextTokenGenerator returns the same count when EOS lands on the last
+        // permitted step as when the loop exhausts its allowance. Do not infer truncation
+        // from a missing streamed marker: a tokenizer may decode a genuine EOS as empty.
+        // Reliable context-full classification needs a native termination-reason API.
         if (stats == null) return ExecuTorchOutcome(StopReason.END_OF_TURN)
 
         val promptTokens = stats.longField("prompt_tokens")

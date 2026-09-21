@@ -48,18 +48,26 @@ suspend fun unload()
 Two implementations ship, and a third class chooses between them. `LlamaCppEngine` runs
 any GGUF the pinned llama.cpp reads, the supported architecture list is code-generated at
 build time from llama.cpp's own table, so it tracks the submodule instead of a hand-kept
-list. `ExecuTorchEngine` runs compiled `.pte` files on XNNPACK; a `.pte` carries no metadata, so the app supplies the chat template, the stop
-tokens and the tool syntax per family, and refuses files whose family it cannot name
-(eight families render today; parity against llama.cpp is measured case-for-case in
-`docs/research/backend-parity.md`). Three things the ExecuTorch side learned in September
-2026: the 1.4.0 runtime never adds a model's start token, so the engine writes each
-family's BOS into the prompt text (`docs/research/executorch-window-matrix.md`); a `.pte`
-reports the window it was exported with through a constant method, the app reads it before
-loading and opens the model at that window, and Discover shows it from the publisher's
-`config.json`; and compiled vision exports of LFM2.5-VL and Gemma 3 are fed pictures through
-the runtime's multimodal runner, with the square, token count and pixel range per family in
-`VisionSpec` (`docs/research/executorch-vision.md`). `RoutingInferenceEngine` dispatches
-on the file format and is what the app actually injects.
+list. `ExecuTorchEngine` runs compiled `.pte` files on XNNPACK. The app supplies the chat
+template, stop tokens and tool syntax from `PromptTemplates`, and refuses unknown families.
+Parity against llama.cpp is measured case-for-case in `docs/research/backend-parity.md`.
+The engine adds a family's BOS only when its tokenizer does not already supply one.
+
+Readable constant methods report the compiled window and prefill bound before loading.
+The actual window is reported even when preferences request a smaller one. Older text
+exports without window metadata retain an explicitly labelled app-side estimate; vision
+exports missing required metadata are refused before the native runner can abort.
+Discover reads optional publisher `config.json` within a decompressed byte limit.
+
+LFM2.5-VL and Gemma 3 exports use the multimodal runner, with square, token count and pixel
+range in `VisionSpec`. Text prefills are bounded without splitting surrogate pairs or
+image control tokens. Truncation invalidates prefix reuse but preserves occupied-cache
+accounting until reset. Unsupported compiled sampler and image-size controls are not
+shown; template capabilities govern thinking and reasoning effort.
+
+`RoutingInferenceEngine` dispatches on file format and is what the app injects.
+See `docs/research/executorch-vision.md` and the dated audit note for the native stop-reason
+limitation that host-side accounting cannot resolve.
 
 ### Native layer
 
@@ -122,6 +130,21 @@ an `isolatedProcess` service with no filesystem, no sockets and no libc to reach
 (`:core:sandbox`), and pages the assistant builds are served to a WebView by a
 loopback-only server that resolves every path through the workspace so `../` is inert.
 
+Approval provenance belongs to the conversation, including its compacted summary and
+carried branch history. Watch summaries store nullable private/untrusted flags in Room
+schema 20; older unknown provenance is treated conservatively. Watch summary text is
+sanitized USER content, never a system instruction. Chat and watch artifact ownership is
+isolated under `TurnRunner`'s mutex.
+
+Session-created file exemptions use exact paths, provider document identity and metadata,
+plus folder-grant and session revisions. Write, delete and fetch-save operations retain the
+checked scope through approval and execution. SAF does not provide atomic compare-and-write,
+so indistinguishable external provider changes remain a trust boundary.
+
+Canvas request headers have aggregate byte and elapsed-time limits before authentication.
+HTML and SVG carry CSP, but navigation is a separate WebView guard. An external browser
+requires per-launch consent because CSP alone cannot prevent top-level navigation.
+
 Memory is four verbs behind two switches: reading back is one decision, and the three
 writing verbs, save, update, forget, share the other, because "may the model write to
 what the app keeps about you" is one question however many tools answer it. Every writing
@@ -132,8 +155,8 @@ Tools screen.
 The boards are how the model and the user share state without sharing a prompt: a plan
 the user ticks (`PlanBoard`), a goal that survives process death (`GoalBoard`), a canvas
 naming what is on screen (`CanvasBoard`), a question waiting for an answer (`AskBoard`).
-Watches are the one tool whose effect outlives the conversation, so they always ask
-first, and a WorkManager scheduler runs them within battery and thermal limits.
+Watches also outlive the conversation, so creating one always asks first. A WorkManager
+scheduler runs them within battery and thermal limits.
 
 Routing a 1B model to the right tool, and to no tool, is measured work, not prompt
 folklore: the suites and their verdicts live in `docs/research/tool-calling.md`, and the

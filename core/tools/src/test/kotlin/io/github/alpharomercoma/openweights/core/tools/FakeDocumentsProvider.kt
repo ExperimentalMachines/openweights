@@ -46,6 +46,13 @@ class FakeDocumentsProvider : DocumentsProvider() {
     /** Whether the listing carries a size; the contract lets a provider leave it out. */
     var reportsSize = true
 
+    /** Provider names need not be the host filenames or have its case-folding rules. */
+    val displayNames = mutableMapOf<String, String>()
+    var nameOnCreate: (String) -> String = { it }
+
+    var onOpen: (String, String) -> Unit = { _, _ -> }
+    var onDelete: (String) -> Unit = {}
+
     /** Every open as `name:mode`, so a test can say what was never opened for writing. */
     val opens = mutableListOf<String>()
 
@@ -79,14 +86,16 @@ class FakeDocumentsProvider : DocumentsProvider() {
         mimeType: String,
         displayName: String,
     ): String {
-        val file = File(fileFor(parentDocumentId), displayName)
+        val storedName = nameOnCreate(displayName)
+        val file = File(fileFor(parentDocumentId), storedName)
         val made = if (mimeType == Document.MIME_TYPE_DIR) file.mkdir() else file.createNewFile()
         if (!made) throw FileNotFoundException("Could not create $displayName")
-        return "$parentDocumentId/$displayName"
+        return "$parentDocumentId/$storedName"
     }
 
     override fun deleteDocument(documentId: String) {
         if (!fileFor(documentId).deleteRecursively()) throw FileNotFoundException(documentId)
+        onDelete(documentId)
     }
 
     override fun renameDocument(documentId: String, displayName: String): String {
@@ -105,6 +114,7 @@ class FakeDocumentsProvider : DocumentsProvider() {
     ): ParcelFileDescriptor {
         val name = documentId.substringAfterLast('/')
         opens += "$name:$mode"
+        onOpen(documentId, mode)
         if ('w' in mode && refusesWritesTo(name)) {
             throw FileNotFoundException("$name is not for writing")
         }
@@ -117,10 +127,11 @@ class FakeDocumentsProvider : DocumentsProvider() {
         val file = fileFor(documentId)
         val row = mapOf(
             Document.COLUMN_DOCUMENT_ID to documentId,
-            Document.COLUMN_DISPLAY_NAME to file.name,
+            Document.COLUMN_DISPLAY_NAME to (displayNames[documentId] ?: file.name),
             Document.COLUMN_MIME_TYPE to
                 if (file.isDirectory) Document.MIME_TYPE_DIR else "text/plain",
             Document.COLUMN_SIZE to file.length().takeIf { reportsSize },
+            Document.COLUMN_LAST_MODIFIED to file.lastModified(),
         )
         addRow(columnNames.map(row::get))
     }
@@ -133,6 +144,7 @@ class FakeDocumentsProvider : DocumentsProvider() {
             Document.COLUMN_DISPLAY_NAME,
             Document.COLUMN_MIME_TYPE,
             Document.COLUMN_SIZE,
+            Document.COLUMN_LAST_MODIFIED,
         )
 
         /** The uri a picker hands back for the root, which is what [WorkspaceGrant.remember] takes. */

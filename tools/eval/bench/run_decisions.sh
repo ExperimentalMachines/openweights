@@ -6,6 +6,8 @@
 #     MODELS=a.pte,b.gguf   ARMS=driven-search,driven-full   SETS=retrievalqa,popqa   FROM=40 ROWS=40
 #     PREFIX=qdc-           names another phone's files
 #     ECHO=1                runs the instruction-echo probe instead of the decisions
+#     DECISIONS=<file>      another question file (a held-out seed); it is pushed as decisions.json
+#     FRESH=1               archives this phone's earlier results locally before clearing them
 #
 # The instrumentation runs attached (-w) from a shell this script keeps open: started
 # detached with nohup, the am client died with the adb session before the test began
@@ -17,13 +19,23 @@
 # froze for two hours that way. The screen is woken at the start and kept awake for the
 # length of the run; on the charger neither is needed.
 set -eu
+# sh reads a script as it runs it. This one runs for hours, and an edit to the file while a
+# battery ran (2026-09-18) made the running copy read new bytes at its old offset, die
+# with a syntax error at the end and skip its result pull; the next battery then deleted
+# the phone's unpulled rows. So the script runs from a copy of itself.
+if [ -z "${RUN_DECISIONS_COPY:-}" ]; then
+  COPY=$(mktemp "${TMPDIR:-/tmp}/run_decisions.XXXXXX")
+  cp "$0" "$COPY"
+  RUN_DECISIONS_COPY=1 RUN_DECISIONS_HERE=$(cd "$(dirname "$0")" && pwd) exec sh "$COPY" "$@"
+fi
 SERIAL=${1:-}
 ADB="adb ${SERIAL:+-s $SERIAL}"
 PKG=io.github.alpharomercoma.openweights.debug
 TEST=$PKG.test
 RUNNER=androidx.test.runner.AndroidJUnitRunner
 EVAL=/data/local/tmp/openweights/eval
-HERE=$(cd "$(dirname "$0")" && pwd)
+# The copy lives in a temp directory, so the original's directory is passed through.
+HERE=${RUN_DECISIONS_HERE:-$(cd "$(dirname "$0")" && pwd)}
 ROOT=$(cd "$HERE/../../.." && pwd)
 OUT="$HERE/../results/decisions"
 mkdir -p "$OUT"
@@ -43,8 +55,26 @@ $ADB shell "settings put system screen_off_timeout 2147483647; input keyevent KE
   done
 ) &
 AWAKE=$!
-trap 'kill $AWAKE 2>/dev/null' EXIT
-$ADB push "$HERE/decisions.json" "$EVAL/decisions.json" >/dev/null
+trap 'rm -f "$0"; kill $AWAKE 2>/dev/null || true' EXIT   # $0 is the temp copy by now
+# Result filenames carry the model and arm, not the questions. Preserve the phone's
+# previous captures before resetting its resumable output for another question set.
+QUESTIONS=${DECISIONS:-$HERE/decisions.json}
+QUESTIONS_SHA=$(shasum -a 256 "$QUESTIONS" | cut -d' ' -f1)
+RESULTS=/sdcard/Android/data/$PKG/files/eval-results
+MARKER=$RESULTS/decisions.questions.sha256
+$ADB shell "mkdir -p $EVAL $RESULTS"
+OLD_SHA=$($ADB shell "cat $MARKER 2>/dev/null" | tr -d '\r\n' || true)
+$ADB push "$QUESTIONS" "$EVAL/decisions.json" >/dev/null
+if [ "$METHOD" = decisions ]; then
+  if [ "${FRESH:-}" = 1 ] || [ "$OLD_SHA" != "$QUESTIONS_SHA" ]; then
+    mkdir -p "$OUT/archive"
+    ARCHIVE=$(mktemp -d "$OUT/archive/${PREFIX:-}previous.XXXXXX")
+    # A failed pull stops the script before anything on the phone is deleted.
+    $ADB pull "$RESULTS" "$ARCHIVE/" >/dev/null
+    $ADB shell "rm -f $RESULTS/decisions-*.jsonl"
+  fi
+  $ADB shell "echo $QUESTIONS_SHA > $MARKER"
+fi
 if [ -n "${INSTALL:-}" ]; then
   $ADB push "$APP" /data/local/tmp/app.apk >/dev/null && $ADB shell pm install -r -t --user 0 /data/local/tmp/app.apk
   $ADB push "$APK" /data/local/tmp/owtest.apk >/dev/null && $ADB shell pm install -r -t --user 0 /data/local/tmp/owtest.apk

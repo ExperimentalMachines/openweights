@@ -99,7 +99,18 @@ object ToolCallParser {
         val body = raw.trim().removePrefix(PYTHON_TAG).trim()
         if (!body.startsWith("{") || !body.endsWith("}")) return null
 
-        val name = body.jsonStringField("name") ?: return null
+        // Llama 3.2 1B also writes a call in the shape its tools were declared in,
+        // `{"type": "function", "function": "get_weather", "parameters": {...}}`. Measured
+        // 2026-09-18 on the 30 BFCL prompts under this app's template: the fp32 model
+        // does so on 22, and an export faithful to it on 17, every one of which was read
+        // as prose (BFCL 7 of 30, 15 with this branch). Only root fields name the call:
+        // arguments can contain the same keys, and JSON field order is not significant.
+        val declared = if (body.jsonStringField("type") == "function") {
+            body.jsonStringField("function")
+        } else {
+            null
+        }
+        val name = declared ?: body.jsonStringField("name") ?: return null
         val arguments = body.jsonObjectField("parameters") ?: return null
         return ParsedToolCalls(
             text = "",
@@ -275,21 +286,15 @@ object ToolCallParser {
     }
 
     private fun String.jsonStringField(field: String): String? {
-        val at = indexOf("\"$field\"")
-        if (at < 0) return null
-
-        val colon = indexOf(':', at + field.length)
-        val open = if (colon < 0) -1 else indexOf('"', colon)
-        val close = if (open < 0) -1 else indexOf('"', open + 1)
-        return if (close < 0) null else substring(open + 1, close)
+        val open = jsonFieldValueStart(field) ?: return null
+        if (this[open] != '"') return null
+        val close = jsonStringEnd(open) ?: return null
+        return substring(open + 1, close)
     }
 
     private fun String.jsonObjectField(field: String): String? {
-        val key = "\"$field\""
-        val at = indexOf(key)
-        if (at < 0) return null
-        val open = indexOf('{', at + key.length)
-        if (open < 0) return null
+        val open = jsonFieldValueStart(field) ?: return null
+        if (this[open] != '{') return null
 
         var depth = 0
         var inString = false
@@ -309,6 +314,61 @@ object ToolCallParser {
                     if (depth == 0) return substring(open, index + 1)
                 }
             }
+        }
+        return null
+    }
+
+    /** Finds only root members, and rejects a second object or trailing prose. */
+    private fun String.jsonFieldValueStart(field: String): Int? =
+        if (startsWith("{") && endsWith("}")) rootJsonFieldValueStart(field) else null
+
+    private fun String.rootJsonFieldValueStart(field: String): Int? {
+        var depth = 0
+        var found: Int? = null
+        var index = 0
+        while (index < length) {
+            when (this[index]) {
+                '{', '[' -> depth++
+                '}', ']' -> {
+                    depth--
+                    if (depth == 0) return found.takeIf { index == lastIndex }
+                }
+                '"' -> {
+                    val end = jsonStringEnd(index) ?: return null
+                    val next = if (depth == 1) jsonMemberValueStart(index, end, field) else null
+                    when {
+                        next == null -> Unit
+                        found != null -> return null
+                        else -> found = next
+                    }
+                    index = end
+                }
+            }
+            index++
+        }
+        return null
+    }
+
+    private fun String.jsonMemberValueStart(open: Int, end: Int, field: String): Int? {
+        if (end - open - 1 != field.length || !regionMatches(open + 1, field, 0, field.length)) {
+            return null
+        }
+        var next = end + 1
+        while (next < length && this[next].isWhitespace()) next++
+        if (next >= length || this[next] != ':') return null
+        next++
+        while (next < length && this[next].isWhitespace()) next++
+        return next
+    }
+
+    private fun String.jsonStringEnd(open: Int): Int? {
+        var index = open + 1
+        while (index < length) {
+            when (this[index]) {
+                '\\' -> index++
+                '"' -> return index
+            }
+            index++
         }
         return null
     }

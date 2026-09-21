@@ -221,6 +221,8 @@ class DeleteFileTool @Inject constructor(
     private val workspace: Workspace,
     private val artifacts: SessionArtifacts,
 ) : Tool {
+    private var checkedCall: Pair<ToolCall, SessionArtifacts.Check>? = null
+
     override val definition = ToolDefinition(
         name = "delete_file",
         description = "Delete a file or folder from the folder the user shared. Use it " +
@@ -247,8 +249,11 @@ class DeleteFileTool @Inject constructor(
     override val writesDurableData: Boolean = true
 
     /** The user's files ask in every mode; the session's own scratch does not. */
-    override fun asksInAuto(call: ToolCall): Boolean =
-        call.argument("path", "file")?.let { !artifacts.isOwn(it) } ?: true
+    override fun asksInAuto(call: ToolCall): Boolean {
+        val checked = call.argument("path", "file")?.let(artifacts::check)
+        checkedCall = checked?.let { call to it }
+        return checked?.own != true
+    }
 
     override suspend fun run(call: ToolCall): String = execute(call).text
 
@@ -256,6 +261,15 @@ class DeleteFileTool @Inject constructor(
         workspace.refusal()?.let { return it }
         val path = call.argument("path", "file")
             ?: return ToolExecution.rejected("No path was given. What should be deleted?")
-        return workspace.delete(path)
+        val checked = checkedCall?.takeIf { it.first == call }?.second ?: artifacts.check(path)
+        checkedCall = null
+        if (!artifacts.isCurrent(checked)) {
+            return ToolExecution.rejected(
+                "The chat or shared folder changed. Try this deletion again.",
+            )
+        }
+        // Retire the grant even on failure: a provider can partially delete a directory.
+        artifacts.deleted(path)
+        return workspace.delete(path, checked.scope.workspace, checked.identity)
     }
 }

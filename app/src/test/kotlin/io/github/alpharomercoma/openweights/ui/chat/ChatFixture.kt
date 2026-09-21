@@ -41,6 +41,7 @@ import io.github.alpharomercoma.openweights.core.tools.SessionArtifacts
 import io.github.alpharomercoma.openweights.core.tools.Tool
 import io.github.alpharomercoma.openweights.core.tools.ToolRegistry
 import io.github.alpharomercoma.openweights.core.tools.ToolSwitches
+import io.github.alpharomercoma.openweights.core.tools.Workspace
 import io.github.alpharomercoma.openweights.core.tools.WorkspaceGrant
 import io.github.alpharomercoma.openweights.download.ModelArrivals
 import io.github.alpharomercoma.openweights.model.AttachmentStore
@@ -108,6 +109,7 @@ abstract class ChatFixture {
     protected lateinit var turns: TurnRunner
     protected lateinit var switches: ToolSwitches
     protected lateinit var grant: WorkspaceGrant
+    protected lateinit var artifacts: SessionArtifacts
 
     /** Held so a test can announce a finished download and watch what the model does. */
     protected lateinit var arrivals: ModelArrivals
@@ -138,16 +140,20 @@ abstract class ChatFixture {
     }
 
     /** Another view model over the same storage, which is what survives process death. */
-    protected fun newViewModel(state: SavedStateHandle): ChatViewModel {
+    protected fun newViewModel(
+        state: SavedStateHandle,
+        tools: List<Tool> = listOf(StubTool),
+    ): ChatViewModel {
         val context = ApplicationProvider.getApplicationContext<android.app.Application>()
         plans = PlanBoard()
         goals = GoalBoard()
         switches = ToolSwitches(context)
         grant = WorkspaceGrant(context)
+        artifacts = SessionArtifacts(Workspace(context, grant))
         arrivals = ModelArrivals()
         turns = TurnRunner(
             engine,
-            ToolRegistry(listOf(StubTool)),
+            ToolRegistry(tools),
             switches,
             plans,
             AskBoard(),
@@ -177,7 +183,7 @@ abstract class ChatFixture {
             goals = goals,
             toolSwitches = switches,
             workspaceGrant = grant,
-            artifacts = SessionArtifacts(),
+            artifacts = artifacts,
             arrivals = arrivals,
             // Robolectric has no service to start, and GenerationService swallows the
             // failure on purpose: a turn that cannot raise its own priority still has to

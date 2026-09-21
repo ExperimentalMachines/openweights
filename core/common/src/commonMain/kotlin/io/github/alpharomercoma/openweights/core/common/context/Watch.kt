@@ -68,6 +68,9 @@ data class Watch(
     val lastRunAt: Long? = null,
     /** What the last tick concluded, one line, or null before the first. */
     val lastSummary: String? = null,
+    /** Null means a legacy summary whose provenance was not recorded. */
+    val summaryUntrusted: Boolean? = null,
+    val summaryPrivate: Boolean? = null,
     val runs: Int = 0,
     /** Reset by any tick that succeeds. See [MAX_CONSECUTIVE_FAILURES]. */
     val consecutiveFailures: Int = 0,

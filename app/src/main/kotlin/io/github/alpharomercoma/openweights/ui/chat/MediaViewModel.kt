@@ -56,6 +56,7 @@ class MediaViewModel @Inject constructor(
     }
 
     val isSpeaking: StateFlow<Boolean> = speech.isSpeaking
+    val speechError: StateFlow<String?> = speech.error
 
     /**
      * Starts reading [text], or stops if a reply is already being read.

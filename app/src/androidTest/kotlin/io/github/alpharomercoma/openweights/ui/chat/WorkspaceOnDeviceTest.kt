@@ -60,7 +60,7 @@ class WorkspaceOnDeviceTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val workspace = Workspace(context, WorkspaceGrant(context))
     private val write =
-        WriteFileTool(workspace, SessionArtifacts(), CanvasBoard(), CanvasGrader.none())
+        WriteFileTool(workspace, SessionArtifacts(workspace), CanvasBoard(), CanvasGrader.none())
     private val read = ReadFileTool(workspace)
     private val find = SearchFilesTool(workspace)
 

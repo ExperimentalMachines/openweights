@@ -42,6 +42,9 @@ enum class GrantState {
     READ_WRITE,
 }
 
+/** A particular selection and permission lifetime, not just a folder's remembered URI. */
+internal data class WorkspaceScope(val tree: Uri, val revision: Long)
+
 /**
  * The one folder the model may look inside, and whether that is still true.
  *
@@ -62,6 +65,8 @@ class WorkspaceGrant @Inject constructor(@param:ApplicationContext private val c
     private val store = context.getSharedPreferences("workspace", Context.MODE_PRIVATE)
 
     private val revisions = MutableStateFlow(0)
+    private var ownershipRevision = 0L
+    private var observedState: GrantState? = null
 
     /**
      * Bumped when the folder is chosen or handed back, for the same listener as
@@ -85,15 +90,30 @@ class WorkspaceGrant @Inject constructor(@param:ApplicationContext private val c
      * that will not take new files. Reporting all of them as "no folder" sends someone to
      * the picker to fix something the picker cannot fix.
      */
+    @Synchronized
     fun state(): GrantState {
-        val tree = stored() ?: return GrantState.NONE
-        val held = context.contentResolver.persistedUriPermissions
-            .firstOrNull { it.uri == tree } ?: return GrantState.LOST
-        return when {
-            !held.isReadPermission -> GrantState.LOST
+        val tree = stored()
+        val held = tree?.let { selected ->
+            context.contentResolver.persistedUriPermissions.firstOrNull { it.uri == selected }
+        }
+        val current = when {
+            tree == null -> GrantState.NONE
+            held == null || !held.isReadPermission -> GrantState.LOST
             held.isWritePermission -> GrantState.READ_WRITE
             else -> GrantState.READ_ONLY
         }
+        if (current != observedState) {
+            ownershipRevision++
+            observedState = current
+        }
+        return current
+    }
+
+    @Synchronized
+    internal fun ownershipScope(): WorkspaceScope? = if (state() == GrantState.READ_WRITE) {
+        stored()?.let { WorkspaceScope(it, ownershipRevision) }
+    } else {
+        null
     }
 
     /**
@@ -110,22 +130,26 @@ class WorkspaceGrant @Inject constructor(@param:ApplicationContext private val c
      * folder was still written down, so [state] answered [GrantState.LOST] forever for a
      * folder the app could perfectly well read.
      */
+    @Synchronized
     fun remember(tree: Uri) {
         val read = Intent.FLAG_GRANT_READ_URI_PERMISSION
         val both = read or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
         runCatching { context.contentResolver.takePersistableUriPermission(tree, both) }
             .recoverCatching { context.contentResolver.takePersistableUriPermission(tree, read) }
         store.edit { putString(KEY_TREE, tree.toString()) }
+        ownershipRevision++
         revisions.update { it + 1 }
     }
 
     /** Hands the folder back, both the record of it and the permission itself. */
+    @Synchronized
     fun forget() {
         val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
         stored()?.let {
             runCatching { context.contentResolver.releasePersistableUriPermission(it, flags) }
         }
         store.edit { remove(KEY_TREE) }
+        ownershipRevision++
         revisions.update { it + 1 }
     }
 

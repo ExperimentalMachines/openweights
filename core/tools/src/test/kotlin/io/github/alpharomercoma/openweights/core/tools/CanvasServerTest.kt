@@ -21,6 +21,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -50,6 +51,11 @@ class CanvasServerTest {
     init {
         // Registered, not held: the tests that need the folder reach it through the grant.
         FakeDocumentsProvider.register()
+    }
+
+    @After
+    fun closeServer() {
+        server.stop()
     }
 
     private fun get(url: String): Pair<Int, String> {
@@ -349,6 +355,73 @@ class CanvasServerTest {
             assertWithMessage(path).that(body).isEqualTo("<h1>Home</h1>")
             // As a page, not as a download: the type is the index file's, not the folder's.
             assertWithMessage(path).that(headers["content-type"]).startsWith("text/html")
+        }
+    }
+
+    @Test
+    fun `an SVG document receives the same egress policy as HTML`() = runTest {
+        grant.remember(FakeDocumentsProvider.TREE)
+        val svg = """
+            <svg xmlns="http://www.w3.org/2000/svg">
+              <script>fetch('https://example.com')</script>
+            </svg>
+        """.trimIndent()
+        check(workspace.put("site/drawing.svg", svg).successful)
+        board.show(CanvasKind.SITE, "site/index.html", "site")
+
+        val (headers, body) = fetch(server.urlFor("site/drawing.svg"))
+        assertThat(body).isEqualTo(svg)
+        assertThat(headers["content-type"]).isEqualTo("image/svg+xml")
+        assertThat(headers["content-security-policy"]).isEqualTo(CanvasServer.PAGE_POLICY)
+        assertThat(headers["referrer-policy"]).isEqualTo("no-referrer")
+    }
+
+    @Test
+    fun `an oversized unauthenticated request is rejected before its line ends`() {
+        Socket("127.0.0.1", server.port()).use { socket ->
+            socket.soTimeout = 2_000
+            socket.getOutputStream().write(("GET /" + "x".repeat(40_000)).toByteArray())
+            val status = socket.getInputStream().bufferedReader().readLine()
+            assertThat(status).isEqualTo("HTTP/1.1 431 Request Header Fields Too Large")
+        }
+        assertThat(get(server.viewerUrlFor("doc", "x")).first).isEqualTo(200)
+    }
+
+    @Test
+    fun `many short headers cannot bypass the request size bound`() {
+        Socket("127.0.0.1", server.port()).use { socket ->
+            socket.soTimeout = 2_000
+            val request =
+                "GET /nothing HTTP/1.1\r\n" +
+                    "X-Padding: abcdefghijklmnopqrstuvwxyz\r\n".repeat(1_200)
+            socket.getOutputStream().write(request.toByteArray())
+            val status = socket.getInputStream().bufferedReader().readLine()
+            assertThat(status).isEqualTo("HTTP/1.1 431 Request Header Fields Too Large")
+        }
+    }
+
+    @Test
+    fun `a trickling client cannot extend the header deadline`() {
+        Socket("127.0.0.1", server.port()).use { socket ->
+            socket.soTimeout = 15_000
+            socket.getOutputStream().write("GET /".toByteArray())
+            val sender = Thread {
+                runCatching {
+                    while (!Thread.currentThread().isInterrupted) {
+                        socket.getOutputStream().write('x'.code)
+                        Thread.sleep(100)
+                    }
+                }
+            }.apply {
+                isDaemon = true
+                start()
+            }
+            try {
+                assertThat(socket.getInputStream().read()).isEqualTo(-1)
+            } finally {
+                sender.interrupt()
+                sender.join(1_000)
+            }
         }
     }
 

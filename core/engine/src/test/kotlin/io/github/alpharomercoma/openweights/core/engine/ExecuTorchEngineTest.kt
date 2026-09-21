@@ -24,6 +24,7 @@ import io.github.alpharomercoma.openweights.core.common.model.MessagePart
 import io.github.alpharomercoma.openweights.core.common.model.ModelLoadParams
 import io.github.alpharomercoma.openweights.core.common.model.SamplerParams
 import io.github.alpharomercoma.openweights.core.common.model.ToolDefinition
+import io.github.alpharomercoma.openweights.core.common.model.assistantHistoryText
 import io.github.alpharomercoma.openweights.core.engine.LlamaException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -180,6 +181,7 @@ class ExecuTorchEngineTest {
         engine.load(installed(MODEL), PARAMS.copy(contextLength = 4096))
 
         assertThat(engine.loadedModel?.contextSize).isEqualTo(2048)
+        assertThat(engine.loadedModel?.contextSizeIsEstimated).isFalse()
         assertThat(engine.loadedModel?.trainingContextSize).isEqualTo(2048)
         assertThat(engine.loadedModel?.contextUsed).isEqualTo(0)
 
@@ -189,6 +191,18 @@ class ExecuTorchEngineTest {
         assertThat(completed.stats.contextSize).isEqualTo(2048)
         assertThat(completed.stats.contextUsed).isEqualTo(43)
         assertThat(engine.loadedModel?.contextUsed).isEqualTo(43)
+    }
+
+    @Test
+    fun `a smaller preference cannot shrink the compiled window`() = runTest {
+        bridge.exportedContextLength = 32768
+        engine.load(installed(MODEL), PARAMS.copy(contextLength = 2048))
+
+        val done = engine.chat(listOf(user("Hi"))).completed()
+
+        assertThat(engine.loadedModel?.contextSize).isEqualTo(32768)
+        assertThat(engine.loadedModel?.trainingContextSize).isEqualTo(32768)
+        assertThat(done.stats.contextSize).isEqualTo(32768)
     }
 
     @Test
@@ -232,6 +246,110 @@ class ExecuTorchEngineTest {
         assertThat(bridge.lastPrompt).isEqualTo("<|image_end|><|im_end|>\n<|im_start|>assistant\n")
         val completed = events.filterIsInstance<GenerationEvent.Completed>().single()
         assertThat(completed.content).isEqualTo("A red square on blue.")
+    }
+
+    @Test
+    fun `long text before and between pictures uses bounded prefills in exact order`() = runTest {
+        bridge.hasVision = true
+        bridge.exportedContextLength = 32768
+        bridge.prefillLength = 128
+        bridge.reply = "Noted.<|im_end|>"
+        // Multimodal stats include the full prompt position, not only the generate tail.
+        bridge.outcome =
+            ExecuTorchOutcome(StopReason.END_OF_TURN, promptTokens = 1700, generatedTokens = 2)
+        val engine =
+            ExecuTorchEngine(bridge, reader = { _, side, _ -> FloatArray(3 * side * side) })
+        engine.load(installed(VISION_MODEL), PARAMS)
+        val before = "Before ".repeat(300)
+        val between = "Between ".repeat(200)
+        val message = ChatMessage(
+            ChatRole.USER,
+            listOf(
+                MessagePart.Text(before),
+                MessagePart.File("/pictures/a.png", "image/png"),
+                MessagePart.Text(between),
+                MessagePart.File("/pictures/b.png", "image/png"),
+                MessagePart.Text("After."),
+            ),
+        )
+
+        val done = engine.chat(listOf(message)).completed()
+
+        bridge.prefills.forEach { assertThat(it.length).isAtMost(127) }
+        assertThat(bridge.prompts.single().length).isAtMost(127)
+        assertThat(bridge.fed.joinToString("") + bridge.prompts.single()).isEqualTo(
+            "<|im_start|>user\n$before<|image_start|><picture 512 x 512>" +
+                "<|image_end|>$between<|image_start|><picture 512 x 512>" +
+                "<|image_end|>After.<|im_end|>\n<|im_start|>assistant\n",
+        )
+        assertThat(done.stats.promptTokens).isEqualTo(1700)
+        assertThat(done.stats.contextUsed).isEqualTo(1702)
+        assertThat(done.stats.cachedTokens).isEqualTo(0)
+    }
+
+    @Test
+    fun `image control tokens stay whole at bounded prefill cuts`() = runTest {
+        bridge.hasVision = true
+        bridge.exportedContextLength = 32768
+        val engine =
+            ExecuTorchEngine(bridge, reader = { _, side, _ -> FloatArray(3 * side * side) })
+        val model = installed(VISION_MODEL)
+        for (prefillBound in listOf(128, 2048)) {
+            bridge.prefillLength = prefillBound
+            engine.load(model, PARAMS)
+            bridge.fed.clear()
+            bridge.prefills.clear()
+            bridge.prompts.clear()
+            val before = "a".repeat(minOf(prefillBound - 1, 800) - 10)
+            val after = "b".repeat(1700)
+            val message = ChatMessage(
+                ChatRole.USER,
+                listOf(
+                    MessagePart.Text(before),
+                    MessagePart.File("/pictures/a.png", "image/png"),
+                    MessagePart.Text(after),
+                ),
+            )
+
+            engine.chat(listOf(message)).completed()
+
+            val pieces = bridge.prefills + bridge.prompts.single()
+            pieces.forEach { assertThat(it.length).isLessThan(prefillBound) }
+            // The native tokenizer sees each piece separately. Every control token must
+            // occur whole in one call, not merely reappear when the calls are concatenated.
+            for (marker in listOf("<|image_start|>", "<|image_end|>")) {
+                assertThat(pieces.sumOf { it.split(marker).size - 1 }).isEqualTo(1)
+            }
+            assertThat(bridge.fed.joinToString("") + bridge.prompts.single()).isEqualTo(
+                "<|im_start|>user\n$before<|image_start|><picture 512 x 512>" +
+                    "<|image_end|>$after<|im_end|>\n<|im_start|>assistant\n",
+            )
+        }
+    }
+
+    @Test
+    fun `stopping during text before a picture never starts the encoder`() = runTest {
+        bridge.hasVision = true
+        bridge.exportedContextLength = 32768
+        bridge.prefillLength = 128
+        val engine =
+            ExecuTorchEngine(bridge, reader = { _, side, _ -> FloatArray(3 * side * side) })
+        engine.load(installed(VISION_MODEL), PARAMS)
+        bridge.onPrefill = { engine.cancel() }
+        val message = ChatMessage(
+            ChatRole.USER,
+            listOf(
+                MessagePart.Text("Before ".repeat(300)),
+                MessagePart.File("/pictures/a.png", "image/png"),
+            ),
+        )
+
+        val done = engine.chat(listOf(message)).completed()
+
+        assertThat(done.reason).isEqualTo(StopReason.CANCELLED)
+        assertThat(bridge.pictures).isEmpty()
+        assertThat(bridge.prompts).isEmpty()
+        assertThat(engine.loadedModel?.contextUsed).isEqualTo(0)
     }
 
     @Test
@@ -293,10 +411,52 @@ class ExecuTorchEngineTest {
         engine.chat(withPicture).toList()
         engine.chat(withPicture + assistant("Hello.") + user("And now?")).toList()
 
-        // Reset before the picture turn, and again after it: embeddings in the cache are
-        // not something the text record can promise to extend.
-        assertThat(bridge.contextResets).isEqualTo(3)
+        // A clean start before the picture turn, and again after it: embeddings in the cache
+        // are not something the text record can promise to extend. The vision model is an
+        // LFM2 export without the state marker, so after its first turn a clean start is a
+        // reopened file rather than a reset (see `a used LFM2 export is reopened`).
+        assertThat(bridge.contextResets + bridge.loads - 1).isEqualTo(3)
         assertThat(bridge.pictures).hasSize(2)
+    }
+
+    @Test
+    fun `a used LFM2 export is reopened, because its reset leaves the conv state behind`() =
+        runTest {
+            bridge.reply = "Hello.<|im_end|>"
+            val engine = ExecuTorchEngine(bridge)
+            engine.load(installed("LFM2.5-1.2B-Instruct-8da4w-32k.pte"), PARAMS)
+            val resets = bridge.contextResets
+
+            engine.chat(listOf(user("Hi"))).toList()
+            engine.chat(listOf(user("Something else entirely"))).toList()
+
+            assertThat(bridge.loads).isEqualTo(2)
+            assertThat(bridge.contextResets).isEqualTo(resets + 1)
+        }
+
+    @Test
+    fun `an LFM2 export that clears its own state keeps the cheap reset`() = runTest {
+        bridge.reply = "Hello.<|im_end|>"
+        bridge.stateResetAtZero = true
+        val engine = ExecuTorchEngine(bridge)
+        engine.load(installed("LFM2.5-1.2B-Instruct-8da4w-32k.pte"), PARAMS)
+
+        engine.chat(listOf(user("Hi"))).toList()
+        engine.chat(listOf(user("Something else entirely"))).toList()
+
+        assertThat(bridge.loads).isEqualTo(1)
+    }
+
+    @Test
+    fun `a model with only a KV cache is never reopened`() = runTest {
+        bridge.reply = "Hello.<|im_end|>"
+        val engine = ExecuTorchEngine(bridge)
+        engine.load(installed(MODEL), PARAMS)
+
+        engine.chat(listOf(user("Hi"))).toList()
+        engine.chat(listOf(user("Something else entirely"))).toList()
+
+        assertThat(bridge.loads).isEqualTo(1)
     }
 
     @Test
@@ -407,6 +567,32 @@ class ExecuTorchEngineTest {
     }
 
     @Test
+    fun `a stop during the final picture never starts generation`() = runTest {
+        bridge.hasVision = true
+        bridge.exportedContextLength = EXPORTED_WINDOW
+        bridge.reply = "never"
+        lateinit var engine: ExecuTorchEngine
+        engine = ExecuTorchEngine(bridge, reader = { _, side, _ ->
+            engine.cancel()
+            FloatArray(3 * side * side)
+        })
+        engine.load(installed(VISION_MODEL), PARAMS)
+        val message = ChatMessage(
+            ChatRole.USER,
+            listOf(MessagePart.File("/p/a.png", "image/png"), MessagePart.Text("Describe.")),
+        )
+
+        val events = engine.chat(listOf(message)).toList()
+
+        val done = events.filterIsInstance<GenerationEvent.Completed>().single()
+        assertThat(done.reason).isEqualTo(StopReason.CANCELLED)
+        assertThat(done.content).isEmpty()
+        assertThat(events.filterIsInstance<GenerationEvent.Token>()).isEmpty()
+        assertThat(bridge.prompts).isEmpty()
+        assertThat(engine.loadedModel?.contextUsed).isEqualTo(0)
+    }
+
+    @Test
     fun `a vision export of a family with no square opens as text`() = runTest {
         bridge.hasVision = true
         bridge.exportedContextLength = EXPORTED_WINDOW
@@ -438,7 +624,6 @@ class ExecuTorchEngineTest {
             // Seen on the phone with an older exporter's SmolVLM2: the multimodal runner reads
             // get_max_seq_len first and kills the process when it is missing.
             bridge.hasVision = true
-            bridge.exportedContextLength = EXPORTED_WINDOW
             bridge.exportedContextLength = null
 
             val refused = runCatching {
@@ -452,10 +637,31 @@ class ExecuTorchEngineTest {
         }
 
     @Test
+    fun `a vision context window does not replace required sequence metadata`() = runTest {
+        val missingSequence = object : ExecuTorchBridge by bridge {
+            override fun probe(modelPath: String) = ExportFacts(
+                contextLength = EXPORTED_WINDOW,
+                hasVision = true,
+                prefillLength = null,
+            )
+        }
+        val engine = ExecuTorchEngine(missingSequence)
+
+        val refused = runCatching {
+            engine.load(installed(VISION_MODEL), PARAMS)
+        }.exceptionOrNull()
+
+        assertThat(refused).isInstanceOf(LlamaException::class.java)
+        assertThat(bridge.loads).isEqualTo(0)
+        assertThat(engine.loadedModel).isNull()
+    }
+
+    @Test
     fun `a file that does not say its window keeps the preference`() = runTest {
         engine.load(installed(MODEL), PARAMS.copy(contextLength = 4096))
 
         assertThat(engine.loadedModel?.contextSize).isEqualTo(4096)
+        assertThat(engine.loadedModel?.contextSizeIsEstimated).isTrue()
     }
 
     @Test
@@ -514,6 +720,43 @@ class ExecuTorchEngineTest {
     }
 
     @Test
+    fun `Qwen3 5 keeps the cache with reasoning off, which Qwen3 cannot`() = runTest {
+        // Its opener closes an empty think block as Qwen3's does, and its template writes
+        // that block back into history, so the turn can be re-rendered as it was fed. The
+        // history string is built the way the app builds it, from the stats of the turn.
+        bridge.reply = "Hello.<|im_end|>"
+        engine.load(installed(QWEN35), PARAMS)
+
+        val first = listOf(user("Hi"))
+        val done = engine.chat(first, NO_THINKING).completed()
+        val stored = assistantHistoryText("Hello.", done.stats.thinkingPrefilled)
+        engine.chat(first + assistant(stored) + user("Again"), NO_THINKING).toList()
+
+        assertThat(bridge.prompts[0]).endsWith("<|im_start|>assistant\n<think>\n\n</think>\n\n")
+        assertThat(bridge.contextResets).isEqualTo(1)
+        assertThat(bridge.prompts[1]).startsWith("<|im_end|>\n<|im_start|>user\nAgain")
+    }
+
+    @Test
+    fun `Qwen3 5 reasons under an opener that left the block open`() = runTest {
+        // The reply closes a block the prompt opened. Read without the prompt, that closer
+        // is text, and the thinking was handed over as the answer.
+        bridge.reply = "Because.\n</think>\n\nHello.<|im_end|>"
+        engine.load(installed(QWEN35), PARAMS)
+
+        val first = listOf(user("Hi"))
+        val done = engine.chat(first).completed()
+        val raw = "Because.\n</think>\n\nHello."
+        val stored = assistantHistoryText(raw, done.stats.thinkingPrefilled)
+        engine.chat(first + assistant(stored) + user("Again")).toList()
+
+        assertThat(bridge.prompts[0]).endsWith("<|im_start|>assistant\n<think>\n")
+        assertThat(done.reasoning).isEqualTo("Because.")
+        assertThat(done.content).isEqualTo("Hello.")
+        assertThat(bridge.contextResets).isEqualTo(1)
+    }
+
+    @Test
     fun `starts over when the tools on offer change`() = runTest {
         // The tool list lives in the system block at the very front of the prompt, and this
         // app withdraws tools when a turn's budget is spent. Everything after that moves, so
@@ -557,19 +800,25 @@ class ExecuTorchEngineTest {
     }
 
     @Test
-    fun `gives up reuse when a reply ran out of budget instead of ending`() = runTest {
-        // No marker means the last sampled token is ordinary text, and nothing here can say
-        // which characters it was. Guessing would leave the record one token ahead of the
-        // cache forever, so the next turn starts over instead.
+    fun `a budget stop retains occupancy but the next turn replays the whole prompt`() = runTest {
+        bridge.exportedContextLength = 2048
         bridge.reply = "Hello, and I was still talking when"
+        bridge.outcome =
+            ExecuTorchOutcome(StopReason.END_OF_TURN, promptTokens = 1900, generatedTokens = 2)
         engine.load(installed(MODEL), PARAMS)
+        val first = listOf(user("x".repeat(1400)))
 
-        val first = listOf(user("Hi"))
-        engine.chat(first).toList()
-        engine.chat(first + assistant("Hello, and I was still talking when") + user("Again"))
-            .toList()
+        val stopped = engine.chat(first, SamplerParams(maxTokens = 3)).completed()
+
+        assertThat(stopped.reason).isEqualTo(StopReason.MAX_TOKENS)
+        assertThat(stopped.stats.contextUsed).isEqualTo(1902)
+        assertThat(engine.loadedModel?.contextUsed).isEqualTo(1902)
+        bridge.reply = "Done.<|im_end|>"
+        val next = engine.chat(first + assistant(stopped.content) + user("Again")).completed()
 
         assertThat(bridge.contextResets).isEqualTo(2)
+        assertThat(next.stats.cachedTokens).isEqualTo(0)
+        assertThat(bridge.prompts.last()).startsWith(bridge.prompts.first() + stopped.content)
     }
 
     @Test
@@ -699,30 +948,15 @@ class ExecuTorchEngineTest {
     }
 
     @Test
-    fun `reports no cached tokens, because nothing is carried between turns`() = runTest {
+    fun `a cold turn reports no cached tokens`() = runTest {
         bridge.outcome = ExecuTorchOutcome(StopReason.END_OF_TURN, promptTokens = 120)
         engine.load(installed(MODEL), PARAMS)
 
         val done = engine.chat(listOf(user("Hi"))).completed()
 
-        // Zero here is the truth rather than a missing number: ExecuTorch re-prefills the
-        // whole conversation every turn, so a follow-up saves nothing.
+        // No prior warm or turn exists, so the whole prompt is new work.
         assertThat(done.stats.cachedTokens).isEqualTo(0)
         assertThat(done.stats.cacheHitRate).isEqualTo(0.0)
-    }
-
-    @Test
-    fun `asks for the whole window when the caller set no limit`() = runTest {
-        engine.load(installed(MODEL), ModelLoadParams(contextLength = 4096))
-
-        engine.chat(listOf(user("Hi")), SamplerParams(maxTokens = 0)).completed()
-
-        // Zero means "no limit" to llama.cpp; passing it straight through would ask
-        // ExecuTorch to generate nothing at all.
-        assertThat(bridge.lastMaxNewTokens).isEqualTo(4096)
-        // And the window itself reaches the runtime, which counts in total sequence length
-        // and cannot work out a new-token allowance without it.
-        assertThat(bridge.loadedContextLength).isEqualTo(4096)
     }
 
     @Test
@@ -877,6 +1111,43 @@ class ExecuTorchEngineTest {
     }
 
     @Test
+    fun `warm and generation pieces preserve surrogate pairs at fallback cuts`() = runTest {
+        val model = installed(MODEL)
+        for (bound in listOf(127, 800)) {
+            bridge.prefillLength = bound + 1
+            engine.load(model, PARAMS)
+            bridge.prefills.clear()
+            val text = "x" + "\uD801\uDC00".repeat(1700)
+            val head = ChatMessage.text(ChatRole.SYSTEM, text)
+
+            engine.warm(listOf(head), params = NO_THINKING)
+
+            assertThat(bridge.prefills.joinToString(""))
+                .isEqualTo("<|im_start|>system\n$text<|im_end|>\n<|im_start|>")
+            bridge.prefills.forEach { piece ->
+                assertThat(piece.length).isAtMost(bound)
+                assertThat(piece.toByteArray(Charsets.UTF_8).toString(Charsets.UTF_8))
+                    .isEqualTo(piece)
+            }
+
+            engine.resetContext()
+            bridge.prefills.clear()
+            bridge.prompts.clear()
+            engine.chat(listOf(user(text))).completed()
+
+            val pieces = bridge.prefills + bridge.prompts.single()
+            assertThat(pieces.joinToString("")).isEqualTo(
+                "<|im_start|>user\n$text<|im_end|>\n<|im_start|>assistant\n",
+            )
+            pieces.forEach { piece ->
+                assertThat(piece.length).isAtMost(bound)
+                assertThat(piece.toByteArray(Charsets.UTF_8).toString(Charsets.UTF_8))
+                    .isEqualTo(piece)
+            }
+        }
+    }
+
+    @Test
     fun `a warm equal to what is held reads nothing`() = runTest {
         engine.load(installed(MODEL), PARAMS)
         val head = ChatMessage.text(ChatRole.SYSTEM, LONG_RULES)
@@ -978,6 +1249,9 @@ class ExecuTorchEngineTest {
 
     private companion object {
         const val MODEL = "Qwen3-1.7B.pte"
+
+        /** A different family whose name contains the one above, named as the exporter names it. */
+        const val QWEN35 = "Qwen3.5-2B-8da4w-2k.pte"
 
         /** What Software Mansion's LFM2.5-VL export reports; a real vision export always has one. */
         const val EXPORTED_WINDOW = 2048

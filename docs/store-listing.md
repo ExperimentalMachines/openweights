@@ -75,10 +75,10 @@ and a follow-up question starts replying in under half a second, because the con
 already in memory is not read twice.
 
 YOURS TO TUNE
-Temperature, top-p, top-k, repeat penalty, context length, the system prompt and what the
-model is told about its tools, all saved per model. Where a model can think before it answers
-that is a switch too, and on a phone with a working GPU you can say which processor holds the
-layers.
+Only controls the loaded runtime supports are shown. Generation settings are shared;
+context and processor choices are model-specific where supported. GGUF exposes adjustable
+samplers. Compiled models show their fixed window, or a labelled estimate for older exports.
+Supported thinking switches remain available.
 
 MORE THAN TEXT
 Images and audio for models that ship a compatible projector, documents supported by the
@@ -89,17 +89,19 @@ AN ASSISTANT THAT CAN ACT
 The model can search the web, read a page, and work with a folder you choose to share. You
 decide how much rope it gets: approve every step, let it run, or ask it to plan first and say
 what it would do before anything happens. It can ask you a clarifying question and follow a
-checklist you can tick yourself. Every tool can be switched off.
+checklist you can tick yourself. User-facing tools have switches.
 
 PRIVATE BY CONSTRUCTION
 Your conversations, your models and your usage stay on the device. There is no analytics SDK,
 no crash reporter, and no backend of ours. Automatic backup and device transfer are switched
-off, so a new phone does not inherit your chats. Uninstalling removes everything.
+off, so a new phone does not inherit your chats. Uninstalling removes app-private data;
+files in a folder you shared remain yours.
 
-Two tools do reach the internet, because they have to: web search and page fetching. Both are
-listed under a heading that says they leave the device, both can be switched off, and every
-call one makes is a row in the reply that names it and what it was given. Your Hugging Face
-token, if you set one, is encrypted with a key held in the Android Keystore and is sent only
+Three tools reach the internet: web search, picture search and page fetching. Each has a
+switch; only web search starts enabled. Calls are recorded in the reply. Queries can include
+conversation data, and private tool data triggers approval in Auto mode. Opening a generated
+page in an external browser asks first because it leaves the app's network controls.
+Your optional Hugging Face token is encrypted with an Android Keystore key and sent only
 to Hugging Face.
 
 WHAT YOU NEED

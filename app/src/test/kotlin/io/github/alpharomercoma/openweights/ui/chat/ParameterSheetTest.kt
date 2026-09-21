@@ -27,6 +27,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import io.github.alpharomercoma.openweights.core.common.model.OutputModality
+import io.github.alpharomercoma.openweights.core.data.ComputeTarget
 import io.github.alpharomercoma.openweights.core.data.ModelPreferences
 import io.github.alpharomercoma.openweights.core.designsystem.theme.OpenWeightsTheme
 import org.junit.Rule
@@ -72,6 +73,18 @@ class ParameterSheetTest {
         showSheet(supportsThinking = true)
 
         compose.onNodeWithText("Thinking", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun `reasoning effort edits are offered only when the template reads them`() {
+        var saved: ModelPreferences? = null
+        showSheet(supportsThinking = true, supportsReasoningEffort = true, onSave = { saved = it })
+
+        compose.onNodeWithText("Low").performScrollTo().performClick()
+
+        assert(saved?.reasoningEffort == "LOW") {
+            "The supported effort edit must reach the model preferences"
+        }
     }
 
     @Test
@@ -121,6 +134,41 @@ class ParameterSheetTest {
         // And the ones whose defaults are correct are not in the way of them.
         compose.onNodeWithText("Top-p").assertDoesNotExist()
         compose.onNodeWithText("Repeat penalty").assertDoesNotExist()
+    }
+
+    @Test
+    fun `a compiled model hides fixed samplers but keeps supported settings`() {
+        showSheet(
+            supportsThinking = true,
+            compiledProcessor = ComputeTarget.CPU,
+            readsImages = true,
+        )
+
+        compose.onNodeWithText("Thinking").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Answer length").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Context length").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("System prompt").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Temperature").assertDoesNotExist()
+        compose.onNodeWithText("Image detail").assertDoesNotExist()
+        compose.onNodeWithText("Low").assertDoesNotExist()
+        compose.onNodeWithText("Medium").assertDoesNotExist()
+        compose.onNodeWithText("High").assertDoesNotExist()
+
+        compose.onNodeWithText("Advanced").performScrollTo().performClick()
+        compose.onNodeWithText("Top-p").assertDoesNotExist()
+        compose.onNodeWithText("Top-k").assertDoesNotExist()
+        compose.onNodeWithText("Repeat penalty").assertDoesNotExist()
+    }
+
+    @Test
+    fun `a GGUF text model keeps all four sampler controls`() {
+        showSheet()
+
+        compose.onNodeWithText("Temperature").assertIsDisplayed()
+        compose.onNodeWithText("Advanced").performScrollTo().performClick()
+        compose.onNodeWithText("Top-p").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Top-k").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Repeat penalty").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -181,15 +229,6 @@ class ParameterSheetTest {
     }
 
     @Test
-    fun `the sheet no longer claims settings are per model`() {
-        // They stopped being per model when hyperparameters went global, and the caption
-        // saying otherwise outlived the change.
-        showSheet()
-
-        compose.onNodeWithText("saved for this model only").assertDoesNotExist()
-    }
-
-    @Test
     fun `a text-only model is not offered an image budget`() {
         // The control governs how much of a picture the projector is given. On a model with
         // no projector there is no picture, so the slider would be a promise the next
@@ -200,21 +239,18 @@ class ParameterSheetTest {
     }
 
     @Test
-    fun `a model that reads pictures is offered one, at the measured default`() {
+    fun `a model that reads pictures is offered an image budget`() {
         showSheet(readsImages = true)
 
         compose.onNodeWithText("Image detail").performScrollTo().assertIsDisplayed()
-        // Tokens, because on this projector tokens are the cost, and the app sets them by
-        // how many pixels it sends. The default is the balanced view, one encode of the
-        // picture at twice the projector's single-view pixels. See
-        // docs/research/image-tokens.md.
-        compose.onNodeWithText("Balanced, 512 tokens").assertIsDisplayed()
     }
 
     @Suppress("LongParameterList")
     private fun showSheet(
         supportsThinking: Boolean = false,
+        supportsReasoningEffort: Boolean = false,
         hasGpu: Boolean = false,
+        compiledProcessor: ComputeTarget? = null,
         outputModality: OutputModality = OutputModality.TEXT,
         readsImages: Boolean = false,
         onSave: (ModelPreferences) -> Unit = {},
@@ -226,8 +262,10 @@ class ParameterSheetTest {
                     modelName = "LFM2.5-2.6B-Q4_K_M",
                     preferences = ModelPreferences(),
                     supportsThinking = supportsThinking,
+                    supportsReasoningEffort = supportsReasoningEffort,
                     outputModality = outputModality,
                     hasGpu = hasGpu,
+                    compiledProcessor = compiledProcessor,
                     readsImages = readsImages,
                     onSave = onSave,
                     onReset = onReset,

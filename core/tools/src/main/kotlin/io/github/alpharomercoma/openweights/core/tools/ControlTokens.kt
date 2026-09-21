@@ -33,7 +33,7 @@ package io.github.alpharomercoma.openweights.core.tools
  * sequence untokenizable as a control token. Ordinary angle brackets, HTML included, and
  * ordinary square brackets are untouched.
  */
-internal fun String.withoutControlTokens(): String {
+fun String.withoutControlTokens(): String {
     var text = this
     if ('<' in text) text = text.replace(ANGLE_CONTROL_TOKEN, "< $1")
     if ('[' in text) text = text.replace(BRACKET_CONTROL_TOKEN, "[ $1")

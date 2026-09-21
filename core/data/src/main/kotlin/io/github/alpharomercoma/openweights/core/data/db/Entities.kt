@@ -374,6 +374,8 @@ data class WatchEntity(
     val createdAt: Long,
     val lastRunAt: Long? = null,
     val lastSummary: String? = null,
+    val summaryUntrusted: Boolean? = null,
+    val summaryPrivate: Boolean? = null,
     val runs: Int = 0,
     val consecutiveFailures: Int = 0,
     /** When the next check is due, as whoever scheduled it last worked it out. */

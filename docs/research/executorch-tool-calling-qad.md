@@ -322,9 +322,15 @@ before any of it is a number in a README.
 
 ## What this changes
 
-Nothing ships from this. It is the first export of LFM2.5 that calls a tool on the
-phone's own prompt at all, it is not level with either GGUF, and it was measured on the
-laptop only. If ExecuTorch is wanted back for LFM2.5, this is the file to measure on the
-phone next, against the QAD GGUF rather than Q4_K_M, on the full suite; and the ask to
-upstream is a weight-only int4 group-32 path on XNNPACK that runs, which would let the
-QAD weights be used as trained.
+Nothing ships from this. The mixed export is the first compiled LFM2.5 that calls a tool on
+the phone's own prompt, it was measured on the Poco above (160 rows, one session), and it
+is not level with either GGUF. The ask to upstream recorded here, a weight-only int4 path on
+XNNPACK, turned out not to be needed.
+
+**Superseded 2026-09-17** by `executorch-state-and-recipes.md`: every `.pte` row in this
+note after a run's first prompt was taken with LFM2's convolution state leaking from the
+previous prompt (the probe reused one runner, the phone harness one engine), which is also
+the whole of the "fp32 export's own gap"; and the int4 loss is one of rounding, not of the
+format. GPTQ codes on the same grid recover most calls at 795 MB in those later experiments,
+not every call or every quality metric. These historical builds do not approve the later
+published GPTQ32k artifact; its captured-failure approval review remains on hold.

@@ -10,6 +10,15 @@ three things that had been measured as one, and says which one carries the loss.
 reviewed by Codex (gpt-5.6-sol) and Gemini 3.8 Flash the same day; section 7 says what
 they changed.
 
+**Read with `executorch-state-and-recipes.md` (2026-09-17).** The `.pte` columns below came
+from one runner reused across prompts, and ExecuTorch's LFM2 graph carries its convolution
+state from one prompt into the next: only the first row of each run (Hanover) was clean. The
+"loss of the graph" in section 3 is that leak and nothing else; the quantisation collapse
+is real and survives a clean state (0.004 to 0.08 on the named rows).
+This historical explanation is not approval of a later GPTQ export. The follow-up note's
+2026-09-21 status distinguishes its lab artifacts from the published GPTQ32k file whose
+captured correctness and tool-outcome failures still block approval.
+
 Everything below is greedy, first-token probability of `<|tool_call_start|>` at the start
 of the reply, on the prompt bytes the phone sent. Scripts:
 `tools/eval/bench/toolcall_probe/`; rows, probabilities and both reviews:

@@ -292,6 +292,9 @@ class WriteFileTool @Inject constructor(
     private val canvas: CanvasBoard,
     private val grader: CanvasGrader,
 ) : Tool {
+    // TurnRunner serializes calls; keep only the decision currently awaiting execution.
+    private var checkedCall: Pair<ToolCall, SessionArtifacts.Check>? = null
+
     override val definition = ToolDefinition(
         name = "write_file",
         description = "Save a file into the folder the user shared. Pass replace to " +
@@ -339,13 +342,11 @@ class WriteFileTool @Inject constructor(
      * default implementation of [asksInAuto] is the only thing [alwaysAsks] feeds, and this
      * replaces it. Ask mode still questions every write through `needsApproval`.
      */
-    override fun asksInAuto(call: ToolCall): Boolean = alwaysAsks ||
-        (
-            call.flag("replace", "overwrite") &&
-                // Replacing a file this same session created is the agent's ordinary
-                // edit loop, not destruction: nothing of the user's is being lost.
-                call.shortArgument("path", "file", "name")?.let { !artifacts.isOwn(it) } != false
-            )
+    override fun asksInAuto(call: ToolCall): Boolean {
+        val checked = call.shortArgument("path", "file", "name")?.let(artifacts::check)
+        checkedCall = checked?.let { call to it }
+        return alwaysAsks || (call.flag("replace", "overwrite") && checked?.own != true)
+    }
 
     override suspend fun run(call: ToolCall): String = execute(call).text
 
@@ -371,6 +372,10 @@ class WriteFileTool @Inject constructor(
                     "$MAX_WRITE_CHARS characters, or save it in parts.",
             )
         }
+        return writeChecked(call, path, content)
+    }
+
+    private suspend fun writeChecked(call: ToolCall, path: String, content: String): ToolExecution {
         // A file this same session created is the model's own scratch, and editing it is
         // the iteration loop working - deck, document, site, saved again after each turn.
         // Requiring the flag there was measured stalling exactly that loop: asked to add
@@ -379,19 +384,32 @@ class WriteFileTool @Inject constructor(
         // own files keep the flag: overwriting what the session did not create destroys
         // content nothing here can put back, and stays behind both the flag and the
         // approval above.
-        val own = artifacts.isOwn(path)
+        val checked = checkedCall?.takeIf { it.first == call }?.second ?: artifacts.check(path)
+        checkedCall = null
+        if (!artifacts.isCurrent(checked)) {
+            return ToolExecution.rejected(
+                "The chat or shared folder changed. Try this write again.",
+            )
+        }
+        val own = checked.own
         val replace = call.flag("replace", "overwrite") || own
         // Whether the write is going over a file the user had. Asked before the write,
         // because afterwards there is a file either way.
-        val existed = !own && replace && workspace.resolve(path) != null
-        val written = workspace.put(path, content, replace = replace)
+        val existed = !own && checked.identity != null
+        val written = workspace.put(
+            path,
+            content,
+            replace = replace,
+            scope = checked.scope.workspace,
+            expected = checked.identity,
+        )
         if (written.successful) {
             // Only a file this made becomes the session's to edit freely. An approved
             // overwrite of the user's file does not make the file the model's: the next
             // rewrite, and a delete, ask again — the approval was for one replacement,
             // and this same process may hold a later conversation the user is not
             // watching so closely.
-            if (!existed) artifacts.created(path)
+            if (!existed) artifacts.created(path, checked.scope)
             // The canvas is watching: a save under what it shows repaints the screen.
             canvas.changed(path)
         }

@@ -450,6 +450,20 @@ class DiscoverViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Whether the compiled file at [path] could open on this device.
+     *
+     * Two conditions, and both cost a whole download to get wrong. The delegate has to be
+     * linked into this build, and a delegate compiled for one chip has to be that chip:
+     * a QNN or NeuroPilot binary reports itself unavailable anywhere else. The backend is
+     * read from the name because a `.pte` carries no metadata the app can inspect.
+     */
+    private fun runsHere(repoId: String, path: String): Boolean = ExecuTorchSupport.canRun(
+        CompiledBackend.of(repoId + path),
+        path,
+        profiler.profile().socModel,
+    )
+
     /** Opens a repository and starts inspecting its files against this device. */
     fun openModel(repoId: String) {
         detailJob?.cancel()
@@ -472,7 +486,7 @@ class DiscoverViewModel @Inject constructor(
                     val compiled = detail.compiled
                         .takeIf { ExecuTorchSupport.AVAILABLE && detail.isInstallableCompiled }
                         .orEmpty()
-                        .filter { ExecuTorchSupport.canRun(CompiledBackend.of(repoId + it.path)) }
+                        .filter { runsHere(repoId, it.path) }
                         // No tokenizer in reach means a download that ends in a model
                         // that cannot open, so the offer is withheld per file.
                         .filter { detail.tokenizerFor(it) != null }
@@ -560,9 +574,7 @@ class DiscoverViewModel @Inject constructor(
                 detail.compiled.none {
                     detail.tokenizerFor(it) != null
                 } -> CompiledWithheld.TOKENIZER
-            detail.compiled.none {
-                ExecuTorchSupport.canRun(CompiledBackend.of(repoId + it.path))
-            } -> CompiledWithheld.BACKEND
+            detail.compiled.none { runsHere(repoId, it.path) } -> CompiledWithheld.BACKEND
             else -> CompiledWithheld.FAMILY
         }
     }

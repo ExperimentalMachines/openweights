@@ -102,23 +102,23 @@ model search and downloads, and the three network tools. The
 | | llama.cpp | ExecuTorch |
 |---|---|---|
 | Files | GGUF, any architecture the pinned build reads | `.pte` compiled for XNNPACK |
-| Families | All of llama.cpp's | Qwen3, Qwen2.5, SmolLM2, SmolLM3, Llama 3.2, Phi-4-mini, Gemma 3, and LFM2.5 including its VL variant |
+| Families | All of llama.cpp's | Qwen3, Qwen3.5, Qwen2.5, SmolLM2, SmolLM3, Llama 3.2, Phi-4-mini, Gemma 3, and LFM2.5 including its VL variant |
 | Pictures | Any model with an `mmproj` projector | LFM2.5-VL and Gemma 3 exports |
 | Audio | Models with an audio projector | Not yet |
-| Tool use | Determined by the model's template | All families except SmolLM2 and Gemma 3 |
-| Thinking switch | Determined by the model's template | Qwen3 and SmolLM3; LFM2.5 decides for itself |
+| Tool use | Determined by the model's template | All families except SmolLM2 and Gemma 3 can write a call; whether a compiled model decides to is a property of how it was quantised (see below: the LFM2.5 1.2B exports were replaced on 2026-09-19 with ones that do, the 2.6B ones not yet) |
+| Thinking switch | Determined by the model's template | Qwen3, Qwen3.5 and SmolLM3; LFM2.5 decides for itself |
 | Compute | CPU with runtime-selected kernels (i8mm, SVE2, SME where present), KleidiAI, Adreno OpenCL where the driver works | CPU, KleidiAI kernels through XNNPACK |
-| Context window | You choose; the app suggests one from the header and your memory | Fixed at export; the app opens at that window |
+| Context window | You choose; the app suggests one from the header and your memory | Fixed at export when reported; legacy files without window metadata show an adjustable app-side estimate, not a verified native limit |
 
 ### Chat
 
 - **Branch, edit, regenerate.** Any message can be edited and resent, branched into a new conversation, regenerated, copied as text or Markdown, read aloud, or reported.
 - **Folding.** When the context passes a threshold you set, older turns fold into a summary between turns. The transcript on screen is untouched; only the prompt shrinks.
 - **Telemetry.** Every reply carries its prefill and decode tokens per second. The stats panel shows cached tokens, tokens generated, total time, and the prefill breakdown.
-- **Per-model parameters.** Answer length, temperature, context length, image detail, the folding threshold, system prompt, thinking and reasoning effort; under Advanced, top-p, top-k, repeat penalty, which processor prefills and which decodes, and the wording the model is given about its tools.
+- **Supported parameters, not inert controls.** Generation settings are shared; context and processor choices are model-specific where supported. GGUF exposes the samplers its runtime reads. Compiled models hide unsupported sampling, reasoning-effort and image-size controls, but keep answer length, system prompt, folding and supported thinking switches. A reported compiled window is read-only; a legacy estimate is labelled and adjustable.
 - **Thermal policy.** Thread counts step down as the phone reports heat, and generation pauses at the critical level.
 - **Search and archive.** Search across conversation titles and bodies; file conversations to an archive grouped by last activity.
-- **Voice.** Dictation uses the phone's on-device recogniser only. Read-aloud uses Android's own text to speech. Nothing is sent anywhere to be spoken.
+- **Voice.** Dictation requests the phone's on-device recogniser only. Read-aloud selects an installed Android voice reported as offline, with no online fallback. This relies on the speech service's metadata.
 - **Input.** Camera, photos, video and documents from the composer. Video arrives as sampled frames.
 
 ### The agent
@@ -144,13 +144,17 @@ on, `web_search`; the rest are off until you turn them on.
 | Command | Mode | What it means |
 |---|---|---|
 | `/ask` | Ask first | Approve each tool call before it runs |
-| `/auto` | Auto (default) | Tools run without asking; the transcript records what ran |
+| `/auto` | Auto (default) | Low-risk enabled tools run directly; sensitive actions pause for approval |
 | `/plan` | Plan | The assistant says what it would do and runs nothing |
-| `/yolo` | Everything | Waives Auto's two network checks for this process only; memory writes and watch creation still ask |
+| `/yolo` | Everything | Waives Auto's two network checks for this process only; memory writes, watch creation and untrusted durable writes still ask |
 
-Auto pauses for approval when a fetch to an address the model chose follows untrusted text
-in the turn, or when data would leave the device after private files were read. `/yolo`
-waives those two checks for the current process and is never saved.
+Auto pauses for approval when a model-chosen fetch follows untrusted content, or when data
+would leave after private tool data was read. Provenance survives compaction and carried
+branch history; watch summaries retain it across ticks. `/yolo` waives those two network
+checks for the current process and is never saved.
+
+The Canvas stays local inside the app. Open in browser asks each time, because an external
+browser is outside the app's request and navigation guards.
 
 **Other commands:** `/new`, `/compact`, `/retry`; `/goal <task>` works through a task on
 its own and resumes if the app is killed; `/deep-research <question>` researches a
@@ -222,6 +226,22 @@ Exports we made and measured, published under the Experimental Machines organisa
 | [LFM2.5-2.6B-ExecuTorch-XNNPACK-32k](https://huggingface.co/experimentalmachines/LFM2.5-2.6B-ExecuTorch-XNNPACK-32k) | LFM2.5 2.6B for ExecuTorch, 32k context. 1.8 GB. Reasons before it answers; give it a 2048-token reply budget. |
 | [LFM2.5-1.2B-Instruct-heretic](https://huggingface.co/experimentalmachines/LFM2.5-1.2B-Instruct-heretic) | The 1.2B with refusal behaviour removed, with an ExecuTorch 32k export beside the weights. |
 | [LFM2.5-2.6B-heretic](https://huggingface.co/experimentalmachines/LFM2.5-2.6B-heretic) | The 2.6B with refusal behaviour removed, with an ExecuTorch 32k export beside the weights. |
+
+**Published does not mean quality-approved.** The 2026-09-21 POCO acceptance run of the
+published 1.2B GPTQ 32k artifact found incorrect arithmetic, lost facts after compaction,
+and success claims after refused file writes. Approval remains withheld for that captured
+artifact. See the [exact artifact and approval review](docs/research/repo-audit-2026-09-17.md#captured-failure-approval-review).
+
+Earlier [recipe and state-reset experiments](docs/research/executorch-state-and-recipes.md)
+measured improvements on specific builds, not every file currently published under these
+repository names. The September 1.2B benchmark builds include a superseded base revision
+and an unpublished heretic build. Compare recorded file hashes before transferring a
+benchmark conclusion to a download. The app reopens exports without a state-reset marker
+between conversations; that runtime safeguard is not a model-quality guarantee.
+
+Model-side benchmark archives and the byte-verified Hugging Face mirror live outside this
+app repository, under `~/ow-models/benchmarks/` and `~/ow-models/hf-mirror/`. App integration
+tests and their existing evaluation tooling remain here.
 
 Each card states the export recipe, the memory the window costs at load, the measured speed
 on a Dimensity 9400, and the start-token rule the ExecuTorch runtime needs. How they were

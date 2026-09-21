@@ -210,14 +210,22 @@ private fun CodeStep(program: String, output: String) {
  * decode, so the ones that reach the network say so in the verb.
  */
 internal fun AgentStep.headline(): String = when (this) {
-    is AgentStep.Requested -> "${call.name.asVerb()} requested"
+    is AgentStep.Requested -> "${call.name.replace('_', ' ')} requested"
 
     is AgentStep.Ran -> {
         val seconds = String.format(Locale.getDefault(), "%.1fs", millis / MILLIS_PER_SECOND)
-        "${call.name.asVerb()} ${call.argumentsJson.summarise()} · $seconds"
+        val outcome = if (successful) {
+            call.name.asVerb()
+        } else {
+            "${call.name.replace(
+                '_',
+                ' ',
+            )} failed"
+        }
+        "$outcome ${call.argumentsJson.summarise()} · $seconds"
     }
 
-    is AgentStep.Skipped -> "${call.name.asVerb()} skipped · $why"
+    is AgentStep.Skipped -> "${call.name.replace('_', ' ')} skipped · $why"
 }
 
 /**

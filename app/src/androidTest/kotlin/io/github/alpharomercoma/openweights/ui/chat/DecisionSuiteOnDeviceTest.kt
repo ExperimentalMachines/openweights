@@ -157,11 +157,12 @@ class DecisionSuiteOnDeviceTest {
             AndroidReachability(app),
         )
         val catalogue = stubs(prompt.getJSONArray("tools"), except = search.definition.name)
+        val workspace = Workspace(app, WorkspaceGrant(app))
         val fetch = FetchUrlTool(
             OkHttpClient(),
             AndroidReachability(app),
-            Workspace(app, WorkspaceGrant(app)),
-            SessionArtifacts(),
+            workspace,
+            SessionArtifacts(workspace),
         )
         val results = resultsDir()
         Log.i(TAG, "START models=${models.map { it.name }} arms=$arms rows=${rows.size}")

@@ -63,6 +63,12 @@ adb -s $SER shell am instrument -w -r -e class <fully.qualified.TestClass> \
   io.github.alpharomercoma.openweights.debug.test/androidx.test.runner.AndroidJUnitRunner
 ```
 
+That runner is the app's test APK (`app-debug-androidTest.apk`: the decision suite, the UI
+probes). The engine's own device tests and the public-benchmark evals live in a second APK,
+`core/engine/build/outputs/apk/androidTest/debug/engine-debug-androidTest.apk`, whose runner
+is `io.github.alpharomercoma.openweights.core.engine.test/androidx.test.runner.AndroidJUnitRunner`;
+`tools/eval/bench/run_local.sh` installs and drives it.
+
 The engine's device tests skip themselves when no model file is present. Prefer an
 instrumented test over driving the UI with `adb shell input`; the phone is usually locked.
 
@@ -71,3 +77,15 @@ instrumented test over driving the UI with `adb shell input`; the phone is usual
 Screen-off runs are throttled by the ROM, two to five times slower with wild variance.
 Wake, unlock and cool the phone before timing anything, and say in the write-up that the
 screen was on.
+
+Unplugged, the ROM's freezer (GreezeManager) can freeze an instrumented run outright: the
+process sits in state S at 0% CPU, `/sys/fs/cgroup/apps/uid_<uid>/pid_<pid>/cgroup.freeze`
+reads 1, JDWP refuses the handshake, and the run simply stops advancing (2026-09-18: a
+decision suite stood still for fifteen minutes on its second row, the first that made a web
+search). Before a long run on battery:
+
+```sh
+P=io.github.alpharomercoma.openweights.debug
+adb shell "cmd deviceidle whitelist +$P; cmd deviceidle whitelist +$P.test; \
+  am set-standby-bucket $P active; cmd appops set $P RUN_ANY_IN_BACKGROUND allow"
+```

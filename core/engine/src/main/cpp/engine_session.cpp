@@ -18,10 +18,14 @@
 
 #include <android/log.h>
 #include <dlfcn.h>
+#if defined(__ANDROID__)
+#include <sched.h>
+#endif
 
 #include <algorithm>
 #include <cmath>
 #include <cctype>
+#include <cerrno>
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
@@ -221,6 +225,10 @@ void log_callback(ggml_log_level level, const char * text, void * /*user_data*/)
 }
 
 std::once_flag g_backend_once;
+#if defined(__ANDROID__)
+cpu_set_t g_process_cpus;
+bool g_process_cpus_known = false;
+#endif
 
 /**
  * The grammar sampler for a rendered tool call, or nullptr when the template asked for
@@ -515,10 +523,10 @@ std::string offload_summary_locked() {
     // Folded by name first: one backend can own several buffers, and three CPU entries
     // ranked apart would each lose to a single larger GPU one.
     std::vector<std::pair<std::string, double>> sorted;
-    for (const auto & [name, mib] : g_load_buffers) {
+    for (const auto & buffer : g_load_buffers) {
         auto found = std::find_if(sorted.begin(), sorted.end(),
-                                  [&](const auto & entry) { return entry.first == name; });
-        if (found == sorted.end()) sorted.emplace_back(name, mib); else found->second += mib;
+                                  [&](const auto & entry) { return entry.first == buffer.first; });
+        if (found == sorted.end()) sorted.emplace_back(buffer); else found->second += buffer.second;
     }
     std::sort(sorted.begin(), sorted.end(),
               [](const auto & a, const auto & b) { return a.second > b.second; });
@@ -531,6 +539,14 @@ std::string offload_summary_locked() {
 
 void init_backend() {
     std::call_once(g_backend_once, [] {
+#if defined(__ANDROID__)
+        // The UI thread's placement can narrow later, while it handles a model-picker tap.
+        g_process_cpus_known =
+            sched_getaffinity(getpid(), sizeof(g_process_cpus), &g_process_cpus) == 0;
+        if (!g_process_cpus_known) {
+            LOGE("threads: could not read startup affinity: %s", strerror(errno));
+        }
+#endif
         llama_log_set(log_callback, nullptr);
         // The projector logs through its own channel; without this its failures go to
         // stderr, which on Android means nowhere.
@@ -539,6 +555,19 @@ void init_backend() {
         load_gpu_backend();
         llama_backend_init();
     });
+}
+
+static void use_process_cpu_affinity() {
+#if defined(__ANDROID__)
+    // Delayed engine startup on the POCO inherited three CPUs for eight workers,
+    // turning a 1.3s reply into 19.8s. Restore the startup mask before creating
+    // the pool, not the UI thread's temporary placement during a model switch.
+    // Kernel cpuset restrictions still apply; no core IDs are hard-coded.
+    if (!g_process_cpus_known) return;
+    if (sched_setaffinity(0, sizeof(g_process_cpus), &g_process_cpus) != 0) {
+        LOGE("threads: could not restore process affinity: %s", strerror(errno));
+    }
+#endif
 }
 
 std::string system_info() {
@@ -696,6 +725,7 @@ Session * Session::load(
     int32_t n_ubatch,
     std::string & error) {
     init_backend();
+    use_process_cpu_affinity();
 
     llama_model_params model_params = llama_model_default_params();
     model_params.n_gpu_layers = n_gpu_layers;

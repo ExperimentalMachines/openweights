@@ -30,6 +30,13 @@ with the shipped instructions, under the shipped instructions and under none.
 import argparse, collections, json, re, statistics, string, sys, unicodedata
 from pathlib import Path
 
+# Chip -> the name the tables use, for files that carry no prefix. `soc` is what the
+# device reported (Build.SOC_MODEL), so this needs no filename convention to be right.
+SOC_PHONES = {
+    "SM8750": "elite",     # Snapdragon 8 Elite, QDC
+    "SM8650": "s24",       # Snapdragon 8 Gen 3
+}
+
 ARTICLES = re.compile(r"\b(a|an|the)\b")
 SEARCH_TALK = re.compile(
     r"\b(search results?|web search|according to (the )?(search|sources?|results?)|"
@@ -140,6 +147,9 @@ def grade_row(row):
 def load(directory):
     runs = {}
     for path in sorted(Path(directory).glob("*decisions-*.jsonl")):
+        # Retain failed-window captures as evidence, not as quality measurements.
+        if path.name.startswith("VOID-"):
+            continue
         header, rows = None, []
         for line in path.read_text().splitlines():
             if not line.strip():
@@ -156,9 +166,10 @@ def load(directory):
         by_id = {}
         for r in rows:
             by_id[r["id"]] = r
-        # The phone is the file's prefix (tensor-, exynos-, elite-, or none for the Poco),
-        # and the header says which chip that was.
-        header["phone"] = path.name.split("decisions-")[0].rstrip("-") or "poco"
+        # An explicit prefix identifies the run, including its question-set identity.
+        # Otherwise use the recorded chip: unprefixed QDC files are not Poco runs.
+        prefix = path.name.split("decisions-")[0].rstrip("-")
+        header["phone"] = prefix or SOC_PHONES.get(header.get("soc", ""), "") or "poco"
         runs[(header["phone"], header["model"], header["arm"])] = (header, list(by_id.values()))
     return runs
 

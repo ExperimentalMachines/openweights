@@ -52,11 +52,8 @@ class PromptTemplatesTest {
 
     @Test
     fun `refuses families that merely look like supported ones`() {
-        // Qwen3.5 normalises to a string containing "qwen3", and it is a different
-        // family with a template nobody transcribed. Guessing would produce a model
+        // A family with a template nobody transcribed. Guessing would produce a model
         // that answers slightly wrongly forever, which is the failure this refuses.
-        assertThat(PromptTemplates.forModel("Qwen3.5-0.8B-ExecuTorch.pte")).isNull()
-        assertThat(PromptTemplates.forModel("react-native-executorch-qwen-3.5.pte")).isNull()
         assertThat(PromptTemplates.forModel("react-native-executorch-gemma-4.pte")).isNull()
         assertThat(PromptTemplates.forModel("react-native-executorch-bielik-v3.0.pte")).isNull()
         // Variants whose protocol differs from the base family's: the family token is in
@@ -65,6 +62,32 @@ class PromptTemplatesTest {
         assertThat(PromptTemplates.forModel("Qwen3-Coder-Next.pte")).isNull()
         assertThat(PromptTemplates.forModel("Llama-3.2-11B-Vision-Instruct.pte")).isNull()
         assertThat(PromptTemplates.forModel("Llama-Guard-3-1B-INT4.pte")).isNull()
+    }
+
+    @Test
+    fun `Qwen3 5 gets its own template and not the one its name contains`() {
+        // Every spelling normalises to a string containing "qwen3", whose template puts
+        // the tools on the other side of the system message and asks for calls as JSON.
+        // The opener tells the two apart: Qwen3 with reasoning on writes no think block.
+        val question = listOf(ChatMessage.text(ChatRole.USER, "Hello."))
+        val names = listOf(
+            "Qwen3.5-2B-8da4w-2k.pte",
+            "Qwen3.5-0.8B-ExecuTorch.pte",
+            "react-native-executorch-qwen-3.5.pte",
+            "qwen3_5_2b_xnnpack_8da4w.pte",
+        )
+
+        names.forEach { name ->
+            val template = PromptTemplates.forModel(name)
+            assertThat(template).isNotNull()
+            assertThat(template).isNotSameInstanceAs(PromptTemplates.forModel("qwen3.pte"))
+            assertThat(template!!.render(question, emptyList(), thinking = true))
+                .isEqualTo(Qwen35Prompt.render(question, thinking = true))
+            assertThat(template.stopMarkers).contains("<|im_end|>")
+            assertThat(template.supportsThinking).isTrue()
+        }
+        // Its vision and coder variants are still somebody else's protocol.
+        assertThat(PromptTemplates.forModel("Qwen3.5-VL-2B.pte")).isNull()
     }
 
     @Test
@@ -96,6 +119,7 @@ class PromptTemplatesTest {
         // advertising a family the matcher cannot reach would be a promise with no door.
         val installable = listOf(
             "qwen3.pte",
+            "qwen3.5.pte",
             "qwen2.5.pte",
             "smollm2.pte",
             "smollm3.pte",

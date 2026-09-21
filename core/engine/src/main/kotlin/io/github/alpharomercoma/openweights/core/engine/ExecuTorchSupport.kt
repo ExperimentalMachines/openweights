@@ -46,6 +46,26 @@ object ExecuTorchSupport {
     /** Whether this build could open a model compiled for [backend]. */
     fun canRun(backend: CompiledBackend): Boolean = backend in BACKENDS
 
+    /**
+     * Whether this build could open the file at [path] on a device whose chip is [socModel].
+     *
+     * The delegate has to be linked in, as [canRun] says, and a chip-locked delegate has a
+     * second condition: the binary was compiled for one chip and reports itself unavailable
+     * on any other. The chip is in the published path (`qnn/sm8750/...`) and Android reports
+     * the device's as `Build.SOC_MODEL`, so the two are compared directly. A chip-locked
+     * file whose path names no chip is refused: nothing can tell where it would run, and the
+     * cost of guessing wrong is a finished download that will not open.
+     *
+     * [socModel] is null when the platform does not say. A chip-locked file is refused then
+     * too, for the same reason.
+     */
+    fun canRun(backend: CompiledBackend, path: String, socModel: String?): Boolean {
+        if (!canRun(backend)) return false
+        if (!backend.isChipLocked) return true
+        val compiledFor = CompiledBackend.socIn(path) ?: return false
+        return socModel != null && compiledFor.equals(socModel, ignoreCase = true)
+    }
+
     /** A bridge onto the real runtime. */
     fun bridge(): ExecuTorchBridge = NativeExecuTorchBridge()
 }

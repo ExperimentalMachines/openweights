@@ -16,12 +16,19 @@
 
 package io.github.alpharomercoma.openweights.core.tools
 
+import android.content.Context
+import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import io.github.alpharomercoma.openweights.core.common.model.ToolCall
 import kotlinx.coroutines.test.runTest
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.Protocol
+import okhttp3.Response
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -31,31 +38,190 @@ import org.robolectric.RobolectricTestRunner
  *
  * [PublicOnlyDns] covers the case where a name resolves somewhere it should not. These are
  * the cases that never reach a resolver at all, which is the gap that makes the resolver an
- * incomplete defence on its own. Every address here is refused before any socket is opened,
- * so none of these tests touch the network.
+ * incomplete defence on its own. Save-race tests return HTTP bodies from an application
+ * interceptor; all other fetches are refused before a socket opens.
  */
 @RunWith(RobolectricTestRunner::class)
 class FetchUrlToolTest {
-    private val workspace = Workspace(
-        ApplicationProvider.getApplicationContext(),
-        WorkspaceGrant(ApplicationProvider.getApplicationContext()),
-    )
+    private val context: Context = ApplicationProvider.getApplicationContext()
+    private val grant = WorkspaceGrant(context)
+    private val workspace = Workspace(context, grant)
+    private val artifacts = SessionArtifacts(workspace)
 
     private val tool =
-        FetchUrlTool(OkHttpClient(), Reachability { true }, workspace, SessionArtifacts())
+        FetchUrlTool(OkHttpClient(), Reachability { true }, workspace, artifacts)
 
     private suspend fun fetch(url: String): String =
         tool.run(ToolCall(id = "1", name = "fetch_url", argumentsJson = """{"url":"$url"}"""))
 
     @Test
-    fun `what it reads is text somebody else wrote, and it says so`() {
-        // This asserted `alwaysAsk`, which no longer exists: fetching a page runs without a
-        // tap now, like everything else. What is left is the flag that still matters, and
-        // it is the one the exfiltration guard reads. A page is not an instruction, and a
-        // model this size does not reliably know that, so anything sent off the device
-        // after one has been read is still approved by hand.
-        assertThat(tool.returnsUntrustedText).isTrue()
-        assertThat(tool.leavesTheDevice).isTrue()
+    fun `tainted yolo asks before saving a fetch but not before read-only fetches`() = runTest {
+        val runner = AgentRunner(ToolRegistry(listOf(tool)), carriesUntrustedText = true)
+        val save = ToolCall(
+            id = "save",
+            name = "fetch_url",
+            argumentsJson = """{"url":"https://127.0.0.1/","save_to":"page.txt"}""",
+        )
+        var asked = 0
+        val decision = runner.step(listOf(save), 0, AgentMode.YOLO, approve = {
+            asked++
+            false
+        }) as AgentDecision.Continue
+        assertThat(asked).isEqualTo(1)
+        assertThat(decision.steps.single()).isInstanceOf(AgentStep.Skipped::class.java)
+
+        // Loopback fails before a socket opens, but reaching the tool proves the policy
+        // did not mistake a read-only request for a durable write.
+        val read = save.copy(id = "read", argumentsJson = """{"url":"https://127.0.0.1/"}""")
+        val readDecision = runner.step(listOf(read), 1, AgentMode.YOLO, approve = {
+            error("Yolo waives read-only egress approval")
+        }) as AgentDecision.Continue
+        assertThat(readDecision.steps.single()).isInstanceOf(AgentStep.Ran::class.java)
+    }
+
+    @Test
+    fun `read-only fetch still asks on tainted auto egress`() = runTest {
+        val runner = AgentRunner(ToolRegistry(listOf(tool)), carriesUntrustedText = true)
+        val decision = runner.step(
+            listOf(ToolCall("read", "fetch_url", """{"url":"https://127.0.0.1/"}""")),
+            0,
+            AgentMode.AUTO,
+            approve = { false },
+        ) as AgentDecision.Continue
+        assertThat(decision.steps.single()).isInstanceOf(AgentStep.Skipped::class.java)
+    }
+
+    @Test
+    fun `find takes precedence over save without requiring durable approval`() = runTest {
+        val runner = AgentRunner(ToolRegistry(listOf(tool)), carriesUntrustedText = true)
+        val decision = runner.step(
+            listOf(
+                ToolCall(
+                    "find",
+                    "fetch_url",
+                    """{"url":"https://127.0.0.1/","save_to":"page.txt","find":"price"}""",
+                ),
+            ),
+            0,
+            AgentMode.YOLO,
+            approve = { error("find does not save") },
+        ) as AgentDecision.Continue
+        assertThat(decision.steps.single()).isInstanceOf(AgentStep.Ran::class.java)
+    }
+
+    @Test
+    fun `save authorization cannot move to a folder selected in the approval callback`() = runTest {
+        val other = writableWorkspace()
+        val saving = savingTool()
+        val runner = AgentRunner(ToolRegistry(listOf(saving)), carriesUntrustedText = true)
+        val decision = runner.step(listOf(saveCall()), 0, AgentMode.YOLO, approve = {
+            grant.remember(other)
+            true
+        }) as AgentDecision.Continue
+
+        val step = decision.steps.single() as AgentStep.Ran
+        assertThat(step.successful).isFalse()
+        assertThat(workspace.resolve("page.txt")).isNull()
+        grant.remember(FakeDocumentsProvider.TREE)
+        assertThat(workspace.resolve("page.txt")).isNull()
+    }
+
+    @Test
+    fun `save authorization stays in its original folder while HTTP is pending`() = runTest {
+        val other = writableWorkspace()
+        val saving = savingTool { grant.remember(other) }
+
+        val execution = saving.execute(saveCall())
+
+        assertThat(execution.successful).isFalse()
+        assertThat(workspace.resolve("page.txt")).isNull()
+        grant.remember(FakeDocumentsProvider.TREE)
+        assertThat(workspace.resolve("page.txt")).isNull()
+    }
+
+    @Test
+    fun `a successful save remains the session's file for iterative edits`() = runTest {
+        writableWorkspace()
+        val saving = savingTool()
+        val call = saveCall()
+        saving.asksInAuto(call)
+
+        assertThat(saving.execute(call).successful).isTrue()
+        val entry = requireNotNull(workspace.resolve("page.txt"))
+        assertThat(workspace.readText(entry, skip = 0, take = 1_000)).isEqualTo("downloaded page")
+        val writer = WriteFileTool(workspace, artifacts, CanvasBoard(), CanvasGrader.none())
+        assertThat(
+            writer.asksInAuto(
+                ToolCall(
+                    "edit",
+                    "write_file",
+                    """{"path":"page.txt","content":"edited","replace":true}""",
+                ),
+            ),
+        ).isFalse()
+    }
+
+    @Test
+    fun `find remains read-only when the folder changes during HTTP`() = runTest {
+        val other = writableWorkspace()
+        val saving = savingTool { grant.remember(other) }
+        val call = ToolCall(
+            "find",
+            "fetch_url",
+            """{"url":"https://example.com/page","save_to":"page.txt","find":"page"}""",
+        )
+        saving.asksInAuto(call)
+
+        val execution = saving.execute(call)
+
+        assertThat(execution.successful).isTrue()
+        assertThat(execution.text).contains("downloaded page")
+        assertThat(workspace.resolve("page.txt")).isNull()
+    }
+
+    @Test
+    fun `a fetch started without a writable folder does not save to a newly selected one`() =
+        runTest {
+            FakeDocumentsProvider.register()
+            val saving = savingTool { grant.remember(FakeDocumentsProvider.TREE) }
+            val call = saveCall()
+            saving.asksInAuto(call)
+
+            val execution = saving.execute(call)
+
+            assertThat(execution.successful).isTrue()
+            assertThat(execution.text).isEqualTo("downloaded page")
+            assertThat(workspace.resolve("page.txt")).isNull()
+        }
+
+    private suspend fun writableWorkspace(): Uri {
+        FakeDocumentsProvider.register()
+        grant.remember(FakeDocumentsProvider.TREE)
+        check(workspace.put("other/keep.txt", "user").successful)
+        return DocumentsContract.buildTreeDocumentUri(
+            FakeDocumentsProvider.TREE.authority,
+            "root/other",
+        )
+    }
+
+    private fun saveCall() = ToolCall(
+        "save",
+        "fetch_url",
+        """{"url":"https://example.com/page","save_to":"page.txt"}""",
+    )
+
+    private fun savingTool(beforeResponse: () -> Unit = {}): FetchUrlTool {
+        val client = OkHttpClient.Builder().addInterceptor { chain ->
+            beforeResponse()
+            Response.Builder()
+                .request(chain.request())
+                .protocol(Protocol.HTTP_1_1)
+                .code(200)
+                .message("OK")
+                .body("downloaded page".toResponseBody("text/plain".toMediaType()))
+                .build()
+        }.build()
+        return FetchUrlTool(client, Reachability { true }, workspace, artifacts)
     }
 
     @Test

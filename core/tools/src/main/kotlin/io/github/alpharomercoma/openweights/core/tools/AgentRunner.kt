@@ -295,7 +295,7 @@ class AgentRunner(
                 !tool.alwaysAsks &&
                 !tool.asksInAuto(call) &&
                 !tool.readsPrivateData &&
-                !tool.writesDurableData &&
+                !tool.writesDurableData(call) &&
                 !tool.sendsWhereTheModelSays &&
                 // The taint, not only the tool. Two searches are parallel safe in
                 // themselves, but once the turn has read something private they both stop
@@ -394,7 +394,7 @@ class AgentRunner(
         // The world changed, so refusals about the old world no longer hold: a file that
         // "is not there" may be there now. Successes stay settled - their results are
         // real regardless.
-        if (execution.successful && tool.writesDurableData) {
+        if (execution.successful && tool.writesDurableData(call)) {
             refusals.forEach(settled::remove)
             refusals.clear()
         }
@@ -468,7 +468,7 @@ class AgentRunner(
         // Untrusted pages and tool results must not be able to persist their instructions
         // into the user's workspace. A clean, additive save remains automatic in Auto;
         // once the turn has consumed untrusted text, every durable write is explicit.
-        if (readUntrustedText && tool.writesDurableData) return approve(call)
+        if (readUntrustedText && tool.writesDurableData(call)) return approve(call)
 
         // Yolo waives the two egress checks below, and nothing else: it is the user saying
         // they know what those checks are for and would rather have the seconds. It has to

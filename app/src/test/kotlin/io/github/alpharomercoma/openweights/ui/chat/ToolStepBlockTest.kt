@@ -85,10 +85,28 @@ class ToolStepBlockTest {
     fun `a call that was refused says so and says why`() {
         // The user declining a tool and the tool having run are opposite outcomes, and the
         // reason is the part that makes a refusal readable rather than a shrug.
-        showStep(AgentStep.Skipped(call("fetch_url"), why = "The user declined to run it."))
+        showStep(AgentStep.Skipped(call("write_file"), why = "The user declined to run it."))
 
         compose.onNodeWithText("skipped", substring = true).assertIsDisplayed()
         compose.onNodeWithText("declined", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Saved", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun `a failed write never claims the file was saved`() {
+        val refusal = "No folder has been shared with this app."
+        showStep(
+            AgentStep.Ran(
+                call("write_file"),
+                result = refusal,
+                millis = 0,
+                successful = false,
+            ),
+        )
+
+        compose.onNodeWithText("Saved", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("failed", substring = true).assertIsDisplayed().performClick()
+        compose.onNodeWithText(refusal).assertIsDisplayed()
     }
 
     private fun call(name: String) = ToolCall(id = name, name = name, argumentsJson = "{}")

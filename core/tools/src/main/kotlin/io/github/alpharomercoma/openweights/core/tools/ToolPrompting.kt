@@ -207,10 +207,9 @@ object ToolPrompting {
      * counting handles a nested object; a run-on that never closes returns nothing rather
      * than the rest of the reply.
      *
-     * A brace inside a double-quoted string is a letter, not structure. Counting every
-     * brace was fine while arguments were queries and paths, and wrong the moment
-     * run_script arrived: a `code` value holding `}` in a string, a regex or a comment
-     * closed the object early, and the tool was handed a fragment that parsed as nothing.
+     * A brace inside either supported quote style is a letter, not structure. Script bodies
+     * contain braces in strings, regexes and comments; counting those closes the arguments
+     * early and dispatches a fragment instead of the call the model wrote.
      * Escapes are honoured so an escaped quote does not end the string it sits in.
      */
     private fun String.argumentsAfter(marker: Int): String? {
@@ -220,14 +219,15 @@ object ToolPrompting {
         if (open < 0) return null
 
         var depth = 0
-        var quoted = false
+        var quote: Char? = null
         var index = open
         while (index < length) {
             val char = this[index]
             when {
-                quoted && char == '\\' -> index++
-                char == '"' -> quoted = !quoted
-                quoted -> Unit
+                quote != null && char == '\\' -> index++
+                quote != null && char == quote -> quote = null
+                quote != null -> Unit
+                char == '"' || char == '\'' -> quote = char
                 char == '{' -> depth++
                 char == '}' -> {
                     depth--
@@ -265,7 +265,7 @@ object ToolPrompting {
             when {
                 // Inside a string an escape covers whatever follows it, quotes included.
                 quote != null && char == '\\' && index + 1 < length -> {
-                    out.append(char).append(this[index + 1])
+                    out.appendJsonEscape(quote, this[index + 1])
                     index++
                 }
                 quote == null && (char == '\'' || char == '"') -> {
@@ -282,6 +282,11 @@ object ToolPrompting {
             index++
         }
         return out.toString()
+    }
+
+    private fun StringBuilder.appendJsonEscape(quote: Char, escaped: Char) {
+        if (quote != '\'' || escaped != '\'') append('\\')
+        append(escaped)
     }
 
     /** The schema on one line, since a pretty-printed one is only longer. */

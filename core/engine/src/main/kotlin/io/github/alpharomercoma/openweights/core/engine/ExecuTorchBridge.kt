@@ -54,12 +54,13 @@ data class ExecuTorchOutcome(
  * @property prefillLength the most tokens one prefill call may carry (`get_max_seq_len`),
  * when the export states it apart from the window. The exporter bounds the token input at
  * one less than this, and the runtime chunks a long prompt at exactly this, so a single
- * call of that many tokens fails; the engine keeps every call under it.
+ * call of that many tokens fails. The engine caps characters as a pre-tokenization heuristic.
  */
 data class ExportFacts(
     val contextLength: Int?,
     val hasVision: Boolean,
     val prefillLength: Int? = null,
+    val stateResetAtZero: Boolean? = null,
 )
 
 interface ExecuTorchBridge {
@@ -88,9 +89,9 @@ interface ExecuTorchBridge {
      * nothing that says which tokenizer produced it, so handing it the wrong one produces
      * fluent nonsense rather than an error.
      *
-     * @param contextLength the whole window, prompt and reply together. ExecuTorch counts
-     * in total sequence length rather than in new tokens, so it belongs to the model rather
-     * than to a call and is kept from here.
+     * The runtime reads its fixed context window from the export. A load preference cannot
+     * resize that window or reduce the compiled cache allocation.
+     *
      * @param multimodal open with the multimodal runner, which is a different runner in the
      * runtime rather than a flag on the text one: it is the only one that can take a
      * picture, and it is what a file with a `vision_encoder` method was exported for.
@@ -100,7 +101,6 @@ interface ExecuTorchBridge {
         modelPath: String,
         tokenizerPath: String,
         temperature: Float,
-        contextLength: Int,
         multimodal: Boolean = false,
     ): Boolean
 
@@ -155,11 +155,9 @@ interface ExecuTorchBridge {
     /**
      * Drops whatever the runtime is holding from previous generations.
      *
-     * ExecuTorch does keep state between calls — `LlmModule` exposes both this and a
-     * prefill-without-generating entry point — so this is a real operation rather than a
-     * formality. Whether an ordinary [generate] *reuses* that state or starts from the
-     * prompt it was given has not been measured yet, and the answer decides whether this
-     * engine is viable for long conversations at all.
+     * Both prefill and generation append to state held across calls. This rewinds the
+     * runner's position; an export with additional recurrent state must also reset it
+     * in its graph. [ExecuTorchEngine] reopens legacy LFM2 exports that do not promise that.
      */
     fun resetContext()
 

@@ -142,6 +142,15 @@ data class Entry(
     val isDirectory: Boolean,
     val sizeBytes: Long,
     val mediaType: String,
+    val lastModifiedMillis: Long? = null,
+)
+
+/** The provider's current document, tied to the permission lifetime that resolved it. */
+internal data class ArtifactIdentity(
+    val scope: WorkspaceScope,
+    val documentId: String,
+    val sizeBytes: Long,
+    val lastModifiedMillis: Long?,
 )
 
 /** A hidden sibling of a file being replaced, where the new text lands before the old goes. */
@@ -207,17 +216,34 @@ class Workspace @Inject constructor(
      */
     suspend fun resolve(path: String): Entry? = withContext(Dispatchers.IO) {
         val tree = grant.folder ?: return@withContext null
-        val segments = path.workspaceSegments() ?: return@withContext null
+        resolve(tree, path)
+    }
+
+    private fun resolve(tree: Uri, path: String): Entry? {
+        val segments = path.workspaceSegments() ?: return null
 
         var parentId = DocumentsContract.getTreeDocumentId(tree)
         var found: Entry? = null
         for ((index, name) in segments.withIndex()) {
             val parentPath = segments.take(index).joinToString("/")
-            found = children(tree, parentId, parentPath).firstOrNull { it.name == name }
-                ?: return@withContext null
+            found = queryChildren(tree, parentId, parentPath).firstOrNull { it.name == name }
+                ?: return null
             parentId = found.documentId
         }
-        found
+        return found
+    }
+
+    private suspend fun resolveIn(tree: Uri, path: String): Entry? =
+        withContext(Dispatchers.IO) { resolve(tree, path) }
+
+    internal fun ownershipScope(): WorkspaceScope? = grant.ownershipScope()
+
+    /** Pins the document seen by the synchronous approval hook, before any user wait. */
+    internal fun artifactIdentity(path: String): ArtifactIdentity? {
+        val scope = ownershipScope() ?: return null
+        val entry = resolve(scope.tree, path) ?: return null
+        if (ownershipScope() != scope) return null
+        return ArtifactIdentity(scope, entry.documentId, entry.sizeBytes, entry.lastModifiedMillis)
     }
 
     /**
@@ -228,16 +254,18 @@ class Workspace @Inject constructor(
      */
     suspend fun children(tree: Uri, parentId: String, under: String): List<Entry> =
         withContext(Dispatchers.IO) {
-            val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(tree, parentId)
-            runCatching {
-                // The query-arguments form, which is the one the framework carries to a
-                // provider: the selection form is folded into it on every device, and a
-                // DocumentsProvider refuses the selection form when handed it directly,
-                // which is what a host test does.
-                context.contentResolver.query(childrenUri, PROJECTION, null, null)
-                    ?.use { cursor -> cursor.entries(under) }
-            }.getOrNull().orEmpty()
+            queryChildren(tree, parentId, under)
         }
+
+    private fun queryChildren(tree: Uri, parentId: String, under: String): List<Entry> {
+        val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(tree, parentId)
+        return runCatching {
+            // The query-arguments form works both with the framework and with host-test
+            // DocumentsProviders, unlike the legacy selection overload.
+            context.contentResolver.query(childrenUri, PROJECTION, null, null)
+                ?.use { cursor -> cursor.entries(under) }
+        }.getOrNull().orEmpty()
+    }
 
     /** The children of a directory already resolved, which is what a search walks. */
     suspend fun children(of: Entry): List<Entry> {
@@ -263,20 +291,30 @@ class Workspace @Inject constructor(
      * writing, so an interrupted call leaves a short file rather than an empty one where
      * something used to be.
      */
-    suspend fun create(parent: Entry?, name: String, mediaType: String): Uri? =
-        withContext(Dispatchers.IO) {
-            val tree = grant.folder ?: return@withContext null
-            val parentId = parent?.documentId ?: DocumentsContract.getTreeDocumentId(tree)
-            val parentUri = DocumentsContract.buildDocumentUriUsingTree(tree, parentId)
-            runCatching {
-                DocumentsContract.createDocument(
-                    context.contentResolver,
-                    parentUri,
-                    mediaType,
-                    name,
-                )
-            }.getOrNull()
-        }
+    suspend fun create(parent: Entry?, name: String, mediaType: String): Uri? {
+        val scope = ownershipScope() ?: return null
+        return create(scope, parent, name, mediaType)
+    }
+
+    private suspend fun create(
+        scope: WorkspaceScope,
+        parent: Entry?,
+        name: String,
+        mediaType: String,
+    ): Uri? = withContext(Dispatchers.IO) {
+        if (ownershipScope() != scope) return@withContext null
+        val tree = scope.tree
+        val parentId = parent?.documentId ?: DocumentsContract.getTreeDocumentId(tree)
+        val parentUri = DocumentsContract.buildDocumentUriUsingTree(tree, parentId)
+        runCatching {
+            DocumentsContract.createDocument(
+                context.contentResolver,
+                parentUri,
+                mediaType,
+                name,
+            )
+        }.getOrNull()
+    }
 
     /** The name the provider actually stored, which is not always the one asked for. */
     private suspend fun displayNameOf(uri: Uri): String? = withContext(Dispatchers.IO) {
@@ -335,14 +373,30 @@ class Workspace @Inject constructor(
      * already exists is the load-bearing line: without it a model that read half a long file
      * would write that half back over the whole, and report success for having done it.
      */
-    // Each return is a distinct storage refusal; flattening them would obscure the boundary.
+    suspend fun put(path: String, text: String, replace: Boolean = false): ToolExecution =
+        withContext(Dispatchers.IO) {
+            val scope = ownershipScope()
+            put(path, text, replace, scope, artifactIdentity(path))
+        }
+
+    // The tree stays pinned across every suspension, including rename fallback.
     @Suppress("ReturnCount")
-    suspend fun put(path: String, text: String, replace: Boolean = false): ToolExecution {
+    internal suspend fun put(
+        path: String,
+        text: String,
+        replace: Boolean,
+        scope: WorkspaceScope?,
+        expected: ArtifactIdentity?,
+    ): ToolExecution {
         val segments = path.workspaceSegments()
             ?: return ToolExecution.rejected(
                 "$path is not a path inside the shared folder. Try one like notes/todo.md.",
             )
-        val existing = resolve(path)
+        if (scope == null || scope != ownershipScope()) return changed(path)
+        val existing = resolveIn(scope.tree, path)
+        if (existing?.let { identity(scope, it) } != expected) {
+            return changed(path)
+        }
         if (existing != null) {
             // Still refused by default, for the reason above. What changed is that a caller
             // can now say it means it. The danger the default guards against is a model
@@ -360,14 +414,21 @@ class Workspace @Inject constructor(
             if (existing.isDirectory) {
                 return ToolExecution.rejected("$path is a folder, not a file.")
             }
-            return replace(existing, segments, text, path)
+            return replace(scope, existing, segments, text, path)
         }
-        val parent = ensureFolders(segments.dropLast(1))
+        val parent = ensureFolders(scope, segments.dropLast(1))
             ?: return ToolExecution.failure(
                 "The folders leading to $path could not be created.",
             )
-        return putInto(parent.takeIf { it.path.isNotEmpty() }, segments.last(), text, path)
+        return putInto(scope, parent.takeIf { it.path.isNotEmpty() }, segments.last(), text, path)
     }
+
+    private fun identity(scope: WorkspaceScope, entry: Entry) =
+        ArtifactIdentity(scope, entry.documentId, entry.sizeBytes, entry.lastModifiedMillis)
+
+    private fun changed(path: String) = ToolExecution.rejected(
+        "$path or the shared folder changed while this operation was being authorized. Try again.",
+    )
 
     /**
      * The raw bytes of [entry], for serving over the canvas — images included.
@@ -405,17 +466,17 @@ class Workspace @Inject constructor(
      * entry for the root is a placeholder with an empty path, which [put] reads as "no
      * parent" the way it always has.
      */
-    private suspend fun ensureFolders(segments: List<String>): Entry? {
+    private suspend fun ensureFolders(scope: WorkspaceScope, segments: List<String>): Entry? {
         if (segments.isEmpty()) return ROOT
         var walked = ""
         var parent: Entry? = null
         for (name in segments) {
             walked = if (walked.isEmpty()) name else "$walked/$name"
-            val found = resolve(walked)
+            val found = resolveIn(scope.tree, walked)
             parent = when {
                 found == null ->
-                    create(parent, name, DocumentsContract.Document.MIME_TYPE_DIR)
-                        ?.let { resolve(walked) }
+                    create(scope, parent, name, DocumentsContract.Document.MIME_TYPE_DIR)
+                        ?.let { resolveIn(scope.tree, walked) }
                 found.isDirectory -> found
                 else -> null
             } ?: return null
@@ -429,31 +490,44 @@ class Workspace @Inject constructor(
      * Deleting through the provider rather than any path arithmetic, for the same reason
      * [resolve] walks: the only ids in hand are ones the granted folder handed over.
      */
-    suspend fun delete(path: String): ToolExecution {
-        val entry = resolve(path)
+    suspend fun delete(path: String): ToolExecution = withContext(Dispatchers.IO) {
+        val scope = ownershipScope()
+        delete(path, scope, artifactIdentity(path))
+    }
+
+    internal suspend fun delete(
+        path: String,
+        scope: WorkspaceScope?,
+        expected: ArtifactIdentity?,
+    ): ToolExecution {
+        if (scope == null || scope != ownershipScope()) return changed(path)
+        val entry = resolveIn(scope.tree, path)
             ?: return ToolExecution.rejected("There is no $path to delete.")
-        val uri = uriFor(entry)
-            ?: return ToolExecution.failure("$path could not be opened.")
-        return if (remove(uri)) {
-            ToolExecution("Deleted $path.")
-        } else {
-            ToolExecution.failure("$path could not be deleted.")
+        if (identity(scope, entry) != expected) return changed(path)
+        val uri = DocumentsContract.buildDocumentUriUsingTree(scope.tree, entry.documentId)
+        return when {
+            scope != ownershipScope() -> changed(path)
+            remove(uri, scope) -> ToolExecution("Deleted $path.")
+            else -> ToolExecution.failure("$path could not be deleted.")
         }
     }
 
     /** Asks the provider to delete a document, and says whether it did. */
-    private suspend fun remove(uri: Uri): Boolean = withContext(Dispatchers.IO) {
-        runCatching { DocumentsContract.deleteDocument(context.contentResolver, uri) }
-            .getOrDefault(false)
-    }
+    private suspend fun remove(uri: Uri, scope: WorkspaceScope? = null): Boolean =
+        withContext(Dispatchers.IO) {
+            if (scope != null && scope != ownershipScope()) return@withContext false
+            runCatching { DocumentsContract.deleteDocument(context.contentResolver, uri) }
+                .getOrDefault(false)
+        }
 
     private suspend fun putInto(
+        scope: WorkspaceScope,
         parent: Entry?,
         name: String,
         text: String,
         path: String,
     ): ToolExecution {
-        val landed = land(parent, name, text)
+        val landed = land(scope, parent, name, text)
             ?: return ToolExecution.failure(
                 "$path could not be created. The folder may not accept new files.",
             )
@@ -483,11 +557,19 @@ class Workspace @Inject constructor(
      * A provider that refuses the rename keeps the decorated name, which is handed back so
      * the caller can say so instead of claiming a path that is not there.
      */
-    private suspend fun land(parent: Entry?, name: String, text: String): Landed? {
-        val uri = create(parent, name, mediaTypeFor(name)) ?: return null
+    private suspend fun land(
+        scope: WorkspaceScope,
+        parent: Entry?,
+        name: String,
+        text: String,
+    ): Landed? {
+        val uri = create(scope, parent, name, mediaTypeFor(name)) ?: return null
+        // A rename may change the document id and invalidate this URI. Write while it
+        // still addresses the created file, then adjust the provider's display name.
+        val written = write(uri, text)
         val actual = displayNameOf(uri)
         val served = if (actual != null && actual != name) rename(uri, name) ?: actual else name
-        return Landed(served, write(uri, text))
+        return Landed(served, written)
     }
 
     /**
@@ -511,22 +593,22 @@ class Workspace @Inject constructor(
     // Each return is a distinct step that can fail, with its own account of what is left.
     @Suppress("ReturnCount")
     private suspend fun replace(
+        scope: WorkspaceScope,
         existing: Entry,
         segments: List<String>,
         text: String,
         path: String,
     ): ToolExecution {
-        val original = uriFor(existing)
-            ?: return ToolExecution.failure("$path could not be opened for writing.")
+        val original = DocumentsContract.buildDocumentUriUsingTree(scope.tree, existing.documentId)
         val parentPath = segments.dropLast(1).joinToString("/")
         val parent = if (parentPath.isEmpty()) {
             null
         } else {
-            resolve(parentPath) ?: return ToolExecution.failure(
+            resolveIn(scope.tree, parentPath) ?: return ToolExecution.failure(
                 "The folder holding $path could not be read, so it is unchanged.",
             )
         }
-        val staged = stage(parent, existing.name)
+        val staged = stage(scope, parent, existing.name)
             ?: return ToolExecution.failure(
                 "$path could not be replaced: the folder would not take a new file to " +
                     "write into, so it is unchanged.",
@@ -536,7 +618,12 @@ class Workspace @Inject constructor(
                 discard(staged, "$path could not be written, so it is unchanged."),
             )
         }
-        if (!remove(original)) {
+        if (resolveIn(scope.tree, path) != existing || scope != ownershipScope()) {
+            return ToolExecution.rejected(
+                discard(staged, "$path or the shared folder changed, so it was not replaced."),
+            )
+        }
+        if (!remove(original, scope)) {
             return ToolExecution.failure(
                 discard(
                     staged,
@@ -545,7 +632,7 @@ class Workspace @Inject constructor(
                 ),
             )
         }
-        return swap(staged, parent, existing.name, text, path)
+        return swap(scope, staged, parent, existing.name, text, path)
     }
 
     /**
@@ -557,9 +644,9 @@ class Workspace @Inject constructor(
      * names to types may decorate the sibling's for it, which costs nothing - it is
      * addressed by uri and reported by whatever name it was actually given.
      */
-    private suspend fun stage(parent: Entry?, name: String): Staged? {
+    private suspend fun stage(scope: WorkspaceScope, parent: Entry?, name: String): Staged? {
         val asked = stagingNameFor(name)
-        val uri = create(parent, asked, mediaTypeFor(name)) ?: return null
+        val uri = create(scope, parent, asked, mediaTypeFor(name)) ?: return null
         return Staged(uri, displayNameOf(uri) ?: asked)
     }
 
@@ -578,6 +665,7 @@ class Workspace @Inject constructor(
      * text written in again from memory; only then is the sibling let go of.
      */
     private suspend fun swap(
+        scope: WorkspaceScope,
         staged: Staged,
         parent: Entry?,
         name: String,
@@ -586,7 +674,7 @@ class Workspace @Inject constructor(
     ): ToolExecution {
         val renamed = rename(staged.uri, name)
         if (renamed != null) return replaced(path, name, renamed, text.length)
-        val landed = land(parent, name, text)
+        val landed = land(scope, parent, name, text)
             ?: return ToolExecution.failure(
                 "$path was removed but could not be created again. Its new contents are " +
                     "in \"${staged.name}\" beside where it was.",
@@ -651,6 +739,7 @@ class Workspace @Inject constructor(
             // Size is optional in the contract, and a directory rarely reports one.
             sizeBytes = if (isNull(SIZE)) 0L else getLong(SIZE),
             mediaType = mediaType,
+            lastModifiedMillis = if (isNull(MODIFIED)) null else getLong(MODIFIED),
         )
     }
 
@@ -675,6 +764,7 @@ class Workspace @Inject constructor(
             DocumentsContract.Document.COLUMN_MIME_TYPE,
             DocumentsContract.Document.COLUMN_DISPLAY_NAME,
             DocumentsContract.Document.COLUMN_SIZE,
+            DocumentsContract.Document.COLUMN_LAST_MODIFIED,
         )
 
         /** Where each column of [PROJECTION] lands, named so the reads are not four numbers. */
@@ -682,6 +772,7 @@ class Workspace @Inject constructor(
         const val TYPE = 1
         const val NAME = 2
         const val SIZE = 3
+        const val MODIFIED = 4
 
         /**
          * A cap on one directory, not on the search.

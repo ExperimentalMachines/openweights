@@ -37,20 +37,50 @@ import javax.inject.Singleton
  * nobody in that chat had watched it being made.
  */
 @Singleton
-class SessionArtifacts @Inject constructor() {
-    private val created = mutableSetOf<String>()
+class SessionArtifacts @Inject constructor(private val workspace: Workspace) {
+    private val created = mutableMapOf<String, ArtifactIdentity>()
+    private var revision = 0L
+
+    /** A completion from an old chat or folder must not grant ownership in the new one. */
+    internal data class Scope(val sessionRevision: Long, val workspace: WorkspaceScope?)
+    internal data class Check(val scope: Scope, val identity: ArtifactIdentity?, val own: Boolean)
 
     @Synchronized
-    fun created(path: String) {
-        created += path.lowercase()
+    internal fun scope(): Scope = Scope(revision, workspace.ownershipScope())
+
+    @Synchronized
+    internal fun created(path: String, started: Scope) {
+        if (started != scope()) return
+        val identity = workspace.artifactIdentity(path) ?: return
+        if (identity.scope == started.workspace) created[path] = identity
+    }
+
+    fun isOwn(path: String): Boolean = check(path).own
+
+    @Synchronized
+    internal fun check(path: String): Check {
+        val started = scope()
+        val identity = workspace.artifactIdentity(path)
+        val own = identity != null && created[path] == identity
+        // A missing or changed document is not ours even if the old name returns later.
+        if (!own) created.remove(path)
+        return Check(started, identity, own)
     }
 
     @Synchronized
-    fun isOwn(path: String): Boolean = path.lowercase() in created
+    internal fun isCurrent(check: Check): Boolean = check.scope == scope()
+
+    /** Deleting a directory also retires ownership of every file beneath it. */
+    @Synchronized
+    internal fun deleted(path: String) {
+        val descendants = "$path/"
+        created.keys.removeAll { it == path || it.startsWith(descendants) }
+    }
 
     /** Forgets everything: from here on every file on disk is the user's until made again. */
     @Synchronized
     fun cleared() {
+        revision++
         created.clear()
     }
 }

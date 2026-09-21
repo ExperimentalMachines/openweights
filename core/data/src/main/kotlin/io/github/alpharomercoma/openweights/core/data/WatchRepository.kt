@@ -133,14 +133,20 @@ class WatchRepository @Inject constructor(private val database: OpenWeightsDatab
      * else, so three failures *in a row* stop the watch while three spread over a day do
      * not. A skipped tick is neither, since nothing was attempted.
      */
-    suspend fun record(watchId: Long, at: Long, outcome: WatchOutcome, summary: String): Watch? =
-        // `database.withTransaction`, not `@Transaction`. The annotation only does anything
+    suspend fun record(
+        watchId: Long,
+        at: Long,
+        outcome: WatchOutcome,
+        summary: String,
+        summaryUntrusted: Boolean? = null,
+        summaryPrivate: Boolean? = null,
+    ): Watch? = // `database.withTransaction`, not `@Transaction`. The annotation only does anything
         // on a DAO method: Room generates the wrapper as part of the DAO implementation, and
         // on a repository function it compiles, reads like a transaction, and does nothing
         // at all. The first attempt at this fix was exactly that, so the interleaving it was
         // written to close stayed open.
         database.withTransaction {
-            recordInTransaction(watchId, at, outcome, summary)
+            recordInTransaction(watchId, at, outcome, summary, summaryUntrusted, summaryPrivate)
         }
 
     /**
@@ -161,6 +167,8 @@ class WatchRepository @Inject constructor(private val database: OpenWeightsDatab
         at: Long,
         outcome: WatchOutcome,
         summary: String,
+        summaryUntrusted: Boolean?,
+        summaryPrivate: Boolean?,
     ): Watch? {
         val existing = database.watches().byId(watchId) ?: return null
         // Re-read inside the transaction is what makes the failure counter safe; a watch
@@ -192,6 +200,16 @@ class WatchRepository @Inject constructor(private val database: OpenWeightsDatab
                 existing.lastSummary
             } else {
                 summary.take(SUMMARY_CHARS)
+            },
+            summaryUntrusted = if (outcome == WatchOutcome.SKIPPED) {
+                existing.summaryUntrusted
+            } else {
+                summaryUntrusted
+            },
+            summaryPrivate = if (outcome == WatchOutcome.SKIPPED) {
+                existing.summaryPrivate
+            } else {
+                summaryPrivate
             },
             runs = if (outcome == WatchOutcome.SKIPPED) existing.runs else existing.runs + 1,
             consecutiveFailures = failures,
@@ -241,6 +259,8 @@ private fun WatchEntity.asWatch() = Watch(
     createdAt = createdAt,
     lastRunAt = lastRunAt,
     lastSummary = lastSummary,
+    summaryUntrusted = summaryUntrusted,
+    summaryPrivate = summaryPrivate,
     runs = runs,
     consecutiveFailures = consecutiveFailures,
     nextRunAt = nextRunAt,
@@ -254,6 +274,8 @@ private fun Watch.asEntity() = WatchEntity(
     createdAt = createdAt,
     lastRunAt = lastRunAt,
     lastSummary = lastSummary,
+    summaryUntrusted = summaryUntrusted,
+    summaryPrivate = summaryPrivate,
     runs = runs,
     consecutiveFailures = consecutiveFailures,
     nextRunAt = nextRunAt,

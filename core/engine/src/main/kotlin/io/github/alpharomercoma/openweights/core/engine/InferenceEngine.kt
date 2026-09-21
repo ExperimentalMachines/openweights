@@ -259,6 +259,8 @@ data class LoadedModelInfo(
     val supportsReasoningEffort: Boolean = false,
     /** Absolute path of the weights currently owned by the engine. */
     val modelPath: String = "",
+    /** Legacy compiled exports without readable window metadata use an app-side estimate. */
+    val contextSizeIsEstimated: Boolean = false,
 )
 
 /**
