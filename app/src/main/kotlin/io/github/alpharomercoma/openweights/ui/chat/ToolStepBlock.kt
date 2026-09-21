@@ -16,7 +16,6 @@
 
 package io.github.alpharomercoma.openweights.ui.chat
 
-import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,8 +25,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Block
@@ -45,14 +42,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
-import coil3.compose.AsyncImage
 import io.github.alpharomercoma.openweights.R
 import io.github.alpharomercoma.openweights.core.designsystem.component.KeepTailPinned
 import io.github.alpharomercoma.openweights.core.designsystem.component.MarkdownText
@@ -151,7 +144,7 @@ fun ToolStepBlock(step: AgentStep, modifier: Modifier = Modifier) {
         // without first being told a tool ran and having to tap.
         val pictures = step.pictures()
         if (pictures.isNotEmpty()) {
-            MediaGrid(pictures = pictures, modifier = Modifier.padding(top = 8.dp))
+            PictureCarousel(pictures = pictures, modifier = Modifier.padding(top = 8.dp))
         }
 
         // Not animated: the height change has to happen in the frame the tap recomposed, or
@@ -303,63 +296,6 @@ private fun AgentStep.pictures(): List<FoundPicture> = when (this) {
     }
     else -> emptyList()
 }
-
-/**
- * Results as pictures, the way every assistant that can show them does it.
- *
- * A row that scrolls sideways rather than a grid that wraps, and the reason is the container:
- * this sits inside a transcript that scrolls vertically, and a wrapping grid inside a
- * vertical scroller either has to be measured to its full height, which makes a long result
- * push the reply off screen, or nested, which Compose will not do. A row has one obvious
- * gesture and takes fixed height whatever the count.
- */
-@Composable
-private fun MediaGrid(pictures: List<FoundPicture>, modifier: Modifier = Modifier) {
-    val context = LocalContext.current
-    LazyRow(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        items(pictures) { picture ->
-            AsyncImage(
-                model = picture.thumbnail,
-                // Named rather than described. Nothing here knows what is in the picture,
-                // and inventing a description for a screen reader is worse than admitting
-                // there is one to look at.
-                contentDescription = stringResource(R.string.search_result_picture),
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(THUMBNAIL)
-                    .clip(RoundedCornerShape(Radius.xs))
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                    .clickable {
-                        // The page, not the picture. Out to the browser rather than into a
-                        // viewer of our own: the thumbnail is a thumbnail, and the page it
-                        // came from is what has the licence, the caption and the context.
-                        //
-                        // This opened the thumbnail until a reviewer read the comment beside
-                        // it and then read the code, which is the only reason a comment that
-                        // describes the opposite of what happens ever gets caught.
-                        //
-                        // Only a web address. The source is whatever the search provider's
-                        // JSON said it was, and ACTION_VIEW launches whichever app claims
-                        // the scheme: a row carrying tel:, sms:, market: or another app's
-                        // own scheme would open that app on a tap meant for a web page.
-                        if (isWebAddress(picture.source)) {
-                            runCatching {
-                                context.startActivity(
-                                    Intent(Intent.ACTION_VIEW, picture.source.toUri()),
-                                )
-                            }
-                        }
-                    },
-            )
-        }
-    }
-}
-
-/** Big enough to recognise a subject, small enough that eight fit a phone's width in two. */
-private val THUMBNAIL = 96.dp
 
 /**
  * Whether [address] is something a browser opens, as opposed to something another app does.
