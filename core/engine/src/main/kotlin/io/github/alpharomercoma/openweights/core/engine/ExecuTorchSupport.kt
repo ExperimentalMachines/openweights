@@ -41,7 +41,11 @@ object ExecuTorchSupport {
      * gigabyte. UNKNOWN is included because most published exports are XNNPACK and do not
      * say so in their name; excluding it would hide nearly all of them.
      */
-    val BACKENDS: Set<CompiledBackend> = setOf(CompiledBackend.XNNPACK, CompiledBackend.UNKNOWN)
+    val BACKENDS: Set<CompiledBackend> = setOf(
+        CompiledBackend.XNNPACK,
+        CompiledBackend.NEUROPILOT,
+        CompiledBackend.UNKNOWN,
+    )
 
     /** Whether this build could open a model compiled for [backend]. */
     fun canRun(backend: CompiledBackend): Boolean = backend in BACKENDS
