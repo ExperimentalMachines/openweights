@@ -671,6 +671,11 @@ class HuggingFaceClient @Inject constructor(
 /**
  * The models this app recommends, and why they are not the benchmark winners.
  *
+ * Current selection: the Experimental Machines LFM2.5 1.2B and 2.6B ExecuTorch exports.
+ * Their refusal-removed heretic counterparts are discoverable under the experimental heading.
+ * The remainder of this comment is the evidence history for earlier shortlist decisions; it
+ * does not override the current repository IDs below.
+ *
  * `docs/research/tool-calling.md` ranks fifteen models on six routing cases in four
  * orderings plus a two-turn pair, all on hardware. Its winners are purpose-built function
  * callers: Hammer 2.1 1.5B at 5 of 6 in every arm, xLAM-2-1b at 5 of 6 and the fastest of
@@ -803,55 +808,29 @@ class HuggingFaceClient @Inject constructor(
  * missing repeat penalty. A fast model that does not finish is not a recommendation.
  */
 val RECOMMENDED = listOf(
-    // Liquid AI's own GGUF repositories. Each lists eight files; the Q4_K_M is the file the
-    // public benchmarks graded, and the QAD-Q4_0 is a distinct checkpoint (Liquid's
-    // quantisation-aware one) that the decision suite has now graded twice on the Dimensity
-    // 9400 and found ahead: on 2026-09-13, all 160 rows in one session, it searched when
-    // needed on 60% against the Q4_K_M's 44%, was correct on 39% against 40%, prefilled at
-    // 227 against 157 tok/s and decoded at 36 against 31, at 731 MB against 697
-    // (`docs/research/executorch-tool-calling-qad.md`). Its GSM8K, IFEval and BFCL grades
-    // are still owed, so the Q4_K_M stays the marked file until they land. That night also
-    // read the compiled question as settled against the family, and the cause given here was
-    // wrong: the 8da4w recipe was losing the tool-call decision to round-to-nearest int4 and
-    // to a conv_state that survived the runner's reset, not to a need for QAT. Both are
-    // fixed at export (`docs/research/executorch-state-and-recipes.md`) and the replacement
-    // exports were published 2026-09-19. The GGUFs stay recommended anyway, because the
-    // evidence does not yet favour the compiled file: offered one tool on held-out
-    // questions it is level with the Q4_K_M on a Snapdragon (49% against 51% searched when
-    // needed) and seven points under it on a Dimensity, while offered the app's sixteen
-    // tools on the Dimensity it leads both GGUFs by fifteen points. The app offers sixteen,
-    // so the deciding run is a sixteen-tool arm on a second phone, which has not been made.
-    "LiquidAI/LFM2.5-1.2B-Instruct-GGUF",
-    "LiquidAI/LFM2.5-2.6B-GGUF",
-    // The family with eyes, from Liquid AI's own GGUF repository: ships its mmproj
-    // projector beside the weights, which the app pairs automatically.
-    "LiquidAI/LFM2.5-VL-1.6B-GGUF",
-    // The generalist from another family, so the list is not one publisher's opinion.
-    "unsloth/Qwen3-1.7B-GGUF",
+    "experimentalmachines/LFM2.5-1.2B-Instruct-ExecuTorch",
+    "experimentalmachines/LFM2.5-2.6B-ExecuTorch",
 )
 
 /**
  * The one file in each recommended repository that the recommendation's numbers were
  * measured on.
  *
- * A row is a repository, and a GGUF repository lists eight quantisations sorted by size.
- * Every grade behind the row (`docs/research/recommended-runtime.md`) was earned by one of
- * them, and a person who opens the row and takes the smallest file takes one the numbers
- * do not cover: Liquid's QAD-Q4_0 is a distinct checkpoint graded on the decision suite and
- * not yet on the public sets, and the plain Q4_0 has neither. Codex named that the
- * principal user-facing risk of the 2026-09-10 reversal, so the card says which file was
- * measured and lists it first. A repository with no entry here has no such file, and its
- * cards say nothing.
+ * A row is a repository, and the published ExecuTorch repositories list fixed-window PTE
+ * programs sorted by the app's normal file ordering.
+ * The map points at the 4k files used for the device comparison. Other context windows stay
+ * available, but are not labelled as the measured download.
  */
 val GRADED: Map<String, String> = mapOf(
-    "LiquidAI/LFM2.5-1.2B-Instruct-GGUF" to "LFM2.5-1.2B-Instruct-Q4_K_M.gguf",
-    "unsloth/Qwen3-1.7B-GGUF" to "Qwen3-1.7B-Q8_0.gguf",
+    "experimentalmachines/LFM2.5-1.2B-Instruct-ExecuTorch" to
+        "xnnpack/LFM2.5-1.2B-Instruct-8da4w-gptq-4k.pte",
+    "experimentalmachines/LFM2.5-2.6B-ExecuTorch" to "xnnpack/LFM2.5-2.6B-8da4w-gptq-4k.pte",
 )
 
 /**
  * Shortlist rows that are findable but not recommended: the two LFM2.5 models as compiled
- * exports with refusal behaviour removed, the same 8da4w 32k recipe as the exports the
- * recommendation carried between 2026-09-07 and 2026-09-10.
+ * exports with refusal behaviour removed, each published at five fixed windows from 2k to
+ * 32k.
  *
  * Kept apart from [RECOMMENDED] on purpose. The app runs any model a person chooses, and
  * these are published so they can be chosen; but "the app can find it" and "the app
@@ -860,8 +839,8 @@ val GRADED: Map<String, String> = mapOf(
  * recommendation, under their own heading, marked [HubModel.modified].
  */
 val EXPERIMENTAL = listOf(
-    "experimentalmachines/LFM2.5-1.2B-Instruct-heretic",
-    "experimentalmachines/LFM2.5-2.6B-heretic",
+    "experimentalmachines/LFM2.5-1.2B-Instruct-heretic-ExecuTorch",
+    "experimentalmachines/LFM2.5-2.6B-heretic-ExecuTorch",
 )
 
 /**

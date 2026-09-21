@@ -22,12 +22,14 @@ import org.junit.Test
 /**
  * The measured-file map only ever points inside the recommendation: a graded file for a
  * repository that is not recommended would mark a card nobody is sent to, and a
- * recommended GGUF row with no graded file is a row whose numbers cover no download.
+ * recommended row with no graded file is a row whose numbers cover no download.
  */
 class GradedFilesTest {
     @Test
     fun `every graded file belongs to a recommended repository`() {
         assertThat(RECOMMENDED).containsAtLeastElementsIn(GRADED.keys)
-        GRADED.values.forEach { assertThat(it).endsWith(".gguf") }
+        GRADED.values.forEach { file ->
+            assertThat(file.endsWith(".gguf") || file.endsWith(".pte")).isTrue()
+        }
     }
 }

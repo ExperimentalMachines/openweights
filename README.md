@@ -95,7 +95,7 @@ model search and downloads, and the three network tools. The
 | Fit before download | Comfortable, tight, will not run, or no room to download, from the GGUF header read remotely and your phone's memory. Compiled files get a size-based estimate and show their exported window where the publisher states it. |
 | Downloads | Resumable over range requests, verified with a rolling SHA-256, run in a foreground service so leaving the app does not end them, with a "Ready to use" notification that opens the model. |
 | Vision projectors | A GGUF's `mmproj` projector is paired with the weights automatically. |
-| Recommended | Four GGUF rows: Liquid AI's LFM2.5 1.2B and 2.6B, LFM2.5-VL 1.6B, and Qwen3 1.7B. Below them, under an "Experimental / modified" heading, our two refusal-removed ExecuTorch exports of LFM2.5: findable, not recommended. Our compiled LFM2.5 exports led the list for three days; the 1.2B came off it on its scores and the 2.6B with it, provisionally. The reasoning is in the code beside the list and in `docs/research/recommended-runtime.md`. |
+| Recommended | The current ExecuTorch LFM2.5 1.2B and 2.6B exports from Experimental Machines. Below them, under an "Experimental / modified" heading, are the 1.2B and 2.6B heretic ExecuTorch exports. The regular rows are the app defaults; heretics remain an explicit experimental choice. |
 
 ### Two runtimes, one build
 
@@ -222,10 +222,10 @@ Exports we made and measured, published under the Experimental Machines organisa
 
 | Repository | What it is |
 |---|---|
-| [LFM2.5-1.2B-Instruct-ExecuTorch-XNNPACK-32k](https://huggingface.co/experimentalmachines/LFM2.5-1.2B-Instruct-ExecuTorch-XNNPACK-32k) | LFM2.5 1.2B for ExecuTorch, 32k context, int4 weights for Arm CPUs. 827 MB. |
-| [LFM2.5-2.6B-ExecuTorch-XNNPACK-32k](https://huggingface.co/experimentalmachines/LFM2.5-2.6B-ExecuTorch-XNNPACK-32k) | LFM2.5 2.6B for ExecuTorch, 32k context. 1.8 GB. Reasons before it answers; give it a 2048-token reply budget. |
-| [LFM2.5-1.2B-Instruct-heretic](https://huggingface.co/experimentalmachines/LFM2.5-1.2B-Instruct-heretic) | The 1.2B with refusal behaviour removed, with an ExecuTorch 32k export beside the weights. |
-| [LFM2.5-2.6B-heretic](https://huggingface.co/experimentalmachines/LFM2.5-2.6B-heretic) | The 2.6B with refusal behaviour removed, with an ExecuTorch 32k export beside the weights. |
+| [LFM2.5-1.2B-Instruct-ExecuTorch](https://huggingface.co/experimentalmachines/LFM2.5-1.2B-Instruct-ExecuTorch) | Recommended LFM2.5 1.2B ExecuTorch export, with 2k through 32k windows. |
+| [LFM2.5-2.6B-ExecuTorch](https://huggingface.co/experimentalmachines/LFM2.5-2.6B-ExecuTorch) | Recommended LFM2.5 2.6B ExecuTorch export, with 2k through 32k windows. |
+| [LFM2.5-1.2B-Instruct-heretic-ExecuTorch](https://huggingface.co/experimentalmachines/LFM2.5-1.2B-Instruct-heretic-ExecuTorch) | Experimental 1.2B heretic ExecuTorch export, with 2k through 32k windows. |
+| [LFM2.5-2.6B-heretic-ExecuTorch](https://huggingface.co/experimentalmachines/LFM2.5-2.6B-heretic-ExecuTorch) | Experimental 2.6B heretic ExecuTorch export, with 2k through 32k windows. |
 
 **Published does not mean quality-approved.** The 2026-09-21 POCO acceptance run of the
 published 1.2B GPTQ 32k artifact found incorrect arithmetic, lost facts after compaction,
