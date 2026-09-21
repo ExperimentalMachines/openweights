@@ -164,17 +164,12 @@ class ModelPreferencesTest {
         assertThat(read.contextLength).isEqualTo(8_192)
     }
 
-    /**
-     * Caught live: asked a plain factual question with no need to search, LFM2.5-1.2B
-     * correctly answered from memory and then prefaced it with "I'm sorry, but I don't have
-     * a tool that can pull up a quick fact from an external source" — false. web_search was
-     * offered the whole time; the model just correctly chose not to use it, and then
-     * described that choice as a missing capability. The default prompt told it when not to
-     * search; nothing told it not to misdescribe itself when it didn't.
-     */
     @Test
-    fun `the default tool prompt says not to deny having a tool it is choosing not to use`() {
-        assertThat(ModelPreferences.DEFAULT_TOOL_PROMPT).contains("do not say you lack a tool")
+    fun `the default tool prompt respects current availability`() {
+        assertThat(
+            ModelPreferences.DEFAULT_TOOL_PROMPT,
+        ).contains("Use only the tools currently offered")
+        assertThat(ModelPreferences.DEFAULT_TOOL_PROMPT).contains("explain the limitation")
     }
 
     /**
@@ -346,7 +341,22 @@ class ModelPreferencesTest {
         // The behaviour the clause exists for. Asked what somebody thought of a repository
         // whose address was sitting in the question, models answered from the address.
         assertThat(ModelPreferences.DEFAULT_TOOL_PROMPT)
-            .contains("open it with fetch_url before you answer")
+            .contains("open it directly with fetch_url, without searching first")
+    }
+
+    @Test
+    fun `version eight default migrates while a custom prompt survives`() = runTest {
+        val fixture = checkNotNull(javaClass.getResource("/tool-prompt-v8.json")).readText()
+        repository.saveRaw("old.gguf", fixture)
+        assertThat(repository.current("old.gguf").toolPrompt)
+            .isEqualTo(ModelPreferences.DEFAULT_TOOL_PROMPT)
+        repository.saveRaw(
+            "custom.gguf",
+            """{"version":8,"toolPrompt":"Use my own routing rules."}""",
+        )
+        assertThat(
+            repository.current("custom.gguf").toolPrompt,
+        ).isEqualTo("Use my own routing rules.")
     }
 
     @Test

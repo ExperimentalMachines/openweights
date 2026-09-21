@@ -120,13 +120,44 @@ class TurnRunnerDenialTest {
         run()
 
         assertThat(engine.offered).hasSize(2)
-        // The retry keeps the definitions rendered: stripping them rewrote the front of
-        // the prompt, which invalidated the KV cache at the tool block and cost a full
-        // conversation re-read - twice, since the next turn put the block back. What is
-        // withheld is the *parsing*: a call written on this pass is not run, which the
-        // test below this one pins.
-        assertThat(engine.offered[1]).isNotEmpty()
-        assertThat(engine.prompts[1].last().text).contains("yourself")
+        assertThat(engine.offered[1]).isEmpty()
+        assertThat(engine.prompts[1]).isEqualTo(engine.prompts[0])
+        assertThat(search.calls).isEmpty()
+    }
+
+    @Test
+    fun `the story denial gets one clean retry of the original request`() = runBlocking<Unit> {
+        val question = "Write a story about a sailor. Start the story now."
+        engine.scripted += ScriptedPass(
+            "I don't have a story to write at the moment. Let me know what you'd like.",
+        )
+        engine.scripted +=
+            ScriptedPass("The sailor watched the lighthouse disappear into the fog.")
+
+        run(question = question)
+
+        assertThat(engine.prompts).hasSize(2)
+        assertThat(engine.prompts[1]).isEqualTo(engine.prompts[0])
+        assertThat(engine.prompts[1].last().text).contains(question)
+        assertThat(engine.offered[0]).isNotEmpty()
+        assertThat(engine.offered[1]).isEmpty()
+        assertThat(search.calls).isEmpty()
+    }
+
+    @Test
+    fun `an offer to write the requested email gets a clean text retry`() = runBlocking<Unit> {
+        engine.scripted += ScriptedPass(
+            "I don't have access to your calendar. However, I can help you draft an email. " +
+                "Would you like me to write one for you?",
+        )
+        engine.scripted +=
+            ScriptedPass("Dear Sam, Thank you for the invitation, but I cannot attend.")
+
+        run(question = "Draft a polite email declining a meeting invitation.")
+
+        assertThat(engine.prompts).hasSize(2)
+        assertThat(engine.prompts[1]).isEqualTo(engine.prompts[0])
+        assertThat(engine.offered[1]).isEmpty()
         assertThat(search.calls).isEmpty()
     }
 
@@ -158,9 +189,8 @@ class TurnRunnerDenialTest {
 
         run()
 
-        // Rendered but not runnable: see the cache note two tests up.
-        assertThat(engine.offered[1]).isNotEmpty()
-        assertThat(engine.prompts[1].last().text).contains("yourself")
+        assertThat(engine.offered[1]).isEmpty()
+        assertThat(engine.prompts[1]).isEqualTo(engine.prompts[0])
     }
 
     @Test
@@ -234,7 +264,11 @@ class TurnRunnerDenialTest {
         assertThat(search.calls).isEmpty()
     }
 
-    private suspend fun run(mode: AgentMode = AgentMode.AUTO, honours: Boolean = true) {
+    private suspend fun run(
+        mode: AgentMode = AgentMode.AUTO,
+        honours: Boolean = true,
+        question: String = "Who is Ada Lovelace?",
+    ) {
         engine.load(modelFile(), ModelLoadParams(contextLength = 4096))
         val runner = TurnRunner(
             engine = engine,
@@ -244,7 +278,7 @@ class TurnRunnerDenialTest {
             asks = AskBoard(),
         ).apply { honoursIntent = honours }
         runner.run(
-            conversation = listOf(ChatMessage.text(ChatRole.USER, "Who is Ada Lovelace?")),
+            conversation = listOf(ChatMessage.text(ChatRole.USER, question)),
             params = SamplerParams(),
             mode = mode,
             withTools = true,

@@ -17,6 +17,7 @@
 package io.github.alpharomercoma.openweights.core.tools
 
 import android.util.Log
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonArray
@@ -82,6 +83,7 @@ class DuckDuckGoMediaProvider(private val client: OkHttpClient) {
                 }
             }
         }.onFailure {
+            if (it is CancellationException) throw it
             Log.i(TAG, "media search: endpoint request failed", it)
         }.getOrNull() ?: return null
 
@@ -155,6 +157,7 @@ class DuckDuckGoMediaProvider(private val client: OkHttpClient) {
                 }
             }
         }.onFailure {
+            if (it is CancellationException) throw it
             Log.i(TAG, "media search: token page request failed", it)
         }.getOrNull() ?: return null
         val token = VQD.find(page)?.groupValues?.getOrNull(1)

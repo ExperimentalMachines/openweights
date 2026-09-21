@@ -1470,13 +1470,15 @@ class TurnRunner @Inject constructor(
             // don't have access to the weather, so I would search" reads denial-shaped —
             // and the prose push would replace the plan the user asked to read with the
             // direct answer they asked to defer.
+            val defersText = CapabilityDenial.defersRequestedText(pass.spoken(), asked)
             val deniesInProse = !pass.raw.containsToolMarkup() &&
                 (
                     CapabilityDenial.denies(pass.spoken()) ||
-                        CapabilityDenial.lamentsUnknown(pass.spoken())
+                        CapabilityDenial.lamentsUnknown(pass.spoken()) ||
+                        defersText
                     )
             if (deniesInProse && mode != AgentMode.PLAN) {
-                return denialRepair(pass)
+                return denialRepair(pass, textOnly = defersText)
             }
             if (!pass.raw.invitesRepair(active)) return false
             repaired = true
@@ -1487,48 +1489,45 @@ class TurnRunner @Inject constructor(
         }
 
         /**
-         * A pass that claimed to lack a capability instead of acting gets the push the user
-         * would otherwise have to type.
-         *
-         * Same single allowance as the parse repair above, for the same reason: re-asking a
-         * model that will not move is how a phone spends a minute arriving nowhere. The
-         * split is [CapabilityDenial]'s and is measured there: a denial about looking up or
-         * computing keeps the tools and is told which one fits; any other denial gets its
-         * retry with the tools withheld, because a retry that can still see them calls one
-         * — a haiku request became a web search — and with nothing to call the model
-         * writes the answer it was refusing to write. On the 34-case routing suite this
-         * mechanism took the shipped prompt from 18 to 30, curing every denial; the four
-         * cases still missed are over-eager searches that never denied anything.
+         * One recovery for a false capability claim. Tool-shaped denials retain their
+         * tool-specific correction. Text denials retry the original conversation cleanly
+         * without tools, because the catalogue and the failed answer both biased the
+         * measured 1.2B replies towards another denial. This deliberately pays a re-prefill
+         * after failure rather than removing tools from ordinary first passes.
          */
-        private suspend fun denialRepair(pass: Pass): Boolean {
+        private suspend fun denialRepair(pass: Pass, textOnly: Boolean): Boolean {
             repaired = true
             // The turn's own question, not the conversation's last message: that one is
             // decorated with tool notes whose text can carry an earlier turn's URLs, and
             // a stale address would classify a translation denial as a fetch.
-            val fitting = when (val chosen = judgedFitting(pass)) {
-                is JudgeQuestions.Choice.Tool -> chosen.name
-                JudgeQuestions.Choice.None -> null
-                JudgeQuestions.Choice.Unread, null -> CapabilityDenial.fitting(pass.spoken(), asked)
-                    .firstOrNull { active.find(it) != null }
+            val fitting = if (textOnly) {
+                null
+            } else {
+                when (val chosen = judgedFitting(pass)) {
+                    is JudgeQuestions.Choice.Tool -> chosen.name
+                    JudgeQuestions.Choice.None -> null
+                    JudgeQuestions.Choice.Unread, null -> CapabilityDenial.fitting(
+                        pass.spoken(),
+                        asked,
+                    )
+                        .firstOrNull { active.find(it) != null }
+                }
             }
-            // proseOnly gates the *parsing*, deliberately not the rendering. The old
-            // version also stripped the tool block from the prompt, which reads as free
-            // and is the most expensive line this file ever had: the block sits a few
-            // hundred tokens into the prompt, so removing it invalidates the KV cache
-            // from that point, the pass re-reads the whole conversation, and the cache
-            // this pass leaves behind lacks the block — so the *next* turn re-reads
-            // everything again to put it back. On a hybrid model, whose cache refuses
-            // partial rollback, both re-reads are full ones: measured live, a three-turn
-            // LFM2.5 chat paid a complete re-prefill on two of its three turns and a
-            // 2,500-token conversation answered with a thirty-second time-to-first-token.
-            // The model does not need the block gone to answer in prose — it needs the
-            // retry message beside this, and any call it writes anyway is not run.
             if (fitting == null) {
+                // A clean prose retry: retaining the catalogue reproduced false writing
+                // denials on the phone, and replaying the denial poisoned the retry. Keep
+                // the original request, instructions and history, but neither the failed
+                // answer nor a new instruction pressuring the model to comply.
+                // This costs a re-prefill on hybrid models. It is paid only after a false
+                // capability claim, once per turn, rather than weakening normal tool use.
                 proseOnly = true
+                renderTools = false
+                engine.resetContext()
+            } else {
+                messages = messages +
+                    ChatMessage.text(ChatRole.ASSISTANT, assistantHistoryText(pass.raw)) +
+                    ChatMessage.text(ChatRole.USER, CapabilityDenial.retryRequest(fitting))
             }
-            messages = messages +
-                ChatMessage.text(ChatRole.ASSISTANT, assistantHistoryText(pass.raw)) +
-                ChatMessage.text(ChatRole.USER, CapabilityDenial.retryRequest(fitting))
             Log.i("OpenWeights", "denial repair fitting=$fitting")
             return true
         }

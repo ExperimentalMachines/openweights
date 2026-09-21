@@ -27,6 +27,61 @@ import org.junit.Test
  */
 class CapabilityDenialTest {
     @Test
+    fun `short false text limitations need no explicit tool noun`() {
+        listOf(
+            "I don't have a story to write at the moment. Let me know what you'd like.",
+            "I'm sorry, but I can't write a story for you. However, I can help you create one.",
+            "I'm sorry, but I can't create a poem right now. If you'd like, I can help.",
+            "I cannot translate that phrase. However, I can help you translate it.",
+            "I can't draft an email directly. Let me know if you'd like a sample.",
+        ).forEach { assertThat(CapabilityDenial.denies(it)).isTrue() }
+    }
+
+    @Test
+    fun `text detection preserves boundaries missing information and supplied answers`() {
+        listOf(
+            "I can't write that because it would be harmful. However, I can help with a safe alternative.",
+            "I cannot summarize without the source text. Let me know when you have it.",
+            "I don't have your private email. Let me know what you'd like.",
+            "I can't help with that request. However, I can help with something else.",
+            "I don't write haikus, but I can help!\n\nLeaves drift to the ground\n" +
+                "Autumn whispers through the trees\nWinter waits nearby",
+            "The sailor said, \"I can't write a story. However, I can sail.\"",
+        ).forEach { assertThat(CapabilityDenial.denies(it)).isFalse() }
+    }
+
+    @Test
+    fun `offering an already requested draft is different from needing account access`() {
+        val reply = "I don’t have access to your personal schedule or calendar, so I can’t " +
+            "automatically check availability. However, I can help you craft a polite email " +
+            "to decline a meeting invitation. Would you like me to write one for you?"
+        assertThat(CapabilityDenial.denies(reply)).isFalse()
+        assertThat(
+            CapabilityDenial.defersRequestedText(
+                reply,
+                "Draft a polite email declining a meeting.",
+            ),
+        ).isTrue()
+        listOf(
+            "Can you access my calendar?",
+            "Draft and send an email to Sam.",
+            "Write out my private password.",
+        ).forEach { assertThat(CapabilityDenial.defersRequestedText(reply, it)).isFalse() }
+        assertThat(
+            CapabilityDenial.defersRequestedText(
+                "I need the source text first. Would you like me to summarize it when you provide it?",
+                "Summarize the report.",
+            ),
+        ).isFalse()
+        assertThat(
+            CapabilityDenial.defersRequestedText(
+                "I can't help with that. Would you like me to write a safe alternative?",
+                "Write an email.",
+            ),
+        ).isFalse()
+    }
+
+    @Test
     fun `a lookup denial keeps the tools and names the search`() {
         val denial = "I’m sorry, but I don’t have access to the latest information about " +
             "the current strongest character in Honkai: Star Rail."
@@ -189,9 +244,8 @@ class CapabilityDenialTest {
     }
 
     @Test
-    fun `the retry line either names the tool or forbids mentioning any`() {
+    fun `a tool retry names the available tool`() {
         assertThat(CapabilityDenial.retryRequest(WebSearchTool.NAME))
             .contains(WebSearchTool.NAME)
-        assertThat(CapabilityDenial.retryRequest(null)).contains("yourself")
     }
 }

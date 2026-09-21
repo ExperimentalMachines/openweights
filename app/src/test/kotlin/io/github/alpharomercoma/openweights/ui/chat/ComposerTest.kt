@@ -24,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -443,18 +444,33 @@ class ComposerTest {
         compose.onNodeWithText("a question I typed elsewhere").assertExists()
     }
 
+    @Test
+    fun `drafting during generation never dispatches a command and keeps the draft`() {
+        var sent = false
+        var command = false
+        show(onSend = {
+            sent = true
+            true
+        }, onCommand = { command = true }, generating = true)
+        compose.onNodeWithContentDescription("Message").performTextInput("/plan")
+        compose.onNodeWithText(SlashCommand.PLAN.description).performClick()
+        compose.onNodeWithContentDescription("Message").assertTextEquals("/plan")
+        assert(!sent && !command)
+    }
+
     private fun show(
         onSend: (String) -> Boolean = { true },
         onCommand: (SlashCommand) -> Unit = {},
         editing: String? = null,
         onPasteMedia: (List<Uri>) -> Unit = {},
+        generating: Boolean = false,
     ) {
         compose.setContent {
             OpenWeightsTheme(dynamicColor = false) {
                 Composer(
                     conversationKey = null,
                     enabled = true,
-                    isGenerating = false,
+                    isGenerating = generating,
                     staged = emptyList<MessagePart.File>(),
                     document = null as StagedDocument?,
                     onRemoveDocument = {},

@@ -33,7 +33,7 @@ import javax.inject.Singleton
  * the app, not of whichever model happens to be loaded, and someone who turned off page
  * fetching does not expect it back when they switch models.
  *
- * Off by default, all but web search; see [Tool.defaultsOn] for the reasoning. A choice
+ * Off by default, except the three public-web tools; see [Tool.defaultsOn] for the reasoning. A choice
  * already written here stands whatever the default is, so a person who had switched
  * something off before the default moved does not find it back on, and one who had
  * everything on keeps everything on.

@@ -51,6 +51,7 @@ class SearchMediaTool @Inject constructor(
     private val settings: SearchSettings,
     private val reachability: Reachability,
 ) : Tool {
+    override val defaultsOn: Boolean = true
     override val parallelSafe: Boolean = true
     override val isAvailable: Boolean get() = reachability.isOnline()
 
@@ -90,24 +91,43 @@ class SearchMediaTool @Inject constructor(
     // network tool without it, so its very first DNS lookup threw
     // NetworkOnMainThreadException, runCatching swallowed it, and every search reported
     // "probably rate limited" without a single packet having left the phone.
-    override suspend fun run(call: ToolCall): String = withContext(Dispatchers.IO) {
+    override suspend fun run(call: ToolCall): String = execute(call).text
+
+    override suspend fun execute(call: ToolCall): ToolExecution = withContext(Dispatchers.IO) {
         val query = call.argument("query", "q", "search")
-            ?: return@withContext "No query was given. Call $NAME again with what to look for."
+            ?: return@withContext ToolExecution.failure(
+                "No query was given. Call $NAME again with what to look for.",
+            )
         val kind = if (call.argument("kind", "type")?.startsWith("video") == true) {
             MediaResultKind.VIDEO
         } else {
             MediaResultKind.IMAGE
         }
 
-        val provider = DuckDuckGoMediaProvider(settings.client(httpClient.forTools()))
-        val hits = provider.search(query, kind, LIMIT)
-            ?: return@withContext "The search did not answer, which usually means it is " +
-                "rate limiting rather than that there is nothing. Try again, or search " +
-                "the web instead."
+        val client = settings.client(httpClient.forTools())
+        val primary = DuckDuckGoMediaProvider(client).search(query, kind, LIMIT)
+        val hits = primary ?: if (kind == MediaResultKind.IMAGE) {
+            CommonsMediaProvider(client).search(query, LIMIT)
+        } else {
+            null
+        }
+        if (hits == null) {
+            return@withContext ToolExecution(
+                "Picture search is unavailable right now. No pictures were returned. " +
+                    "Tell the user that images could not be retrieved. Do not invent image " +
+                    "URLs or open unrelated pages to stand in for pictures.",
+                successful = false,
+            )
+        }
+        val source = if (primary == null) "Wikimedia Commons" else "DuckDuckGo"
 
         val what = if (kind == MediaResultKind.VIDEO) "clips" else "pictures"
-        buildString {
+        val result = buildString {
             append("Found ${hits.size} $what for \"$query\".\n")
+            append("Source: $source. The pictures are displayed to the user.\n")
+            append(
+                "Reply with a brief caption, without repeating image URLs or listing every picture.\n",
+            )
             hits.forEachIndexed { index, hit ->
                 append("\n${index + 1}. ${hit.title.ifBlank { "Untitled" }}")
                 // Thumbnail and source on one line, in that order, because the interface
@@ -123,6 +143,7 @@ class SearchMediaTool @Inject constructor(
                 }
             }
         }
+        ToolExecution(result)
     }
 
     companion object {

@@ -26,6 +26,7 @@ import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.svg.SvgDecoder
 import dagger.hilt.android.HiltAndroidApp
 import io.github.alpharomercoma.openweights.core.tools.PublicOnlyDns
+import io.github.alpharomercoma.openweights.core.tools.SEARCH_USER_AGENT
 import io.github.alpharomercoma.openweights.core.tools.isPrivateLiteral
 import io.github.alpharomercoma.openweights.watch.WatchScheduler
 import kotlinx.coroutines.CoroutineScope
@@ -114,7 +115,13 @@ class OpenWeightsApplication :
                                 if (request.url.host.isPrivateLiteral()) {
                                     throw IOException("Refused an image from a private address")
                                 }
-                                chain.proceed(request)
+                                // Wikimedia rejects generic HTTP-library user agents with 403.
+                                chain.proceed(
+                                    request.newBuilder().header(
+                                        "User-Agent",
+                                        SEARCH_USER_AGENT,
+                                    ).build(),
+                                )
                             }
                             .followRedirects(false)
                             .followSslRedirects(false)

@@ -238,15 +238,8 @@ interface Tool {
     /**
      * Whether this tool is on for somebody who has never opened the Tools screen.
      *
-     * False for everything but web search. A fresh install answers from the model and can
-     * look something up; anything more than that is switched on by the person, on the
-     * Tools screen, one row at a time. It used to be the other way round, everything on
-     * unless a tool said otherwise, and the argument was that a tool shipped off is a
-     * feature nobody finds. The cost was the other half of the same fact: the first turn
-     * of every chat carried the description of sixteen tools the person had never asked
-     * for, and a small model chose among them worse than it chose among one. Search is
-     * the one that earns its place on day one, because "look it up" is the request a
-     * local model cannot otherwise meet.
+     * The three public-web tools opt in: search, page reading and pictures. All other
+     * user-facing tools remain opt-in. Saved choices always override these defaults.
      *
      * A tool with no row on the Tools screen has no switch to be off, so the plan-mode
      * machinery that [isUserFacing] keeps off the screen is on wherever its mode offers it.

@@ -228,7 +228,8 @@ class JudgedDecisionsTest {
 
         answering("write a poem about roses", denials = true)
 
-        assertThat(engine.prompts[1].last().text).startsWith("Write the complete answer yourself")
+        assertThat(engine.prompts[1]).isEqualTo(engine.prompts[0])
+        assertThat(engine.offered[1]).isEmpty()
     }
 
     @Test
@@ -240,7 +241,8 @@ class JudgedDecisionsTest {
 
         answering("write a poem about roses", denials = true)
 
-        assertThat(engine.prompts[1].last().text).startsWith("Write the complete answer yourself")
+        assertThat(engine.prompts[1]).isEqualTo(engine.prompts[0])
+        assertThat(engine.offered[1]).isEmpty()
     }
 
     @Test

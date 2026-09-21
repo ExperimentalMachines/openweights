@@ -17,30 +17,13 @@
 package io.github.alpharomercoma.openweights.core.tools
 
 /**
- * Reads a reply that claims a missing capability, so the turn can spend a pass fixing it.
+ * Identifies missing-capability claims so the caller can try one bounded recovery.
  *
- * The failure this exists for was reproduced at temperature zero on the exact shipped
- * prompt: shown five working tools, LFM2.5-1.2B opens with "I'm sorry, but I don't have a
- * tool that can..." on a third of a 34-case suite, for things its tools do (search the
- * current meta, multiply two numbers) and for things it needs no tool for at all (write a
- * haiku, translate a phrase). Half of those replies then do the thing anyway under the
- * apology; the other half stop at an offer, and the user is the one who has to type "go".
- *
- * Wording was the first lever tried and it is refuted twice over. The system prompt already
- * says, at length, that the tools work and none of it is true; a sentence naming the exact
- * apology phrase changed nothing on-device; and on this suite five description rewrites
- * moved the total by at most one in either direction while reshuffling unrelated cases. The
- * lever that works is mechanical, and it is the same one the user reaches for: pushed with
- * one corrective line, the model does the right thing nearly every time. So the push is
- * automated, and this object is the part that reads the model's own denial to decide which
- * push it earned.
- *
- * Two pushes, because a retry that can still see the tools calls one, almost whatever the
- * corrective text says — measured, a haiku request retried "with no apology" became a call
- * to web_search. A denial about *looking up, fetching or computing* keeps the tools and is
- * told which one fits: eight of eight such denials converted to the right call. Any other
- * denial is about something the model can write in the reply, so the retry takes the tools
- * away — with nothing to call, six of six wrote the complete answer cleanly.
+ * On the phone (2026-09-22), LFM2.5-1.2B refused ordinary writing with tools present,
+ * including claims with no tool noun. A clean retry of the original conversation without
+ * the catalogue answered the five initial probes; replaying the denial did not. Lookup
+ * denials still need the appropriate tool. Privacy claims, reasoned refusals and missing
+ * source material must not be treated as false writing limitations.
  */
 object CapabilityDenial {
     /**
@@ -48,9 +31,9 @@ object CapabilityDenial {
      *
      * Judged on the head of the reply only. Every denial observed opens with one — it is a
      * reflex prefix, not a conclusion — and a match deeper in the text is far more likely
-     * to be quoted or legitimate content. Both halves are required: a denial word alone is
-     * an ordinary refusal ("I can't help with that"), and a capability noun alone is an
-     * ordinary sentence about tools. "I'm sorry for your loss" matches neither.
+     * to be quoted or legitimate content. A denial needs a capability claim or a narrow
+     * text limitation. Ordinary refusals ("I can't help with that") and sympathy
+     * ("I'm sorry for your loss") match neither.
      */
     fun denies(reply: String): Boolean {
         val head = reply.head()
@@ -58,8 +41,35 @@ object CapabilityDenial {
         // usually a suggestion ("set a reminder on your phone instead"), and "your" there
         // is the model being helpful, not a privacy boundary being claimed.
         return DENIAL.containsMatchIn(head) &&
-            CAPABILITY.containsMatchIn(head) &&
+            (CAPABILITY.containsMatchIn(head) || deniesText(reply, head)) &&
             !REFUSAL.containsMatchIn(head.substringBefore(". "))
+    }
+
+    /** An offer to write text the user already asked for, rather than a request for data. */
+    fun defersRequestedText(reply: String, question: String): Boolean {
+        val text = reply.trim().lowercase().plainQuotes()
+        return reply.length <= TEXT_DENIAL_CHARS &&
+            '\n' !in reply &&
+            TEXT_REQUEST.containsMatchIn(question.trim().lowercase()) &&
+            !TEXT_REQUEST_BOUNDARY.containsMatchIn(question.lowercase()) &&
+            !TEXT_REFUSAL_REASON.containsMatchIn(text) &&
+            !TEXT_INPUT_MISSING.containsMatchIn(text) &&
+            TEXT_PERMISSION.containsMatchIn(text)
+    }
+
+    /** A short false writing limitation, without broadening ordinary refusals. */
+    private fun deniesText(reply: String, head: String): Boolean {
+        val sentence = head.substringBefore(". ")
+        // A refusal with a reason, missing input, or a substantive answer is not this
+        // failure. In particular, never turn a privacy or safety boundary into a retry.
+        if (reply.length > TEXT_DENIAL_CHARS ||
+            '\n' in reply ||
+            TEXT_BOUNDARY.containsMatchIn(sentence)
+        ) {
+            return false
+        }
+        return TEXT_UNAVAILABLE.containsMatchIn(sentence) ||
+            (TEXT_ACTION.containsMatchIn(sentence) && TEXT_OFFER.containsMatchIn(head))
     }
 
     /**
@@ -118,20 +128,49 @@ object CapabilityDenial {
     val REPAIRABLE: List<String> =
         listOf(WebSearchTool.NAME, FetchUrlTool.NAME, RunScriptTool.NAME, WatchTool.NAME)
 
-    /** The corrective line for the retry, given the tool that fits or null for none. */
-    fun retryRequest(fitting: String?): String = if (fitting == null) {
-        "Write the complete answer yourself now, directly, with no apology and no " +
-            "mention of tools."
-    } else {
+    /** The corrective line when the retry needs an available tool. */
+    fun retryRequest(fitting: String): String =
         "You do have a working tool for exactly this: $fitting. Call it now, with no " +
             "apology and no explanation."
-    }
 
     /** Lowercased with curly apostrophes straightened, which is how this model writes. */
     private fun String.head(): String = take(HEAD_CHARS).lowercase().plainQuotes()
 
     private val DENIAL = Regex(
         "\\b(don't|do not|doesn't|does not|can't|cannot|unable to|not able to|no way to)\\b",
+    )
+
+    private const val TEXT_DENIAL_CHARS = 500
+    private val TEXT_REQUEST = Regex(
+        "^(?:please )?(?:write|draft|compose|translate|rewrite|summarize)\\b",
+    )
+    private val TEXT_REQUEST_BOUNDARY = Regex(
+        "https?://|password|credential|private|confidential|\\b(?:send|schedule|publish)\\b",
+    )
+    private val TEXT_REFUSAL_REASON = Regex(
+        "harmful|unsafe|illegal|copyright|safe alternative|can't help|cannot help|won't|will not",
+    )
+    private val TEXT_INPUT_MISSING = Regex(
+        "need the|need your|without|missing|not provided|not supplied",
+    )
+    private val TEXT_PERMISSION = Regex(
+        "(?:would you like|do you want) me to " +
+            "(?:write|draft|compose|translate|rewrite|summarize|provide)\\b[^?]*\\?\\s*$",
+    )
+    private val TEXT_ACTION = Regex(
+        "^i(?:'m sorry,? but i| am sorry,? but i| am sorry,? i|\\s+sorry,? but i)? " +
+            "(?:can't|cannot|don't|do not|am unable to) " +
+            "(?:write|create|generate|compose|draft|translate|rewrite|summarize)\\b",
+    )
+    private val TEXT_UNAVAILABLE = Regex(
+        "^i (?:don't|do not) have (?:a |an |any )?" +
+            "(?:story|poem|haiku|draft|translation|summary|email)\\b.*" +
+            "(?:ready|to (?:write|share)|at the moment)",
+    )
+    private val TEXT_OFFER = Regex("however,? i can|but i can|if you'd like|let me know")
+    private val TEXT_BOUNDARY = Regex(
+        "because|unsafe|harmful|illegal|copyright|private|privacy|personal|confidential|" +
+            "missing|without|not provided|not supplied|need more|need the|need you",
     )
 
     // "Webpage" is here for the denial that names no tool at all: "I can't view or

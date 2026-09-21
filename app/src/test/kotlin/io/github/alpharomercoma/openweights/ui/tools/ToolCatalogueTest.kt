@@ -139,10 +139,19 @@ class ToolCatalogueTest {
         // spent before the user has said anything, and the number that grows quietly as tools
         // are added, so it is asserted rather than trusted.
         //
-        // "Every install" means on by default as well as able to run, with nothing shared
-        // yet, and since 2026-09-09 that is web search alone: every other tool starts off
-        // and is switched on from the Tools screen. Measured first, before [tools] takes
-        // the grant, so what is counted is what a fresh install's first turn carries.
+        // The three public-web tools ship on; saved choices still win over defaults.
+        val defaults = AppToolRegistry.build(context).all.filter {
+            it.isUserFacing && it.defaultsOn
+        }
+        assertThat(
+            defaults.map {
+                it.definition.name
+            },
+        ).containsExactly("web_search", "fetch_url", "show_pictures")
+        val switches = io.github.alpharomercoma.openweights.core.tools.ToolSwitches(context)
+        defaults.forEach { switches.setEnabled(it.definition.name, false) }
+        defaults.forEach { assertThat(switches.isEnabled(it)).isFalse() }
+        context.getSharedPreferences("tool_switches", Context.MODE_PRIVATE).edit().clear().commit()
         val shipped = tokens(
             AppToolRegistry.build(context).all.filter { it.isAvailable && it.defaultsOn },
         )
@@ -168,22 +177,8 @@ class ToolCatalogueTest {
         /** The same English approximation the tool budget uses. */
         const val CHARS_PER_TOKEN = 4
 
-        /**
-         * What the tools every install has cost to describe, with room to edit.
-         *
-         * About 196 tokens, for web search alone, and the ceiling is 256. Until 2026-09-09
-         * every user-facing tool shipped on, and this number was 775 against a ceiling of
-         * 832: the story of how it got there is in the history of this file, and the short
-         * form is that each addition was paid for consciously and the count still crept up
-         * on a two-thousand-token window. Turning the default round made the first turn of
-         * a fresh chat about six hundred tokens cheaper and gave a small model one tool to
-         * choose, which it does better than choosing among sixteen.
-         *
-         * The property this ceiling exists for is unchanged: the margin absorbs a copy edit
-         * of the one description, and a second default tool, which costs 40 to 90 tokens,
-         * still trips it. A tool that wants to ship on has to come here and say so.
-         */
-        const val DEFAULT_CEILING = 256
+        /** Search, page reading and pictures share a bounded budget on small models. */
+        const val DEFAULT_CEILING = 832
 
         /**
          * And what all of them cost, once a folder has been shared: was 672 tokens, now

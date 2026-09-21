@@ -39,6 +39,30 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 @Suppress("LargeClass") // One fixture exercises the complete approval state machine.
 class AgentRunnerTest {
+    @Test
+    fun `a network lost during approval prevents execution and can recover next round`() = runTest {
+        var online = true
+        var calls = 0
+        val tool = object : Tool {
+            override val definition = ToolDefinition("web_search", "Search", "{}")
+            override val isAvailable get() = online
+            override suspend fun run(call: ToolCall): String {
+                calls++
+                return "found"
+            }
+        }
+        val runner = AgentRunner(ToolRegistry(listOf(tool)))
+        val call = ToolCall("network", "web_search", "{}")
+        runner.step(listOf(call), 0, AgentMode.ASK, {
+            online = false
+            true
+        })
+        assertThat(calls).isEqualTo(0)
+        online = true
+        runner.step(listOf(call), 1, AgentMode.AUTO, { true })
+        assertThat(calls).isEqualTo(1)
+    }
+
     private val ran = mutableListOf<String>()
 
     private val echo = object : Tool {

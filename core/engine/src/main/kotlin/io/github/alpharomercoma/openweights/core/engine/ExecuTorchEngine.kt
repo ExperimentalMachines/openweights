@@ -66,9 +66,9 @@ class ExecuTorchEngine(
     /** How a picture on disk becomes the encoder's square; swapped out in tests. */
     private val reader: PictureReader = AndroidPictureReader(),
     /**
-     * The sampling temperature the model is opened with. A constructor parameter rather
-     * than a [SamplerParams] field because ExecuTorch fixes it when the runner is built,
-     * not per call; zero means greedy, which is what a reproducible evaluation loads.
+     * The sampling temperature used for loading and each generation. This engine keeps it
+     * fixed for the loaded session; zero means greedy for reproducible evaluation. The
+     * native bridge must also set it per call, where the AAR otherwise defaults to 0.8.
      */
     private val temperature: Float = DEFAULT_TEMPERATURE,
     /**
@@ -1056,8 +1056,8 @@ class ExecuTorchEngine(
         const val THINK_CLOSE = "</think>"
 
         /**
-         * ExecuTorch fixes temperature when the runner is built rather than per call, so
-         * this is the value the model is opened with and [SamplerParams] cannot move it.
+         * The text session default, passed through loading and generation. Per-turn
+         * [SamplerParams] do not currently change this engine session setting.
          */
         const val DEFAULT_TEMPERATURE = 0.8f
 

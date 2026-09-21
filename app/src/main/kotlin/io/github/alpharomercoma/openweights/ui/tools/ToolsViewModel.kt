@@ -24,6 +24,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.alpharomercoma.openweights.R
+import io.github.alpharomercoma.openweights.core.tools.AndroidReachability
 import io.github.alpharomercoma.openweights.core.tools.GrantState
 import io.github.alpharomercoma.openweights.core.tools.Memory
 import io.github.alpharomercoma.openweights.core.tools.Remembered
@@ -91,6 +92,7 @@ class ToolsViewModel @Inject constructor(
     private val grant: WorkspaceGrant,
     private val search: SearchSettings,
     private val memory: Memory,
+    private val network: AndroidReachability,
     @param:ApplicationContext private val context: Context,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(
@@ -99,6 +101,8 @@ class ToolsViewModel @Inject constructor(
     val uiState: StateFlow<ToolsUiState> = _uiState.asStateFlow()
 
     init {
+        viewModelScope.launch { network.online.collect { refresh() } }
+        viewModelScope.launch { switches.changes.collect { refresh() } }
         // Collected rather than snapshotted, because the other writer is the model: a fact
         // saved mid-conversation should be on this screen when the user arrives to check.
         viewModelScope.launch {
@@ -217,6 +221,7 @@ class ToolsViewModel @Inject constructor(
  */
 private val LABELS: Map<String, Pair<Int, Int>> = mapOf(
     "web_search" to (R.string.tool_search_name to R.string.tool_search_detail),
+    "show_pictures" to (R.string.tool_pictures_name to R.string.tool_pictures_detail),
     "fetch_url" to (R.string.tool_page_name to R.string.tool_page_detail),
     "find_files" to (R.string.tool_find_file_name to R.string.tool_find_file_detail),
     "search_files" to (R.string.tool_find_file_name to R.string.tool_find_file_detail),

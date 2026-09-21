@@ -107,7 +107,7 @@ class WebSearchTool @Inject constructor(
 ) : Tool {
     override val parallelSafe: Boolean = true
 
-    /** The one tool a fresh install has on. See [Tool.defaultsOn]. */
+    /** One of the three public-web tools enabled on a fresh install. */
     override val defaultsOn: Boolean = true
 
     /**
@@ -139,11 +139,10 @@ class WebSearchTool @Inject constructor(
         // four more all called this tool, and the model's own reasoning showed it deciding
         // to "verify with a web search" a fact it had already stated correctly. The list
         // is now exhaustive, and the double check is named as the thing not to do.
-        description = "Search the web for what you cannot already know: what changed, " +
-            "what is recent, or the present state of a named person, product or " +
-            "organisation. Returns text; for pictures or clips use ${SearchMediaTool.NAME}. " +
-            "Not for settled knowledge (definitions, translations, history, arithmetic) " +
-            "and never to double check what you know: answer those yourself.",
+        description = "Search for current or unknown facts, or when asked to search. " +
+            "Answer settled knowledge without searching. For a supplied URL use fetch_url. " +
+            "Use snippets if sufficient; open a result for missing details. " +
+            "Reuse earlier evidence when sufficient. For pictures use show_pictures.",
         parametersJson = """
             {
               "type": "object",
@@ -304,6 +303,8 @@ class FetchUrlTool @Inject constructor(
     private val workspace: Workspace,
     private val artifacts: SessionArtifacts,
 ) : Tool {
+    override val defaultsOn: Boolean = true
+
     private var checkedCall: Pair<ToolCall, SessionArtifacts.Check>? = null
 
     /**
@@ -382,10 +383,10 @@ class FetchUrlTool @Inject constructor(
 
     override val definition = ToolDefinition(
         name = NAME,
-        description = "Fetch a public web page and return its readable text, when you were " +
-            "given the address. Not for finding a page, and not when a search result " +
-            "already answers it. Pass find to search a long page for what you actually " +
-            "need instead of reading its opening.",
+        description = "Read a public URL from the user, search results, or earlier conversation. " +
+            "Open supplied URLs directly; never invent one. After search, open only for " +
+            "missing details, verification or a requested summary. Reuse text already read. " +
+            "If a page fails, search for another source. Use find to locate details on a long page.",
         parametersJson = """
             {
               "type": "object",

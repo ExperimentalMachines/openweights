@@ -338,6 +338,20 @@ class AgentRunner(
             return AgentStep.Skipped(call, "The user declined to run ${call.name}.")
         }
 
+        // Connectivity may change after the catalogue was built or while approval waited.
+        // Do not rewrite that running prompt; refuse only the unavailable execution.
+        return if (!tool.isAvailable) {
+            AgentStep.Skipped(
+                call,
+                "${call.name} is currently unavailable. " +
+                    "If offline, explain that live information could not be checked.",
+            )
+        } else {
+            executeAvailable(tool, call, now)
+        }
+    }
+
+    private suspend fun executeAvailable(tool: Tool, call: ToolCall, now: () -> Long): AgentStep {
         val startedAt = now()
         // A tool that throws must not end the turn: the model is told what went wrong and
         // can try something else, which is the whole point of a tool loop.

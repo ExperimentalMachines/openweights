@@ -21,6 +21,7 @@ import io.github.alpharomercoma.openweights.core.common.context.Compaction
 import io.github.alpharomercoma.openweights.core.common.model.ChatMessage
 import io.github.alpharomercoma.openweights.core.common.model.ChatRole
 import io.github.alpharomercoma.openweights.core.common.model.ToolCall
+import io.github.alpharomercoma.openweights.core.data.ModelPreferences
 import io.github.alpharomercoma.openweights.core.engine.GenerationStats
 import io.github.alpharomercoma.openweights.core.tools.AgentMode
 import io.github.alpharomercoma.openweights.core.tools.AgentStep
@@ -61,7 +62,7 @@ class EngineMessagesTest {
         // searched for the author of Pride and Prejudice after stating the answer
         // correctly. So the pin moved off the tool's name and onto the clause that
         // replaced it, which is the part that has to survive an edit.
-        assertThat(system.text).contains("Do not search to double check")
+        assertThat(system.text).contains(ModelPreferences.DEFAULT_TOOL_PROMPT)
         // The date deliberately stays OUT of the instructions — it is the one line that
         // changes daily, and in the head it invalidated the warm snapshot and disk store
         // at every midnight. It opens the conversation as its own acknowledged exchange.
@@ -128,7 +129,7 @@ class EngineMessagesTest {
             .single { it.role == ChatRole.SYSTEM }
 
         assertThat(system.text).contains("Search first, always.")
-        assertThat(system.text).doesNotContain("Do not search to double check")
+        assertThat(system.text).doesNotContain(ModelPreferences.DEFAULT_TOOL_PROMPT)
     }
 
     @Test
@@ -141,7 +142,7 @@ class EngineMessagesTest {
 
         val system = state.engineMessages().single { it.role == ChatRole.SYSTEM }
 
-        assertThat(system.text).contains("Do not search to double check")
+        assertThat(system.text).contains(ModelPreferences.DEFAULT_TOOL_PROMPT)
     }
 
     @Test
@@ -218,7 +219,7 @@ class EngineMessagesTest {
         // answered 6 and reached for a tool on 3. See `recap`.
         val system = messages.single { it.role == ChatRole.SYSTEM }
         assertThat(system.text).contains("Answer from what you know")
-        assertThat(system.text).contains("Do not search to double check")
+        assertThat(system.text).contains(ModelPreferences.DEFAULT_TOOL_PROMPT)
         assertThat(system.text).doesNotContain("The user is porting a parser.")
         assertThat(system.text).doesNotContain("$")
         val recap = messages.first { it.text.contains("Earlier in this conversation:") }

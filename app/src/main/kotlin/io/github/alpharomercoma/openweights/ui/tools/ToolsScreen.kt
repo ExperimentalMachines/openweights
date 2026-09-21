@@ -402,7 +402,15 @@ private fun ToolRow(tool: ToolSummary, onToggle: (Boolean) -> Unit) {
             // so the branch could not be reached by any registered tool and only the preview
             // ever showed it. Whether a run is approved is now a property of the turn rather
             // than of the tool, so there is nothing true this row could say about it.
-            val note = if (tool.isReady) null else stringResource(R.string.waiting_for_folder)
+            val note = when {
+                tool.leavesTheDevice && !tool.isEnabled -> stringResource(R.string.tool_status_off)
+                tool.leavesTheDevice && !tool.isReady -> stringResource(
+                    R.string.tool_status_offline,
+                )
+                tool.leavesTheDevice -> stringResource(R.string.tool_status_ready)
+                !tool.isReady -> stringResource(R.string.waiting_for_folder)
+                else -> null
+            }
             note?.let {
                 Text(
                     text = it,

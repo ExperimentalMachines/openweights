@@ -121,7 +121,7 @@ fun KeepTailPinned(expanded: Boolean) {
  */
 @Composable
 fun rememberFollowTailState(listState: LazyListState, scope: CoroutineScope): FollowTailState {
-    val state = remember(listState) { FollowTailState(listState, scope) }
+    val state = remember(listState, scope) { FollowTailState(listState, scope) }
 
     val isAtBottom by remember(listState) {
         derivedStateOf {
@@ -137,13 +137,21 @@ fun rememberFollowTailState(listState: LazyListState, scope: CoroutineScope): Fo
     // also fires for the scroll this component performs itself, so following the tail
     // switched following off, the check below switched it back on, and the two fought each
     // other for every token of a streamed reply.
-    LaunchedEffect(listState) {
+    LaunchedEffect(state, listState) {
         listState.interactionSource.interactions.collect { interaction ->
-            if (interaction is DragInteraction.Start) state.isFollowing = false
+            when (interaction) {
+                is DragInteraction.Start -> state.isFollowing = false
+                // A drag on a short list can end without changing isAtBottom at all,
+                // so the layout effect alone would leave its future replies detached.
+                is DragInteraction.Stop, is DragInteraction.Cancel -> {
+                    if (isAtBottom) state.isFollowing = true
+                }
+                else -> Unit
+            }
         }
     }
 
-    LaunchedEffect(isAtBottom) {
+    LaunchedEffect(state, isAtBottom) {
         if (isAtBottom) state.isFollowing = true
     }
 
@@ -202,13 +210,14 @@ private const val PIN_TO_END_OFFSET = Int.MAX_VALUE / 2
 fun LazyListState.hasHiddenTail(): Boolean {
     val hidden by remember(this) {
         derivedStateOf {
+            if (!canScrollForward) return@derivedStateOf false
             val layout = layoutInfo
             val last = layout.visibleItemsInfo.lastOrNull() ?: return@derivedStateOf false
             val isLastItem = last.index == layout.totalItemsCount - 1
             val overshoot = last.offset + last.size - layout.viewportEndOffset
             // Either there are whole items below, or the last one runs well past the fold.
             val viewport = layout.viewportEndOffset - layout.viewportStartOffset
-            !isLastItem || overshoot > viewport / HIDDEN_TAIL_FRACTION
+            viewport > 0 && (!isLastItem || overshoot > viewport / HIDDEN_TAIL_FRACTION)
         }
     }
     return hidden

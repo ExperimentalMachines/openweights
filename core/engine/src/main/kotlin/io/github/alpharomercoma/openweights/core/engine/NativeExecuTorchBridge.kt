@@ -30,6 +30,7 @@ import org.pytorch.executorch.extension.llm.LlmModule
 class NativeExecuTorchBridge : ExecuTorchBridge {
 
     private var module: LlmModule? = null
+    private var moduleTemperature: Float = 0f
 
     // Written from the runtime's callback rather than returned by it, so they are held
     // here for the duration of one blocking generate rather than passed through.
@@ -55,6 +56,7 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
             LlmModule(modelType, modelPath, tokenizerPath, temperature).also {
                 it.load()
                 module = it
+                moduleTemperature = temperature
             }
         }.fold(
             onSuccess = { true },
@@ -150,21 +152,7 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
         // never maxNewTokens (the AAR's bytecode), so the runtime resolves its allowance
         // from the window and this value changes nothing. The budget that holds is the
         // engine's StopDiscipline, which counts callbacks and stops the loop itself.
-        val config = LlmGenerationConfig.create()
-            .maxNewTokens(maxNewTokens)
-            // No seqLen override: the export owns the total window. This AAR ignores
-            // maxNewTokens, so the engine's callback discipline enforces the output budget.
-            // Echo replays the prompt through onResult, and the whole conversation would
-            // arrive looking like something the model had written.
-            .echo(false)
-            // Explicit, because this one is applied per call and would otherwise append an
-            // EOS token to the end of every suffix fed in — turning what should be a
-            // continuation into a sequence of terminated fragments. The module's BOS is
-            // the opposite case: it is added once after construction or resetContext and
-            // then suppressed, so incremental feeding cannot duplicate it, and the
-            // per-call numBos in this config is ignored by the JNI layer entirely.
-            .numEos(0)
-            .build()
+        val config = generationConfig(maxNewTokens, moduleTemperature)
 
         val attempt = runCatching {
             running.generate(
@@ -284,3 +272,22 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
             .toLongOrNull() ?: 0
     }
 }
+
+/** The AAR defaults each call to 0.8, which otherwise overrides the loaded sampler. */
+internal fun generationConfig(maxNewTokens: Int, temperature: Float): LlmGenerationConfig =
+    LlmGenerationConfig.create()
+        .temperature(temperature)
+        .maxNewTokens(maxNewTokens)
+        // No seqLen override: the export owns the total window. This AAR ignores
+        // maxNewTokens, so the engine's callback discipline enforces the output budget.
+        // Echo replays the prompt through onResult, and the whole conversation would
+        // arrive looking like something the model had written.
+        .echo(false)
+        // Explicit, because this one is applied per call and would otherwise append an
+        // EOS token to the end of every suffix fed in — turning what should be a
+        // continuation into a sequence of terminated fragments. The module's BOS is
+        // the opposite case: it is added once after construction or resetContext and
+        // then suppressed, so incremental feeding cannot duplicate it, and the
+        // per-call numBos in this config is ignored by the JNI layer entirely.
+        .numEos(0)
+        .build()

@@ -282,6 +282,10 @@ fun Composer(
     }
 
     fun trySend() {
+        // Keyboard actions and command shortcuts must obey the same gate as the button.
+        // A draft never enters the live turn or changes its prepared prefix.
+        val modelReady = !isGenerating && !isLoadingModel && !isPreparingFirstResponse
+        if (!enabled || !modelReady || isAttaching) return
         // Resending, unconditionally. The reopened text goes straight to onSend, which is
         // `submit()` and already puts editing ahead of command parsing; gating it here too
         // meant an edit that happened to read like a failed command ("/tmp is full") needed
@@ -292,8 +296,7 @@ fun Composer(
         }
         val command = pendingCommand
         if (command != null) {
-            if (draft.isBlank()) return
-            if (onSend("${command.trigger} ${draft.trim()}")) {
+            if (draft.isNotBlank() && onSend("${command.trigger} ${draft.trim()}")) {
                 clearSent()
                 pendingCommandName = null
                 unknownAttempt = null
@@ -349,7 +352,7 @@ fun Composer(
         if (commands != null) {
             SlashCommandPalette(
                 commands = commands,
-                enabled = enabled,
+                enabled = enabled && !isGenerating && !isLoadingModel && !isPreparingFirstResponse,
                 onSelect = { command ->
                     unknownAttempt = null
                     if (command.takesArgument) {
@@ -404,7 +407,8 @@ fun Composer(
                     UnknownCommandNotice(
                         token = unknown.token,
                         suggestion = unknown.suggestions.firstOrNull(),
-                        enabled = enabled,
+                        enabled =
+                        enabled && !isGenerating && !isLoadingModel && !isPreparingFirstResponse,
                         onUseSuggestion = { suggestion ->
                             unknownAttempt = null
                             if (suggestion.takesArgument) {

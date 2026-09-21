@@ -50,6 +50,37 @@ class ToolsScreenTest {
     val compose = createComposeRule()
 
     @Test
+    fun `offline status preserves the switch and changes live on reconnect`() {
+        val state = androidx.compose.runtime.mutableStateOf(
+            ToolsUiState(
+                tools = listOf(
+                    ToolSummary(
+                        "web_search",
+                        "Search",
+                        "Find facts",
+                        leavesTheDevice = true,
+                        isReady = false,
+                        isEnabled = true,
+                    ),
+                ),
+            ),
+        )
+        compose.setContent {
+            OpenWeightsTheme(dynamicColor = false) {
+                ToolsScreen(state.value, onToggle = { _, on ->
+                    state.value =
+                        state.value.copy(tools = state.value.tools.map { it.copy(isEnabled = on) })
+                }, onChooseFolder = {}, onForgetFolder = {})
+            }
+        }
+        compose.onNodeWithText("Paused: no internet. Resumes automatically when connected.")
+            .performScrollTo().assertIsDisplayed()
+        compose.onNodeWithContentDescription("Search").performClick()
+        state.value = state.value.copy(tools = state.value.tools.map { it.copy(isReady = true) })
+        compose.onNodeWithText("Off by your choice").assertIsDisplayed()
+    }
+
+    @Test
     fun `switching a tool off reports which tool and that it is off`() {
         var switched: Pair<String, Boolean>? = null
         showTools(onToggle = { id, on -> switched = id to on })

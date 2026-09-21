@@ -82,6 +82,18 @@ class ChatViewModelTest : ChatFixture() {
     }
 
     @Test
+    fun `generation allows drafts after conversation allocation but blocks sending`() {
+        val pending = ChatUiState(modelName = "model-a", isGenerating = true)
+        assertThat(pending.canType).isFalse()
+        val allocated = pending.copy(activeConversationId = 1L)
+        assertThat(allocated.canType).isTrue()
+        assertThat(allocated.canSend).isFalse()
+        assertThat(allocated.copy(isPreparingFirstResponse = true).canSend).isFalse()
+        assertThat(allocated.copy(isLoadingModel = true).canSend).isFalse()
+        assertThat(allocated.copy(isGenerating = false).canSend).isTrue()
+    }
+
+    @Test
     fun `nothing types into a composer with no model at all`() {
         val state = ChatUiState(modelName = null, isLoadingModel = false)
 

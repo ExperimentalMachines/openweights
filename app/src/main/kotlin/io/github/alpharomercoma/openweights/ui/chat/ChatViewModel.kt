@@ -539,7 +539,7 @@ data class ChatUiState(
     /**
      * Whether the composer may be typed into, staged with a file, or dictated to.
      *
-     * [canSend] minus the loading and first-prefix checks: a model coming into memory, or
+     * [canSend] minus generation, loading and first-prefix checks: a model coming into memory, or
      * preparing the first prompt cache, is not a reason to throw away a draft. A message
      * written while either read runs is kept — [Composer] refuses to submit it until [canSend]
      * is true, so nothing races the load or pays the cold prefill; the field itself stays open
@@ -548,8 +548,10 @@ data class ChatUiState(
     val canType: Boolean get() =
         modelName != null &&
             outputModality == OutputModality.TEXT &&
-            !isGenerating &&
-            !isCompacting
+            !isCompacting &&
+            // The first send allocates a conversation asynchronously. Wait for its ID so
+            // the composer's new conversation key cannot discard a draft typed meanwhile.
+            (!isGenerating || activeConversationId != null)
 }
 
 @HiltViewModel

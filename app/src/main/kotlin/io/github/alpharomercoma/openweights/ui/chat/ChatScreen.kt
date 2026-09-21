@@ -84,6 +84,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -205,16 +206,19 @@ fun ChatScreen(
     question: UserQuestion? = null,
     onAnswerQuestion: (String) -> Unit = {},
 ) {
-    val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
 
-    // This screen recomposes on every streamed flush — it reads the transcript — which
-    // is exactly the signal the follow-tail pins from.
-    val followTail = rememberFollowTailState(
-        listState = listState,
-        scope = scope,
-    )
+    // A removed LazyColumn retains its last layout. Scope both the position and follow
+    // state to its conversation and presence, including clearing a chat without a new id.
+    // The local scope also cancels queued jumps when that reading surface is replaced.
+    val (listState, followTail) = key(
+        state.activeConversationId,
+        hasReading(state, plan, question),
+    ) {
+        val list = rememberLazyListState()
+        list to rememberFollowTailState(list, rememberCoroutineScope())
+    }
 
     // Hold the id, not the entry: streaming replaces entries on every token, and a
     // captured copy would have Copy putting a half-finished reply on the clipboard.
@@ -410,7 +414,7 @@ private fun ChatContent(
     // Each step of a goal starts a new reply at the bottom. A reader who scrolled up to
     // check the last one is brought back for the next, because a run they cannot see is a
     // run they cannot judge; outside a goal the transcript follows its usual rule.
-    LaunchedEffect(goal?.stepsTaken, state.transcript.size) {
+    LaunchedEffect(followTail, goal?.stepsTaken, state.transcript.size) {
         if (goal?.isRunning == true) followTail.jumpToLatest()
     }
 
@@ -477,34 +481,33 @@ private fun ChatContent(
                         // that need it are disclosures four or five layers inside a list
                         // item and none of the layers between has any business knowing about
                         // scrolling. See KeepTailPinned.
-                        CompositionLocalProvider(LocalFollowTail provides followTail) {
-                            Transcript(
-                                state = state,
-                                goal = goal,
-                                plan = plan,
-                                onTick = onTickStep,
-                                question = question,
-                                onAnswer = onAnswerQuestion,
-                                listState = listState,
-                                isSpeaking = isSpeaking,
-                                clipboard = clipboard,
-                                onActionsForId = onActionsForId,
-                                onToggleReadAloud = onToggleReadAloud,
+                        key(listState) {
+                            CompositionLocalProvider(LocalFollowTail provides followTail) {
+                                Transcript(
+                                    state = state,
+                                    goal = goal,
+                                    plan = plan,
+                                    onTick = onTickStep,
+                                    question = question,
+                                    onAnswer = onAnswerQuestion,
+                                    listState = listState,
+                                    isSpeaking = isSpeaking,
+                                    clipboard = clipboard,
+                                    onActionsForId = onActionsForId,
+                                    onToggleReadAloud = onToggleReadAloud,
+                                )
+                            }
+                            // Keep the button inside the reading surface so even its exit
+                            // animation cannot remain over a new chat's empty state.
+                            JumpToLatestButton(
+                                visible = followTail.isDetached && listState.hasHiddenTail(),
+                                onClick = followTail::jumpToLatest,
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .padding(bottom = 12.dp),
                             )
                         }
                     }
-
-                    JumpToLatestButton(
-                        // Detached is not enough on its own: a transcript that fits the screen
-                        // is detached the moment you touch it, and offering to scroll to a
-                        // bottom already in view is an offer that reads as a bug. Only once
-                        // there is a screenful or so out of sight below.
-                        visible = followTail.isDetached && listState.hasHiddenTail(),
-                        onClick = followTail::jumpToLatest,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 12.dp),
-                    )
                 }
 
                 StatusStrip(

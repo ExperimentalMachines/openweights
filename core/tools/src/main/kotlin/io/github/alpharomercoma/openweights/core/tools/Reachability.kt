@@ -18,9 +18,12 @@ package io.github.alpharomercoma.openweights.core.tools
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.Network
 import android.net.NetworkCapabilities
 import androidx.core.content.getSystemService
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -38,9 +41,7 @@ import javax.inject.Singleton
  * fails, and the reply is either empty or an apology. Not offering them when they cannot
  * work is the same rule [FileTools] already follow with a folder nobody has shared.
  *
- * Cached for a few seconds rather than per call, because `isAvailable` is read once per tool
- * per turn and a system call per read is wasteful. Short enough that stepping into a lift
- * costs one turn.
+ * Default-network callbacks update the UI without rewriting saved tool preferences.
  */
 fun interface Reachability {
     /** True when a search would have something to talk to. */
@@ -48,7 +49,7 @@ fun interface Reachability {
 }
 
 /**
- * The real one, reading the platform and remembering the answer for a few seconds.
+ * The real one, observing the default network for the lifetime of the application.
  *
  * An interface in front of it because `isAvailable` is read on every turn by every tool and
  * a test for a tool should not need a phone to say whether the internet is up.
@@ -57,32 +58,34 @@ fun interface Reachability {
 class AndroidReachability @Inject constructor(
     @param:ApplicationContext private val context: Context,
 ) : Reachability {
-    private var lastAnswer = false
-    private var lastAsked = 0L
+    private val manager = context.getSystemService<ConnectivityManager>()
+    private val _online = MutableStateFlow(look())
+    val online = _online.asStateFlow()
 
-    override fun isOnline(): Boolean {
-        val now = System.currentTimeMillis()
-        if (now - lastAsked < CACHE_MS) return lastAnswer
-        lastAsked = now
-        lastAnswer = look()
-        return lastAnswer
+    init {
+        manager?.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
+            override fun onCapabilitiesChanged(
+                network: Network,
+                capabilities: NetworkCapabilities,
+            ) {
+                _online.value =
+                    capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                    capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+            }
+
+            override fun onLost(network: Network) {
+                // Android warns that synchronous network reads can be stale in callbacks.
+                _online.value = false
+            }
+        })
     }
 
-    /**
-     * True when a network says it can reach the internet.
-     *
-     * `NET_CAPABILITY_VALIDATED` rather than merely connected, because a captive portal is
-     * connected and answers every request with a login page, which to a search tool looks
-     * like results that are not results.
-     */
+    // A dispatch check must see the current network even before its callback is delivered.
+    override fun isOnline(): Boolean = online.value && look()
+
     private fun look(): Boolean {
-        val manager = context.getSystemService<ConnectivityManager>() ?: return false
-        val capabilities = manager.getNetworkCapabilities(manager.activeNetwork) ?: return false
+        val capabilities = manager?.getNetworkCapabilities(manager.activeNetwork) ?: return false
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
             capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-    }
-
-    private companion object {
-        const val CACHE_MS = 5_000L
     }
 }
