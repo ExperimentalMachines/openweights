@@ -252,9 +252,10 @@ JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./gradlew :app:ktlintCheck :app:detekt :a
 
 The build retains a C++17 warning about an existing captured structured binding in CPU
 backend selection. The full-repository checks above preceded these device follow-ups.
-Device evidence, exact audit transcripts and selected screenshots are retained locally at
-`/tmp/openweights-device-audit-20260921/`. No release, commit, push or model publication was
-performed.
+Device evidence, exact audit transcripts and selected screenshots were initially staged at
+`/tmp/openweights-device-audit-20260921/` and are now archived locally at
+`~/ow-models/benchmarks/openweights-device-audit-20260921/`. No release, commit, push or model
+publication was performed during that device-audit stage.
 
 The phone was left on its original GGUF model with the unsent `who` draft restored, no
 shared folder, and Save a file and Show website off. The published compiled model, 26 audit
@@ -355,3 +356,38 @@ hold, rather than equating publication or historical recipe results with current
 No models, defaults, mirrors or exporter sources were changed by this reconciliation.
 The work is intended for local commits only; hosted CI requires a later push and is not
 claimed by these local checks.
+
+## Preservation and reference verification, 2026-09-21
+
+The integrity audit is retained outside Git at
+`~/ow-models/benchmarks/integrity-audit-20260921/`. Its JSON reports compare each archived
+destination against either the original transfer inventory, the deleted Git blob, or the
+additional-artifact manifest. Both original checksum inventories were copied out of `/tmp`
+without changing their expected hashes.
+
+All 190 tracked files removed by `e3db3de5` have byte-identical archived copies. The eight
+additional raw records, four parser regrades and screen recording also match all 13 manifest
+hashes. Of the original 231 transfer entries, 230 still match. The sole mismatch is the
+consolidated archive's `README.md`; its original contents were not recovered. No raw
+benchmark log mismatch was found. The audit records this exception rather than replacing
+the original checksum or claiming that every transferred file is unchanged.
+
+The device-audit archive now contains 61 curated files, 236 PNG/XML capture files, five
+retained runtime log slices and three host-command logs, with verified SHA-256 copies and a
+preservation manifest. The original files remain in place. These runtime slices are not a
+complete lifetime logcat. The integrity archive also retains 191 JUnit XML reports from
+eight modules: 1,681 cases, zero failures or errors, and ten intentional skips. One skip
+requires optional replay input; nine require opt-in live Hugging Face calls. These existing
+reports were inspected, not rerun for this evidence-only follow-up.
+
+The reference check found no broken targets or Markdown fragments among 145 local
+references in 74 tracked Markdown files. It did not fetch the 134 external references or
+interpret historical commands inside code blocks. The actual site builder produced all
+five HTML pages; their 14 static local links and fragments resolve. The grader reproduced
+all 73 committed decision-summary groups exactly in memory, without rewriting the summary.
+The VOID window-failure capture remains available as evidence.
+
+This is verified local preservation, not an independently verified off-machine backup.
+The installed device-acceptance APK predates the reconciliation changes. No new physical
+vision-model, live cloud API or remote CI verification was performed. Host stability does
+not lift the compiled GPTQ32k approval hold or the observed GGUF compaction failure.
