@@ -76,3 +76,14 @@
 # package is reached from native code by descriptor, which R8 cannot see, and the package
 # is fourteen classes. ExecuTorch's own Java classes keep their AAR's rules; they held.
 -keep class com.facebook.jni.** { *; }
+
+# Prefill/Decode Disaggregated Native Bridge
+-keep class io.github.alpharomercoma.openweights.core.engine.DisaggregatedBridge {
+    native <methods>;
+}
+-keep interface io.github.alpharomercoma.openweights.core.engine.DisaggregatedCallback {
+    boolean onToken(java.lang.String);
+}
+-keepclassmembers class * implements io.github.alpharomercoma.openweights.core.engine.DisaggregatedCallback {
+    boolean onToken(java.lang.String);
+}

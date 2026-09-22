@@ -55,3 +55,9 @@ tools/eval/results/**/*.logcat
 
 # Python bytecode from the eval scripts
 __pycache__/
+
+# MediaTek NeuroPilot native libraries: a hundred megabytes of vendor and generated
+# binaries that belong to the NeuroPilot Express SDK and the ExecuTorch build tree, not
+# here. docs/research/npu-pd-disaggregation.md says where each one comes from and how to
+# rebuild it. Debug-only on purpose, so a release build never carries them.
+core/engine/src/debug/jniLibs/

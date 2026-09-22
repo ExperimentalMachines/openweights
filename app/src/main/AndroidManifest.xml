@@ -97,6 +97,50 @@
         <profileable android:shell="true" />
 
         <!--
+             MediaTek NPU inference. The NeuroPilot adapter and the APU driver libraries it
+             opens live on the device, in /system_ext/lib64, and are listed in
+             /system/etc/public.libraries-mtk.txt. From API 31 the linker refuses a vendor
+             public library that the manifest has not named: without these lines the adapter
+             resolves to its path and is then rejected with "not accessible for the namespace
+             clns-N", the ExecuTorch Neuron backend cannot allocate shared weights, and it
+             aborts the process. Bundling MediaTek's own copy in the APK is not a substitute;
+             that copy runs its constructors in the app namespace and dies on a null call.
+
+             required="false" throughout: every one of these is absent on a non-MediaTek
+             phone, where the app installs and runs the CPU path as before.
+        -->
+        <uses-native-library
+            android:name="libneuronusdk_adapter.mtk.so"
+            android:required="false" />
+        <uses-native-library
+            android:name="libapuwareapusys_v2.mtk.so"
+            android:required="false" />
+        <uses-native-library
+            android:name="libapuwareapusys.mtk.so"
+            android:required="false" />
+        <uses-native-library
+            android:name="libapuwareutils_v2.mtk.so"
+            android:required="false" />
+        <uses-native-library
+            android:name="libapuwareutils.mtk.so"
+            android:required="false" />
+        <uses-native-library
+            android:name="libapuwarexrp_v2.mtk.so"
+            android:required="false" />
+        <uses-native-library
+            android:name="libapuwarexrp.mtk.so"
+            android:required="false" />
+        <uses-native-library
+            android:name="libapuwarehmp.mtk.so"
+            android:required="false" />
+        <uses-native-library
+            android:name="libapuwareaiste.mtk.so"
+            android:required="false" />
+        <uses-native-library
+            android:name="libneuron_sys_util.mtk.so"
+            android:required="false" />
+
+        <!--
              Keep phone-sized windows portrait. A QDC phone and a real handset can report their
              current physical orientation as landscape when the app starts, which made the
              first frame arrive sideways before the user had chosen to rotate anything.

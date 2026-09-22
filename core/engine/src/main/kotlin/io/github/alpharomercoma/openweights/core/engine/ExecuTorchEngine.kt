@@ -904,7 +904,25 @@ class ExecuTorchEngine(
 
     override fun systemInfo(): String = "ExecuTorch"
 
-    override fun computeDevices(): List<ComputeDevice> = emptyList()
+    /**
+     * The NPU, and only when this session's prompts are actually going to it.
+     *
+     * Not when the phone merely has one: the disaggregated bridge falls back to the CPU
+     * runtime whenever a model has no compiled chunks here, and a badge saying NPU over a
+     * reply the CPU produced is worse than no badge.
+     */
+    override fun computeDevices(): List<ComputeDevice> {
+        val disaggregated = bridge as? DisaggregatedExecuTorchBridge ?: return emptyList()
+        if (!disaggregated.prefillingOnNpu) return emptyList()
+        return listOf(
+            ComputeDevice(
+                id = "npu",
+                description = "MediaTek NeuroPilot NPU",
+                kind = ComputeDeviceKind.ACCELERATOR,
+                totalMemoryBytes = 0L,
+            ),
+        )
+    }
 
     override fun close() {
         bridge.close()

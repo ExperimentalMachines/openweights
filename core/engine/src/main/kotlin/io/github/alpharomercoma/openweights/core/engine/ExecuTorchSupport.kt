@@ -70,6 +70,18 @@ object ExecuTorchSupport {
         return socModel != null && compiledFor.equals(socModel, ignoreCase = true)
     }
 
-    /** A bridge onto the real runtime. */
-    fun bridge(): ExecuTorchBridge = NativeExecuTorchBridge()
+    /**
+     * Whether this phone can prefill on a NeuroPilot NPU.
+     *
+     * The question is answered by loading the runtime, never by matching a chip name: the
+     * adapter is only reachable where the platform publishes it, which is the same
+     * condition the NPU path actually needs. A phone that answers yes may still have no
+     * compiled chunks for the chosen model, and [DisaggregatedExecuTorchBridge] falls back
+     * to the CPU runtime on its own when that is the case.
+     */
+    fun hasNpu(): Boolean = DisaggregatedBridge.isAvailable
+
+    /** A bridge onto the runtime, prefilling on the NPU where the phone has one. */
+    fun bridge(): ExecuTorchBridge =
+        if (hasNpu()) DisaggregatedExecuTorchBridge() else NativeExecuTorchBridge()
 }

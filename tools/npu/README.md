@@ -133,3 +133,27 @@ a server: `llama-app` links against `libllama-server-impl.so`.
 Models must live on `/data/local/tmp`, not `/sdcard`. As the shell user the
 latter goes through the FUSE emulation layer, which is far slower than the app's
 own access to the same file and will dominate any measurement.
+
+## The disaggregated JNI bridge
+
+`mtk_pd_disaggregated_jni.cpp` is the source of `libexecutorch_pd_jni.so`, the library
+the app loads when the NPU reads a prompt and the CPU writes the reply. It is kept here
+because the built library is git ignored: a hundred megabytes of generated binary does
+not belong in the repository, and without the source the repository could not reproduce
+its own debug artifact.
+
+It does not build here. It builds inside an ExecuTorch tree, against MediaTek's runner
+in `examples/mediatek/executor_runner/llama_runner`, which is where it has to be copied
+before building:
+
+```sh
+cp tools/npu/mtk_pd_disaggregated_jni.cpp \
+   "$EXECUTORCH/examples/mediatek/executor_runner/mtk_pd_disaggregated_jni.cpp"
+ninja -C "$EXECUTORCH/cmake-android-ninja/examples/mediatek" executorch_pd_jni
+llvm-strip --strip-unneeded \
+  -o core/engine/src/debug/jniLibs/arm64-v8a/libexecutorch_pd_jni.so \
+  "$EXECUTORCH/cmake-android-ninja/examples/mediatek/libexecutorch_pd_jni.so"
+```
+
+What it measures, what it costs and why the path ships off is in
+[`docs/research/npu-pd-disaggregation.md`](../../docs/research/npu-pd-disaggregation.md).
