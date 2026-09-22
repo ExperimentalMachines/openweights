@@ -17,8 +17,11 @@ worth turning on today:
 - **The decode half of this runner is about half the speed of the app's own CPU path**,
   13 to 18 tok/s against the 27 tok/s the app gets from the same `.pte`. Decode is where
   the time goes, so as it stands the whole path is slower end to end than doing nothing.
+- **It holds two copies of the model**, 2.71 GB resident against 1.87 GB for the CPU path
+  alone, and the phone starts swapping. Loading both halves took 97.56 s against 16.5 s
+  for one. See [what it costs on the phone](#what-it-costs-on-the-phone).
 
-Neither is a property of the accelerator. The first is an export flag, the second is a
+None of this is a property of the accelerator. The first is an export flag, the second is a
 hand written decode loop that the app's `LlmModule` beats. Both are fixable, and until
 they are there is nothing to switch on.
 
@@ -168,6 +171,61 @@ beats NPU decode on the same model, so prefill on the accelerator and decode on 
 is the correct split, not the reverse. And **the prefill win is 1.7x, not the 5x the raw
 NPU number suggests**, because the comparison that counts is against the app's own
 KleidiAI prefill at 188 tok/s, not against nothing.
+
+## What it costs on the phone
+
+Measured with `dumpsys meminfo`, same model, same phone, both halves settled after the
+warm prefill, marker on and marker off:
+
+| | CPU only | NPU prefill + CPU decode |
+|---|---:|---:|
+| PSS total | **1.87 GB** | **2.71 GB** |
+| RSS total | 1.98 GB | 2.68 GB |
+| Native heap | 1.75 GB | 1.86 GB |
+| EGL mtrack (DMA) | 0 | **585 MB**, peaking at 856 MB during load |
+| Swap in use | 0 | 138 MB |
+
+**The NPU half costs 881 MB, and almost all of it is DMA memory rather than heap.** The
+Neuron buffer allocator takes AHardwareBuffer, so the shared weights land in gralloc and
+show up as `EGL mtrack`, not as native heap. Four chunks at 133.8 MB of shared weights is
+535 MB of that; the state caches are 32 slots of `[1, 8, 512, 64]` fp32, 32 MB; the rest
+is the prompt graph's working buffers, which are released after load.
+
+The 512 MB fp32 embedding table is not in that figure. It is mapped `r--s` from the file,
+so only the touched rows are resident and the kernel can evict them.
+
+**The real cost is that this path holds two copies of the model.** 827 MB of XNNPACK
+`.pte` for the decode half and 1.18 GB of NPU chunks plus embedding for the prefill half.
+That is inherent to splitting prefill from decode across two runtimes, and it is what
+`FitEstimator` does not model: it sizes one model file times `COMPILED_RUNTIME_FACTOR`,
+and would under-count this path by the whole NPU half.
+
+**And the phone notices.** With both halves resident the app swaps for the first time,
+and loading the CPU half took **97.56 s against 16.5 s** on the same build minutes
+earlier, purely because the NPU half was already holding 856 MB when it started. Against
+the warm prefix work that took first turns from 18.5 s to 184 ms, a 97 s load is not a
+detail.
+
+### How that scales with the window
+
+The caches are the only part that grows: 64 KB of DMA per token of window, across all 32
+slots.
+
+| Window | NPU caches | NPU half | App total |
+|---:|---:|---:|---:|
+| 512 | 32 MB | 0.86 GB | **2.73 GB** (measured) |
+| 2048 | 128 MB | 0.95 GB | 2.82 GB |
+| 4096 | 256 MB | 1.08 GB | 2.95 GB |
+| 8192 | 512 MB | 1.33 GB | 3.20 GB |
+| 16384 | 1.0 GB | 1.83 GB | 3.70 GB |
+| 32768 | 2.0 GB | 2.83 GB | 4.70 GB |
+
+Lower bounds: only the caches are scaled here. The attention mask and the prompt graph's
+activations grow with the window as well and are not counted.
+
+So the window is cheap on the device and expensive on the export host, which is the
+opposite of where the 512 limit came from. Going to 4k costs about 220 MB more on the
+phone and roughly doubles the export's peak host memory.
 
 ## The 512 token window
 
