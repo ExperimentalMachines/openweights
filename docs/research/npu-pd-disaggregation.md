@@ -14,16 +14,17 @@ worth turning on today:
   over a window the CPU half never saw the start of, so the runtime refuses it. The app's
   own prompts run to about 2,050 tokens once the tool prefix is in, which is four times
   the window.
-- **The decode half of this runner is about half the speed of the app's own CPU path**,
-  13 to 18 tok/s against the 27 tok/s the app gets from the same `.pte`. Decode is where
-  the time goes, so as it stands the whole path is slower end to end than doing nothing.
+- **The decode half runs the same `.pte` about three and a half times slower than the
+  app's own CPU path**, and the reason is the libraries it is built against, not the
+  design. See [why decode loses](#why-decode-loses), which traces it from 6 tok/s in the
+  app down to a single `forward()` call and four wrong guesses that were measured away.
 - **It holds two copies of the model**, 2.71 GB resident against 1.87 GB for the CPU path
   alone, and the phone starts swapping. Loading both halves took 97.56 s against 16.5 s
   for one. See [what it costs on the phone](#what-it-costs-on-the-phone).
 
-None of this is a property of the accelerator. The first is an export flag, the second is a
-hand written decode loop that the app's `LlmModule` beats. Both are fixable, and until
-they are there is nothing to switch on.
+None of this is a property of the accelerator. The first is an export flag; the second is
+a build, and the hand written loop it was blamed on turned out to be innocent. Both are
+fixable, and until they are there is nothing to switch on.
 
 Against that stands [`npu-prefill-multiturn.md`](npu-prefill-multiturn.md): on 138 real
 turns decode is 60 to 77% of wall time, a turn prefills a median of 50 tokens after cache
@@ -161,9 +162,9 @@ so the layout is all K then all V.
 | CPU module load | 16.5 to 17.2 s |
 | NPU prefill | 60 to 327 tok/s, rising with prompt length |
 | State handoff | 0.09 to 0.75 ms |
-| CPU decode, this runner | 13 to 18 tok/s |
+| CPU decode, this runner | 13 to 18 tok/s, and see below for why |
 | NPU decode, MediaTek's runner | 10.5 to 11.2 tok/s |
-| CPU decode, the app's own path, same `.pte` | 27 tok/s |
+| CPU decode, the app's own path, same `.pte` | 30 to 31 tok/s |
 | CPU prefill, the app's own path, same `.pte` | 188 tok/s |
 
 Two readings matter. **Splitting the work the right way round is confirmed**: CPU decode
@@ -261,10 +262,128 @@ Chunks are found beside the model first. A staging directory under
 directory is a bind mount that never picks up shell's writes, and a pushed chunk set can
 only be read from there. That cost an hour before it was believed, so it is written down.
 
+## Why decode loses
+
+Dated 2026-09-23, Poco X8 Pro Max, phone awake and unlocked, temperature quoted with every
+figure because this ROM throttles hard. The short answer: the decode loop is innocent, and
+so is the accelerator. The libraries this path is built against run the same `.pte` about
+three and a half times slower than the prebuilt `org.pytorch:executorch-android:1.4.0` AAR
+that the app's own path uses.
+
+Four explanations were measured and thrown away before that one. They are listed because
+each looked obviously right at the time, and because anyone reaching for them again should
+know they have already been paid for.
+
+| Guess | How it died |
+|---|---|
+| Thermal drift | App 31 tok/s at 33.1 °C and 30 tok/s at 40.4 °C. The app barely moves with temperature; the gap does not close. |
+| A different export, or KleidiAI missing from it | Both halves load the *same file*, `LFM2.5-1.2B-Instruct-8da4w-gptq-32k.pte`. The runner's `--cpu_model_path` points at the app's own download. |
+| `Module::execute` resolving the method by name each token | Bound the inputs to the `Method` once and drove it directly. 11.85 to 12.93 tok/s before, 11.82 to 13.05 after. No change; reverted. |
+| Swap thrash from holding both halves | 490 to 750 minor faults/s and 2 to 6 major faults/s during decode, `VmSwap` flat. At 4 KB a fault that is about 2 MB/s against the hundreds of MB/s a token streams. |
+
+What the measurements did show, in order.
+
+**The decode caller was pinned to one core, and it took the delegate's threadpool with
+it.** Decode looks like one thread chasing one dependency chain, so an earlier version
+pinned it to the widest core in the kernel's capacity table. It is not one thread: the
+XNNPACK delegate fans every matmul across a pthreadpool. Reading `Cpus_allowed_list` for
+every thread during a decode showed the caller on `cpus=7` and its seven workers on
+`cpus=4-7`, eight runnable threads over four cores, against the app's own path where every
+thread carries `cpus=0-7`. Busy cores, sampled from `/proc/<pid>/stat` over three seconds:
+
+| | cores burned | affinity |
+|---|---:|---|
+| App's own ExecuTorch path | 6.12 | all threads `0-7` |
+| This path, caller pinned | 3.2 | caller `7`, workers `4-7` |
+
+The pin is gone. The reading that had justified it, 13.02 tok/s pinned against 10.58
+unpinned, came from the standalone shell runner, where the pool is confined to one core
+anyway and the only question is which core the single thread lands on. Re-tested there
+after the fix: 10.11 unpinned, 10.54 pinned, which is noise. **A number from the bench
+binary was carried over to the app without checking that the two behave alike, and they
+do not.**
+
+**The Android build had no optimisation flags at all.** `CMAKE_BUILD_TYPE` was empty in
+both `cmake-android-out` and the `examples/mediatek` subproject that actually produces
+`libexecutorch_pd_jni.so`, so XNNPACK compiled with no `-O` flag. The app's engine is the
+prebuilt Release AAR. Reconfigured both with `-DCMAKE_BUILD_TYPE=Release`, confirmed
+`-O3 -DNDEBUG` reaches the XNNPACK translation units, and rebuilt. The shell runner went
+from 10.54 to 14.88 tok/s.
+
+**Neither fix closed the gap, so the next step was to stop guessing.** Two instrumented
+lines in the decode loop settled where the time goes: `forward()` is **99.8%** of decode,
+312 ms of a 313 ms token, with a delegate threadpool of 8 threads. Whatever is slow is
+inside one call into the model, not in the loop, not in the argmax, not in the tokenizer,
+and not in the JNI callback.
+
+### The bench that isolated it
+
+`tools/npu/cpu_forward_bench.cpp` loads a CPU `.pte` and times one decode step, with no
+Neuron runtime, no handoff, no tokenizer and no app. It links exactly the libraries the
+disaggregated runner links, so the only difference between the two binaries is that this
+one never initialises an NPU. That removes the last confound in one measurement:
+
+| | ms per `forward()` | cores | note |
+|---|---:|---:|---|
+| App's own path, AAR 1.4.0 | ~33 | 6.12 | about 980 tokens of context, 38 to 40 °C |
+| This tree's libraries, alone in a shell process | 116 | 7.04 | 1,024 tokens, 38 °C |
+| This tree's libraries, inside the app | 283 | 3.2 to 3.3 | about 880 tokens, 38 °C |
+
+Seven cores against six, nothing else loaded, and still three and a half times slower than
+the AAR. So the Neuron runtime's residency is **not** the primary cause: most of the gap
+is there without it.
+
+The third row says the process matters as well, and by another factor of about 2.4. That
+part is **not** isolated. Two candidates were not separated: the Neuron runtime's 1.2 GB
+and 95 threads, and the fact that the app process holds a second, independent copy of
+ExecuTorch and XNNPACK, the AAR's, with its own threadpool and its own static state.
+Swap was ruled out for it (see the table above), scheduling was not the whole story once
+the pin was gone, and beyond that it is an open question rather than an answer.
+
+### Where the time actually goes
+
+Sweeping the starting cache position shows the cost is linear in how much cache attention
+has to read, and the line is clean:
+
+| `--start_pos` | median `forward()` |
+|---:|---:|
+| 0 | 45.7 ms |
+| 512 | 85.3 ms |
+| 1,024 | 116.0 ms |
+| 2,048 | 169.2 ms |
+| 4,096 | 274.6 ms |
+
+That fits `45.7 ms + 0.056 ms per cached position`. Per position this model reads K and V
+for 6 attention layers times 8 KV heads times 64 dims in fp32, 24.6 KB, so 56 µs per
+position works out at about **440 MB/s across seven cores**, which is roughly thirty times
+below what this memory can do. The constant term is the linear layers and is the part
+XNNPACK delegates; the slope is attention over the KV cache, which runs as the custom
+`llama::sdpa_with_kv_cache` / `custom_sdpa` ops. Both are registered in the binary, so the
+op is present, and it is the kernel behind it that is slow.
+
+At the app's real context of about 980 tokens the fit predicts 100 ms a token, 10 tok/s,
+against the AAR's measured 33 ms. **The remaining gap is the attention kernel this tree
+builds, and closing it is what would make the whole path worth switching on.** That is
+still open: the cause is isolated and reproducible with one command, but not yet named
+down to the build flag.
+
+### How to reproduce
+
+```sh
+adb -s $SER push cpu_forward_bench /data/local/tmp/npu/
+adb -s $SER shell "cd /data/local/tmp/npu && LD_LIBRARY_PATH=. ./cpu_forward_bench \
+  --cpu_model_path=<the app's .pte> --steps=30 --start_pos=1024 --mmap=true"
+```
+
+Force stop the app first. A held model and 856 MB of DMA in another process was what made
+the very first disaggregated reading 6.5 tok/s prefill and 0.60 decode, and that reading
+was nonsense.
+
 ## What would turn it on
 
 - An export whose window covers a real prompt, so the 512 token refusal stops firing.
-- A decode loop that matches the app's own 27 tok/s rather than 13 to 18, since decode is
-  most of the wall clock and the path cannot win while it loses there.
+- A build of ExecuTorch whose attention kernels match the prebuilt AAR's, since decode is
+  most of the wall clock and the path cannot win while it loses there. The loop is not the
+  problem and does not need rewriting; see [why decode loses](#why-decode-loses).
 - Then the 1.7x prefill against the app's CPU path, measured on real multi turn traffic
   rather than on single questions, against the 1.07x to 1.47x ceiling already on file.

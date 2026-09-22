@@ -34,6 +34,7 @@
 #include "llama_runner/LlamaConfig.h"
 #include "llama_runner/LlamaModelChunk.h"
 #include "llama_runner/LlamaRuntime.h"
+#include <executorch/extension/threadpool/threadpool.h>
 #include "llama_runner/ModelChunk.h"
 #include "llama_runner/Utils.h"
 #include "llama_runner/llm_helper/include/llm_types.h"
@@ -119,29 +120,6 @@ static example::LlamaModelOptions ParseRunnerOptions(const std::string& json_tex
          options.prompt_token_batch_size, options.cache_size, options.hidden_size,
          options.num_head, options.num_layer, options.head_dim, options.max_token_length);
     return options;
-}
-
-static int fastest_cpu() {
-    // One metric for the whole comparison: capacities and frequencies are on different
-    // scales, so mixing them across cores would rank them by which file happens to exist.
-    for (const char* leaf : {"cpu_capacity", "cpufreq/cpuinfo_max_freq"}) {
-        int best_cpu = -1;
-        long best_score = -1;
-        for (int cpu = 0; cpu < CPU_SETSIZE && cpu < 32; ++cpu) {
-            char path[128];
-            snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu%d/%s", cpu, leaf);
-            std::ifstream in(path);
-            long score = 0;
-            if (in >> score && score > best_score) {
-                best_score = score;
-                best_cpu = cpu;
-            }
-        }
-        if (best_cpu >= 0) {
-            return best_cpu;
-        }
-    }
-    return -1;
 }
 
 static size_t utf8_complete_prefix(const std::string& s) {
@@ -431,6 +409,10 @@ public:
             return false;
         }
         cpu_method_ = *method_res;
+        // Worth a line because a confined or single-threaded pool is invisible from
+        // the throughput alone, and both have happened here.
+        LOGI("DisaggregatedSession: CPU delegate threadpool has %zu threads",
+             ::executorch::extension::threadpool::get_threadpool()->get_thread_count());
         auto cpu_end = std::chrono::high_resolution_clock::now();
         double cpu_sec = std::chrono::duration<double>(cpu_end - cpu_start).count();
         LOGI("DisaggregatedSession: CPU Module initialized in %.2f s", cpu_sec);
@@ -447,65 +429,102 @@ public:
         return true;
     }
 
-    int Prefill(const std::string& prompt_text) {
-        if (!tokenizer_) return 0;
-
-        auto encode_res = tokenizer_->encode(prompt_text, 1 /* add_bos */, 0 /* add_eos */);
-        if (!encode_res.ok()) {
-            LOGE("DisaggregatedSession: Tokenizer encode failed");
-            return 0;
-        }
-
-        prompt_tokens_ = std::move(encode_res.get());
-        prompt_len_ = prompt_tokens_.size();
+    /**
+     * Feeds [tokens] to the NPU, appending at wherever its position already is.
+     *
+     * The MediaTek runtime rolls its cache forward across Run calls, so this is genuinely
+     * incremental: what a caller fed earlier stays fed. Returns false when the window is
+     * full or the caller asked to stop.
+     */
+    bool FeedTokens(const std::vector<uint64_t>& tokens) {
+        if (tokens.empty()) return true;
 
         // The NPU keeps a fixed window and the older tokens roll out of it, so a prompt
         // longer than the window prefills happily and then hands over a context the CPU
         // half never saw the start of. The reply that comes back reads fluently and
         // answers the wrong question, which is the one failure worth refusing outright.
-        if (prompt_len_ > npu_cache_size_) {
-            LOGE("DisaggregatedSession: prompt is %zu tokens and the NPU window is %zu; refusing rather than answering from a truncated prompt",
-                 prompt_len_, npu_cache_size_);
-            prompt_len_ = 0;
-            return 0;
+        if (fed_tokens_.size() + tokens.size() > npu_cache_size_) {
+            LOGE("DisaggregatedSession: %zu tokens fed plus %zu more exceeds the %zu-token NPU window; refusing rather than answering from a truncated prompt",
+                 fed_tokens_.size(), tokens.size(), npu_cache_size_);
+            return false;
         }
-
-        LOGI("DisaggregatedSession: Starting NPU Prefill for %zu prompt tokens...", prompt_len_);
 
         const size_t batch_size = npu_runtime_.GetTokenBatchSize();
-        size_t cur_token_index = 0;
-        void* last_logits = nullptr;
-
-        auto prefill_start = std::chrono::high_resolution_clock::now();
-        while (cur_token_index < prompt_len_ && !stop_requested_) {
-            size_t num_remain = prompt_len_ - cur_token_index;
-            size_t remainder = num_remain % batch_size;
-            size_t num_new = remainder ? remainder : batch_size;
-            std::vector<uint64_t> chunk_tokens(
-                prompt_tokens_.begin() + cur_token_index,
-                prompt_tokens_.begin() + cur_token_index + num_new
-            );
-            last_logits = npu_runtime_.Run(chunk_tokens);
-            cur_token_index += chunk_tokens.size();
+        size_t cursor = 0;
+        auto start_time = std::chrono::high_resolution_clock::now();
+        while (cursor < tokens.size() && !stop_requested_) {
+            const size_t remaining = tokens.size() - cursor;
+            const size_t remainder = remaining % batch_size;
+            const size_t take = remainder ? remainder : batch_size;
+            std::vector<uint64_t> batch(tokens.begin() + cursor, tokens.begin() + cursor + take);
+            last_logits_ = npu_runtime_.Run(batch);
+            cursor += take;
         }
-        auto prefill_end = std::chrono::high_resolution_clock::now();
-        prefill_ms_ = std::chrono::duration<double, std::milli>(prefill_end - prefill_start).count();
+        auto end_time = std::chrono::high_resolution_clock::now();
+        // This feed's own time for the rate below; the running total is what the turn
+        // reports. Dividing a batch by the cumulative total understates every feed after
+        // the first and gets worse with each one.
+        const double feed_ms = std::chrono::duration<double, std::milli>(end_time - start_time).count();
+        prefill_ms_ += feed_ms;
 
         if (stop_requested_) {
-            LOGW("DisaggregatedSession: Prefill cancelled");
-            return 0;
+            LOGW("DisaggregatedSession: prefill cancelled");
+            return false;
         }
 
+        fed_tokens_.insert(fed_tokens_.end(), tokens.begin(), tokens.end());
+        prompt_len_ = fed_tokens_.size();
         const auto logits_type = npu_runtime_.GetModelOptions().model_output_type;
-        first_output_token_ = argmax(logits_type, last_logits, vocab_size_);
-        LOGI("DisaggregatedSession: NPU Prefill done in %.2f ms (%.1f tok/s), first_tok=%llu",
-             prefill_ms_, (double)prompt_len_ / (prefill_ms_ / 1000.0), (unsigned long long)first_output_token_);
+        first_output_token_ = argmax(logits_type, last_logits_, vocab_size_);
+        LOGI("DisaggregatedSession: NPU fed %zu tokens in %.2f ms (%.1f tok/s), %zu total in %.2f ms, next_tok=%llu",
+             tokens.size(), feed_ms, (double)tokens.size() / (feed_ms / 1000.0),
+             fed_tokens_.size(), prefill_ms_, (unsigned long long)first_output_token_);
+        return true;
+    }
 
-        // Perform State Handoff
+    /**
+     * Warms [prompt_text] into the cache without generating.
+     *
+     * ExecuTorchEngine feeds every piece of the prompt through here except a final tail,
+     * which the generate call takes, and it tracks for itself what it has already fed. So
+     * this appends rather than replacing, and BOS goes on the first piece only.
+     */
+    int Prefill(const std::string& prompt_text) {
+        if (!tokenizer_) return 0;
+        const int8_t add_bos = fed_tokens_.empty() ? 1 : 0;
+        auto encoded = tokenizer_->encode(prompt_text, add_bos, 0 /* add_eos */);
+        if (!encoded.ok()) {
+            LOGE("DisaggregatedSession: tokenizer encode failed");
+            return 0;
+        }
+        if (!FeedTokens(encoded.get())) return 0;
+        return static_cast<int>(fed_tokens_.size());
+    }
+
+    /**
+     * Appends the generate call's tail and hands the state to the CPU half.
+     *
+     * The tail is a continuation, not a whole prompt: the runtime appends it at wherever
+     * its position already is, exactly as a prefill does. Matching it against what has been
+     * fed, as an earlier version did, throws the conversation away every turn, because a
+     * piece tokenised on its own never matches the same text tokenised inside the whole.
+     */
+    bool AppendAndHandoff(const std::string& tail_text) {
+        if (!tokenizer_) return false;
+        const int8_t add_bos = fed_tokens_.empty() ? 1 : 0;
+        auto encoded = tokenizer_->encode(tail_text, add_bos, 0 /* add_eos */);
+        if (!encoded.ok()) {
+            LOGE("DisaggregatedSession: tokenizer encode failed");
+            return false;
+        }
+        if (!encoded.get().empty() && !FeedTokens(encoded.get())) return false;
+        if (fed_tokens_.empty()) {
+            LOGE("DisaggregatedSession: nothing was fed, refusing to decode from an empty cache");
+            return false;
+        }
         HandoffStates();
-
         prefilled_ = true;
-        return static_cast<int>(prompt_len_);
+        return true;
     }
 
     void HandoffStates() {
@@ -590,46 +609,33 @@ public:
     ) {
         stop_requested_ = false;
 
-        if (!prefilled_) {
-            if (Prefill(prompt_text) == 0 && !stop_requested_) {
-                // Prefill refused or failed. Decoding now would answer from whatever the
-                // caches happen to hold, so the caller is told instead.
-                return {};
-            }
+        // Always bring the NPU up to this prompt. The old code trusted a prefilled_ flag
+        // set by the warm-up calls and then decoded from the last warm segment's
+        // prediction, so the app answered a question it had never been asked.
+        if (!AppendAndHandoff(prompt_text) && !stop_requested_) {
+            return {};
         }
 
         if (stop_requested_) {
             return {2 /* CANCELLED */, (int64_t)prompt_len_, 0, (int64_t)prefill_ms_, 0};
         }
 
-        // Decode is one thread chasing one dependency chain, so it belongs on the widest
-        // core the chip has. Which core that is comes from the kernel's own capacity
-        // table, never from a SoC name: on the Dimensity 9400 this picks cpu7, the
-        // Cortex-X925, and on a chip with a different topology it picks whatever that
-        // chip calls fastest.
+        // Nothing is pinned here, and that is a measured decision rather than an
+        // omission. Decode looks like one thread chasing one dependency chain, so an
+        // earlier version pinned it to the widest core in the kernel's capacity table,
+        // which on this chip is cpu7. It is not one thread: the XNNPACK delegate fans
+        // every matmul across a pthreadpool, and pthreadpool runs one share of each
+        // parallel region on the calling thread. Pinning the caller confined the pool
+        // with it. On the Poco X8 Pro Max the decode threads then read cpus=7 for the
+        // caller and cpus=4-7 for its seven workers: eight runnable threads over four
+        // cores, so every parallel region waited on a doubled-up share.
         //
-        // This runs on a shared coroutine dispatcher thread, so the previous mask is put
-        // back at the end: pinning it permanently would hand the whole app one core.
-        cpu_set_t previous_affinity;
-        CPU_ZERO(&previous_affinity);
-        const bool had_affinity =
-            sched_getaffinity(0, sizeof(cpu_set_t), &previous_affinity) == 0;
-        const int fastest = fastest_cpu();
-        if (fastest >= 0) {
-            cpu_set_t cpuset;
-            CPU_ZERO(&cpuset);
-            CPU_SET(fastest, &cpuset);
-            sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
-        }
-        struct AffinityGuard {
-            const cpu_set_t* mask;
-            bool restore;
-            ~AffinityGuard() {
-                if (restore) {
-                    sched_setaffinity(0, sizeof(cpu_set_t), mask);
-                }
-            }
-        } affinity_guard{&previous_affinity, had_affinity && fastest >= 0};
+        // Measured against the app's own ExecuTorch path, same .pte, same prompt, same
+        // thermal state: pinned gave 3.2 busy cores and 6 tok/s, unpinned gives all
+        // threads cpus=0-7, 6.12 busy cores and 31 tok/s. The earlier reading that put
+        // pinning ahead (13.02 against 10.58) came from the standalone shell runner,
+        // where the pool is single-threaded anyway and the only question is which core
+        // the one thread lands on. See docs/research/npu-pd-disaggregation.md.
 
         int64_t cur_token = first_output_token_;
         int64_t cur_pos = prompt_len_;
@@ -649,6 +655,7 @@ public:
         cpu_step_inputs.push_back(t_tensor);
         cpu_step_inputs.push_back(p_tensor);
 
+        double forward_ms = 0.0;
         auto decode_start = std::chrono::high_resolution_clock::now();
 
         // Emit first token
@@ -673,7 +680,10 @@ public:
         generated_count++;
 
         while (generated_count < max_new_tokens && !stop_requested_) {
+            const auto step_start = std::chrono::high_resolution_clock::now();
             auto res = cpu_module_->execute("forward", cpu_step_inputs);
+            forward_ms += std::chrono::duration<double, std::milli>(
+                std::chrono::high_resolution_clock::now() - step_start).count();
             if (!res.ok()) {
                 LOGE("DisaggregatedSession: CPU forward execution failed at step %d", generated_count);
                 break;
@@ -719,6 +729,12 @@ public:
         double decode_tok_s = (double)generated_count / (decode_ms / 1000.0);
         LOGI("DisaggregatedSession: CPU Decode completed: %d tokens in %.2f ms (%.2f tok/s)",
              generated_count, decode_ms, decode_tok_s);
+        // Splitting the loop from the model it drives, because the two have been
+        // confused here before: forward() is 99.8% of a token, so a decode that looks
+        // slow is the export and its kernels, never the loop around them.
+        LOGI("DisaggregatedSession: forward() was %.2f ms of that (%.1f%%), %.2f ms per token",
+             forward_ms, 100.0 * forward_ms / decode_ms,
+             forward_ms / std::max(1, generated_count - 1));
 
         int64_t reason = stop_requested_ ? 2 /* CANCELLED */ : (generated_count >= max_new_tokens ? 1 /* MAX_TOKENS */ : 0 /* END_OF_TURN */);
         return {reason, (int64_t)prompt_len_, (int64_t)generated_count, (int64_t)prefill_ms_, (int64_t)decode_ms};
@@ -729,6 +745,12 @@ public:
         stop_requested_ = false;
         prompt_len_ = 0;
         first_output_token_ = 0;
+        prefill_ms_ = 0.0;
+        last_logits_ = nullptr;
+        // The NPU half has its own rolling cache and its own token index. Clearing only
+        // the CPU tensors left the next turn continuing the previous one on the NPU side.
+        fed_tokens_.clear();
+        npu_runtime_.Reset();
         // Zero what the last turn actually wrote, not the whole exported window.
         if (cpu_method_) {
             for (const auto& m : layer_mappings_) {
@@ -768,6 +790,10 @@ private:
     // seven hundred megabytes of memset per reset at 32k, for a prompt of a few hundred.
     size_t cache_high_water_ = 0;
     std::unordered_set<uint64_t> stop_tokens_;
+    // Everything fed to the NPU this turn, so an incremental prefill can tell what a new
+    // prompt already contains and feed only the rest.
+    std::vector<uint64_t> fed_tokens_;
+    void* last_logits_ = nullptr;
     std::vector<uint64_t> prompt_tokens_;
     size_t prompt_len_ = 0;
     uint64_t first_output_token_ = 0;

@@ -155,5 +155,41 @@ llvm-strip --strip-unneeded \
   "$EXECUTORCH/cmake-android-ninja/examples/mediatek/libexecutorch_pd_jni.so"
 ```
 
+**Configure both trees with `-DCMAKE_BUILD_TYPE=Release`, and check it took.** The same
+warning three paragraphs up about a plain `arm64-v8a` llama.cpp build applies here and
+was paid for twice. `examples/mediatek` is its own CMake project, so a build type set on
+the parent tree does not reach it, and an empty `CMAKE_BUILD_TYPE` means CMake adds no
+`-O` flag at all rather than defaulting to anything. It reads as a slow model, never as a
+misconfigured build:
+
+```sh
+cmake -S . -B cmake-android-out -DCMAKE_BUILD_TYPE=Release
+cmake -S examples/mediatek -B cmake-android-out/examples/mediatek -DCMAKE_BUILD_TYPE=Release
+# then confirm it reached XNNPACK, which is where it matters
+python3 -c "import json;cc=json.load(open('cmake-android-out/compile_commands.json'));\
+print(next(e['command'] for e in cc if '/XNNPACK/' in e['file']))" | grep -o '\-O3'
+```
+
+## Timing one decode step
+
+`cpu_forward_bench.cpp` loads a CPU `.pte` and times a single `forward()` with no Neuron
+runtime, no handoff, no tokenizer and no app around it. It exists because a slow decode
+has three possible owners here, the loop, the libraries and the NPU sharing the process,
+and only this separates them. It links the same libraries as the disaggregated runner, so
+the one difference between those binaries is that this never initialises an NPU.
+
+```sh
+ninja -C "$EXECUTORCH/cmake-android-ninja/examples/mediatek" cpu_forward_bench
+adb -s $SER push cpu_forward_bench /data/local/tmp/npu/
+adb -s $SER shell am force-stop io.github.alpharomercoma.openweights.debug
+adb -s $SER shell "cd /data/local/tmp/npu && LD_LIBRARY_PATH=. ./cpu_forward_bench \
+  --cpu_model_path=<the app's .pte> --steps=30 --start_pos=1024 --mmap=true"
+```
+
+`--start_pos` is the point: this model's `forward()` is linear in how much KV cache
+attention reads, so a number taken at position 0 says nothing about a real turn. Sweep it.
+Force stopping the app first is not optional, because a held model in another process
+turned the first reading ever taken here into nonsense.
+
 What it measures, what it costs and why the path ships off is in
 [`docs/research/npu-pd-disaggregation.md`](../../docs/research/npu-pd-disaggregation.md).
