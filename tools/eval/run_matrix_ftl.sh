@@ -41,7 +41,11 @@ case "$ENGINE" in
   # prompts do not fit the 45-minute window on the slower phones.
   bench-executorch) CLASS=ExecuTorchBenchmarkEval; PATTERN='\.pte$|\.tokenizer\.json$' ;;
   bench-llamacpp)   CLASS=LlamaCppBenchmarkEval;   PATTERN='\.gguf$' ;;
-  *) echo "engine must be executorch, llamacpp, probe, bench-executorch or bench-llamacpp" >&2; exit 2 ;;
+  # The disaggregated path's CPU decode half on a phone with no NPU export: the pool policy,
+  # the libraries' build and MediaTek's performance lock. See PdDecodeProbe.kt. One file is
+  # enough; it times decode steps, not answers.
+  pd-probe)         CLASS=PdDecodeProbe;           PATTERN='LFM2\.5-1\.2B-Instruct-8da4w-16k\.pte$' ;;
+  *) echo "engine must be executorch, llamacpp, probe, pd-probe, bench-executorch or bench-llamacpp" >&2; exit 2 ;;
 esac
 BENCH_MODEL=${BENCH_MODEL:-}
 BENCH_SETS=${BENCH_SETS:-}
@@ -116,6 +120,7 @@ gcloud storage cp "${RESULTS}$MODEL-$VERSION-en-portrait/logcat" "${LOG%.ftl.log
 
 case "$CLASS" in
   *BenchmarkEval) echo "done: grade with tools/eval/bench/grade.py, render with bench/report.py" ;;
+  PdDecodeProbe) echo "done: $OUT/${PREFIX}pd-decode-probe.json" ;;
   *)
     echo "== rendering comparison"
     python3 "$HERE/compare.py" "$OUT" --out "$ROOT/docs/research/backend-parity.md"

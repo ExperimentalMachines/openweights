@@ -1,0 +1,94 @@
+{
+  "model": "pd-decode-probe",
+  "pte": "LFM2.5-1.2B-Instruct-8da4w-16k.pte",
+  "device": "2602BPC18G",
+  "soc": "Mediatek MT6991",
+  "cores": 8,
+  "start_pos": 1024,
+  "steps": 30,
+  "cgroup_while_probing": "4:memory:\/mimd\/uid_10454\n3:cpuset:\/top-app\n2:cpu:\/top-app\n1:blkio:\/\n0::\/apps\/uid_10454\/pid_16328",
+  "runs": [
+    {
+      "run": "policy",
+      "median_ms": 27.85577,
+      "tok_s": 35.899205083901826,
+      "pool_threads": 7,
+      "performant_cores": 8,
+      "cores_busy": 5.064150850995837,
+      "lock_available": true,
+      "effective_uclamp_min": 0
+    },
+    {
+      "run": "aar",
+      "median_ms": 26.343077,
+      "tok_s": 37.96063762786709,
+      "pool_threads": 7
+    },
+    {
+      "run": "all-cores",
+      "median_ms": 26.366385,
+      "tok_s": 37.92708025768417,
+      "pool_threads": 8,
+      "performant_cores": 8,
+      "cores_busy": 7.350672221018084,
+      "lock_available": true,
+      "effective_uclamp_min": 0
+    },
+    {
+      "run": "policy",
+      "median_ms": 26.271692,
+      "tok_s": 38.06378363449145,
+      "pool_threads": 7,
+      "performant_cores": 8,
+      "cores_busy": 6.413872350032411,
+      "lock_available": true,
+      "effective_uclamp_min": 0
+    },
+    {
+      "run": "aar",
+      "median_ms": 26.349615,
+      "tok_s": 37.95121864209401,
+      "pool_threads": 7
+    },
+    {
+      "run": "all-cores",
+      "median_ms": 26.285308,
+      "tok_s": 38.04406628980722,
+      "pool_threads": 8,
+      "performant_cores": 8,
+      "cores_busy": 7.166703060976106,
+      "lock_available": true,
+      "effective_uclamp_min": 0
+    },
+    {
+      "run": "policy+lifetime-lock",
+      "median_ms": 32.777154,
+      "tok_s": 30.509055179104323,
+      "pool_threads": 7,
+      "performant_cores": 8,
+      "cores_busy": 2.883538962843026,
+      "lock_available": true,
+      "effective_uclamp_min": 1024
+    },
+    {
+      "run": "policy+lifetime-lock",
+      "median_ms": 33.296384,
+      "tok_s": 30.03329130274326,
+      "pool_threads": 7,
+      "performant_cores": 8,
+      "cores_busy": 2.9052389699037673,
+      "lock_available": true,
+      "effective_uclamp_min": 1024
+    },
+    {
+      "run": "policy-after-lock",
+      "median_ms": 26.172385,
+      "tok_s": 38.20821067701702,
+      "pool_threads": 7,
+      "performant_cores": 8,
+      "cores_busy": 6.4274315790105385,
+      "lock_available": true,
+      "effective_uclamp_min": 0
+    }
+  ]
+}

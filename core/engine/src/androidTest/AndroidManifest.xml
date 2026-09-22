@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- MediaTek's performance-lock library, which PdDecodeProbe holds to measure what the
+             Neuron backend's old lifetime lock did to a CPU decode. From API 31 an app cannot
+             load a vendor public library its manifest does not name, and the probe must still
+             run on phones that have none, hence required="false". -->
+        <uses-native-library
+            android:name="libapuwareutils_v2.mtk.so"
+            android:required="false" />
+        <uses-native-library
+            android:name="libapuwareutils.mtk.so"
+            android:required="false" />
+
+        <!-- Holds the foreground while PdDecodeProbe runs: the boost it measures was applied
+             only to the top app, so an instrumentation process with nothing on screen would
+             measure a different phone state. -->
+        <activity
+            android:name="io.github.alpharomercoma.openweights.core.engine.eval.ProbeActivity"
+            android:exported="false" />
+    </application>
+</manifest>

@@ -19,8 +19,8 @@ package io.github.alpharomercoma.openweights.core.engine
 import android.util.Log
 
 /**
- * JNI wrapper for the Prefill/Decode Disaggregated runtime:
- * MediaTek NeuroPilot NPU for prefill, the phone's widest CPU core for decode.
+ * JNI wrapper for the Prefill/Decode Disaggregated runtime: the MediaTek NPU for prefill, the
+ * CPU's XNNPACK delegate for decode, sized and placed the way the app's own ExecuTorch path is.
  */
 class DisaggregatedBridge {
 

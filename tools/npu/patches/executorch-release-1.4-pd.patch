@@ -1,0 +1,451 @@
+diff --git a/backends/mediatek/runtime/NeuronBackend.cpp b/backends/mediatek/runtime/NeuronBackend.cpp
+index 7b4084f..e4d5602 100644
+--- a/backends/mediatek/runtime/NeuronBackend.cpp
++++ b/backends/mediatek/runtime/NeuronBackend.cpp
+@@ -209,6 +209,7 @@ Error NeuronExecuTorchDelegate::execute(
+     }
+   }
+ 
++  NpuActivityPerformanceLock::Scope npu_busy;
+   return mExecutor.Compute() == NEURON_NO_ERROR ? Error::Ok
+                                                 : Error::InvalidState;
+ };
+diff --git a/backends/mediatek/runtime/include/NeuronBackend.h b/backends/mediatek/runtime/include/NeuronBackend.h
+index 1d2e856..ec983c0 100644
+--- a/backends/mediatek/runtime/include/NeuronBackend.h
++++ b/backends/mediatek/runtime/include/NeuronBackend.h
+@@ -150,9 +150,7 @@ class NeuronExecuTorchDelegate {
+ 
+   NeuronExecuTorchDelegate() {}
+ 
+-  ~NeuronExecuTorchDelegate() {
+-    mPLock->Stop();
+-  }
++  ~NeuronExecuTorchDelegate() {}
+ 
+   int LoadCompiledNetwork(
+       NeuronPayload payload,
+@@ -169,7 +167,8 @@ class NeuronExecuTorchDelegate {
+     CHECK_NO_ERROR(res);
+     CHECK_TRUE(mExecutor.IsValid());
+     SummarizeIoSizes(payload.Header.InputCount, payload.Header.OutputCount);
+-    mPLock = std::unique_ptr<ScopePerformancer>(new ScopePerformancer);
++    // No lifetime performance lock here: it is taken per execution instead, see
++    // NpuActivityPerformanceLock in api/APUWareUtilsLib.h for why.
+     return NEURON_NO_ERROR;
+   }
+ 
+@@ -279,7 +278,6 @@ class NeuronExecuTorchDelegate {
+ 
+   mutable MemoryCache mCache;
+ 
+-  std::unique_ptr<ScopePerformancer> mPLock;
+ 
+   neuron::NeuronExecutor mExecutor;
+ 
+diff --git a/backends/mediatek/runtime/include/api/APUWareUtilsLib.h b/backends/mediatek/runtime/include/api/APUWareUtilsLib.h
+index 8ade536..db60a50 100644
+--- a/backends/mediatek/runtime/include/api/APUWareUtilsLib.h
++++ b/backends/mediatek/runtime/include/api/APUWareUtilsLib.h
+@@ -25,6 +25,10 @@
+ #include <android/log.h>
+ #include <dlfcn.h>
+ #include <cstdlib>
++#include <atomic>
++#include <mutex>
++#include <condition_variable>
++#include <chrono>
+ #include <memory>
+ #include <string>
+ #include <thread>
+@@ -164,4 +168,112 @@ class ScopePerformancer {
+   std::mutex mMutex;
+ 
+   std::condition_variable mCond;
+-};
+\ No newline at end of file
++};
++
++// Holds MediaTek's FAST_SINGLE_ANSWER performance lock only while the NPU is executing.
++//
++// ScopePerformancer above renews the lock every second for as long as it lives, and the
++// backend used to create one per compiled chunk at load, so a loaded model kept the power
++// HAL's boost scenario for the whole session. For a foreground app that scenario raised
++// every thread of the process to uclamp.min 1024, and under that clamp the scheduler
++// stacked a CPU decode's XNNPACK pool onto two cores: measured on a Dimensity 9400, seven
++// threads spending more time queued than running, 50 to 57 ms a decode step against 36
++// with no lock held. The lock is worth having where the APU works (a 128-token prefill
++// call took about 500 ms with it and 700 ms without), so it is kept for exactly that.
++//
++// One per process, because the lock is a process-level request, and a multi-chunk model
++// runs its chunks back to back: one holder spanning them avoids a HAL call per chunk.
++class NpuActivityPerformanceLock {
++ public:
++  static NpuActivityPerformanceLock& Get() {
++    static NpuActivityPerformanceLock instance;
++    return instance;
++  }
++
++  // RAII marker for one NPU execution.
++  class Scope {
++   public:
++    Scope() { NpuActivityPerformanceLock::Get().Begin(); }
++    ~Scope() { NpuActivityPerformanceLock::Get().End(); }
++    Scope(const Scope&) = delete;
++    Scope& operator=(const Scope&) = delete;
++  };
++
++ private:
++  // How long the APU may sit idle before the lock goes. Longer than the gap between the
++  // chunks of one prefill batch and between batches, which is CPU bookkeeping measured in
++  // single milliseconds; far shorter than any CPU work that follows a prefill.
++  static constexpr std::chrono::milliseconds kIdleRelease{100};
++  // What each request asks the HAL for, renewed well inside it.
++  static constexpr uint32_t kLockMs = 2000;
++  static constexpr std::chrono::milliseconds kRenewEvery{1000};
++
++  NpuActivityPerformanceLock() : mLib(ApuWareUtilsLib::GetInstance()) {
++    if (mLib.mEnable) mThread = std::thread(&NpuActivityPerformanceLock::Run, this);
++  }
++
++  // A process-lifetime static; the worker is detached at exit rather than joined, since
++  // joining in a static destructor can deadlock against other teardown.
++  ~NpuActivityPerformanceLock() {
++    {
++      std::lock_guard<std::mutex> guard(mMutex);
++      mStop = true;
++    }
++    mCond.notify_one();
++    if (mThread.joinable()) mThread.detach();
++  }
++
++  void Begin() {
++    if (!mLib.mEnable) return;
++    std::lock_guard<std::mutex> guard(mMutex);
++    ++mActive;
++    if (!mHeld) {
++      // Taken here rather than by the worker, so the first execution of a prefill already
++      // runs boosted instead of waiting for a thread to wake.
++      mHandle = mLib.acquirePerformanceLock(mHandle, FAST_SINGLE_ANSWER_MODE, kLockMs);
++      mLastRenew = std::chrono::steady_clock::now();
++      mHeld = true;
++      mCond.notify_one();
++    }
++  }
++
++  void End() {
++    if (!mLib.mEnable) return;
++    std::lock_guard<std::mutex> guard(mMutex);
++    if (mActive > 0) --mActive;
++    mLastEnd = std::chrono::steady_clock::now();
++    mCond.notify_one();
++  }
++
++  void Run() {
++    std::unique_lock<std::mutex> lock(mMutex);
++    while (!mStop) {
++      mCond.wait(lock, [this] { return mStop || mHeld; });
++      while (!mStop && mHeld) {
++        const auto now = std::chrono::steady_clock::now();
++        if (mActive == 0 && now - mLastEnd >= kIdleRelease) {
++          mLib.releasePerformanceLock(mHandle);
++          mHandle = 0;
++          mHeld = false;
++          break;
++        }
++        if (now - mLastRenew >= kRenewEvery) {
++          mHandle = mLib.acquirePerformanceLock(mHandle, FAST_SINGLE_ANSWER_MODE, kLockMs);
++          mLastRenew = now;
++        }
++        mCond.wait_for(lock, mActive == 0 ? kIdleRelease : kRenewEvery);
++      }
++    }
++  }
++
++  ApuWareUtilsLib& mLib;
++  std::mutex mMutex;
++  std::condition_variable mCond;
++  std::thread mThread;
++  int mActive = 0;
++  bool mHeld = false;
++  bool mStop = false;
++  int32_t mHandle = 0;
++  std::chrono::steady_clock::time_point mLastEnd{};
++  std::chrono::steady_clock::time_point mLastRenew{};
++};
+diff --git a/examples/mediatek/CMakeLists.txt b/examples/mediatek/CMakeLists.txt
+index 04d465d..227ebda 100644
+--- a/examples/mediatek/CMakeLists.txt
++++ b/examples/mediatek/CMakeLists.txt
+@@ -40,6 +40,15 @@ set(_common_include_directories
+ #
+ executorch_load_build_variables()
+ 
++list(APPEND CMAKE_PREFIX_PATH
++  ${EXECUTORCH_ROOT}/cmake-android-out
++  ${EXECUTORCH_ROOT}/cmake-android-out/lib/cmake/ExecuTorch
++  ${EXECUTORCH_ROOT}/cmake-android-out/lib/cmake/tokenizers
++  ${EXECUTORCH_ROOT}/cmake-android-out/lib/cmake/absl
++  ${EXECUTORCH_ROOT}/cmake-android-out/lib/cmake/re2
++  ${EXECUTORCH_ROOT}/cmake-android-out/lib/cmake/pcre2
++)
++
+ # Find prebuilt libraries. executorch package should contain portable_ops_lib,
+ # etdump, bundled_program.
+ find_package(executorch CONFIG REQUIRED)
+@@ -117,11 +126,18 @@ if(${ANDROID})
+        ${CMAKE_CURRENT_LIST_DIR}/executor_runner/mtk_llama_executor_runner.cpp
+   )
+   # Build tokenizers library
+-  set(SUPPORT_REGEX_LOOKAHEAD ON)
+-  add_subdirectory(
+-    ${EXECUTORCH_ROOT}/extension/llm/tokenizers
+-    ${CMAKE_CURRENT_BINARY_DIR}/tokenizers
+-  )
++  if(NOT TARGET tokenizers::tokenizers)
++    set(SUPPORT_REGEX_LOOKAHEAD ON)
++    add_subdirectory(
++      ${EXECUTORCH_ROOT}/extension/llm/tokenizers
++      ${CMAKE_CURRENT_BINARY_DIR}/tokenizers
++    )
++  else()
++    if(NOT TARGET tokenizers)
++      add_library(tokenizers INTERFACE)
++      target_link_libraries(tokenizers INTERFACE tokenizers::tokenizers)
++    endif()
++  endif()
+ 
+   # Include directory for neuron headers
+   include_directories(
+@@ -148,4 +164,135 @@ if(${ANDROID})
+   target_compile_options(
+     mtk_llama_executor_runner PUBLIC ${_common_compile_options}
+   )
++
++  # Build Disaggregated Runner (MediaTek NPU Prefill + CPU Decode)
++  set(_mtk_pd_disaggregated_runner__srcs ${_mtk_executor_runner__srcs})
++  list(FILTER _mtk_pd_disaggregated_runner__srcs EXCLUDE REGEX
++       ".*executor_runner.cpp$"
++  )
++  list(PREPEND _mtk_pd_disaggregated_runner__srcs
++       ${CMAKE_CURRENT_LIST_DIR}/executor_runner/mtk_pd_disaggregated_runner.cpp
++  )
++
++  add_executable(mtk_pd_disaggregated_runner ${_mtk_pd_disaggregated_runner__srcs})
++
++  target_include_directories(
++    mtk_pd_disaggregated_runner
++    PUBLIC ${_common_include_directories}
++           ${EXECUTORCH_ROOT}/cmake-android-out/third-party/gflags/include
++  )
++
++  target_sources(
++    mtk_pd_disaggregated_runner
++    PRIVATE
++      ${CMAKE_CURRENT_SOURCE_DIR}/../models/llama/tokenizer/llama_tiktoken.cpp
++      ${EXECUTORCH_ROOT}/kernels/prim_ops/register_prim_ops.cpp
++      ${EXECUTORCH_ROOT}/kernels/prim_ops/et_view.cpp
++      ${EXECUTORCH_ROOT}/kernels/prim_ops/et_copy_index.cpp
++  )
++
++  target_link_libraries(
++    mtk_pd_disaggregated_runner
++    ${_executor_runner_libs}
++    neuron_backend
++    gflags
++    mtk_llama_executor_lib
++    tokenizers
++    extension_module
++    -Wl,--whole-archive
++    custom_ops
++    -Wl,--no-whole-archive
++    quantized_ops_lib
++    quantized_kernels
++    xnnpack_backend
++    XNNPACK
++    kleidiai
++  )
++  target_compile_options(
++    mtk_pd_disaggregated_runner PUBLIC ${_common_compile_options}
++  )
++
++  # Build the CPU forward bench: one decode step, nothing else loaded, so a slow
++  # forward() can be blamed on these libraries or on the Neuron runtime, not both.
++  add_executable(cpu_forward_bench
++                 ${CMAKE_CURRENT_LIST_DIR}/executor_runner/cpu_forward_bench.cpp)
++
++  target_include_directories(
++    cpu_forward_bench
++    PUBLIC ${_common_include_directories}
++           ${EXECUTORCH_ROOT}/cmake-android-out/third-party/gflags/include
++  )
++
++  target_sources(
++    cpu_forward_bench
++    PRIVATE
++      ${EXECUTORCH_ROOT}/kernels/prim_ops/register_prim_ops.cpp
++      ${EXECUTORCH_ROOT}/kernels/prim_ops/et_view.cpp
++      ${EXECUTORCH_ROOT}/kernels/prim_ops/et_copy_index.cpp
++  )
++
++  target_link_libraries(
++    cpu_forward_bench
++    ${_executor_runner_libs}
++    neuron_backend
++    gflags
++    mtk_llama_executor_lib
++    tokenizers
++    extension_module
++    -Wl,--whole-archive
++    custom_ops
++    -Wl,--no-whole-archive
++    quantized_ops_lib
++    quantized_kernels
++    xnnpack_backend
++    XNNPACK
++    kleidiai
++  )
++  target_compile_options(cpu_forward_bench PUBLIC ${_common_compile_options})
++
++  # Build Disaggregated JNI Shared Library (for Android App integration)
++  set(_mtk_pd_jni__srcs ${_mtk_executor_runner__srcs})
++  list(FILTER _mtk_pd_jni__srcs EXCLUDE REGEX ".*executor_runner.*\\.cpp$")
++  list(PREPEND _mtk_pd_jni__srcs
++       ${CMAKE_CURRENT_LIST_DIR}/executor_runner/mtk_pd_disaggregated_jni.cpp
++  )
++
++  add_library(executorch_pd_jni SHARED ${_mtk_pd_jni__srcs})
++
++  target_include_directories(
++    executorch_pd_jni
++    PUBLIC ${_common_include_directories}
++           ${EXECUTORCH_ROOT}/cmake-android-out/third-party/gflags/include
++  )
++
++  target_sources(
++    executorch_pd_jni
++    PRIVATE
++      ${CMAKE_CURRENT_SOURCE_DIR}/../models/llama/tokenizer/llama_tiktoken.cpp
++      ${EXECUTORCH_ROOT}/kernels/prim_ops/register_prim_ops.cpp
++      ${EXECUTORCH_ROOT}/kernels/prim_ops/et_view.cpp
++      ${EXECUTORCH_ROOT}/kernels/prim_ops/et_copy_index.cpp
++  )
++
++  target_link_libraries(
++    executorch_pd_jni
++    ${_executor_runner_libs}
++    neuron_backend
++    mtk_llama_executor_lib
++    tokenizers
++    extension_module
++    -Wl,--whole-archive
++    custom_ops
++    -Wl,--no-whole-archive
++    quantized_ops_lib
++    quantized_kernels
++    xnnpack_backend
++    XNNPACK
++    kleidiai
++    log
++  )
++  target_compile_options(
++    executorch_pd_jni PUBLIC ${_common_compile_options}
++  )
+ endif()
++
+diff --git a/examples/mediatek/executor_runner/llama_runner/LlamaModelChunk.h b/examples/mediatek/executor_runner/llama_runner/LlamaModelChunk.h
+index d8cf08e..66a6b4f 100644
+--- a/examples/mediatek/executor_runner/llama_runner/LlamaModelChunk.h
++++ b/examples/mediatek/executor_runner/llama_runner/LlamaModelChunk.h
+@@ -84,6 +84,33 @@ class LlamaModelChunk : public ModelChunk {
+ 
+   size_t GetTokenIndex() const;
+ 
++  bool hasInput(const IOKind kind) const;
++  bool hasOutput(const IOKind kind) const;
++  const std::vector<size_t>& getInputIndexes(const IOKind kind) const;
++  const std::vector<size_t>& getOutputIndexes(const IOKind kind) const;
++  size_t getInputIndex(const IOKind kind, const size_t pos = 0) const;
++  size_t getOutputIndex(const IOKind kind, const size_t pos = 0) const;
++  size_t getNumInputsFor(const IOKind kind) const;
++  size_t getNumOutputsFor(const IOKind kind) const;
++
++  // The cache geometry, for a caller that has to read the cache from outside the chunk.
++  // Every state tensor in a chunk shares this shape: PrepareCacheIOs reads it once, from
++  // the first cache input, and the padding and rollback paths stride every other cache by
++  // it. A prefill/decode handoff has to walk the same rows and stride, so it is exposed
++  // here rather than re-derived from a tensor shape the caller cannot see.
++  const TensorShape& GetCacheShape() const {
++    return mCacheShape;
++  }
++  size_t GetCacheRows() const {
++    return GetCacheNumRows();
++  }
++  size_t GetCacheStrideBytes() const {
++    return GetCacheStrideSize();
++  }
++  size_t GetCacheLength() const {
++    return kCacheLength;
++  }
++
+  private:
+   void SetPosEmbed(const size_t tokenIndex);
+ 
+@@ -118,18 +145,6 @@ class LlamaModelChunk : public ModelChunk {
+   void defineInput(const IOKind kind, const size_t count = 1);
+   void defineOutput(const IOKind kind, const size_t count = 1);
+ 
+-  bool hasInput(const IOKind kind) const;
+-  bool hasOutput(const IOKind kind) const;
+-
+-  const std::vector<size_t>& getInputIndexes(const IOKind kind) const;
+-  const std::vector<size_t>& getOutputIndexes(const IOKind kind) const;
+-
+-  size_t getInputIndex(const IOKind kind, const size_t pos = 0) const;
+-  size_t getOutputIndex(const IOKind kind, const size_t pos = 0) const;
+-
+-  size_t getNumInputsFor(const IOKind kind) const;
+-  size_t getNumOutputsFor(const IOKind kind) const;
+-
+   void CheckIoCount();
+ 
+  private:
+diff --git a/examples/mediatek/executor_runner/llama_runner/LlamaRuntime.h b/examples/mediatek/executor_runner/llama_runner/LlamaRuntime.h
+index fc2fca2..7026a7d 100644
+--- a/examples/mediatek/executor_runner/llama_runner/LlamaRuntime.h
++++ b/examples/mediatek/executor_runner/llama_runner/LlamaRuntime.h
+@@ -47,6 +47,10 @@ class LlamaRuntime {
+ 
+   const LlamaModelOptions& GetModelOptions() const;
+ 
++  const std::vector<std::unique_ptr<ModelChunk>>& GetModelChunks() const {
++    return mLlamaModelChunks;
++  }
++
+  private:
+   LlamaModelOptions mModelOptions;
+   std::vector<std::unique_ptr<ModelChunk>> mLlamaModelChunks;
+diff --git a/runtime/executor/method.h b/runtime/executor/method.h
+index 834325f..26b15d8 100644
+--- a/runtime/executor/method.h
++++ b/runtime/executor/method.h
+@@ -304,6 +304,10 @@ class Method final {
+   /// retrieve Method outputs.
+   ET_DEPRECATED EValue& mutable_output(size_t i);
+ 
++  ET_EXPERIMENTAL size_t values_size() const { return n_value_; }
++  ET_EXPERIMENTAL const EValue& get_value(size_t i) const;
++  ET_EXPERIMENTAL EValue& mutable_value(size_t i);
++
+   ~Method();
+ 
+  private:
+@@ -379,8 +383,6 @@ class Method final {
+     return init_state_ == InitializationState::Initialized;
+   }
+ 
+-  const EValue& get_value(size_t i) const;
+-  EValue& mutable_value(size_t i);
+   size_t get_input_index(size_t i) const;
+   size_t get_output_index(size_t i) const;
+ 

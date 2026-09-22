@@ -3,9 +3,9 @@
 Two small programs that answer one question on a real phone: **is MediaTek's NPU
 faster than the CPU at the multiply this app spends its time in?**
 
-- `npu_matmul_bench.cpp` — one `NEURON_FULLY_CONNECTED` in `QUANT8_ASYMM`
+- `npu_matmul_bench.cpp`: one `NEURON_FULLY_CONNECTED` in `QUANT8_ASYMM`
   through NeuronAdapter, pinned to the MDLA.
-- `cpu_matmul_bench.cpp` — the same shape through ggml's `MUL_MAT`, loaded via
+- `cpu_matmul_bench.cpp`: the same shape through ggml's `MUL_MAT`, loaded via
   the backend registry so it picks the identical CPU variant the app runs.
 
 Results and what they mean are in
@@ -28,7 +28,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 export PATH=$PWD/tools/bin:$PATH
 uv python install 3.10          # the wheels are cp310 only
 
-# NeuroPilot Express SDK — a public download, no account. The link list is at
+# NeuroPilot Express SDK: a public download, no account. The link list is at
 # https://neuropilot.mediatek.com/resources/public/npexpress/en/docs/npexpress
 # It arrives under an opaque S3 filename and must be renamed before extracting.
 mkdir -p sdk && cd sdk
@@ -140,35 +140,29 @@ own access to the same file and will dominate any measurement.
 the app loads when the NPU reads a prompt and the CPU writes the reply. It is kept here
 because the built library is git ignored: a hundred megabytes of generated binary does
 not belong in the repository, and without the source the repository could not reproduce
-its own debug artifact.
+its own debug artifact. The same goes for `mtk_pd_disaggregated_runner.cpp`, the shell
+runner, and for `patches/executorch-release-1.4-pd.patch`, which carries this project's
+changes to ExecuTorch itself: the build targets, the accessors the state handoff reads,
+and the Neuron backend holding MediaTek's performance lock only while the NPU executes.
 
-It does not build here. It builds inside an ExecuTorch tree, against MediaTek's runner
-in `examples/mediatek/executor_runner/llama_runner`, which is where it has to be copied
-before building:
-
-```sh
-cp tools/npu/mtk_pd_disaggregated_jni.cpp \
-   "$EXECUTORCH/examples/mediatek/executor_runner/mtk_pd_disaggregated_jni.cpp"
-ninja -C "$EXECUTORCH/cmake-android-ninja/examples/mediatek" executorch_pd_jni
-llvm-strip --strip-unneeded \
-  -o core/engine/src/debug/jniLibs/arm64-v8a/libexecutorch_pd_jni.so \
-  "$EXECUTORCH/cmake-android-ninja/examples/mediatek/libexecutorch_pd_jni.so"
-```
-
-**Configure both trees with `-DCMAKE_BUILD_TYPE=Release`, and check it took.** The same
-warning three paragraphs up about a plain `arm64-v8a` llama.cpp build applies here and
-was paid for twice. `examples/mediatek` is its own CMake project, so a build type set on
-the parent tree does not reach it, and an empty `CMAKE_BUILD_TYPE` means CMake adds no
-`-O` flag at all rather than defaulting to anything. It reads as a slow model, never as a
-misconfigured build:
+It does not build here. It builds inside an ExecuTorch `release/1.4` checkout at
+`e4d02f4`, and one script does all of it:
 
 ```sh
-cmake -S . -B cmake-android-out -DCMAKE_BUILD_TYPE=Release
-cmake -S examples/mediatek -B cmake-android-out/examples/mediatek -DCMAKE_BUILD_TYPE=Release
-# then confirm it reached XNNPACK, which is where it matters
-python3 -c "import json;cc=json.load(open('cmake-android-out/compile_commands.json'));\
-print(next(e['command'] for e in cc if '/XNNPACK/' in e['file']))" | grep -o '\-O3'
+EXECUTORCH=~/abliteration/vendor/executorch \
+ANDROID_NDK=~/chips/ndk \
+NEUROPILOT_SDK=~/neuropilot_sdk/neuropilot-express-sdk-8.0.8-build20250925 \
+tools/npu/build_pd_libs.sh
 ```
+
+It applies the patch, builds both trees Release, installs the runtime before linking the
+MediaTek targets, checks the installed archives are byte-identical to the ones just built,
+and only then strips the library and the backend into `core/engine/src/debug/jniLibs`.
+**Do not build these by hand.** `examples/mediatek` is its own CMake project: a build type
+set on the parent does not reach it, and it links the parent's *installed* archives, so a
+parent rebuilt without `--target install` leaves every binary linked against whatever was
+installed last. That happened here, and a decode step read 116 ms against 28 with nothing
+anywhere saying the build was stale.
 
 ## Timing one decode step
 
@@ -178,18 +172,27 @@ has three possible owners here, the loop, the libraries and the NPU sharing the 
 and only this separates them. It links the same libraries as the disaggregated runner, so
 the one difference between those binaries is that this never initialises an NPU.
 
+`build_pd_libs.sh` builds it. It prints how much of the window the pool's threads spent
+running and how much queued, because throughput cannot tell a slow kernel from threads the
+scheduler keeps stacked on two cores, and the second is what MediaTek's performance lock
+did to the app. `--threads` compares pool sizes: -1 is the session's policy, 0 one per core.
+
 ```sh
-ninja -C "$EXECUTORCH/cmake-android-ninja/examples/mediatek" cpu_forward_bench
-adb -s $SER push cpu_forward_bench /data/local/tmp/npu/
+adb -s $SER push "$EXECUTORCH/cmake-android-out/examples/mediatek/cpu_forward_bench" /data/local/tmp/npu/
 adb -s $SER shell am force-stop io.github.alpharomercoma.openweights.debug
 adb -s $SER shell "cd /data/local/tmp/npu && LD_LIBRARY_PATH=. ./cpu_forward_bench \
   --cpu_model_path=<the app's .pte> --steps=30 --start_pos=1024 --mmap=true"
 ```
 
-`--start_pos` is the point: this model's `forward()` is linear in how much KV cache
+`--start_pos` is the point: this model's `forward()` grows with how much KV cache
 attention reads, so a number taken at position 0 says nothing about a real turn. Sweep it.
 Force stopping the app first is not optional, because a held model in another process
 turned the first reading ever taken here into nonsense.
+
+The same decode code runs on phones with no MediaTek NPU through `PdDecodeProbe`, an
+instrumented test in core/engine, because the library needs only system libraries and a
+Neuron backend that loads MediaTek's adapter lazily. On Test Lab:
+`tools/eval/run_matrix_ftl.sh mustang 36 tensor- pd-probe`.
 
 What it measures, what it costs and why the path ships off is in
 [`docs/research/npu-pd-disaggregation.md`](../../docs/research/npu-pd-disaggregation.md).

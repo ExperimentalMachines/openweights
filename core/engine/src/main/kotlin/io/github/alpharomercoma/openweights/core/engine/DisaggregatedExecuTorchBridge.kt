@@ -22,8 +22,8 @@ import org.json.JSONObject
 import java.io.File
 
 /**
- * Executes models using Prefill/Decode (PD) Disaggregation:
- * MediaTek NeuroPilot NPU for Prefill + ARM Cortex-X925 CPU for Decode.
+ * Executes models using Prefill/Decode (PD) Disaggregation: the MediaTek NPU reads the prompt,
+ * then the CPU writes the reply from the same `.pte` the CPU path loads.
  *
  * Falls back to [NativeExecuTorchBridge] when NPU chunks or native libraries are unavailable.
  */
@@ -190,12 +190,12 @@ class DisaggregatedExecuTorchBridge(
      * The compiled chunks, the embedding table and the options they were compiled for, or
      * null when this model has no NPU half here.
      *
-     * The directory must also hold [ENABLE_MARKER]. The path answers correctly and is off
-     * on cost, not on correctness: the chunks hold 512 tokens against the roughly 2,050 a
-     * real prompt reaches once the tool prefix is in, and this runner's decode is 13 to 18
-     * tok/s against the 27 the app's own CPU path gets from the same file, which is where
-     * the wall clock goes. See docs/research/npu-pd-disaggregation.md. Touching the marker
-     * turns the path on for a measurement run without a rebuild.
+     * The directory must also hold [ENABLE_MARKER]. The path answers correctly and its
+     * decode now nearly matches the CPU path (27 to 29 tok/s against 30), so it is off on what the split
+     * itself costs: a second copy of the model resident, and an NPU call that takes about
+     * half a second whether it carries 128 tokens or ten, against a median of 50 new tokens
+     * a turn after cache reuse. See docs/research/npu-pd-disaggregation.md. Touching the
+     * marker turns the path on for a measurement run without a rebuild.
      */
     private fun resolveNpuComponents(modelFile: File): NpuComponents? {
         val parent = modelFile.parentFile ?: return null

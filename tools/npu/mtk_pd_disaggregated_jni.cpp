@@ -7,11 +7,15 @@
 
 #include <jni.h>
 #include <android/log.h>
+#include <cerrno>
 #include <sched.h>
+#include <sys/resource.h>
+#include <unistd.h>
 
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <thread>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -34,6 +38,8 @@
 #include "llama_runner/LlamaConfig.h"
 #include "llama_runner/LlamaModelChunk.h"
 #include "llama_runner/LlamaRuntime.h"
+#include <executorch/backends/mediatek/runtime/include/api/APUWareUtilsLib.h>
+#include <executorch/extension/threadpool/cpuinfo_utils.h>
 #include <executorch/extension/threadpool/threadpool.h>
 #include "llama_runner/ModelChunk.h"
 #include "llama_runner/Utils.h"
@@ -120,6 +126,83 @@ static example::LlamaModelOptions ParseRunnerOptions(const std::string& json_tex
          options.prompt_token_batch_size, options.cache_size, options.hidden_size,
          options.num_head, options.num_layer, options.head_dim, options.max_token_length);
     return options;
+}
+
+
+/**
+ * Widens the calling thread to every CPU the process may use, and puts the old mask back
+ * when it goes out of scope.
+ *
+ * Kotlin's coroutine threads are spawned lazily from whichever thread submits work, and a
+ * new thread inherits its creator's affinity. On this ROM the UI thread is narrowed to the
+ * big cluster while it handles a tap, so a DefaultDispatch thread born then keeps
+ * cpus=4-7 for the life of the process, and every pthreadpool worker created from it
+ * inherits the same four cores. That was measured here: seven delegate threads over four
+ * cores, 75 ms a token against 35 for the same library in a shell process. engine_session.cpp
+ * met the same trap on the llama.cpp path and restores the startup mask for it.
+ *
+ * Asking for every configured CPU names no core: the kernel intersects the request with
+ * the process's cpuset, so the result is whatever this phone allows this app, and the
+ * scheduler is left to place the threads.
+ */
+class ProcessWideAffinity {
+public:
+    ProcessWideAffinity() {
+        CPU_ZERO(&previous_);
+        saved_ = sched_getaffinity(0, sizeof(previous_), &previous_) == 0;
+        cpu_set_t all;
+        CPU_ZERO(&all);
+        const long configured = sysconf(_SC_NPROCESSORS_CONF);
+        for (long cpu = 0; cpu < configured && cpu < CPU_SETSIZE; ++cpu) CPU_SET(cpu, &all);
+        if (sched_setaffinity(0, sizeof(all), &all) != 0) {
+            LOGW("DisaggregatedSession: could not widen thread affinity: %s", strerror(errno));
+        }
+    }
+    ~ProcessWideAffinity() {
+        if (saved_) sched_setaffinity(0, sizeof(previous_), &previous_);
+    }
+    ProcessWideAffinity(const ProcessWideAffinity&) = delete;
+    ProcessWideAffinity& operator=(const ProcessWideAffinity&) = delete;
+
+private:
+    cpu_set_t previous_;
+    bool saved_ = false;
+};
+
+/**
+ * Sizes the XNNPACK delegate's threadpool and returns how many threads it ended up with.
+ *
+ * [requested] below zero sizes it the way the app's own ExecuTorch path does, so the two
+ * decode on the same cores on every phone. ExecuTorch's default is one thread per core, and
+ * pthreadpool splits each region into equal shares, so on a chip with efficiency cores
+ * (A520, A510, A55, A53) every region waits for its share on a little core.
+ * get_num_performant_cores() reads each core's microarchitecture from cpuinfo and drops
+ * those; minus one leaves a core for the UI thread. This is what jni_layer_llama.cpp does
+ * in the AAR. Zero sizes it to every core, which is ExecuTorch's own default, and a positive
+ * value forces that count; both exist for the probe, which measures whether the policy
+ * matters on a given phone. The pool is one per process, so each call sets it outright
+ * rather than leaving whatever the last call chose.
+ *
+ * Must run before any Module is loaded: XNNPACK captures the pool when it creates its
+ * runtime, and resizing afterwards would leave that runtime holding a freed pool.
+ */
+static size_t size_delegate_pool(int32_t requested) {
+    int32_t threads = requested;
+    if (requested < 0) {
+        threads =
+            static_cast<int32_t>(::executorch::extension::cpuinfo::get_num_performant_cores()) - 1;
+    } else if (requested == 0) {
+        threads = static_cast<int32_t>(cpuinfo_get_processors_count());
+    }
+    // Workers inherit the mask of the thread that creates them, so this thread is widened
+    // first; see ProcessWideAffinity. The workers keep the wide mask after this thread's own
+    // is put back.
+    ProcessWideAffinity creator_affinity;
+    if (threads > 0) {
+        ::executorch::extension::threadpool::get_threadpool()->_unsafe_reset_threadpool(
+            static_cast<uint32_t>(threads));
+    }
+    return ::executorch::extension::threadpool::get_threadpool()->get_thread_count();
 }
 
 static size_t utf8_complete_prefix(const std::string& s) {
@@ -396,6 +479,7 @@ public:
 
         LOGI("DisaggregatedSession: Initializing CPU Module: %s", cpu_model_path.c_str());
         auto cpu_start = std::chrono::high_resolution_clock::now();
+        size_delegate_pool(-1);
         cpu_module_ = std::make_unique<Module>(cpu_model_path, Module::LoadMode::File);
         auto err = cpu_module_->load_method("forward");
         if (err != Error::Ok) {
@@ -423,6 +507,7 @@ public:
             LOGE("DisaggregatedSession: no state handoff is possible for this export");
             return false;
         }
+
 
         prefilled_ = false;
         stop_requested_ = false;
@@ -620,22 +705,13 @@ public:
             return {2 /* CANCELLED */, (int64_t)prompt_len_, 0, (int64_t)prefill_ms_, 0};
         }
 
-        // Nothing is pinned here, and that is a measured decision rather than an
-        // omission. Decode looks like one thread chasing one dependency chain, so an
-        // earlier version pinned it to the widest core in the kernel's capacity table,
-        // which on this chip is cpu7. It is not one thread: the XNNPACK delegate fans
-        // every matmul across a pthreadpool, and pthreadpool runs one share of each
-        // parallel region on the calling thread. Pinning the caller confined the pool
-        // with it. On the Poco X8 Pro Max the decode threads then read cpus=7 for the
-        // caller and cpus=4-7 for its seven workers: eight runnable threads over four
-        // cores, so every parallel region waited on a doubled-up share.
-        //
-        // Measured against the app's own ExecuTorch path, same .pte, same prompt, same
-        // thermal state: pinned gave 3.2 busy cores and 6 tok/s, unpinned gives all
-        // threads cpus=0-7, 6.12 busy cores and 31 tok/s. The earlier reading that put
-        // pinning ahead (13.02 against 10.58) came from the standalone shell runner,
-        // where the pool is single-threaded anyway and the only question is which core
-        // the one thread lands on. See docs/research/npu-pd-disaggregation.md.
+        // pthreadpool runs one share of every parallel region on this thread, so its
+        // placement matters as much as the workers'. It is widened for the decode and put
+        // back afterwards, because it is a shared coroutine thread; see
+        // ProcessWideAffinity for why it can arrive narrowed. An earlier version pinned it
+        // to the single widest core instead, which confined the pool with it and was
+        // measured as eight runnable threads over four cores. Nothing names a core.
+        ProcessWideAffinity decode_affinity;
 
         int64_t cur_token = first_output_token_;
         int64_t cur_pos = prompt_len_;
@@ -656,6 +732,8 @@ public:
         cpu_step_inputs.push_back(p_tensor);
 
         double forward_ms = 0.0;
+        struct rusage usage_start;
+        getrusage(RUSAGE_SELF, &usage_start);
         auto decode_start = std::chrono::high_resolution_clock::now();
 
         // Emit first token
@@ -732,6 +810,18 @@ public:
         // Splitting the loop from the model it drives, because the two have been
         // confused here before: forward() is 99.8% of a token, so a decode that looks
         // slow is the export and its kernels, never the loop around them.
+        // How many cores the decode actually got. Throughput alone cannot tell a slow
+        // kernel from a pool the scheduler has squeezed onto two cores, and the second has
+        // happened here twice: a narrowed affinity mask, then a power-HAL boost that stacked
+        // the threads. A healthy decode on an eight-core phone reads five or six.
+        {
+            struct rusage usage_end;
+            getrusage(RUSAGE_SELF, &usage_end);
+            const auto seconds = [](const timeval& t) { return t.tv_sec + t.tv_usec / 1e6; };
+            const double cpu_s = seconds(usage_end.ru_utime) - seconds(usage_start.ru_utime) +
+                                 seconds(usage_end.ru_stime) - seconds(usage_start.ru_stime);
+            LOGI("DisaggregatedSession: decode kept %.2f cores busy", cpu_s / (decode_ms / 1000.0));
+        }
         LOGI("DisaggregatedSession: forward() was %.2f ms of that (%.1f%%), %.2f ms per token",
              forward_ms, 100.0 * forward_ms / decode_ms,
              forward_ms / std::max(1, generated_count - 1));
@@ -918,3 +1008,116 @@ Java_io_github_alpharomercoma_openweights_core_engine_DisaggregatedBridge_native
 }
 
 } // extern "C"
+
+/**
+ * Times the CPU half's decode step on any arm64 phone, NPU or not.
+ *
+ * The rest of this library needs a MediaTek NPU; this does not, so the decode half's
+ * choices (the Release build of these libraries, the pool sizing, the affinity guard) can be
+ * checked on phones this repository has no NPU export for. It runs the same code the session
+ * runs: size_delegate_pool, a Module loaded the same way, and a widened caller. With
+ * [hold_lifetime_lock] it also holds MediaTek's FAST_SINGLE_ANSWER lock for the whole
+ * timing, the way the Neuron backend used to for a loaded model's lifetime, so the effect
+ * of that lock on a CPU decode can be measured on another MediaTek phone and ROM.
+ *
+ * Returns {median ms per step, pool threads, performant cores, cores busy, whether the lock
+ * library was reachable, the caller's effective uclamp.min while timing}, or null on failure.
+ * Called by core/engine's PdDecodeProbe instrumented test.
+ */
+static int effective_uclamp_min_of_this_thread() {
+    char path[64];
+    snprintf(path, sizeof(path), "/proc/self/task/%d/sched", static_cast<int>(gettid()));
+    FILE* file = fopen(path, "r");
+    if (file == nullptr) return -1;
+    char line[256];
+    int value = -1;
+    while (fgets(line, sizeof(line), file) != nullptr) {
+        if (strncmp(line, "effective uclamp.min", 20) == 0) {
+            const char* colon = strchr(line, ':');
+            if (colon != nullptr) value = atoi(colon + 1);
+            break;
+        }
+    }
+    fclose(file);
+    return value;
+}
+
+extern "C" JNIEXPORT jdoubleArray JNICALL
+Java_io_github_alpharomercoma_openweights_core_engine_eval_PdDecodeProbeNative_nativeProbeCpuDecode(
+    JNIEnv* env,
+    jobject /* thiz */,
+    jstring cpu_model_path,
+    jint start_pos,
+    jint steps,
+    jint threads,
+    jboolean hold_lifetime_lock
+) {
+    const char* path_chars = env->GetStringUTFChars(cpu_model_path, nullptr);
+    const std::string path(path_chars);
+    env->ReleaseStringUTFChars(cpu_model_path, path_chars);
+
+    const size_t pool = size_delegate_pool(threads);
+    const auto performant = ::executorch::extension::cpuinfo::get_num_performant_cores();
+    Module module(path, Module::LoadMode::File);
+    if (module.load_method("forward") != Error::Ok) {
+        LOGE("probe: could not load forward from %s", path.c_str());
+        return nullptr;
+    }
+
+    int64_t token = 1;
+    int64_t pos = start_pos;
+    int32_t token_sizes[] = {1, 1};
+    uint8_t token_dims[] = {0, 1};
+    TensorImpl token_impl(ScalarType::Long, 2, token_sizes, &token, token_dims);
+    int32_t pos_sizes[] = {1};
+    uint8_t pos_dims[] = {0};
+    TensorImpl pos_impl(ScalarType::Long, 1, pos_sizes, &pos, pos_dims);
+    std::vector<EValue> inputs{EValue(Tensor(&token_impl)), EValue(Tensor(&pos_impl))};
+
+    // One untimed step, so lazily built runtime state is not charged to the first sample.
+    module.execute("forward", inputs);
+    pos = start_pos;
+
+    std::unique_ptr<ScopePerformancer> lifetime_lock;
+    const bool lock_available = ApuWareUtilsLib::GetInstance().mEnable;
+    if (hold_lifetime_lock && lock_available) {
+        lifetime_lock = std::make_unique<ScopePerformancer>();
+        // The HAL applies the scenario asynchronously; let it settle before timing.
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+
+    ProcessWideAffinity caller_affinity;
+    std::vector<double> step_ms;
+    struct rusage usage_start;
+    getrusage(RUSAGE_SELF, &usage_start);
+    const auto window_start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < steps; ++i) {
+        const auto step_start = std::chrono::high_resolution_clock::now();
+        module.execute("forward", inputs);
+        step_ms.push_back(std::chrono::duration<double, std::milli>(
+            std::chrono::high_resolution_clock::now() - step_start).count());
+        pos++;
+    }
+    const double window_s = std::chrono::duration<double>(
+        std::chrono::high_resolution_clock::now() - window_start).count();
+    const int uclamp_min = effective_uclamp_min_of_this_thread();
+    struct rusage usage_end;
+    getrusage(RUSAGE_SELF, &usage_end);
+    lifetime_lock.reset();
+
+    const auto seconds = [](const timeval& t) { return t.tv_sec + t.tv_usec / 1e6; };
+    const double cpu_s = seconds(usage_end.ru_utime) - seconds(usage_start.ru_utime) +
+                         seconds(usage_end.ru_stime) - seconds(usage_start.ru_stime);
+    std::sort(step_ms.begin(), step_ms.end());
+    const double result[] = {
+        step_ms.empty() ? 0.0 : step_ms[step_ms.size() / 2],
+        static_cast<double>(pool),
+        static_cast<double>(performant),
+        cpu_s / window_s,
+        lock_available ? 1.0 : 0.0,
+        static_cast<double>(uclamp_min),
+    };
+    jdoubleArray out = env->NewDoubleArray(6);
+    env->SetDoubleArrayRegion(out, 0, 6, result);
+    return out;
+}
