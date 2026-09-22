@@ -184,13 +184,15 @@ designed for convolutional vision graphs rather than for the dynamic shapes,
 KV cache and weight-only int4 an LLM decode step needs. Google's own
 replacement path is LiteRT, below.
 
-## The allowlist is not permission
+## The allowlist is not permission, and the reason was a missing manifest line
+
+**Corrected 2026-09-22. The observation below was right, the conclusion drawn
+from it was wrong, and the remedy it recommended is the thing that crashes.**
 
 `libneuron_runtime.so` is named in `/vendor/etc/public.libraries.txt`, which is
 what normally lets an ordinary app out of its linker namespace to reach a vendor
-library. It does not work here. Asked from inside an app process rather than
-from an adb shell — the shell has a different namespace and answers an easier
-question — the loader refuses:
+library. Asked from inside an app process rather than from an adb shell, which
+has a different namespace and answers an easier question, the loader refused:
 
 ```
 System.loadLibrary(neuron_runtime)         -> dlopen failed: library "libneuron_runtime.so" not found
@@ -199,9 +201,25 @@ System.loadLibrary(neuronusdk_adapter.mtk) -> "/system_ext/lib64/libneuronusdk_a
 System.loadLibrary(neuralnetworks)         -> LOADED
 ```
 
-So there is no shortcut of dlopen'ing the vendor runtime. The supported route is
-to bundle MediaTek's own adapter libraries in the APK, which is what ExecuTorch's
-backend does. Getting them is easier than expected — see below.
+The third line is the interesting one and it was read as a refusal of principle.
+It is not. The linker resolved the name to the right file on the device and then
+declined to link it, because **from API 31 an app has to name a vendor public
+library in `<uses-native-library>` before the linker will hand it over**. Adding
+
+```xml
+<uses-native-library android:name="libneuronusdk_adapter.mtk.so" android:required="false" />
+```
+
+and the same for the `libapuware*.mtk.so` drivers makes the device's own adapter
+load in an ordinary app process, first try. MediaTek publishes the whole set in
+`/system/etc/public.libraries-mtk.txt` for exactly this purpose.
+
+The recommendation that followed, to bundle MediaTek's own adapter from the SDK
+inside the APK, is worse than unnecessary: that copy resolves its dependencies
+by name against `/vendor/lib64`, finds nothing in an app namespace, and calls a
+null pointer inside `.init_array`, killing the process before any of our code
+runs. Use the phone's copy, declared in the manifest. Measured and written up in
+[`npu-pd-disaggregation.md`](npu-pd-disaggregation.md).
 
 ## Why there is no ggml backend — corrected
 
@@ -326,16 +344,27 @@ Check these rather than re-arguing:
 
 1. **A MediaTek backend lands upstream in ggml.** OpenVINO and Hexagon both did.
    Then this becomes a build flag beside `GGML_OPENCL`, and the answer flips
-   immediately.
-0. **A matmul-only ggml backend.** The measurement makes this the interesting
-   option: cover `MUL_MAT` on the MDLA and let everything else — RMSNorm,
-   attention, the ops NeuronAdapter does not have — fall back to the CPU, with
-   int8 requantisation at load and a compiled-network cache keyed by shape. The
-   open question is not whether the NPU is fast enough. It is whether the
-   per-op crossings and the fallbacks eat a 10x kernel advantage, and that is
-   answerable with a second experiment rather than by argument: run one
-   transformer block end to end, split that way, and compare against the same
-   block on the CPU.
+   immediately. **Checked 2026-09-22: it has not.** The vendored tree has no
+   reference to mediatek, neuropilot, neuron, mdla or apusys anywhere in `ggml/`
+   or `src/`, and upstream's own documentation still says llama.cpp supports
+   three backends on Snapdragon devices, CPU, Adreno GPU and Hexagon NPU, with
+   no MediaTek equivalent. Qualcomm shipped `ggml-hexagon` and runs a Q4_0 GGUF
+   on the NPU directly (Llama-1B: pp128 169 t/s, tg64 51.5 t/s, marked
+   experimental). That is the shape of the thing that would have to exist here,
+   and nobody is building it. Re-check by grepping the submodule rather than by
+   asking.
+0. **A matmul-only ggml backend. Answered 2026-09-22, and the answer is no.**
+   This asked whether per-op crossings would eat the kernel advantage, and
+   proposed a second experiment to find out. The experiment is no longer needed,
+   because the ExecuTorch path has now been measured end to end on this phone
+   and it is the best case a Neuron backend could ever have: the whole graph
+   compiled ahead of time, no per-op crossings at all, weights already in the
+   accelerator's own format. It returns **1.7x on prefill against the app's own
+   CPU path, and decode slower than the CPU**. A matmul-only ggml backend keeps
+   RMSNorm, attention, softmax and RoPE on the CPU and pays quantise-in and
+   dequantise-out twice a layer on top, so it starts below 1.7x and goes down
+   from there. There is no 10x left for the crossings to eat. See
+   [`npu-pd-disaggregation.md`](npu-pd-disaggregation.md).
 2. **LiteRT-LM broadens** to a large model catalogue or accepts GGUF, *and*
    names D9400. Then a "these particular models run on the NPU" mode becomes a
    coherent feature rather than a second app.
