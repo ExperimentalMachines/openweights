@@ -190,12 +190,12 @@ class DisaggregatedExecuTorchBridge(
      * The compiled chunks, the embedding table and the options they were compiled for, or
      * null when this model has no NPU half here.
      *
-     * The directory must also hold [ENABLE_MARKER]. The NPU path is off until the two
-     * halves agree numerically: the handoff itself is sound, and the NPU cache matches the
-     * CPU's at cosine 0.97 to 0.99, but the A16W4 chunks and the 8da4w CPU export differ by
-     * MAE 0.33 to 1.14 on the cached keys, and a decode seeded from them repeats one token
-     * forever. See docs/research/npu-pd-disaggregation.md. Touching the marker turns the
-     * path on for a measurement run without a rebuild.
+     * The directory must also hold [ENABLE_MARKER]. The path answers correctly and is off
+     * on cost, not on correctness: the chunks hold 512 tokens against the roughly 2,050 a
+     * real prompt reaches once the tool prefix is in, and this runner's decode is 13 to 18
+     * tok/s against the 27 the app's own CPU path gets from the same file, which is where
+     * the wall clock goes. See docs/research/npu-pd-disaggregation.md. Touching the marker
+     * turns the path on for a measurement run without a rebuild.
      */
     private fun resolveNpuComponents(modelFile: File): NpuComponents? {
         val parent = modelFile.parentFile ?: return null

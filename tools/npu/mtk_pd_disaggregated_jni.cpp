@@ -458,6 +458,18 @@ public:
 
         prompt_tokens_ = std::move(encode_res.get());
         prompt_len_ = prompt_tokens_.size();
+
+        // The NPU keeps a fixed window and the older tokens roll out of it, so a prompt
+        // longer than the window prefills happily and then hands over a context the CPU
+        // half never saw the start of. The reply that comes back reads fluently and
+        // answers the wrong question, which is the one failure worth refusing outright.
+        if (prompt_len_ > npu_cache_size_) {
+            LOGE("DisaggregatedSession: prompt is %zu tokens and the NPU window is %zu; refusing rather than answering from a truncated prompt",
+                 prompt_len_, npu_cache_size_);
+            prompt_len_ = 0;
+            return 0;
+        }
+
         LOGI("DisaggregatedSession: Starting NPU Prefill for %zu prompt tokens...", prompt_len_);
 
         const size_t batch_size = npu_runtime_.GetTokenBatchSize();
@@ -527,7 +539,10 @@ public:
                 const size_t heads = m.kv_heads;
                 const size_t dim = m.head_dim;
                 const size_t npu_window = npu_cache_size_;
-                if (T > npu_window) continue;
+                if (T > npu_window) {
+                    LOGE("DisaggregatedSession: handoff reached with %zu tokens for a %zu window", T, npu_window);
+                    return;
+                }
                 for (size_t s = 0; s < T; ++s) {
                     const size_t mtk_s = npu_window - T + s;
                     for (size_t h = 0; h < heads; ++h) {
@@ -576,7 +591,11 @@ public:
         stop_requested_ = false;
 
         if (!prefilled_) {
-            Prefill(prompt_text);
+            if (Prefill(prompt_text) == 0 && !stop_requested_) {
+                // Prefill refused or failed. Decoding now would answer from whatever the
+                // caches happen to hold, so the caller is told instead.
+                return {};
+            }
         }
 
         if (stop_requested_) {
@@ -831,6 +850,11 @@ Java_io_github_alpharomercoma_openweights_core_engine_DisaggregatedBridge_native
     jmethodID cb_method = cb_class ? env->GetMethodID(cb_class, "onToken", "(Ljava/lang/String;)Z") : nullptr;
 
     auto result = session->Generate(prompt_str, max_tokens, env, callback, cb_method);
+    if (result.empty()) {
+        // Refused, not finished. Null is what the Kotlin side turns into an exception;
+        // an empty array would read as a turn that ended normally with no tokens.
+        return nullptr;
+    }
 
     jlongArray res_arr = env->NewLongArray(result.size());
     env->SetLongArrayRegion(res_arr, 0, result.size(), reinterpret_cast<const jlong*>(result.data()));

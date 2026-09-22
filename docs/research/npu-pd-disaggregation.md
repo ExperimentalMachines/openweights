@@ -1,26 +1,68 @@
-# NPU prefill, CPU decode: what works and what the handoff costs
+# NPU prefill, CPU decode: what works and what it costs
 
 **Measured 2026-09-22 on the Poco X8 Pro Max, MediaTek MT6991 (Dimensity 9400),
 Android 16 / HyperOS.** Phone awake, unlocked and idle for every timing.
 
 ## Decision
 
-**The path runs and is off.** The NPU half now loads inside the app, prefills a real
-prompt at 148 to 302 tok/s, and hands its state to the CPU half in under a millisecond.
-The reply that comes back is wrong, and the reason is not the plumbing: the compiled
-A16W4 chunks and the 8da4w GPTQ CPU export do not agree closely enough on what a key is
-for one to continue the other's prompt. Turning the path on needs both halves exported
-from the same quantisation, which is exporter work, not app work.
+**It works, and it stays off for now, on cost rather than correctness.** The NPU half
+loads inside the app, prefills at 60 to 327 tok/s, hands its state to the CPU half in
+under a millisecond, and the reply that comes back is correct. Two things stop it being
+worth turning on today:
+
+- **The NPU export holds 512 tokens.** A prompt longer than that prefills and then hands
+  over a window the CPU half never saw the start of, so the runtime refuses it. The app's
+  own prompts run to about 2,050 tokens once the tool prefix is in, which is four times
+  the window.
+- **The decode half of this runner is about half the speed of the app's own CPU path**,
+  13 to 18 tok/s against the 27 tok/s the app gets from the same `.pte`. Decode is where
+  the time goes, so as it stands the whole path is slower end to end than doing nothing.
+
+Neither is a property of the accelerator. The first is an export flag, the second is a
+hand written decode loop that the app's `LlmModule` beats. Both are fixable, and until
+they are there is nothing to switch on.
 
 Against that stands [`npu-prefill-multiturn.md`](npu-prefill-multiturn.md): on 138 real
 turns decode is 60 to 77% of wall time, a turn prefills a median of 50 tokens after cache
 reuse, and the whole offload projects to 1.07x to 1.47x. [`first-turn-latency.md`](first-turn-latency.md)
 then took the one case with a large prefill, the cold first turn, from 18.5 s to under a
-second by warming the prefix. The workload the NPU would help with has already been
-answered twice, so the bar for spending 102 MB of native libraries on this is high.
+second by warming the prefix.
 
-What did come out of it is a crash fix that matters on every MediaTek phone, and five
-defects in the disaggregated runner that would have been charged to the NPU.
+What did come out of it regardless is a crash fix that matters on every MediaTek phone.
+
+## A correction
+
+**An earlier version of this note said the handoff was blocked by a quantisation
+mismatch. That was wrong, and the error was in the test, not the runtime.**
+
+The prompt used was a bare sentence with no chat template. An instruct model given raw
+text simply continues it, and this one degenerates: MediaTek's own runner, NPU prefill
+and NPU decode, no handoff anywhere, answers *" there there there there ..."* to the same
+raw prompt. The CPU half happened to handle it gracefully, so the degeneration was
+charged to the handoff between them.
+
+Under the model's own chat template every configuration answers:
+
+| Path | Reply |
+|---|---|
+| NPU prefill, NPU decode | "The capital of Japan is Tokyo, and it is there because it serves as the political and economic hub of the country." |
+| NPU prefill, handoff, CPU decode | "The capital of Japan is Tokyo, and it serves as the political and economic center of the country." |
+| CPU prefill, CPU decode | "The capital of Japan is Tokyo, which is there because it is the largest and most populous city in the country." |
+
+Four prompts through the disaggregated path, all correct, including "What is 17 times
+24?" answered as 408. **The control that proves the handoff is doing the work**: run the
+same thing with the state handoff skipped and nothing else changed, and the CPU decode
+emits `TheCK::::::::::::`. The transferred state is what makes the reply.
+
+The per layer error is real and was measured correctly: mean absolute error 0.33 to 1.14
+across the six attention layers, 0.011 to 0.19 across the ten conv layers. It is simply
+tolerable. Cosine against the keys the CPU computes for itself is 0.9892 at prompt token
+7 and 0.9746 at token 14, at exactly the right aligned positions the handoff assumes, and
+a decoder continues happily from that.
+
+The lesson is cheap to state and was expensive to learn: **never judge a model's output
+on a prompt that is not in the template it was trained for**, and when two halves are
+being compared, test each half alone before blaming the seam.
 
 ## The app could not load the NeuroPilot adapter at all
 
@@ -93,6 +135,10 @@ options, and guessing them is not a small error.** With 16 heads and int16 the p
 predicted token 0 and token 2, which are padding and end of turn. With the manifest's 32
 heads and fp32 it predicts ordinary words.
 
+The pinning was worth keeping, which is not what was expected. Measured both ways on the
+same prompt: pinned 13.02 tok/s, unpinned 10.58 tok/s. The core is still chosen from the
+kernel's capacity table rather than by name.
+
 ## What the handoff actually does
 
 The NPU keeps every state tensor in one shape, `[1, 8, 512, 64]`, 1 MB each, eight slots
@@ -106,47 +152,34 @@ cache is still zero, and those ten are at exactly the chunk offsets of the model
 conv layers. Treating the slots as per layer K/V pairs instead reads an untouched slot,
 so the layout is all K then all V.
 
-Timing, 16 layers, 15 to 205 token prompts:
-
 | Stage | Measured |
 |---|---|
 | NPU chunk load | 1.2 to 1.6 s |
 | CPU module load | 16.5 to 17.2 s |
-| NPU prefill | 334 to 794 ms, 148 to 302 tok/s |
-| State handoff | 0.09 to 0.72 ms |
-| CPU decode | 16.6 to 17.8 tok/s, 58 to 60 ms a token |
+| NPU prefill | 60 to 327 tok/s, rising with prompt length |
+| State handoff | 0.09 to 0.75 ms |
+| CPU decode, this runner | 13 to 18 tok/s |
+| NPU decode, MediaTek's runner | 10.5 to 11.2 tok/s |
+| CPU decode, the app's own path, same `.pte` | 27 tok/s |
+| CPU prefill, the app's own path, same `.pte` | 188 tok/s |
 
-The handoff is free. That was the thing worth knowing and it is true.
+Two readings matter. **Splitting the work the right way round is confirmed**: CPU decode
+beats NPU decode on the same model, so prefill on the accelerator and decode on the CPU
+is the correct split, not the reverse. And **the prefill win is 1.7x, not the 5x the raw
+NPU number suggests**, because the comparison that counts is against the app's own
+KleidiAI prefill at 188 tok/s, not against nothing.
 
-## Why the reply is still wrong
+## The 512 token window
 
-Same runner, same prompt, same decode loop, one flag apart:
+The chunks are compiled at `cache_size=512`; the export report records it as "forced with
+`--context` (static NPU graphs)". A 1,098 token prompt prefills on the NPU at 326.9 tok/s
+and then cannot be handed over: the older tokens have rolled out of the window, so the
+CPU half would answer from the tail of the prompt alone.
 
-- CPU prefill, no handoff: *"The capital of Japan is Tokyo, which is there because it is
-  the largest and most populous city in the country, serving as the political, economic,
-  and cultural center."*
-- NPU prefill, handoff, CPU decode: *" there there there there there ..."* to the token
-  limit.
-
-The caches are the same quantity and the alignment is right. Comparing the transferred
-keys against the ones the CPU computes for itself, position by position, cosine is
-**0.9892 at prompt token 7 and 0.9746 at token 14**, both at exactly the right aligned
-position the handoff assumes. So the design holds.
-
-What does not hold is the agreement. Mean absolute error on the same keys is **0.33 to
-1.14 across the six attention layers** and 0.011 to 0.19 across the ten conv layers,
-growing with depth, on values whose own scale is about 1. Prompt token 0 is worse again,
-cosine 0.39, and restoring it from the CPU's own state changes nothing about the reply,
-so the attention sink is not carrying this on its own.
-
-That gap is what an A16W4 NeuroPilot compilation and an 8da4w GPTQ XNNPACK export
-disagree by. Four bit weights on one side and a different four bit grid on the other do
-not produce the same key for the same token, and a decoder asked to continue from keys
-that are 30% off gives up and repeats itself.
-
-**The fix is an export, not a patch.** Both halves have to come from one quantisation
-before the handoff can be judged again. Until then the numbers above are what the path
-costs, not what it is worth.
+**The runtime now refuses that rather than answering.** A fluent reply to a question the
+model only half read is the worst failure available here, worse than an error, so
+`Prefill` returns zero and the bridge raises instead of decoding from a truncated
+context. Reopening this needs an export at a window that covers a real prompt.
 
 ## How it is wired, and how to turn it on
 
@@ -156,15 +189,13 @@ are git ignored: 102 MB of vendor and generated binaries do not belong in this r
 
 | File | Size | Where it comes from |
 |---|---|---|
-| `libexecutorch_pd_jni.so` | 23.6 MB stripped | `ninja executorch_pd_jni` in the ExecuTorch tree, from `examples/mediatek/executor_runner/mtk_pd_disaggregated_jni.cpp` |
+| `libexecutorch_pd_jni.so` | 23.6 MB stripped | `ninja executorch_pd_jni` in the ExecuTorch tree, from `tools/npu/mtk_pd_disaggregated_jni.cpp` |
 | `libneuron_backend.so` | 77.8 MB | `ninja neuron_backend`, ExecuTorch `backends/mediatek` |
 | `libneuron_buffer_allocator.so` | 771 KB | NeuroPilot Express SDK 8.0.8-build20250925, verbatim |
 | `libneuronusdk_adapter.mtk.so` | not shipped | the phone's own, from `/system_ext/lib64` |
 
 Even in a debug build the path stays on the CPU until an `enable-pd` file sits beside the
-chunks. That is deliberate: the reply is wrong, and a wrong reply that reads fluently is
-worse than no feature. Touching the marker turns it on for one measurement run without a
-rebuild.
+chunks. Touching the marker turns it on for a measurement run without a rebuild.
 
 Chunks are found beside the model first. A staging directory under
 `/data/local/tmp/mtk_models` is also searched, because on this ROM a file pushed into
@@ -172,9 +203,10 @@ Chunks are found beside the model first. A staging directory under
 directory is a bind mount that never picks up shell's writes, and a pushed chunk set can
 only be read from there. That cost an hour before it was believed, so it is written down.
 
-## What would reopen this
+## What would turn it on
 
-- Both halves exported from one quantisation, and the per layer MAE above falling far
-  enough that the CPU decode continues the NPU's prompt.
-- A workload where prefill is not a median of 50 tokens. There is not one in the app
-  today; the warm prefix removed the only one there was.
+- An export whose window covers a real prompt, so the 512 token refusal stops firing.
+- A decode loop that matches the app's own 27 tok/s rather than 13 to 18, since decode is
+  most of the wall clock and the path cannot win while it loses there.
+- Then the 1.7x prefill against the app's CPU path, measured on real multi turn traffic
+  rather than on single questions, against the 1.07x to 1.47x ceiling already on file.
