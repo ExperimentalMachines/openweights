@@ -353,11 +353,210 @@ index 04d465d..227ebda 100644
 +  )
  endif()
 +
+diff --git a/examples/mediatek/executor_runner/llama_runner/LlamaModelChunk.cpp b/examples/mediatek/executor_runner/llama_runner/LlamaModelChunk.cpp
+index 8f4c74c..7253f39 100644
+--- a/examples/mediatek/executor_runner/llama_runner/LlamaModelChunk.cpp
++++ b/examples/mediatek/executor_runner/llama_runner/LlamaModelChunk.cpp
+@@ -115,10 +115,50 @@ void LlamaModelChunk::defineIOs() {
+   defineInput(IOKind::Mask);
+   defineInput(IOKind::SWAMask, enableSWA);
+   defineInput(IOKind::RotEmb, kRotEmbInputCount);
+-  defineInput(IOKind::KVCache, kCacheCount);
++  mHasConvInputs = DetectConvInputs(mExpectedNumInputs);
++  if (mHasConvInputs) {
++    defineInput(IOKind::ConvValid);
++    defineInput(IOKind::ConvSelect);
++  }
++  // The states are whatever inputs remain. A hybrid export's chunks do not all carry the same
++  // number (a conv layer has one state, an attention layer a K and a V), so the count comes
++  // from the model rather than from 2 * num_layer / num_chunk.
++  const size_t numModelInputs = GetModelMethod().inputs_size();
++  ET_CHECK_MSG(
++      numModelInputs > mExpectedNumInputs,
++      "Model has %zu inputs, none left for states after %zu",
++      numModelInputs,
++      mExpectedNumInputs);
++  mCacheCount = numModelInputs - mExpectedNumInputs;
++  if (mCacheCount != kCacheCount) {
++    ET_LOG(
++        Info,
++        "Chunk takes %zu states (a uniform cache layout would be %zu)",
++        mCacheCount,
++        kCacheCount);
++  }
++  defineInput(IOKind::KVCache, mCacheCount);
+   // Outputs
+   defineOutput(IOKind::Logits);
+-  defineOutput(IOKind::KVCache, kCacheCount);
++  defineOutput(IOKind::KVCache, mCacheCount);
++}
++
++bool LlamaModelChunk::DetectConvInputs(const size_t firstIndex) {
++  // [1, t, 1] then [1, t + s, s]: nothing else a llama chunk takes after its rotary
++  // embedding looks like this, since a cache is 4-D.
++  const auto method_meta = GetModelMethod().method_meta();
++  if (firstIndex + 1 >= method_meta.num_inputs()) {
++    return false;
++  }
++  const auto valid = method_meta.input_tensor_meta(firstIndex);
++  const auto select = method_meta.input_tensor_meta(firstIndex + 1);
++  if (!valid.ok() || !select.ok()) {
++    return false;
++  }
++  const auto v = valid->sizes();
++  const auto s = select->sizes();
++  return v.size() == 3 && v[0] == 1 && v[2] == 1 && s.size() == 3 && s[0] == 1 &&
++      s[2] >= 1 && s[1] == v[1] + s[2];
+ }
+ 
+ void LlamaModelChunk::defineInput(const IOKind kind, const size_t count) {
+@@ -287,7 +327,7 @@ void LlamaModelChunk::LeftPaddingCachePostprocess() {
+   const size_t zeroCount = mCurrentPadSize * strideSizeBytes;
+ 
+   // Fill padded sections with zeros
+-  for (const auto cacheInputIdx : getInputIndexes(IOKind::KVCache)) {
++  for (const auto cacheInputIdx : mAttnCacheInputIndexes) {
+     auto cacheBuffer =
+         reinterpret_cast<char*>(mInputBufferInfos[cacheInputIdx].data);
+     for (size_t rowIdx = 0; rowIdx < numRows; rowIdx++) {
+@@ -327,8 +367,10 @@ void LlamaModelChunk::RollbackCache(
+   const size_t rowSize = kCacheLength * strideSizeBytes;
+   const size_t numRows = GetCacheNumRows();
+ 
+-  // Shift right and truncate rollbackTokCount, then fill left with zeros
+-  for (const auto cacheInputIdx : getInputIndexes(IOKind::KVCache)) {
++  // Shift right and truncate rollbackTokCount, then fill left with zeros. Only the attention
++  // caches: a conv state holds the last real positions already (UpdateConvInputs), and
++  // shifting it would move them out.
++  for (const auto cacheInputIdx : mAttnCacheInputIndexes) {
+     auto cacheBuffer =
+         reinterpret_cast<char*>(mInputBufferInfos[cacheInputIdx].data);
+ 
+@@ -401,6 +443,7 @@ size_t LlamaModelChunk::GetTokenIndex() const {
+ 
+ void LlamaModelChunk::Run() {
+   UpdatePosEmbAndMask(mTokenBatchSize);
++  UpdateConvInputs();
+   ModelChunk::Run();
+   PaddingPostprocess();
+   AdvanceTokenIndex();
+@@ -432,16 +475,82 @@ void LlamaModelChunk::SetPosEmbed(const size_t tokenIndex) {
+ }
+ 
+ void LlamaModelChunk::PrepareCacheIOs() {
+-  // Get cache shape
+   const auto method_meta = GetModelMethod().method_meta();
+-  const auto firstInCacheIdx = getInputIndex(IOKind::KVCache);
+-  mCacheShape = method_meta.input_tensor_meta(firstInCacheIdx)->sizes();
+-
+-  // Link cache IOs
+   const size_t numCaches = getNumInputsFor(IOKind::KVCache);
++  mStateInputs.clear();
++  mAttnCacheInputIndexes.clear();
++  bool haveCacheShape = false;
+   for (size_t i = 0; i < numCaches; i++) {
+-    this->LinkModelIO(
+-        getInputIndex(IOKind::KVCache, i), getOutputIndex(IOKind::KVCache, i));
++    const auto inputIdx = getInputIndex(IOKind::KVCache, i);
++    const auto sizes = method_meta.input_tensor_meta(inputIdx)->sizes();
++    const bool isAttentionCache = sizes.size() == 4 &&
++        static_cast<size_t>(sizes[kCacheLengthDim]) == kCacheLength;
++    mStateInputs.push_back({inputIdx, isAttentionCache});
++    if (isAttentionCache) {
++      mAttnCacheInputIndexes.push_back(inputIdx);
++      // Every attention cache has this shape; padding and rollback stride by it.
++      if (!haveCacheShape) {
++        mCacheShape = sizes;
++        haveCacheShape = true;
++      }
++    }
++    // A state is updated in place: its output shares the input's buffer.
++    this->LinkModelIO(inputIdx, getOutputIndex(IOKind::KVCache, i));
++  }
++  ET_CHECK_MSG(
++      haveCacheShape,
++      "None of the %zu states has the %zu-token window on axis %zu; is --cache_size right?",
++      numCaches,
++      kCacheLength,
++      kCacheLengthDim);
++  if (mAttnCacheInputIndexes.size() != numCaches || mHasConvInputs) {
++    ET_LOG(
++        Info,
++        "Chunk states: %zu attention caches, %zu recurrent states, conv inputs %s",
++        mAttnCacheInputIndexes.size(),
++        numCaches - mAttnCacheInputIndexes.size(),
++        mHasConvInputs ? "yes" : "no");
++  }
++}
++
++void LlamaModelChunk::UpdateConvInputs() {
++  if (!mHasConvInputs) {
++    return;
++  }
++  // Real tokens are [left, t - right). A conv mixes neighbouring positions and has no mask,
++  // so the pads are zeroed before it (valid), and the next state is taken at the last real
++  // positions (select), which on a right-padded batch are not the batch's last positions.
++  const size_t t = mTokenBatchSize;
++  const size_t left = GetLeftPadding();
++  const size_t right = GetRightPadding();
++  const auto method_meta = GetModelMethod().method_meta();
++  const auto validIdx = getInputIndex(IOKind::ConvValid);
++  const auto selectIdx = getInputIndex(IOKind::ConvSelect);
++  const auto selectSizes = method_meta.input_tensor_meta(selectIdx)->sizes();
++  const size_t rows = static_cast<size_t>(selectSizes[1]);
++  const size_t cols = static_cast<size_t>(selectSizes[2]);
++  ET_CHECK_MSG(rows == t + cols, "Conv select input is %zu rows for a %zu-token batch", rows, t);
++
++  auto fill = [&](auto zero, auto one) {
++    using T = decltype(zero);
++    auto valid = reinterpret_cast<T*>(mInputBufferInfos[validIdx].data);
++    for (size_t i = 0; i < t; i++) {
++      valid[i] = (i >= left && i < t - right) ? one : zero;
++    }
++    auto select = reinterpret_cast<T*>(mInputBufferInfos[selectIdx].data);
++    std::fill(select, select + rows * cols, zero);
++    const size_t end = t - right;
++    for (size_t j = 0; j < cols; j++) {
++      select[(end + j) * cols + j] = one;
++    }
++  };
++  const auto type = method_meta.input_tensor_meta(validIdx)->scalar_type();
++  if (type == executorch::aten::ScalarType::Float) {
++    fill(0.0f, 1.0f);
++  } else if (type == executorch::aten::ScalarType::Half) {
++    fill(static_cast<__fp16>(0.0f), static_cast<__fp16>(1.0f));
++  } else {
++    ET_LOG(Fatal, "Unsupported conv input type %d", static_cast<int>(type));
+   }
+ }
+ 
 diff --git a/examples/mediatek/executor_runner/llama_runner/LlamaModelChunk.h b/examples/mediatek/executor_runner/llama_runner/LlamaModelChunk.h
-index d8cf08e..66a6b4f 100644
+index d8cf08e..62245d8 100644
 --- a/examples/mediatek/executor_runner/llama_runner/LlamaModelChunk.h
 +++ b/examples/mediatek/executor_runner/llama_runner/LlamaModelChunk.h
-@@ -84,6 +84,33 @@ class LlamaModelChunk : public ModelChunk {
+@@ -47,7 +47,20 @@ class LlamaModelChunk : public ModelChunk {
+     Logits,
+ 
+     // Cache Eviction
+-    Attention
++    Attention,
++
++    // A hybrid export's conv layers: which positions are real tokens, and which state-padded
++    // positions become the next state (LFM2, see UpdateConvInputs).
++    ConvValid,
++    ConvSelect
++  };
++
++  // One per state input, in the order the export takes them. An attention cache has the
++  // window on its length axis; anything else is a recurrent state (an LFM2 conv layer's two
++  // positions), which is carried whole from call to call and never shifted or rolled back.
++  struct StateInput {
++    size_t inputIndex;
++    bool isAttentionCache;
+   };
+ 
+  private:
+@@ -84,6 +97,39 @@ class LlamaModelChunk : public ModelChunk {
  
    size_t GetTokenIndex() const;
  
@@ -387,11 +586,28 @@ index d8cf08e..66a6b4f 100644
 +  size_t GetCacheLength() const {
 +    return kCacheLength;
 +  }
++  const std::vector<StateInput>& GetStateInputs() const {
++    return mStateInputs;
++  }
++  bool HasConvInputs() const {
++    return mHasConvInputs;
++  }
 +
   private:
    void SetPosEmbed(const size_t tokenIndex);
  
-@@ -118,18 +145,6 @@ class LlamaModelChunk : public ModelChunk {
+@@ -93,6 +139,10 @@ class LlamaModelChunk : public ModelChunk {
+ 
+   void PrepareCacheIOs();
+ 
++  bool DetectConvInputs(const size_t firstIndex);
++
++  void UpdateConvInputs();
++
+   size_t GetCacheStrideSize() const;
+ 
+   size_t GetCacheNumRows() const;
+@@ -118,18 +168,6 @@ class LlamaModelChunk : public ModelChunk {
    void defineInput(const IOKind kind, const size_t count = 1);
    void defineOutput(const IOKind kind, const size_t count = 1);
  
@@ -410,6 +626,17 @@ index d8cf08e..66a6b4f 100644
    void CheckIoCount();
  
   private:
+@@ -145,6 +183,10 @@ class LlamaModelChunk : public ModelChunk {
+ 
+   // Cache
+   TensorShape mCacheShape;
++  std::vector<StateInput> mStateInputs;
++  std::vector<size_t> mAttnCacheInputIndexes;
++  size_t mCacheCount = 0;
++  bool mHasConvInputs = false;
+   const LLMType kCacheType;
+   const size_t kMaxTokenLength;
+   const size_t kCacheLength;
 diff --git a/examples/mediatek/executor_runner/llama_runner/LlamaRuntime.h b/examples/mediatek/executor_runner/llama_runner/LlamaRuntime.h
 index fc2fca2..7026a7d 100644
 --- a/examples/mediatek/executor_runner/llama_runner/LlamaRuntime.h

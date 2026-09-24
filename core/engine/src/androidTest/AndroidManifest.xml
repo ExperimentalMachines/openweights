@@ -12,6 +12,34 @@
         <uses-native-library
             android:name="libapuwareutils.mtk.so"
             android:required="false" />
+        <!-- The rest of the app's list (app/src/main/AndroidManifest.xml), so
+             DisaggregatedOnDeviceTest can reach the NPU from this APK: without the adapter
+             named here the Neuron backend is refused with "not accessible for the namespace
+             clns-N" and the test sees no NPU at all. -->
+        <uses-native-library
+            android:name="libneuronusdk_adapter.mtk.so"
+            android:required="false" />
+        <uses-native-library
+            android:name="libapuwareapusys_v2.mtk.so"
+            android:required="false" />
+        <uses-native-library
+            android:name="libapuwareapusys.mtk.so"
+            android:required="false" />
+        <uses-native-library
+            android:name="libapuwarexrp_v2.mtk.so"
+            android:required="false" />
+        <uses-native-library
+            android:name="libapuwarexrp.mtk.so"
+            android:required="false" />
+        <uses-native-library
+            android:name="libapuwarehmp.mtk.so"
+            android:required="false" />
+        <uses-native-library
+            android:name="libapuwareaiste.mtk.so"
+            android:required="false" />
+        <uses-native-library
+            android:name="libneuron_sys_util.mtk.so"
+            android:required="false" />
 
         <!-- Holds the foreground while PdDecodeProbe runs: the boost it measures was applied
              only to the top app, so an instrumentation process with nothing on screen would

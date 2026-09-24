@@ -266,6 +266,9 @@ struct LayerMapping {
     // at several context lengths and the cache tensor grows with the window.
     size_t kv_heads;
     size_t head_dim;
+    // The conv state is its own [1, dim, 2] tensor on the NPU (the corrected export), rather
+    // than the first rows of a window-sized K cache (the first LFM2 exports).
+    bool conv_state_own_tensor;
 };
 
 namespace {
@@ -298,7 +301,58 @@ std::vector<size_t> attention_layers(size_t num_layers) {
 
 } // namespace
 
-static std::vector<LayerMapping> build_layer_mappings(size_t num_chunks, Method* cpu_method) {
+// Where each layer's state sits on the NPU, per chunk: the position of its state (or K) and
+// of its V among the chunk's KVCache inputs.
+struct NpuSlot {
+    size_t chunk;
+    size_t k;
+    size_t v;
+    bool attention;
+};
+
+// The corrected LFM2 export takes its states per layer, in layer order: one [1, dim, 2] conv
+// state per conv layer, a K then a V per attention layer, and each chunk reports which input
+// is which. The first LFM2 exports kept MediaTek's uniform layout, every K of the chunk then
+// every V, with the conv state hidden in the first rows of a window-sized K; for those the
+// layer types come from the known pattern instead.
+static std::vector<NpuSlot> npu_slots(
+        const std::vector<std::unique_ptr<example::ModelChunk>>& npu_chunks, size_t num_layers) {
+    std::vector<NpuSlot> slots;
+    bool per_layer = false;
+    for (const auto& c : npu_chunks) {
+        per_layer = per_layer || static_cast<LlamaModelChunk*>(c.get())->HasConvInputs();
+    }
+    if (per_layer) {
+        for (size_t c = 0; c < npu_chunks.size(); ++c) {
+            const auto& states = static_cast<LlamaModelChunk*>(npu_chunks[c].get())->GetStateInputs();
+            for (size_t i = 0; i < states.size();) {
+                if (!states[i].isAttentionCache) {
+                    slots.push_back({c, i, 0, false});
+                    i += 1;
+                } else if (i + 1 < states.size() && states[i + 1].isAttentionCache) {
+                    slots.push_back({c, i, i + 1, true});
+                    i += 2;
+                } else {
+                    LOGE("DisaggregatedSession: chunk %zu state %zu is a K without a V", c, i);
+                    return {};
+                }
+            }
+        }
+        return slots;
+    }
+    const std::vector<size_t> attn_layers = attention_layers(num_layers);
+    if (attn_layers.empty() || npu_chunks.empty()) return {};
+    const size_t layers_per_chunk = (num_layers + npu_chunks.size() - 1) / npu_chunks.size();
+    for (size_t l = 0; l < num_layers; ++l) {
+        const size_t layer_in_chunk = l % layers_per_chunk;
+        const bool is_attn = std::find(attn_layers.begin(), attn_layers.end(), l) != attn_layers.end();
+        slots.push_back({l / layers_per_chunk, layer_in_chunk, layers_per_chunk + layer_in_chunk, is_attn});
+    }
+    return slots;
+}
+
+static std::vector<LayerMapping> build_layer_mappings(
+        const std::vector<std::unique_ptr<example::ModelChunk>>& npu_chunks, Method* cpu_method) {
     std::vector<LayerMapping> mappings;
 
     std::vector<size_t> conv_indices;
@@ -335,59 +389,40 @@ static std::vector<LayerMapping> build_layer_mappings(size_t num_chunks, Method*
     }
 
     const size_t num_layers = conv_indices.size() + attn_k_indices.size();
-    const std::vector<size_t> attn_layers = attention_layers(num_layers);
-
     LOGI("DisaggregatedSession: state block has %zu conv, %zu K/V pairs (%zu heads x %zu dim), %zu layers",
          conv_indices.size(), attn_k_indices.size(), kv_heads, head_dim, num_layers);
 
-    if (attn_layers.size() != attn_k_indices.size() ||
-        attn_k_indices.size() != attn_v_indices.size()) {
+    const std::vector<NpuSlot> slots = npu_slots(npu_chunks, num_layers);
+    size_t npu_attn = 0;
+    for (const auto& slot : slots) npu_attn += slot.attention ? 1 : 0;
+    if (attn_k_indices.size() != attn_v_indices.size() || slots.size() != num_layers ||
+        npu_attn != attn_k_indices.size()) {
         // A layout this runtime has not been measured against. Handing off a partial state
         // would answer from a prompt the CPU half never saw, which reads as a fluent
         // non-sequitur rather than as a failure, so nothing is handed off at all and the
         // caller falls back to the plain CPU runtime.
-        LOGE("DisaggregatedSession: unrecognised state layout (%zu conv, %zu K, %zu V); no handoff",
-             conv_indices.size(), attn_k_indices.size(), attn_v_indices.size());
+        LOGE("DisaggregatedSession: unrecognised state layout (CPU %zu conv, %zu K, %zu V; NPU %zu layers, %zu attention); no handoff",
+             conv_indices.size(), attn_k_indices.size(), attn_v_indices.size(), slots.size(), npu_attn);
         return mappings;
     }
 
+    const bool own_tensor = !slots.empty() &&
+        static_cast<LlamaModelChunk*>(npu_chunks.front().get())->HasConvInputs();
     mappings.reserve(num_layers);
-    const size_t layers_per_chunk = (num_layers + num_chunks - 1) / num_chunks;
     size_t conv_ptr = 0;
     size_t attn_ptr = 0;
-
     for (size_t l = 0; l < num_layers; ++l) {
-        const size_t chunk = l / layers_per_chunk;
-        const size_t layer_in_chunk = l % layers_per_chunk;
-        const size_t chunk_k = layer_in_chunk;
-        const size_t chunk_v = layers_per_chunk + layer_in_chunk;
-        const bool is_attn =
-            std::find(attn_layers.begin(), attn_layers.end(), l) != attn_layers.end();
-
-        if (is_attn) {
+        const NpuSlot& slot = slots[l];
+        if (slot.attention) {
             mappings.push_back({
-                LayerMapping::Type::Attention,
-                l,
-                chunk,
-                chunk_k,
-                chunk_v,
-                attn_k_indices[attn_ptr],
-                attn_v_indices[attn_ptr],
-                kv_heads,
-                head_dim,
+                LayerMapping::Type::Attention, l, slot.chunk, slot.k, slot.v,
+                attn_k_indices[attn_ptr], attn_v_indices[attn_ptr], kv_heads, head_dim, own_tensor,
             });
             attn_ptr++;
         } else {
             mappings.push_back({
-                LayerMapping::Type::ShortConv,
-                l,
-                chunk,
-                chunk_k,
-                0,
-                conv_indices[conv_ptr],
-                0,
-                kv_heads,
-                head_dim,
+                LayerMapping::Type::ShortConv, l, slot.chunk, slot.k, 0,
+                conv_indices[conv_ptr], 0, kv_heads, head_dim, own_tensor,
             });
             conv_ptr++;
         }
@@ -398,7 +433,15 @@ static std::vector<LayerMapping> build_layer_mappings(size_t num_chunks, Method*
 class DisaggregatedSession {
 public:
     DisaggregatedSession() : stop_requested_(false), prefilled_(false), prompt_len_(0), first_output_token_(0) {}
-    ~DisaggregatedSession() = default;
+    // MediaTek's LlamaRuntime and ModelChunk destructors are empty: only Release() frees the
+    // compiled networks and the NPU buffers. Without it every session leaked its NPU half, and
+    // the engine reopens a session per conversation, so the fourth question of a test run had
+    // the low-memory killer take the process with 1.4 GB swapped (2026-09-24).
+    ~DisaggregatedSession() {
+        if (npu_initialized_) {
+            npu_runtime_.Release();
+        }
+    }
 
     bool Load(
         const std::string& runner_options_json,
@@ -473,6 +516,7 @@ public:
         LOGI("DisaggregatedSession: Initializing NPU Runtime with %zu chunks...", num_chunks_);
         auto npu_start = std::chrono::high_resolution_clock::now();
         npu_runtime_.Initialize(npu_options, npu_paths);
+        npu_initialized_ = true;
         auto npu_end = std::chrono::high_resolution_clock::now();
         double npu_sec = std::chrono::duration<double>(npu_end - npu_start).count();
         LOGI("DisaggregatedSession: NPU Runtime initialized in %.2f s", npu_sec);
@@ -501,7 +545,7 @@ public:
         double cpu_sec = std::chrono::duration<double>(cpu_end - cpu_start).count();
         LOGI("DisaggregatedSession: CPU Module initialized in %.2f s", cpu_sec);
 
-        layer_mappings_ = build_layer_mappings(num_chunks_, cpu_method_);
+        layer_mappings_ = build_layer_mappings(npu_runtime_.GetModelChunks(), cpu_method_);
         LOGI("DisaggregatedSession: Built %zu layer mappings for state handoff", layer_mappings_.size());
         if (layer_mappings_.empty()) {
             LOGE("DisaggregatedSession: no state handoff is possible for this export");
@@ -666,17 +710,21 @@ public:
                 float* cpu_conv_ptr = cpu_conv_tensor.mutable_data_ptr<float>();
                 const float* src_conv = reinterpret_cast<const float*>(mtk_conv_ptr);
 
-                // The conv state sits in the same fixed-window buffer as a cache, one
-                // contiguous window per head. Bounded by the CPU tensor so a model whose
-                // hidden size does not happen to equal heads times window cannot overrun.
-                const size_t window = npu_cache_size_;
-                const size_t stride = window * m.head_dim;
                 const size_t capacity = static_cast<size_t>(cpu_conv_tensor.numel());
-                size_t written = 0;
-                for (size_t h = 0; h < m.kv_heads && written < capacity; ++h) {
-                    const size_t n = std::min(window, capacity - written);
-                    std::memcpy(cpu_conv_ptr + written, src_conv + h * stride, n * sizeof(float));
-                    written += n;
+                if (m.conv_state_own_tensor) {
+                    // [1, dim, 2] on both sides, the same order: one copy.
+                    const size_t npu_bytes = llama_chunk->GetInputBuffer(conv_in_idx).nbytesUsed;
+                    std::memcpy(cpu_conv_ptr, src_conv, std::min(npu_bytes, capacity * sizeof(float)));
+                } else {
+                    // The first LFM2 exports kept the state in the first rows of each head's
+                    // window of a K cache: capacity / heads floats per head, at a stride of the
+                    // window. Copying a whole window per head, as this did, was only right when
+                    // the window happened to be 512 (8 rows of 64).
+                    const size_t per_head = capacity / m.kv_heads;
+                    const size_t stride = npu_cache_size_ * m.head_dim;
+                    for (size_t h = 0; h < m.kv_heads; ++h) {
+                        std::memcpy(cpu_conv_ptr + h * per_head, src_conv + h * stride, per_head * sizeof(float));
+                    }
                 }
             }
         }
@@ -876,6 +924,7 @@ private:
     size_t vocab_size_ = 128000;
 
     size_t npu_cache_size_ = 512;
+    bool npu_initialized_ = false;
     // How far into the CPU caches the last turn wrote. Zeroing the whole tensor would be
     // seven hundred megabytes of memset per reset at 32k, for a prompt of a few hundred.
     size_t cache_high_water_ = 0;
