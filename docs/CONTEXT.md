@@ -25,10 +25,14 @@ compaction and truthful reporting of tool outcomes failed captured acceptance ca
 The full artifact identity, measurements, approval review and limitations are in
 [`research/repo-audit-2026-09-17.md`](research/repo-audit-2026-09-17.md#on-device-acceptance-follow-up-2026-09-21).
 
-Model-side archives and the verified Hugging Face mirror are now outside the app repository,
+Model-side archives and the verified Hugging Face mirror are outside the app repository,
 under `~/ow-models/benchmarks/` and `~/ow-models/hf-mirror/`. Commit `e3db3de5` removed the
-tracked Qualcomm artifacts without rewriting published history. Artifact presence or
-checksum agreement proves provenance, not model-quality approval.
+tracked Qualcomm artifacts without rewriting published history; on 2026-09-24 those 190 files
+came back to `tools/eval/results/` (the three raw logcats xz-compressed, like every other
+logcat there), because the public benchmark matrix's Snapdragon 8 Elite columns could not be
+regenerated from a clone without them. The quantization lab and the consolidated Qualcomm
+archive's other material stay outside. Artifact presence or checksum agreement proves
+provenance, not model-quality approval.
 
 ## What this project is
 

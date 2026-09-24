@@ -21,8 +21,10 @@ Model-side `tools/executorch/quantlab/` sources moved to
 `~/ow-models/benchmarks/quantlab/results/`. Short `quantlab/` references below name the
 corresponding source or result within that external archive. Qualcomm/Firebase benchmark
 captures live in `~/ow-models/benchmarks/qualcomm-2026-09/` and the preserved legacy
-trees, not in the application checkout. These local archives are required to reproduce
-the historical tables; a clone of this repository alone does not contain them.
+trees. The Snapdragon 8 Elite files commit `e3db3de5` removed from `tools/eval/results/`
+(the public-benchmark runs, the decision-suite rows and their logs) were restored there on
+2026-09-24; the quantlab tables below still need the local archives, which a clone of this
+repository does not contain.
 Archived scripts retain their historical relative paths; they are provenance, not a
 drop-in replacement for the current standalone exporter.
 
