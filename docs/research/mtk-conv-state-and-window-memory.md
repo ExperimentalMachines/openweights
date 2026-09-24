@@ -1,6 +1,6 @@
 # The MediaTek LFM2 export: its conv state, the runner's pads, and what a window costs
 
-Dated 2026-09-24. Poco X8 Pro Max (MediaTek MT6991, Dimensity 9400, 11.5 GB), screen on, charging.
+Dated 2026-09-24. Poco X8 Pro Max (MediaTek Dimensity 9500s, platform MT6991, 11.5 GB), screen on, charging.
 LFM2.5-1.2B-Instruct at revision 0f604ada, A16W8, four chunks. Exports from
 `executorch-model-exporter` branch `mtk-conv-state`; the MediaTek runner and the app's
 disaggregated library built from ExecuTorch release/1.4 with `tools/npu/patches/executorch-release-1.4-pd.patch`.
