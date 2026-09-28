@@ -1,9 +1,10 @@
 # Play Store release checklist
 
 What is verified before a bundle goes up, and what the Console needed the first time. The
-app is live at <https://play.google.com/store/apps/details?id=io.github.alpharomercoma.openweights>;
-each release is built and uploaded by hand from this checkout. Every claim below was
-checked against the build rather than assumed.
+app is live at <https://play.google.com/store/apps/details?id=io.github.alpharomercoma.openweights>.
+Every release until 2026-09-28 was built and uploaded by hand from this checkout; since then
+the Release workflow can do it (below, "Releasing from GitHub Actions"). Every
+claim below was checked against the build rather than assumed.
 
 ## Verified in the build
 
@@ -384,12 +385,98 @@ The build therefore refuses a shallow clone rather than believing it, and the wo
 for `fetch-depth: 0`. Release from `main`: the count is per branch, and a branch with fewer
 commits builds a lower code, which Play rejects rather than accepts.
 
-### Automating the upload itself
+## Releasing from GitHub Actions
 
-Not done, and it is a separate job from the version code. The shape is a workflow triggered
-by a tag, which builds the bundle and hands it to Play, and it needs two secrets this
-repository deliberately does not have: the upload keystore, and a Play service account key
-with release permissions. Both are worth adding now that releases recur; every upload so far has been by hand.
+`.github/workflows/release.yml`, started by hand: Actions, **Release**, **Run workflow**. It
+builds main as it is at that moment, and it takes four inputs: the track (internal, closed
+testing `alpha`, open testing `beta`, or production), the rollout percentage (below 100 is a
+staged rollout), the What's new text (optional), and a dry run switch.
+
+It runs in two jobs.
+
+1. **prepare** asks Play which version code each track is serving, and stops within seconds
+   if main's code is not higher than every code Play has, or if nothing has changed. It then
+   writes the release notes (below), builds `:app:bundleRelease` with the upload key,
+   which runs `verifyJniSymbols` on the bundle as it always does, checks the bundle is
+   signed, and keeps the bundle, `mapping.txt` and the notes as the run's artifact. The run's
+   summary page shows the notes, the commits they came from, and the SHA-256 of the signing
+   certificate, which must match the upload certificate in the Console.
+2. **publish** uploads the bundle and the R8 mapping file, puts the release on the track
+   with the notes, and commits the edit. For production it waits first: the job runs in
+   the `play-production` environment, which needs an approval, so nothing reaches users
+   until somebody has read the summary and pressed Approve. The testing tracks go straight
+   through (`play-testing`, no approval). A dry run stops before this job and uploads nothing.
+
+### Where "what changed" comes from
+
+There is no tag to remember and no changelog file to keep. The version code is the commit
+count on main, so the code a track is serving names the commit it was built from, and the
+release is every commit after it. `tools/release/play.py notes` reads the track's code from
+Play (the completed release, or a staged one if nothing on the track completed; production
+stands in for a testing track that has never had a release), finds that commit on main, and
+lists everything since.
+
+The text users see comes from one of two places. Typed into the whats_new box, it is used as
+it is (`\n` between lines, since the box is one line). Left empty, Claude (`claude-opus-5`)
+drafts it from the commits' subjects, bodies and the parts of the tree each touched, told to
+write only about what a user would notice and to skip research, benchmarks, evaluation and
+build work, in at most 450 characters. That needs an `ANTHROPIC_API_KEY` secret; without one,
+an empty box stops the run with a message rather than shipping something generic. Either way
+the text is held to Play's 500-character limit and the house style (no em or en dashes)
+before it is shown, and a production release waits for the approval described above, so a
+bad draft is rejected at that point and the run started again with the text typed in.
+
+A draft cannot know whether a feature ships switched off. The prompt says a change that is
+off by default, or only for developers, is not a change for users, but the approval is the
+check that counts; read the draft against the commit list under it.
+
+### Choices made on purpose
+
+- **Main only.** The prepare job refuses any other branch, because a branch builds a lower
+  commit count and Play refuses a code that goes down.
+- **Nothing already in review is cancelled.** Play's API, by default, cancels changes that
+  are in review, a listing edit made in the Console included, and resubmits them with the
+  release. The commit asks for `ERROR_IF_IN_REVIEW` instead, so a clash stops the run.
+- **No third-party action sees the Play key.** The upload is Google's own Python client in
+  about a hundred lines (`tools/release/play.py`), pinned in `tools/release/requirements.txt`,
+  rather than a marketplace action that would hold a key able to publish to every user.
+- **A dry run uploads nothing.** Whether Play keeps a version code taken by a bundle that was
+  uploaded and never released has not been measured here, and finding out on a real release
+  would cost a commit. The dry run checks everything else: the secrets, Play access, the
+  version code, the notes, the build and the signature.
+- **One release at a time**, and a running one is never cancelled by the next.
+
+If a run ever fails after the upload with "version code has already been used", push any
+commit to main and run it again; the new count is a new code.
+
+### Setting it up, once
+
+1. **A service account.** In the Google Cloud Console, in any project: enable the *Google
+   Play Android Developer API*, create a service account, and create a JSON key for it.
+2. **Its access to the app.** In the Play Console, *Users and permissions*, *Invite new
+   users*, with the service account's email address. Under *App permissions* add OpenWeights
+   only, with *View app information (read-only)*, *Release apps to testing tracks* and
+   *Release to production, exclude devices, and use Play App Signing*. Nothing account-wide.
+3. **The secrets.** On the machine that signs releases:
+
+   ```sh
+   ANTHROPIC_API_KEY=... tools/release/set_play_secrets.sh ~/Downloads/<the key>.json
+   ```
+
+   It sets `OPENWEIGHTS_KEYSTORE_BASE64`, `OPENWEIGHTS_KEYSTORE_PASSWORD`,
+   `OPENWEIGHTS_KEY_ALIAS` and `OPENWEIGHTS_KEY_PASSWORD` from `keystore.properties` and
+   the keystore it names, `PLAY_SERVICE_ACCOUNT_JSON` from the key, and `ANTHROPIC_API_KEY`
+   if one is exported (leave it out to always type the notes). Every value goes from its
+   file into `gh secret set` on stdin and is never printed. Delete the downloaded key after.
+4. **A dry run** on the internal track, then a real one there, before the first production
+   release from the workflow.
+
+The environments are already made: `play-production` requires approval from
+@alpharomercoma and deploys from main only, and `play-testing` deploys from main only.
+
+The same script runs from a laptop, with the key's JSON in `PLAY_SERVICE_ACCOUNT_JSON`:
+`python3 tools/release/play.py notes --track production` prints what the next release would
+say, and `--base-code <code> --draft` drafts against a code of your choosing without asking Play.
 
 ## The Console work, done once for the first release
 
@@ -453,9 +540,11 @@ notes. What is left is the part that needs a person, a key, or a graphics tool.
   read something private (either tool). Neither condition is the ordinary case, so the
   ordinary search or fetch does not stop to ask, and the two that do are declared as such
   rather than folded into "the tools ask before they run."
-- **The upload key lives only on one machine.** `keystore.properties` and `upload.jks`
-  exist in the working checkout that cuts releases and nowhere else; a fresh clone builds
-  an unsigned AAB, which is the intended failure. Every bundle since 2026-09-04 (version code 485 then, 570 on 2026-09-07) carries
+- **The upload key lives on one machine and, once the Release workflow is set up, in the
+  repository's encrypted secrets.** `keystore.properties` and `upload.jks` exist in the
+  working checkout that cuts releases and are never committed; `set_play_secrets.sh` copies
+  their values into GitHub secrets, which only the Release workflow reads. A fresh clone
+  still builds an unsigned AAB, which is the intended failure. Every bundle since 2026-09-04 (version code 485 then, 570 on 2026-09-07) carries
   that key (`keytool -printcert -jarfile` on either shows the same SHA-256 as the
   keystore), and enrolling it in Play App Signing is still the first Console step.
 - **One bundle.** Until 2026-09-06 there were two flavours, `standard` (llama.cpp alone)

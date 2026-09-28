@@ -211,7 +211,7 @@ QuickJS for the script sandbox. Cloned without `--recurse-submodules`? Run
 | Stack | Kotlin 2.3.20, Jetpack Compose, Hilt, Room, WorkManager; `core:common` is Kotlin Multiplatform with JVM and iOS targets |
 | Checks | `./gradlew verify` runs ktlint, detekt, lint, every host test tier and assembles the debug build; `verifyOnDevice` needs a phone with models pushed; `verifyJniSymbols` fails a release whose R8 pass renamed a name JNI resolves |
 | Versioning | `versionName` is typed (2.0.0); `versionCode` is derived from the repository's commit count, with a floor that stops it going backwards |
-| Release | A signed bundle from `./gradlew :app:bundleRelease` with the upload key on the release machine only; the checklist is [docs/play-store.md](docs/play-store.md) |
+| Release | The Release workflow, started by hand, builds and signs the bundle from main, drafts What's new from the commits since the version on Play, and uploads it; production waits for an approval. Setup and the checklist are in [docs/play-store.md](docs/play-store.md) |
 
 One build carries both runtimes.
 
