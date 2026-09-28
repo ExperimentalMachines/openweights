@@ -4,7 +4,7 @@
 # `gh secret set` on stdin, so it never lands in the terminal, the shell history or a log.
 #
 #   tools/release/set_play_secrets.sh [path/to/play-service-account.json]
-#     ANTHROPIC_API_KEY=... in the environment also sets that secret, for drafted notes
+#     GEMINI_API_KEY=... in the environment also sets that secret, for drafted notes
 #
 # The upload key and its passwords come from keystore.properties and the keystore it names.
 # Run it again whenever one of them changes; a secret that is set again is replaced.
@@ -32,8 +32,8 @@ prop keyPassword | gh secret set OPENWEIGHTS_KEY_PASSWORD -R "$REPO"
 if [ $# -ge 1 ]; then
   gh secret set PLAY_SERVICE_ACCOUNT_JSON -R "$REPO" < "$1"
 fi
-if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
-  printf %s "$ANTHROPIC_API_KEY" | gh secret set ANTHROPIC_API_KEY -R "$REPO"
+if [ -n "${GEMINI_API_KEY:-}" ]; then
+  printf %s "$GEMINI_API_KEY" | gh secret set GEMINI_API_KEY -R "$REPO"
 fi
 
 gh secret list -R "$REPO"

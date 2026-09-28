@@ -2,7 +2,7 @@
 
     python3 -m unittest tools/release/test_play.py
 
-Nothing here talks to Play or to Claude. What is covered is what those calls are given: the
+Nothing here talks to Play or to Gemini. What is covered is what those calls are given: the
 commit a version code names, the text that goes out as the release notes, and the track body.
 """
 import subprocess

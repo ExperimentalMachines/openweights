@@ -16,7 +16,7 @@ on:
         type: number
         default: 100
       whats_new:
-        description: "What's new, at most 500 characters, \\n between lines. Empty: Claude drafts it from the commits since the version on the track"
+        description: "What's new, at most 500 characters, \\n between lines. Empty: Gemini drafts it from the commits since the version on the track"
         type: string
         required: false
       dry_run:
@@ -85,7 +85,7 @@ jobs:
         id: notes
         env:
           PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           WHATS_NEW: ${{ inputs.whats_new }}
           TRACK: ${{ inputs.track }}
         run: python3 tools/release/play.py notes --track "$TRACK" --out release

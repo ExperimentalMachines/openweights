@@ -12,9 +12,9 @@ or whatever Application Default Credentials find. The one-time setup is in docs/
 `notes` answers "what changed" from Play itself rather than from a tag somebody has to
 remember to push. The version code is the commit count on main (app/build.gradle.kts), so the
 code Play is serving on a track names the commit it was built from, and the commits after it
-are the release. The user-facing text is drafted from them by Claude when ANTHROPIC_API_KEY
-is set, or taken verbatim from WHATS_NEW; either way it is shown for approval before
-`publish` sends it.
+are the release. The user-facing text is drafted from them by Gemini, on the API's free tier,
+when GEMINI_API_KEY is set, or taken verbatim from WHATS_NEW; either way it is shown for
+approval before `publish` sends it.
 """
 from __future__ import annotations
 
@@ -34,6 +34,9 @@ LANGUAGE = "en-US"
 # Play's own limit for a release note, per language. Longer text is refused at upload.
 NOTES_LIMIT = 500
 TRACKS = ("internal", "alpha", "beta", "production")
+# The newest Flash model on the Gemini API's free tier. Free-tier prompts may be used to
+# improve Google's products; what is sent is commit messages from this public repository.
+DRAFT_MODEL = "gemini-3.8-flash"
 REPO_URL = "https://github.com/ExperimentalMachines/openweights"
 
 
@@ -270,26 +273,34 @@ def check_notes(text: str) -> str:
 
 
 def draft_notes(commits: list[Commit], base_code: int, head_code: int) -> str:
-    import anthropic
+    from google import genai
+    from google.genai import errors, types
 
-    client = anthropic.Anthropic()
+    client = genai.Client()  # GEMINI_API_KEY
     prompt = commits_prompt(commits, base_code, head_code)
     for _attempt in range(2):
-        response = client.beta.messages.create(
-            model="claude-opus-5",
-            max_tokens=16000,
-            system=SYSTEM,
-            messages=[{"role": "user", "content": prompt}],
-            # A declined request is re-run on Anthropic's recommended fallback model instead of
-            # coming back empty. A commit log is not the kind of text that is declined, but a
-            # release blocked on it would be a strange way to find out.
-            betas=["server-side-fallback-2026-07-01"],
-            fallbacks="default",
-        )
-        if response.stop_reason == "refusal":
-            raise ReleaseError("Claude declined to draft the notes. Run again with the text in whats_new.")
-        text = clean_notes("".join(block.text for block in response.content if block.type == "text"))
-        if text and len(text) <= NOTES_LIMIT:
+        try:
+            response = client.models.generate_content(
+                model=DRAFT_MODEL,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=SYSTEM,
+                    # There are no tools; off, it also stops the SDK warning about them in the log.
+                    automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+                ),
+            )
+        except errors.APIError as error:
+            # 429 is the free tier's daily or per-minute quota, which one draft per release
+            # should never reach; anything else is a key or model problem worth reading whole.
+            raise ReleaseError(f"Gemini refused the request ({error.code}): {error.message}") from error
+        text = clean_notes(response.text or "")
+        if not text:
+            feedback = response.prompt_feedback
+            reason = feedback.block_reason if feedback and feedback.block_reason else (
+                response.candidates[0].finish_reason if response.candidates else "no candidates"
+            )
+            raise ReleaseError(f"Gemini returned no draft ({reason}). Run again with the text in whats_new.")
+        if len(text) <= NOTES_LIMIT:
             return text
         # One fresh request with the long draft quoted, rather than a second turn: the retry
         # is the same question with one more constraint, and needs none of the first reply's state.
@@ -342,10 +353,10 @@ def notes_command(args: argparse.Namespace) -> None:
     given = os.environ.get("WHATS_NEW", "").replace("\\n", "\n").strip()
     if given:
         text, source = check_notes(given), "given in whats_new"
-    elif os.environ.get("ANTHROPIC_API_KEY") or args.draft:
-        text, source = check_notes(draft_notes(commits, base_code, head_code)), "drafted by Claude from the commits"
+    elif os.environ.get("GEMINI_API_KEY"):
+        text, source = check_notes(draft_notes(commits, base_code, head_code)), f"drafted by {DRAFT_MODEL} from the commits"
     else:
-        raise ReleaseError("No whats_new was given and there is no ANTHROPIC_API_KEY to draft one with.")
+        raise ReleaseError("No whats_new was given and there is no GEMINI_API_KEY to draft one with.")
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -416,7 +427,6 @@ def main(argv: list[str] | None = None) -> int:
     notes.add_argument("--track", choices=TRACKS, default="production")
     notes.add_argument("--out", default="build/release")
     notes.add_argument("--base-code", type=int, help="measure from this version code instead of asking Play")
-    notes.add_argument("--draft", action="store_true", help="draft with Claude even without ANTHROPIC_API_KEY set")
     notes.set_defaults(run=notes_command)
 
     publish = commands.add_parser("publish", help="upload a bundle and release it on a track")

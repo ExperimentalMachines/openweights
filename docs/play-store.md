@@ -417,11 +417,17 @@ stands in for a testing track that has never had a release), finds that commit o
 lists everything since.
 
 The text users see comes from one of two places. Typed into the whats_new box, it is used as
-it is (`\n` between lines, since the box is one line). Left empty, Claude (`claude-opus-5`)
+it is (`\n` between lines, since the box is one line). Left empty, Gemini (`gemini-3.8-flash`)
 drafts it from the commits' subjects, bodies and the parts of the tree each touched, told to
 write only about what a user would notice and to skip research, benchmarks, evaluation and
-build work, in at most 450 characters. That needs an `ANTHROPIC_API_KEY` secret; without one,
-an empty box stops the run with a message rather than shipping something generic. Either way
+build work, in at most 450 characters. That needs a `GEMINI_API_KEY` secret, a key from Google
+AI Studio on the free tier; without one, an empty box stops the run with a message rather
+than shipping something generic.
+
+The free tier costs nothing and one draft per release is far inside its quota. Its terms let
+Google use what is sent to improve its products, which is acceptable here only because what
+is sent is commit messages that are already public in this repository. Nothing else goes to
+it: no source, no secrets, no user data. Either way
 the text is held to Play's 500-character limit and the house style (no em or en dashes)
 before it is shown, and a production release waits for the approval described above, so a
 bad draft is rejected at that point and the run started again with the text typed in.
@@ -460,13 +466,14 @@ commit to main and run it again; the new count is a new code.
 3. **The secrets.** On the machine that signs releases:
 
    ```sh
-   ANTHROPIC_API_KEY=... tools/release/set_play_secrets.sh ~/Downloads/<the key>.json
+   GEMINI_API_KEY=... tools/release/set_play_secrets.sh ~/Downloads/<the key>.json
    ```
 
    It sets `OPENWEIGHTS_KEYSTORE_BASE64`, `OPENWEIGHTS_KEYSTORE_PASSWORD`,
    `OPENWEIGHTS_KEY_ALIAS` and `OPENWEIGHTS_KEY_PASSWORD` from `keystore.properties` and
-   the keystore it names, `PLAY_SERVICE_ACCOUNT_JSON` from the key, and `ANTHROPIC_API_KEY`
-   if one is exported (leave it out to always type the notes). Every value goes from its
+   the keystore it names, `PLAY_SERVICE_ACCOUNT_JSON` from the key, and `GEMINI_API_KEY`
+   if one is exported (a free key from <https://aistudio.google.com/apikey>; leave it out to
+   always type the notes). Every value goes from its
    file into `gh secret set` on stdin and is never printed. Delete the downloaded key after.
 4. **A dry run** on the internal track, then a real one there, before the first production
    release from the workflow.
@@ -476,7 +483,8 @@ The environments are already made: `play-production` requires approval from
 
 The same script runs from a laptop, with the key's JSON in `PLAY_SERVICE_ACCOUNT_JSON`:
 `python3 tools/release/play.py notes --track production` prints what the next release would
-say, and `--base-code <code> --draft` drafts against a code of your choosing without asking Play.
+say, and `--base-code <code>` measures from a code of your choosing without asking Play.
+With `GEMINI_API_KEY` exported the text is drafted; without it, give it in `WHATS_NEW`.
 
 ## The Console work, done once for the first release
 
