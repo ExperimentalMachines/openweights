@@ -82,6 +82,24 @@ class VersionCodeToCommitTest(unittest.TestCase):
         self.assertEqual(commits[-1].areas, ["tools/eval"])
 
 
+class AreasTest(unittest.TestCase):
+    def test_test_sources_are_not_the_app(self):
+        self.assertEqual(play.area("app/src/main/kotlin/A.kt"), "app")
+        self.assertEqual(play.area("core/engine/src/main/cpp/llama_jni.cpp"), "core/engine")
+        self.assertEqual(play.area("app/src/androidTest/kotlin/Probe.kt"), "tests:app")
+        self.assertEqual(play.area("core/common/src/jvmTest/kotlin/T.kt"), "tests:core/common")
+        self.assertEqual(play.area("docs/research/x.md"), "docs/research")
+        self.assertEqual(play.area("core/engine/src/debug/jniLibs/arm64-v8a/x.so"), "tests:core/engine")
+
+    def test_only_a_commit_that_changed_the_app_ships(self):
+        commit = lambda *areas: play.Commit("a", "s", "", list(areas))
+        self.assertTrue(commit("app", "docs/research").ships)
+        self.assertTrue(commit("core/engine").ships)
+        self.assertFalse(commit("tests:app", "tools/release").ships)
+        self.assertFalse(commit("docs", "README.md").ships)
+        self.assertFalse(commit().ships)
+
+
 class TracksTest(unittest.TestCase):
     TRACKS = {
         "production": play.TrackState("production", [

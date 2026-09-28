@@ -417,10 +417,18 @@ stands in for a testing track that has never had a release), finds that commit o
 lists everything since.
 
 The text users see comes from one of two places. Typed into the whats_new box, it is used as
-it is (`\n` between lines, since the box is one line). Left empty, Gemini (`gemini-3.8-flash`)
-drafts it from the commits' subjects, bodies and the parts of the tree each touched, told to
-write only about what a user would notice and to skip research, benchmarks, evaluation and
-build work, in at most 450 characters. That needs a `GEMINI_API_KEY` secret, a key from Google
+it is (`\n` between lines, since the box is one line). Left empty, Gemini drafts it, in at
+most 450 characters, from the commits that changed the app's shipped code (`app/` or
+`core/*`, test and debug source sets aside); commits that touched only research, docs, tests or tooling
+are listed on the summary but never shown to the model, because the first real draft
+(2026-09-29, all 27 commits since 613) turned research-only ones into features. The model
+is told to write only about what a user would notice.
+
+The free tier is often busy. On the first real calls every 3.x Flash model answered 503 or
+held the request for over 45 s while 2.5 Flash-Lite answered in under a second, so each
+draft tries `gemini-3.8-flash`, then `gemini-3.5-flash`, then `gemini-2.5-flash-lite`,
+each three times with backoff and a 60 s timeout, and the summary names the one that wrote
+it. That needs a `GEMINI_API_KEY` secret, a key from Google
 AI Studio on the free tier; without one, an empty box stops the run with a message rather
 than shipping something generic.
 

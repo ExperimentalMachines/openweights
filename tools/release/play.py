@@ -34,9 +34,16 @@ LANGUAGE = "en-US"
 # Play's own limit for a release note, per language. Longer text is refused at upload.
 NOTES_LIMIT = 500
 TRACKS = ("internal", "alpha", "beta", "production")
-# The newest Flash model on the Gemini API's free tier. Free-tier prompts may be used to
-# improve Google's products; what is sent is commit messages from this public repository.
-DRAFT_MODEL = "gemini-3.8-flash"
+# Models on the Gemini API's free tier, best first; the next is asked only when one is still
+# busy after its retries. On the first real calls (2026-09-29) every 3.x Flash model answered
+# 503 or hung for minutes on the free tier while 2.5 Flash-Lite answered in under a second,
+# so the chain ends on the one that was there. Free-tier prompts may be used to improve
+# Google's products; what is sent is commit messages from this public repository.
+DRAFT_MODELS = ("gemini-3.8-flash", "gemini-3.5-flash", "gemini-2.5-flash-lite")
+# Overloaded or over quota: worth another model. Anything else (a bad key) is not.
+BUSY = (429, 500, 502, 503, 504)
+# A draft of ~6,000 prompt tokens takes seconds when a model is free; a minute is a stall.
+DRAFT_TIMEOUT_S = 60
 REPO_URL = "https://github.com/ExperimentalMachines/openweights"
 
 
@@ -90,13 +97,22 @@ class Commit:
     body: str
     areas: list[str]
 
+    @property
+    def ships(self) -> bool:
+        """Whether the commit changed code that goes into the bundle, tests aside."""
+        return any(a == "app" or a.startswith("core/") for a in self.areas)
+
+
+# Source sets that never reach a release bundle, whatever module they sit in: tests, and the
+# debug source set (core/engine/src/debug carries the MediaTek NPU libraries, debug builds only).
+TEST_SOURCES = re.compile(r"/src/(test|androidTest|jvmTest|commonTest|[a-zA-Z]+Test|debug)/")
+
 
 def area(path: str) -> str:
     """The part of the tree a file belongs to, coarse enough to tell app code from research."""
     parts = path.split("/")
-    if parts[0] in ("core", "docs", "tools") and len(parts) > 2:
-        return "/".join(parts[:2])
-    return parts[0]
+    name = "/".join(parts[:2]) if parts[0] in ("core", "docs", "tools") and len(parts) > 2 else parts[0]
+    return f"tests:{name}" if TEST_SOURCES.search(path) else name
 
 
 TRAILER = re.compile(r"^(Co-authored-by|Signed-off-by):", re.IGNORECASE)
@@ -215,7 +231,9 @@ def release_body(track: str, code: int, name: str, notes: str, rollout: float) -
 # ---------------------------------------------------------------------------------------------
 # The notes
 
-SYSTEM = """You write the "What's new" text for OpenWeights on Google Play.
+UNDER_THE_HOOD = "• Fixes and improvements under the hood."
+
+SYSTEM = f"""You write the "What's new" text for OpenWeights on Google Play.
 
 OpenWeights is an Android app that runs open-weight language models entirely on the phone:
 GGUF files through llama.cpp and compiled .pte exports through ExecuTorch. No account, no
@@ -227,8 +245,9 @@ are research, benchmarks, evaluation tooling, documentation or build work that c
 a user can see. Write only about what a person using the app would notice: a new feature, a
 fixed bug, something faster or lighter, a model that now works. A commit that adds code which
 ships switched off, or only for developers or a test harness, is not a change for users. Its
-"areas" say which part of the tree it touched: app and core/* are the app; docs, tools, eval
-and play are not shipped; build-logic, gradle and .github are the build.
+"areas" say which part of the tree it touched: app and core/* are the app, and tests:* is test
+code. Only commits that changed the app are given to you, but most of them also carry research
+or test work in the same commit; that part is not a change for users either.
 
 Rules for the text:
 - At most 450 characters in total. Play refuses more than 500.
@@ -237,7 +256,7 @@ Rules for the text:
 - A number only if a commit measured it on a phone, and only as the commit states it.
 - No em dashes or en dashes; use a comma, a colon or a full stop. No emoji, no exclamation
   marks, no marketing adjectives.
-- If nothing user-visible changed, write one line: "• Fixes and improvements under the hood."
+- If nothing user-visible changed, write one line: "{UNDER_THE_HOOD}"
 
 Reply with the text only, nothing before or after it."""
 
@@ -272,16 +291,16 @@ def check_notes(text: str) -> str:
     return text
 
 
-def draft_notes(commits: list[Commit], base_code: int, head_code: int) -> str:
-    from google import genai
+def generate(client, prompt: str) -> tuple[str, str]:
+    """The first model in DRAFT_MODELS that answers, and its text."""
+    import httpx
     from google.genai import errors, types
 
-    client = genai.Client()  # GEMINI_API_KEY
-    prompt = commits_prompt(commits, base_code, head_code)
-    for _attempt in range(2):
+    busy = None
+    for model in DRAFT_MODELS:
         try:
             response = client.models.generate_content(
-                model=DRAFT_MODEL,
+                model=model,
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     system_instruction=SYSTEM,
@@ -289,9 +308,15 @@ def draft_notes(commits: list[Commit], base_code: int, head_code: int) -> str:
                     automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
                 ),
             )
+        except httpx.TimeoutException:
+            busy = f"no answer in {DRAFT_TIMEOUT_S} s"
+            print(f"{model}: {busy}, after retries; trying the next model", file=sys.stderr)
+            continue
         except errors.APIError as error:
-            # 429 is the free tier's daily or per-minute quota, which one draft per release
-            # should never reach; anything else is a key or model problem worth reading whole.
+            if error.code in BUSY:
+                busy = f"{error.code}: {error.message}"
+                print(f"{model} is busy ({error.code}) after retries; trying the next model", file=sys.stderr)
+                continue
             raise ReleaseError(f"Gemini refused the request ({error.code}): {error.message}") from error
         text = clean_notes(response.text or "")
         if not text:
@@ -300,8 +325,29 @@ def draft_notes(commits: list[Commit], base_code: int, head_code: int) -> str:
                 response.candidates[0].finish_reason if response.candidates else "no candidates"
             )
             raise ReleaseError(f"Gemini returned no draft ({reason}). Run again with the text in whats_new.")
+        return model, text
+    raise ReleaseError(f"Every Gemini model was busy ({busy}). Run again later, or with the text in whats_new.")
+
+
+def draft_notes(commits: list[Commit], base_code: int, head_code: int) -> tuple[str, str]:
+    """The notes, and the model that wrote them."""
+    from google import genai
+    from google.genai import types
+
+    # The SDK retries nothing and never times out unless asked, and a busy free-tier model
+    # does both: it answers 503, or holds the request open (3.8 Flash, for over 45 s). Three
+    # attempts per model, 5 s then 10 s apart, each given DRAFT_TIMEOUT_S, before the next.
+    client = genai.Client(  # GEMINI_API_KEY
+        http_options=types.HttpOptions(
+            timeout=DRAFT_TIMEOUT_S * 1000,
+            retry_options=types.HttpRetryOptions(attempts=3, initial_delay=5.0, max_delay=30.0),
+        ),
+    )
+    prompt = commits_prompt(commits, base_code, head_code)
+    for _attempt in range(2):
+        model, text = generate(client, prompt)
         if len(text) <= NOTES_LIMIT:
-            return text
+            return model, text
         # One fresh request with the long draft quoted, rather than a second turn: the retry
         # is the same question with one more constraint, and needs none of the first reply's state.
         prompt = f"{prompt}\n\nA first draft was {len(text)} characters, over the limit:\n\n{text}\n\nWrite it again in at most 450."
@@ -351,10 +397,18 @@ def notes_command(args: argparse.Namespace) -> None:
 
     # A workflow_dispatch text box is one line, so a typed \n is the line break.
     given = os.environ.get("WHATS_NEW", "").replace("\\n", "\n").strip()
+    # Most commits here are research, evaluation or docs. Dropping them before the draft,
+    # rather than asking the model to, is what lets a small free model write it (2026-09-29:
+    # 2.5 Flash-Lite, given all 27 commits since 613, listed research-only ones as features).
+    shipped = [c for c in commits if c.ships]
     if given:
         text, source = check_notes(given), "given in whats_new"
+    elif not shipped:
+        text, source = UNDER_THE_HOOD, "fixed text: no commit changed the app's shipped code"
     elif os.environ.get("GEMINI_API_KEY"):
-        text, source = check_notes(draft_notes(commits, base_code, head_code)), f"drafted by {DRAFT_MODEL} from the commits"
+        model, text = draft_notes(shipped, base_code, head_code)
+        text = check_notes(text)
+        source = f"drafted by {model} from the {len(shipped)} commits that changed the app"
     else:
         raise ReleaseError("No whats_new was given and there is no GEMINI_API_KEY to draft one with.")
 
@@ -362,9 +416,8 @@ def notes_command(args: argparse.Namespace) -> None:
     out.mkdir(parents=True, exist_ok=True)
     (out / "whats-new.txt").write_text(text + "\n")
     head = git("rev-parse", "HEAD")
-    listing = "\n".join(
-        f"- [`{c.sha[:8]}`]({REPO_URL}/commit/{c.sha}) {c.subject}" for c in commits
-    )
+    def listing(chosen: list[Commit]) -> str:
+        return "\n".join(f"- [`{c.sha[:8]}`]({REPO_URL}/commit/{c.sha}) {c.subject}" for c in chosen) or "None."
     near = "" if exact else " (the nearest commit on main; that code was built inside a merge)"
     changes = (
         f"## Release {version_name()} ({head_code}) to {args.track}\n\n"
@@ -372,7 +425,10 @@ def notes_command(args: argparse.Namespace) -> None:
         f"{base_code}, built from [`{base[:8]}`]({REPO_URL}/commit/{base}){near}.\n\n"
         f"### What's new, {len(text)} of {NOTES_LIMIT} characters, {source}\n\n"
         f"```\n{text}\n```\n\n"
-        f"### The {len(commits)} commits since version {base_code}\n\n{listing}\n"
+        f"### The {len(commits)} commits since version {base_code}\n\n"
+        f"Changed the app ({len(shipped)}, the ones the draft is written from):\n\n{listing(shipped)}\n\n"
+        f"Research, docs, tests and tooling only ({len(commits) - len(shipped)}):\n\n"
+        f"{listing([c for c in commits if not c.ships])}\n"
     )
     (out / "changes.md").write_text(changes)
     summary(changes)
