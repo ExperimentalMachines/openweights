@@ -114,6 +114,17 @@ class TracksTest(unittest.TestCase):
         self.assertEqual(play.live_code(self.TRACKS, "production"), 615)
         self.assertEqual(play.live_code(self.TRACKS, "internal"), 630)
 
+    def test_testers_have_production_when_it_is_newer(self):
+        # The shape Play returned on 2026-09-29: internal testing left at 201 long ago.
+        tracks = {
+            "production": play.TrackState("production", [{"status": "completed", "versionCodes": ["615"]}]),
+            "internal": play.TrackState("internal", [{"status": "completed", "versionCodes": ["201"]}]),
+            "beta": play.TrackState("beta", [{"status": "draft"}]),
+        }
+        self.assertEqual(play.live_code(tracks, "internal"), 615)
+        self.assertEqual(play.live_code(tracks, "beta"), 615)
+        self.assertEqual(play.highest_code(tracks), 615)
+
     def test_a_track_with_nothing_live_is_measured_from_production(self):
         self.assertEqual(play.live_code(self.TRACKS, "alpha"), 615)
         self.assertEqual(play.live_code(self.TRACKS, "beta"), 615)

@@ -191,18 +191,19 @@ def read_tracks(service) -> dict[str, TrackState]:
 def live_code(tracks: dict[str, TrackState], track: str) -> int | None:
     """The version code most of this track's users have, which is what the notes are measured from.
 
-    A completed release is what everyone on the track was given. A staged rollout, or a halted
-    one, reached only some of them, so it is used only when nothing on the track completed.
-    Production stands in for a testing track that has never had a release.
+    A tester is also a production user, and Play gives everyone the highest code they are
+    eligible for, so a testing track's users have whichever is higher of its own release and
+    production's. That matters here: on 2026-09-29 internal testing still held 201, from long
+    before production reached 615, and measuring from 201 would have listed 440 commits.
+
+    A completed release is what everyone on a track was given. A staged rollout, or a halted
+    one, reached only some of them, so it counts only when nothing on either track completed.
     """
-    for name in (track, "production"):
-        state = tracks.get(name)
-        if not state:
-            continue
-        for statuses in (("completed",), ("inProgress", "halted")):
-            codes = state.codes(statuses)
-            if codes:
-                return max(codes)
+    names = {track, "production"}
+    for statuses in (("completed",), ("inProgress", "halted")):
+        codes = [code for name in names if name in tracks for code in tracks[name].codes(statuses)]
+        if codes:
+            return max(codes)
     return None
 
 

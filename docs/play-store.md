@@ -411,10 +411,12 @@ It runs in two jobs.
 
 There is no tag to remember and no changelog file to keep. The version code is the commit
 count on main, so the code a track is serving names the commit it was built from, and the
-release is every commit after it. `tools/release/play.py notes` reads the track's code from
-Play (the completed release, or a staged one if nothing on the track completed; production
-stands in for a testing track that has never had a release), finds that commit on main, and
-lists everything since.
+release is every commit after it. `tools/release/play.py notes` reads the code from Play,
+finds that commit on main, and lists everything since. For production that is production's
+completed release. For a testing track it is the higher of that track's and production's,
+because testers are production users too and Play gives them whichever is newer: on
+2026-09-29 internal testing still held 201 from long ago while production had 615. A staged
+or halted rollout counts only when nothing completed.
 
 The text users see comes from one of two places. Typed into the whats_new box, it is used as
 it is (`\n` between lines, since the box is one line). Left empty, Gemini drafts it, in at
