@@ -5,11 +5,14 @@
 Nothing here talks to Play or to Gemini. What is covered is what those calls are given: the
 commit a version code names, the text that goes out as the release notes, and the track body.
 """
+import os
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import play  # noqa: E402
@@ -39,6 +42,9 @@ class VersionCodeToCommitTest(unittest.TestCase):
         run("init", "-q", "-b", "main")
         run("config", "user.email", "test@example.com")
         run("config", "user.name", "test")
+        (cls.root / "app").mkdir()
+        (cls.root / "app" / "build.gradle.kts").write_text('versionName = "1.0"\n')
+        run("add", "app/build.gradle.kts")
         cls.c1 = commit("app/a.kt", "one")
         cls.c2 = commit("docs/research/b.md", "two")
         cls.c3 = commit("core/engine/src/c.kt", "three")
@@ -80,6 +86,41 @@ class VersionCodeToCommitTest(unittest.TestCase):
         self.assertEqual(commits[0].areas, ["app"])
         self.assertEqual(commits[1].body, "Why it changed.")
         self.assertEqual(commits[-1].areas, ["tools/eval"])
+
+
+class PromoteTest(VersionCodeToCommitTest):
+    """Notes for a bundle Play already has: the commits up to it, not up to main."""
+
+    def notes(self, base_code, version_code):
+        out = tempfile.mkdtemp()
+        args = SimpleNamespace(track="production", out=out, base_code=base_code, version_code=version_code)
+        with mock.patch.dict(os.environ, {"WHATS_NEW": "• Something.", "GITHUB_OUTPUT": str(Path(out) / "o")}), \
+                mock.patch.object(play, "summary"):
+            play.notes_command(args)
+        return (Path(out) / "changes.md").read_text(), (Path(out) / "o").read_text()
+
+    def test_the_notes_stop_at_the_promoted_bundle(self):
+        changes, outputs = self.notes(3, 8)
+        self.assertIn("Promotes the bundle Play already has", changes)
+        self.assertIn("four", changes)
+        self.assertNotIn("five", changes)
+        self.assertIn("release_name=1.0 (8)", outputs)
+        self.assertIn("version_code=8", outputs)
+
+    def test_a_code_no_commit_on_main_built_is_refused(self):
+        with self.assertRaises(play.ReleaseError):
+            self.notes(3, 5)
+
+    def test_a_code_users_already_have_is_refused(self):
+        with self.assertRaises(play.ReleaseError):
+            self.notes(8, 8)
+
+    def test_publish_needs_exactly_one_source(self):
+        with mock.patch("sys.stderr"):
+            self.assertEqual(play.main(["publish", "--track", "internal", "--notes", "x"]), 1)
+            self.assertEqual(
+                play.main(["publish", "--track", "internal", "--notes", "x", "--bundle", "a.aab", "--version-code", "8"]), 1,
+            )
 
 
 class AreasTest(unittest.TestCase):

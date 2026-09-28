@@ -132,8 +132,8 @@ def commits_between(base: str, head: str = "HEAD") -> list[Commit]:
     return commits
 
 
-def version_name() -> str:
-    text = (ROOT / "app" / "build.gradle.kts").read_text()
+def version_name(rev: str = "HEAD") -> str:
+    text = git("show", f"{rev}:app/build.gradle.kts")
     found = re.search(r'versionName\s*=\s*"([^"]+)"', text)
     if not found:
         raise ReleaseError("No versionName in app/build.gradle.kts.")
@@ -377,22 +377,39 @@ def output(**values: object) -> None:
 
 
 def notes_command(args: argparse.Namespace) -> None:
-    head_code = commit_count()
+    promoting = args.version_code is not None
+    if promoting:
+        # A bundle Play already has, most often one tested on internal testing first. Its
+        # notes are the commits up to the one it was built from, not up to main.
+        head_code = args.version_code
+        head, exact_head = commit_for_code(head_code)
+        if not exact_head:
+            raise ReleaseError(f"No commit on main has the count {head_code}, so no bundle of main has that version code.")
+    else:
+        head_code, head = commit_count(), git("rev-parse", "HEAD")
     if args.base_code is not None:
-        base_code, top = args.base_code, args.base_code
+        base_code = args.base_code
     else:
         tracks = read_tracks(play_service())
-        base_code, top = live_code(tracks, args.track), highest_code(tracks)
+        base_code = live_code(tracks, args.track)
         if base_code is None:
             raise ReleaseError("Play has no release on any track to compare with. Give the text in whats_new.")
-        if head_code <= top:
+        on_play = {code for state in tracks.values() for code in state.codes()}
+        if promoting and head_code not in on_play:
             raise ReleaseError(
-                f"main is at version code {head_code} and Play already has {top}. Play refuses a "
-                "code it has seen; release a newer commit.",
+                f"Play has no bundle with version code {head_code}. Release it to a testing track first, "
+                "or leave version_code empty to build main.",
             )
+        if not promoting and head_code <= highest_code(tracks):
+            raise ReleaseError(
+                f"main is at version code {head_code} and Play already has {highest_code(tracks)}. Play "
+                "refuses a code it has seen; release a newer commit, or promote that code with version_code.",
+            )
+    if head_code <= base_code:
+        raise ReleaseError(f"The track's users already have version {base_code}, and this is {head_code}.")
 
     base, exact = commit_for_code(base_code)
-    commits = commits_between(base)
+    commits = commits_between(base, head)
     if not commits:
         raise ReleaseError(f"Nothing has changed since version {base_code}.")
 
@@ -416,13 +433,13 @@ def notes_command(args: argparse.Namespace) -> None:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     (out / "whats-new.txt").write_text(text + "\n")
-    head = git("rev-parse", "HEAD")
     def listing(chosen: list[Commit]) -> str:
         return "\n".join(f"- [`{c.sha[:8]}`]({REPO_URL}/commit/{c.sha}) {c.subject}" for c in chosen) or "None."
     near = "" if exact else " (the nearest commit on main; that code was built inside a merge)"
     changes = (
-        f"## Release {version_name()} ({head_code}) to {args.track}\n\n"
-        f"Built from [`{head[:8]}`]({REPO_URL}/commit/{head}). The track's users have version "
+        f"## Release {version_name(head)} ({head_code}) to {args.track}\n\n"
+        f"{'Promotes the bundle Play already has, built' if promoting else 'Built'} from "
+        f"[`{head[:8]}`]({REPO_URL}/commit/{head}). The track's users have version "
         f"{base_code}, built from [`{base[:8]}`]({REPO_URL}/commit/{base}){near}.\n\n"
         f"### What's new, {len(text)} of {NOTES_LIMIT} characters, {source}\n\n"
         f"```\n{text}\n```\n\n"
@@ -433,35 +450,24 @@ def notes_command(args: argparse.Namespace) -> None:
     )
     (out / "changes.md").write_text(changes)
     summary(changes)
-    output(version_code=head_code, base_code=base_code)
+    output(version_code=head_code, base_code=base_code, release_name=f"{version_name(head)} ({head_code})")
 
 
 def publish_command(args: argparse.Namespace) -> None:
-    from googleapiclient.http import MediaFileUpload
-
+    if (args.bundle is None) == (args.version_code is None):
+        raise ReleaseError("Give either --bundle to upload, or --version-code for a bundle Play already has.")
     notes = check_notes(Path(args.notes).read_text())
     service = play_service()
     edits = service.edits()
     edit_id = edits.insert(packageName=PACKAGE, body={}).execute(num_retries=3)["id"]
     try:
-        bundle = edits.bundles().upload(
-            packageName=PACKAGE,
-            editId=edit_id,
-            media_body=MediaFileUpload(args.bundle, mimetype="application/octet-stream", resumable=True),
-        ).execute(num_retries=3)
-        code = int(bundle["versionCode"])
-        print(f"Uploaded the bundle: version code {code}, sha256 {bundle.get('sha256', '?')}")
-        if args.mapping:
-            # Without it every crash in Android vitals and the pre-launch report reads q90.a().
-            edits.deobfuscationfiles().upload(
-                packageName=PACKAGE,
-                editId=edit_id,
-                apkVersionCode=code,
-                deobfuscationFileType="proguard",
-                media_body=MediaFileUpload(args.mapping, mimetype="application/octet-stream", resumable=True),
-            ).execute(num_retries=3)
-            print("Uploaded the R8 mapping file")
-        body = release_body(args.track, code, f"{version_name()} ({code})", notes, args.rollout)
+        if args.version_code is not None:
+            code = args.version_code
+            print(f"Releasing version code {code}, which Play already has; nothing is uploaded")
+        else:
+            code = upload(edits, edit_id, args.bundle, args.mapping)
+        name = args.name or f"{version_name()} ({code})"
+        body = release_body(args.track, code, name, notes, args.rollout)
         edits.tracks().update(packageName=PACKAGE, editId=edit_id, track=args.track, body=body).execute(num_retries=3)
         # The default would cancel whatever is already in review, a listing change made in the
         # Console included, and resubmit it with this release. Stop and say so instead.
@@ -473,7 +479,31 @@ def publish_command(args: argparse.Namespace) -> None:
         if edit_id:
             edits.delete(packageName=PACKAGE, editId=edit_id).execute(num_retries=3)
     rollout = "" if args.rollout >= 100 else f", staged to {args.rollout:g}% of users"
-    summary(f"## Released {version_name()} ({code}) to {args.track}{rollout}\n\n```\n{notes}\n```\n")
+    summary(f"## Released {name} to {args.track}{rollout}\n\n```\n{notes}\n```\n")
+
+
+def upload(edits, edit_id: str, bundle_path: str, mapping_path: str | None) -> int:
+    """Uploads the bundle, and its R8 mapping when given, into the edit. Returns the version code."""
+    from googleapiclient.http import MediaFileUpload
+
+    bundle = edits.bundles().upload(
+        packageName=PACKAGE,
+        editId=edit_id,
+        media_body=MediaFileUpload(bundle_path, mimetype="application/octet-stream", resumable=True),
+    ).execute(num_retries=3)
+    code = int(bundle["versionCode"])
+    print(f"Uploaded the bundle: version code {code}, sha256 {bundle.get('sha256', '?')}")
+    if mapping_path:
+        # Without it every crash in Android vitals and the pre-launch report reads q90.a().
+        edits.deobfuscationfiles().upload(
+            packageName=PACKAGE,
+            editId=edit_id,
+            apkVersionCode=code,
+            deobfuscationFileType="proguard",
+            media_body=MediaFileUpload(mapping_path, mimetype="application/octet-stream", resumable=True),
+        ).execute(num_retries=3)
+        print("Uploaded the R8 mapping file")
+    return code
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -484,12 +514,15 @@ def main(argv: list[str] | None = None) -> int:
     notes.add_argument("--track", choices=TRACKS, default="production")
     notes.add_argument("--out", default="build/release")
     notes.add_argument("--base-code", type=int, help="measure from this version code instead of asking Play")
+    notes.add_argument("--version-code", type=int, help="a bundle Play already has, to promote instead of main")
     notes.set_defaults(run=notes_command)
 
-    publish = commands.add_parser("publish", help="upload a bundle and release it on a track")
+    publish = commands.add_parser("publish", help="release a bundle on a track, uploading it first if new")
     publish.add_argument("--track", choices=TRACKS, required=True)
-    publish.add_argument("--bundle", required=True)
+    publish.add_argument("--bundle", help="the .aab to upload")
     publish.add_argument("--mapping")
+    publish.add_argument("--version-code", type=int, help="a bundle Play already has, released without uploading")
+    publish.add_argument("--name", help="the release's name in the Console; default versionName (code)")
     publish.add_argument("--notes", required=True, help="file holding the What's new text")
     publish.add_argument("--rollout", type=float, default=100, help="percent of the track's users")
     publish.set_defaults(run=publish_command)

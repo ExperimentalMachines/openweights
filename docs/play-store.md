@@ -407,6 +407,20 @@ It runs in two jobs.
    until somebody has read the summary and pressed Approve. The testing tracks go straight
    through (`play-testing`, no approval). A dry run stops before this job and uploads nothing.
 
+### Testing first, then promoting the same bundle
+
+The usual order is a release to internal testing, a look at it on a phone, then production.
+Production should get the bundle that was tested, not a rebuild of the same commit, and Play
+refuses a version code twice anyway. So the workflow takes a `version_code`: given one Play
+already has, it builds nothing and releases that bundle on the chosen track, with notes from
+the commits since the track's version up to the one that bundle was built from. The run
+refuses a code Play does not have, and a code no commit on main has the count of.
+
+```
+Run workflow: track internal                        builds main as 642, releases it to testers
+Run workflow: track production, version_code 642    promotes that bundle, after the approval
+```
+
 ### Where "what changed" comes from
 
 There is no tag to remember and no changelog file to keep. The version code is the commit
