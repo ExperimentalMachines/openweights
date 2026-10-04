@@ -1,0 +1,1 @@
+None. The previous findings are fixed, and the revised ratios and ranges agree with the raw logs and CSVs.

@@ -17,10 +17,13 @@ of the code, is in [`tools/eval/results/vulkan-2026-10-04/`](../../tools/eval/re
   correctly on each, and, on the Poco, ExecuServe's OpenAI (16/16), edge-case (28/28) and
   Anthropic (8/8) suites.
 - **Whether the GPU is the faster choice depends on the GPU.** On the Mali phone the CPU
-  build decodes 2.2 to 3.7 times faster than the GPU build (the gap narrows as the context
-  fills), and the GPU's only win is reading a long prompt, 1.2 to 1.5 times as fast. On the newest Adreno (SM8850) the GPU reads long prompts 1.4 to 1.9 times
-  as fast and decodes 1.2 to 1.4 times as fast with a long prompt in the cache, but decodes
-  short replies at 0.7 times the CPU's speed. This is the same lesson as
+  build decodes 2.2 to 3.9 times faster than the GPU build at both prompt lengths measured
+  (the gap narrows as the context fills), and the GPU's only win is reading a long prompt,
+  1.1 to 1.6 times as fast. On the newest Adreno (SM8850) the GPU reads long prompts 1.2 to
+  2.0 times as fast and decodes 1.2 to 1.4 times as fast with a long prompt in the cache,
+  but decodes short replies at 0.6 to 0.75 times the CPU's speed. (Ranges run from the
+  slowest to the fastest of three runs each, across ExecuServe and the engine; one model,
+  Qwen3-0.6B, on one phone of each GPU.) This is the same lesson as
   [gpu-backends.md](gpu-backends.md) for llama.cpp: "GPU is faster" is a property of a
   driver and a memory system, measured per family.
 - **The apps do not prefer either build yet.** They offer CPU and GPU files side by side.
@@ -38,8 +41,10 @@ file naming a delegate the runtime has not linked fails with "backend is not reg
 registers both, so CPU and GPU exports open from the same library and nothing else in the
 engine changes. It is pinned at 1.5.1 because the exporter moved to 1.5.1 the same day, and
 ExecuTorch promises an older file loads on the next minor runtime but promises nothing for
-a file newer than the runtime (`runtime/COMPATIBILITY.md`). Every 1.4.0 file on the Hub
-therefore keeps working, which section 3.4 checked on a phone.
+a file newer than the runtime (`runtime/COMPATIBILITY.md`). That promise covers files made
+with stable APIs, subject to its feature-specific limits (custom operators carry their own),
+so the 1.4.0 files on the Hub are expected to keep working; section 3.4 checked one 1.4.0
+XNNPACK export on the 1.5.1 runtime on a phone.
 
 | Repository | Commit | What |
 |---|---|---|
@@ -93,8 +98,9 @@ ExecuServe had the same matcher and the same fix.
 
 ### Telling a GPU file from a CPU file
 
-A `.pte` carries no metadata the app can read, and the runtime has no call that says which
-delegates a loaded file uses ([executorch.md](executorch.md)), so the name decides.
+The app reads some of a `.pte`'s metadata (its window, through the runtime), but not the
+delegate identifiers inside it, and the runtime has no call that says which delegates a
+loaded file uses ([executorch.md](executorch.md)), so the name decides.
 
 - **The file's path before its repository's name.** A repository can hold several
   backends' folders, and its name speaks for one at most: `…-ExecuTorch-XNNPACK` holding
@@ -120,7 +126,8 @@ delegates a loaded file uses ([executorch.md](executorch.md)), so the name decid
   starts, for the screen and for `tools/execuserve pull` alike.
 - Each install's `execuserve.json` records its delegate folder (`"backend": "vulkan"`), and
   `/v1/models` reports `executorch-vulkan` or `executorch-xnnpack` from it. A file copied in
-  by hand has no record, so only its name can say.
+  by hand, or an install whose manifest predates the field, has no record, so only its name
+  can say.
 - GPU install ids always contain `vulkan` and CPU ids never do (a CPU file named for Vulkan
   is not listed), so a CPU and a GPU install can never share a folder.
 - `pull vulkan/x.pte` takes exactly that file, never the `xnnpack/` file of the same name.
@@ -151,8 +158,9 @@ Three harnesses, each answering a different question:
 
 **Two different CPU files appear below, and the difference matters.** On 2026-10-03 the
 published CPU file was `xnnpack/Qwen3-0.6B-8da4w-2k.pte`, rounded to nearest. It has since
-been replaced by `xnnpack/Qwen3-0.6B-8da4w-gptq-2k.pte` (GPTQ, gated against fp32). The Poco
-comparisons use the first; the SM8850 comparisons use the second. Both are 8da4w with the
+been replaced by `xnnpack/Qwen3-0.6B-8da4w-gptq-2k.pte` (GPTQ, gated against fp32). The Poco's
+`llama_main` comparisons use the first; its later engine and ExecuServe comparisons, and all
+the SM8850's, use the second. Both are 8da4w with the
 same kernels, so speed is comparable; answers are not.
 
 ## 3. Results
@@ -166,7 +174,7 @@ same kernels, so speed is comparable; answers are not.
 | Poco (Mali) | ExecuServe debug (`13085b1`) | Tokyo, Jupiter, a correct stream; `executorch-vulkan`; OpenAI 16/16, edge cases 28/28, Anthropic 8/8 |
 | SM8650 | openweights engine tests | 9 of 9 |
 | SM8650 | ExecuServe debug (`c67ec10`) | Tokyo; `/v1/models` said `executorch-xnnpack` for the GPU file, which is what `13085b1` fixed |
-| SM8850 | ExecuServe release APK (`f46833d`) | Catalog pulls of both builds; records `vulkan` / `xnnpack`; greedy Tokyo, 51, Jupiter; 36-chunk stream; 5 of 5 requests |
+| SM8850 | ExecuServe release APK (`f46833d`) | Catalog pulls of both builds; records `vulkan` / `xnnpack`; greedy Tokyo, 51, Jupiter; a stream of 36 `data:` lines ending in `[DONE]`; the server's totals then said 5 completed, 0 failed; later, 12 timed requests, all `stop` |
 | SM8850 | openweights release APK | Installs, launches, keeps running |
 | SM8850 | openweights engine tests | 9 of 9 on the GPU build (twice) and 9 of 9 on the GPTQ CPU build, test APK from the release commit |
 
@@ -215,8 +223,8 @@ throughout):
 
 | Poco, engine, 937-token prompt | CPU (GPTQ) | GPU | GPU ÷ CPU |
 |---|---:|---:|---:|
-| Prefill, tok/s | 274.2, 279.4, 278.7 | **405.6, 401.8, 426.7** | 1.5 |
-| Decode, tok/s | **24.8, 24.8, 24.8** | 9.5, 9.5, 10.4 | 0.4 |
+| Prefill, tok/s | 274.2, 279.4, 278.7 | **405.6, 401.8, 426.7** | 1.4 to 1.6 |
+| Decode, tok/s | **24.8, 24.8, 24.8** | 9.5, 9.5, 10.4 | 0.38 to 0.42 |
 
 The GPU decoded slower in this run than in the first (9.5 to 10.4 against 12.5 to 13.7 tok/s,
 same file); prefill matched. ExecuServe's debug build (the phone's Play-signed release blocks
@@ -225,13 +233,13 @@ requests as on the SM8850, sent from the Mac through `adb forward`; its run hist
 
 | Poco, ExecuServe | CPU (GPTQ) | GPU | GPU ÷ CPU |
 |---|---:|---:|---:|
-| 27-token prompt: prefill, tok/s | 197, 380, 391 | 173, 178, 189 | about 0.5 |
-| 27-token prompt: decode, tok/s | **56.4, 59.3, 59.5** | 15.3, 15.8, 16.3 | 0.27 |
-| 702-token prompt: prefill, tok/s | 325, 328, 335 | **371, 431, 432** | 1.2 to 1.3 |
-| 702-token prompt: decode, tok/s | **29.7, 29.9, 30.4** | 13.3, 13.5, 13.6 | 0.45 |
+| 27-token prompt: prefill, tok/s | 197, 380, 391 | 173, 178, 189 | 0.4 to 1.0 |
+| 27-token prompt: decode, tok/s | **56.4, 59.3, 59.5** | 15.3, 15.8, 16.3 | 0.26 to 0.29 |
+| 702-token prompt: prefill, tok/s | 325, 328, 335 | **371, 431, 432** | 1.1 to 1.3 |
+| 702-token prompt: decode, tok/s | **29.7, 29.9, 30.4** | 13.3, 13.5, 13.6 | 0.44 to 0.46 |
 
-On Mali the GPU wins only the long prompt's read, and the CPU decodes 2.2 to 3.7 times faster
-at every length. A 900-token first turn with a 100-token reply is therefore about 2.7 + 3.3 =
+On this Mali GPU the GPU wins only the long prompt's read, and the CPU decodes 2.2 to 3.9
+times faster at both measured lengths (27 and 702 tokens in ExecuServe, 937 in the engine). A 900-token first turn with a 100-token reply is therefore about 2.7 + 3.3 =
 6.0 s on the CPU against 2.1 + 7.4 = 9.5 s on the GPU, by ExecuServe's long-prompt figures.
 
 **Snapdragon 8 Gen 3 (SM8650, Adreno 750).** Engine matrix, Vulkan: prefill 585.6, 638.7
@@ -243,40 +251,42 @@ folder):
 
 | | CPU (GPTQ) | GPU | GPU ÷ CPU |
 |---|---:|---:|---:|
-| 27-token prompt: prefill, tok/s | 540, 900, 931 | 794, 871, 900 | about 1 |
-| 27-token prompt: decode, tok/s | **123.1, 124.8, 127.5** | 80.9, 90.8, 92.5 | 0.7 |
-| 702-token prompt: prefill, tok/s | 746, 749, 771 | **901, 1,007, 1,180** | 1.4 |
-| 702-token prompt: decode, tok/s | 49.6, 50.4, 51.4 | **61.3, 61.7, 63.9** | 1.2 |
+| 27-token prompt: prefill, tok/s | 540, 900, 931 | 794, 871, 900 | 0.9 to 1.7 |
+| 27-token prompt: decode, tok/s | **123.1, 124.8, 127.5** | 80.9, 90.8, 92.5 | 0.63 to 0.75 |
+| 702-token prompt: prefill, tok/s | 746, 749, 771 | **901, 1,007, 1,180** | 1.2 to 1.6 |
+| 702-token prompt: decode, tok/s | 49.6, 50.4, 51.4 | **61.3, 61.7, 63.9** | 1.2 to 1.3 |
 
 The engine's matrix on the same phone (937-token prompt, three turns):
 
 | SM8850, engine | Prefill, tok/s | Decode, tok/s | Resident |
 |---|---|---|---|
-| Vulkan | 1,046.9, 968.0, 1,116.8 | 54.3, 54.8, 51.4 | 264 to 268 MB |
-| XNNPACK (GPTQ) | 556.1, 550.2, 548.3 | 38.9, 38.0, 38.1 | 1,164 to 1,166 MB |
+| Vulkan | 1,046.9, 968.0, 1,116.8 | 54.3, 54.8, 51.4 | 264 to 268 MiB |
+| XNNPACK (GPTQ) | 556.1, 550.2, 548.3 | 38.9, 38.0, 38.1 | 1,164 to 1,166 MiB |
 
-Through the engine the GPU reads the 937-token prompt 1.9 times as fast and decodes 1.4
-times as fast. The engine feeds a prompt in 800-character pieces where ExecuServe feeds it
-whole, which is why the CPU's long-prompt figures differ between the two tables (550 against
-750 tok/s); the piece-size test on the same phone read 525 to 604 tok/s on the CPU and 862 to
+Through the engine the GPU reads the 937-token prompt 1.7 to 2.0 times as fast and decodes
+1.3 to 1.4 times as fast. The CPU's long-prompt figures differ between the two tables (550
+against 750 tok/s): the engine feeds a prompt in 800-character pieces and ExecuServe feeds it
+whole, but the prompts and harnesses differ too, so the difference is not attributed to the
+pieces; the piece-size test on the same phone read 525 to 604 tok/s on the CPU and 862 to
 1,189 on the GPU across pieces of 400 to 6,400 characters. Decode slows as the context fills
 on both backends, but less on the GPU, which is why the GPU leads with a long prompt and
 trails with a short one.
 
 ### 3.3 Memory
 
-- **Resident memory is not comparable across GPU families.** The same Vulkan file showed
-  222 to 249 MB resident on the SM8650 and 264 to 268 MB on the SM8850 (where the CPU file
-  showed 1,164 to 1,166 MB), but 2,208 to 2,249 MB on the Mali phone (where the CPU file showed
-  1,186 to 1,189 MB). On the Poco, `llama_main` reported 1,047 MiB for the CPU file and 1,680
+- **Resident memory is not comparable across GPU families.** The engine logs `VmRSS` in MiB.
+  The same Vulkan file showed 222 to 249 MiB resident on the SM8650 and 264 to 268 MiB on the
+  SM8850 (where the CPU file showed 1,164 to 1,166 MiB), but 2,208 to 2,249 MiB on the Mali
+  phone (where the CPU file showed 1,186 to 1,189 MiB). On the Poco, `llama_main` reported 1,047 MiB for the CPU file and 1,680
   MiB after loading the GPU file, rising to 2,201 MiB by the end of the reply. Where a driver
   places GPU buffers decides what the process is charged for; the number is not the model's
   size.
 - **The Vulkan file is larger**: 616 MB against 497 MB for the CPU file at 2k (the 16k and
   32k GPU files are 704 MB and 805 MB).
-- **32k does not fit a 12 GB phone.** The 32k Vulkan file loaded on the Poco and was killed
-  while allocating its 7.5 GB fp32 KV cache, taking adb down with it. Its `config.json`
-  already says `fits_phone_budget: false`.
+- **32k did not run on the 12 GB phone.** The 32k Vulkan file's run on the Poco stopped after
+  reading its metadata, and adb dropped with it; the saved output shows neither a finished
+  load nor the kill. Its fp32 KV cache alone would be about 7.5 GB, and its `config.json`
+  already says `fits_phone_budget: false`, but the cause was not captured.
 
 ### 3.4 The 1.5.1 runtime opens 1.4.0 files
 
@@ -293,24 +303,26 @@ should.
 - **Ship the GPU path, and keep the CPU path beside it.** It is correct on every GPU tried,
   costs no second library, and a phone whose driver cannot run the shaders loses only its
   GPU offers, once, with the reason recorded.
-- **On Mali, the CPU build is the one to use.** Decode is what a reader waits on, and the
-  Mali GPU decodes at a quarter to a half of the CPU's speed with this delegate; its 1.2 to
-  1.5 times faster read of a long prompt does not pay for that on any turn measured. That matches
+- **On this Mali phone, the CPU build is the one to use.** Decode is what a reader waits on,
+  and the Mali-G925 decodes Qwen3-0.6B at a quarter to a half of the CPU's speed with this
+  delegate; its 1.1 to 1.6 times faster read of a long prompt does not pay for that on any
+  turn measured. Other Mali GPUs and larger models were not measured. That matches
   llama.cpp's Vulkan on the same GPU in [gpu-backends.md](gpu-backends.md) only in its
   verdict, not its shape: there prefill was the loss and decode a small win.
 - **On a recent Adreno, it depends on the conversation.** On the SM8850 the GPU reads long
-  prompts 1.4 to 1.9 times as fast and decodes 1.2 to 1.4 times as fast with a long prompt
-  behind it, and decodes a short exchange at 0.7 times the CPU's speed. The SM8650 had no
+  prompts 1.2 to 2.0 times as fast and decodes 1.2 to 1.4 times as fast with a long prompt
+  behind it, and decodes a short exchange at 0.6 to 0.75 times the CPU's speed. The SM8650 had no
   CPU run, so no ratio is claimed for it.
 - **Only Qwen3-0.6B was measured.** Larger models move the balance (the GPU's advantage
   grows with arithmetic per token), and the hybrid families are untested on 1.5.1's Vulkan
   delegate: 1.4.0's segfaulted on LFM2.5 at the first prefill
   ([executorch-state-and-recipes.md](executorch-state-and-recipes.md), "Another backend").
 
-## 5. QA: six Codex rounds on the app code
+## 5. QA: Codex on the code, then on these documents
 
-Every review ran `gpt-6.1-sol` at medium reasoning in a read-only sandbox, so none ran builds
-or tests; each fix was tested before the next round. Outputs and the exact prompts are in
+Every review ran `gpt-6.1-sol` at medium reasoning in a read-only sandbox. The app reviews
+report that they ran no builds or device tests; the execupack review reports running Ruff and
+seven version tests. Each fix was tested before the next round. Outputs and the exact prompts are in
 [`codex/`](../../tools/eval/results/vulkan-2026-10-04/codex/).
 
 | Round | Reviewed | Found | Outcome |
@@ -322,6 +334,7 @@ or tests; each fix was tested before the next round. Outputs and the exact promp
 | Vulkan 2 | Both apps, after the fixes | The bridge's overflow matcher (openweights); install ids still colliding across folders (ExecuServe); a Vulkan-named repository suppressing the folder suffix; `pull` matching basenames before paths | All fixed, then committed (`55e4f68`, `c67ec10`, `13085b1`) |
 | Vulkan 3 | The pushed commits | Every earlier fix confirmed; five narrow cases: a CPU file in a Vulkan-named repository labelled GPU; GPU rows stale until reload; ids colliding for files named `…-vulkan`; a pull in flight enqueuing after a refusal; the backend reported from names | All fixed (`a23195d0`, `f46833d`) |
 | Vulkan 4 to 6 | Those fixes | ExecuServe clean at once. openweights: the new names would orphan a copy saved under the old name, then a half-downloaded one | Fixed; round 6 found none |
+| Docs 1 and 2 | This note, ExecuServe's results page and execupack's findings, against the raw files | Claims beyond the saved evidence (the SM8850 stream, the 32k cause, the cause of a speed difference), CPU-file attribution, ratio ranges, MB for MiB, two key-file paths left in logs, links in the archived reviews | Fixed; the second pass found two wording items, also fixed |
 
 ## 6. What was recorded, and what was not
 
@@ -351,15 +364,17 @@ record the numbers?" Mostly no, at the time, and this is the account.
 ## Open
 
 - **Recommend the CPU build where it is faster.** Both apps offer the two builds without a
-  preference. The data says CPU on Mali at every length, and depends-on-length on the
-  SM8850's Adreno; a rule for older Adrenos needs a CPU run on an SM8650 first.
+  preference. The data says CPU on the Poco's Mali-G925 at both measured lengths, and
+  depends-on-length on the SM8850's Adreno; a rule for older Adrenos needs a CPU run on an SM8650 first.
 - **Larger models and the hybrid families on 1.5.1's Vulkan delegate.**
 - **Sustained runs.** Every number here is from a cool phone over a few minutes.
 
 ## Reproducing
 
 ```sh
-# The engine tests against any .pte on the phone (the test APK from :core:engine:assembleDebugAndroidTest)
+# The engine tests against any .pte on the phone (the test APK from :core:engine:assembleDebugAndroidTest).
+# A streamed adb install worked on the Poco this time; where HyperOS refuses it, push and pm install:
+#   adb push <apk> /data/local/tmp/engine-test.apk && adb shell pm install -r -t --user 0 /data/local/tmp/engine-test.apk
 adb install -r -t core/engine/build/outputs/apk/androidTest/debug/engine-debug-androidTest.apk
 adb shell am instrument -w -r \
   -e class io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest \

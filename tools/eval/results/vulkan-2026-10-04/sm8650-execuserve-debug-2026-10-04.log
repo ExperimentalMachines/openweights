@@ -6,21 +6,21 @@ not captured to a file at the time. Keys are redacted; scratch paths shortened t
 ##############################################################################
 # /v1/models
 ##############################################################################
-$ export ADB_SERVER_SOCKET=tcp:127.0.0.1:5037; ls ~/.config/execuserve/ 2>/dev/null; K=$(cat ~/.config/execuserve/*36aa3b71* 2>/dev/null | head -1); [ -z "$K" ] && K=$(grep -rh "" ~/.config/execuserve/ 2>/dev/null | head -1); echo "key length ${#K}"; adb shell "curl -s -m 20 http://127.0.0.1:8080/v1/models -H 'Authorization: Bearer $K'" | head -c 600; echo
+$ export ADB_SERVER_SOCKET=tcp:127.0.0.1:5037; ls <key file> 2>/dev/null; K=<redacted>; [ -z "$K" ] && K=$(grep -rh "" <key file> 2>/dev/null | head -1); echo "key length ${#K}"; adb shell "curl -s -m 20 http://127.0.0.1:8080/v1/models -H 'Authorization: Bearer $K'" | head -c 600; echo
 
-36aa3b71.key
-783ee7e5.key
-adb-EIHAIRFYORFADMCE-PreFuw._adb-tls-connect._tcp.key
-emulator-5554.key
-emulator-5560.key
-emulator-5562.key
+[key file name redacted]
+[key file name redacted]
+[key file name redacted]
+[key file name redacted]
+[key file name redacted]
+[key file name redacted]
 key length 47
 {"object":"list","data":[{"id":"qwen3-0.6b-vulkan-8da4w-2k","object":"model","created":1791094823,"owned_by":"Qwen","context_length":2048,"loaded":true,"family":"qwen3","size_bytes":616404352,"backend":"executorch-xnnpack","aliases":["qwen3-0.6b-vulkan"],"capabilities":["completions","chat","tools","reasoning"]}]}
 
 ##############################################################################
 # chat request
 ##############################################################################
-$ export ADB_SERVER_SOCKET=tcp:127.0.0.1:5037; K=$(cat ~/.config/execuserve/36aa3b71.key); adb shell "curl -s -m 120 http://127.0.0.1:8080/v1/chat/completions -H 'Authorization: Bearer $K' -H 'Content-Type: application/json' -d '{\"model\":\"qwen3-0.6b-vulkan-8da4w-2k\",\"messages\":[{\"role\":\"user\",\"content\":\"What is the capital of Japan? Answer in one sentence. /no_think\"}],\"max_tokens\":60}'" | python3 -c "import json,sys; d=json.load(sys.stdin); print('reply:', d['choices'][0]['message']['content'].strip()); print('usage:', d.get('usage')); print('timings:', {k:v for k,v in d.items() if 'time' in k or 'speed' in k})"; adb logcat -d | grep -E "AdrenoVK|ExecuTorch Vulkan" | tail -2
+$ export ADB_SERVER_SOCKET=tcp:127.0.0.1:5037; K=<redacted>; adb shell "curl -s -m 120 http://127.0.0.1:8080/v1/chat/completions -H 'Authorization: Bearer $K' -H 'Content-Type: application/json' -d '{\"model\":\"qwen3-0.6b-vulkan-8da4w-2k\",\"messages\":[{\"role\":\"user\",\"content\":\"What is the capital of Japan? Answer in one sentence. /no_think\"}],\"max_tokens\":60}'" | python3 -c "import json,sys; d=json.load(sys.stdin); print('reply:', d['choices'][0]['message']['content'].strip()); print('usage:', d.get('usage')); print('timings:', {k:v for k,v in d.items() if 'time' in k or 'speed' in k})"; adb logcat -d | grep -E "AdrenoVK|ExecuTorch Vulkan" | tail -2
 
 reply: The capital of Japan is Tokyo.
 usage: {'prompt_tokens': 24, 'completion_tokens': 12, 'total_tokens': 36, 'prompt_tokens_details': {'cached_tokens': 0}}

@@ -1,0 +1,23 @@
+- **P2, `openweights: docs/research/vulkan-on-device.md:155`: Wrong CPU-file attribution.** The Poco home engine logs and ExecuServe CSV use GPTQ, contradicting “The Poco comparisons use the first.” **Correct text:** “The Poco’s llama_main comparisons use the round-to-nearest CPU file. Its home engine and ExecuServe comparisons, and the SM8850 comparisons, use GPTQ.”
+
+- **P2, `openweights: docs/research/vulkan-on-device.md:169`: Unrecorded streaming result presented as verified.** The SM8850 release log shows three answers, then a parser `TypeError`; the streaming/status retry ends with `/dev/stdin: No such device or address`. Neither “36-chunk stream” nor “5 of 5 requests” appears in the record. **Correct text:** “Catalog pulls of both builds; recorded Vulkan/XNNPACK backends; greedy Tokyo, 51 and Jupiter. Streaming and final request totals are not verified by the retained output.”
+
+- **P2, `openweights: docs/research/vulkan-on-device.md:277`: Load completion and OOM cause exceed the captured evidence.** The 32k log stops after metadata and method selection. It contains no completed-load message, allocation failure or kill diagnostic. **Correct text:** “The 32k attempt on the Poco did not complete. The session reports an adb disconnect, but the retained output does not establish a successful load or confirm an OOM kill during KV-cache allocation.”
+
+- **P2, `openweights: docs/research/vulkan-on-device.md:259`: Chunking is asserted as a proven cause.** The harnesses use different prompts, and the CPU piece-size experiment remains at 525–604 tok/s even with 6,400-character pieces. It does not establish why ExecuServe reaches approximately 750 tok/s. **Correct text:** “The engine uses 800-character prefill pieces, while ExecuServe feeds these prompts whole. The prompts and harnesses differ, so these measurements do not isolate the cause of their throughput difference.”
+
+- **P2, `openweights: docs/research/vulkan-on-device.md:363`: Reproduction command fails on the primary test phone.** The repository’s phone-deploy instructions document HyperOS blocking plain `adb install`. **Correct commands:**
+  ```sh
+  adb push core/engine/build/outputs/apk/androidTest/debug/engine-debug-androidTest.apk /data/local/tmp/engine-test.apk
+  adb shell pm install -r -t --user 0 /data/local/tmp/engine-test.apk
+  ```
+
+- **P2, `openweights: docs/research/vulkan-on-device.md:41`: Universal compatibility claim is too broad.** Section 3.4 checks one 1.4.0 export, not every Hub file. Upstream’s guarantee is qualified by stable APIs and feature-specific limitations, including custom operators. **Correct text:** “Upstream guarantees backward compatibility for exports using stable APIs, subject to feature-specific limitations. Section 3.4 verifies one 1.4.0 XNNPACK export on the 1.5.1 runtime.” See the [upstream policy](https://raw.githubusercontent.com/pytorch/executorch/v1.5.1/runtime/COMPATIBILITY.md).
+
+- **P3, `openweights: docs/research/vulkan-on-device.md:312` and `openweights: tools/eval/results/vulkan-2026-10-04/codex/PROMPTS.md:3`: “No review ran tests” contradicts the archived review.** `1.5.1-execupack.md:5` reports Ruff checks and seven passing version tests. **Correct text:** “Reviews used a read-only sandbox. The execupack review reports passing Ruff checks and seven version tests; app reviews report that builds and device tests were not run.”
+
+- **P3, `openweights: docs/research/vulkan-on-device.md:255` and `openweights: docs/research/vulkan-on-device.md:269`: Resident-memory units are wrong.** `residentMb()` divides Linux `VmRSS` KiB by 1,024, producing MiB. **Correct text:** Change the engine resident-memory units from “MB” to “MiB”; retain the numbers. File sizes expressed in decimal MB should remain unchanged.
+
+- **P3, `openweights: docs/research/vulkan-on-device.md:96`: “No metadata the app can read” is false.** The engine reads exported context metadata; the missing API concerns delegate identification. **Correct text:** “The app reads some exported metadata, but does not inspect the file’s delegate identifiers, and the runtime exposes no API identifying the delegates used by a loaded file. Backend classification therefore uses names.”
+
+- **P3, `openweights: tools/eval/results/vulkan-2026-10-04/sm8650-execuserve-debug-2026-10-04.log:9` and `openweights: tools/eval/results/vulkan-2026-10-04/sm8850-execuserve-release-2026-10-04.log:102`: Credential-file paths remain exposed.** SM8650 lines 9–16 and 23 disclose cache locations and key filenames; SM8850 lines 102, 116 and 152 retain its key path. **Correct text:** Replace credential-reading expressions with `K=<redacted>` or `KEY=<redacted>`, and replace the credential-directory listing with `[credential filenames redacted]`.

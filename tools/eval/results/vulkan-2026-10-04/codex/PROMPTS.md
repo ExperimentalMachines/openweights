@@ -1,7 +1,7 @@
 # The prompts each Codex review was given
 
-Every review ran as `codex exec -m gpt-6.1-sol -c model_reasoning_effort=medium -s read-only` (read-only sandbox, so
-no review ran builds or tests), from the repository named, and wrote its final message to the file named. Prompts are
+Every review ran as `codex exec -m gpt-6.1-sol -c model_reasoning_effort=medium -s read-only` (a read-only sandbox:
+the app reviews report no builds or device tests; the execupack review reports passing Ruff and seven version tests), from the repository named, and wrote its final message to the file named. Prompts are
 verbatim from the session; scratch paths are shortened.
 
 ## 1.5.1-execuserve-r1.md
@@ -116,3 +116,16 @@ Re-review the uncommitted diff (git diff HEAD). Your last finding: for publisher
 Re-review the uncommitted diff (git diff HEAD), focusing on ModelStore.compiledDestination. Your last finding: a legacy partial download (<legacy name>.pte.part) was ignored, so a redownload started at the new suffixed name. Now a destination counts as started when the file or its DOWNLOAD_PARTIAL_SUFFIX file exists; the current name wins if started, else a started legacy name, else the current name. Verify, and confirm nothing else in the diff regressed. Report only real problems with file:line and a fix, ranked P1-P3, or say none.
 ```
 
+## docs-ow-r1.md, docs-es-r1.md, docs-ep-r1.md
+
+2026-10-04, after the documentation was pushed: each repository's documentation of this work
+was checked against its raw logs, CSVs and code. The prompts asked for every number, ratio and
+claim to be recomputed and checked, contradictions, broken links, leaked secrets and misleading
+statements, ranked P1-P3. All findings were fixed in the commit that adds these files.
+
+## docs-ow-r2.md, docs-es-r2.md, docs-ep-r2.md
+
+The same day, on the fixes: each repository's uncommitted documentation diff, with the first
+review's output in it, re-checked for each finding being fixed and every stated ratio
+recomputed from the raw files. ExecuServe came back clean; openweights and execupack each had
+one P3 wording item, both fixed in the same commit.

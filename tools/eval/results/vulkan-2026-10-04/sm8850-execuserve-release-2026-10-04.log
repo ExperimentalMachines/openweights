@@ -99,7 +99,7 @@ LISTEN      0      511     [::ffff:127.0.0.1]:8080                     *:*      
 ##############################################################################
 # load and /v1/models
 ##############################################################################
-$ KEY=$(cat ~/.config/execuserve/4816891.key); H="Authorization: Bearer $KEY"
+$ KEY=<redacted>; H="Authorization: Bearer $KEY"
 adb shell "curl -s -m 300 -X POST -H '$H' http://127.0.0.1:8080/v1/execuserve/models/qwen3-0.6b-vulkan-8da4w-2k/load; echo; curl -s -H '$H' http://127.0.0.1:8080/v1/models" | python3 -c "
 import sys,json
 lines=sys.stdin.read().strip().split('\n')
@@ -113,7 +113,7 @@ qwen3-0.6b-vulkan-8da4w-2k executorch-vulkan loaded
 ##############################################################################
 # greedy questions
 ##############################################################################
-$ KEY=$(cat ~/.config/execuserve/4816891.key)
+$ KEY=<redacted>
 cat > $SCRATCH/q.sh <<EOF
 H="Authorization: Bearer $KEY"
 for q in "What is the capital of Japan? Answer in one word." "What is 17 times 3? Answer with the number only." "Name the largest planet in our solar system in one word."; do
@@ -149,7 +149,7 @@ TypeError: argument of type 'int' is not iterable
 # stream and status
 ##############################################################################
 $ adb shell sh /dev/stdin <<EOF | tail -3
-H="Authorization: Bearer $(cat ~/.config/execuserve/4816891.key)"
+H="Authorization: Bearer <redacted>"
 curl -s -N -m 120 -H "\$H" -H 'Content-Type: application/json' http://127.0.0.1:8080/v1/chat/completions -d '{"model":"qwen3-0.6b-vulkan-8da4w-2k","stream":true,"temperature":0,"max_tokens":40,"messages":[{"role":"user","content":"Count from 1 to 5. /no_think"}]}' > /data/local/tmp/es-s.txt
 echo "stream data lines: \$(grep -c '^data:' /data/local/tmp/es-s.txt), done: \$(grep -c 'DONE' /data/local/tmp/es-s.txt)"
 rm /data/local/tmp/es-s.txt
@@ -158,3 +158,18 @@ EOF
 
 sh: /dev/stdin: No such device or address
 
+##############################################################################
+# stream and status, retried as a pushed script (the first try above failed: the device has no /dev/stdin)
+##############################################################################
+$ S=$SCRATCH; cat > $S/s.sh <<EOF
+H="Authorization: Bearer <redacted>"
+curl -s -N -m 120 -H "\$H" -H 'Content-Type: application/json' http://127.0.0.1:8080/v1/chat/completions -d '{"model":"qwen3-0.6b-vulkan-8da4w-2k","stream":true,"temperature":0,"max_tokens":40,"messages":[{"role":"user","content":"Count from 1 to 5. /no_think"}]}' > /data/local/tmp/es-s.txt
+echo "stream data lines: \$(grep -c '^data:' /data/local/tmp/es-s.txt), done: \$(grep -c 'DONE' /data/local/tmp/es-s.txt)"
+rm /data/local/tmp/es-s.txt
+curl -s -H "\$H" http://127.0.0.1:8080/v1/execuserve/status | tr ',' '\n' | grep -iE 'completed|failed|per_s|tps|rate' | head -8 | tr '\n' ' '
+EOF
+adb push $S/s.sh /data/local/tmp/es-s.sh >/dev/null && adb shell sh /data/local/tmp/es-s.sh; adb shell rm /data/local/tmp/es-s.sh
+
+$SCRATCH/s.sh: 1 file pushed, 0 skipped. 3.2 MB/s (656 bytes in 0.000s)
+stream data lines: 36, done: 1
+"totals":{"completed":5 "failed":0 "decode_tokens_per_second":92.03980099502488 "prefill_tokens_per_second":606.060606060606 "decode_tokens_per_second":91.35802469135803 "prefill_tokens_per_second":105.26315789473684 "decode_tokens_per_second":92.3076923076923 "prefill_tokens_per_second":774.1935483870968

@@ -58,8 +58,8 @@ that is what the measurements kept saying, and Settings explains rather than off
   GGUFs (`research/executorch.md`). It runs a file on whichever delegate the file was
   exported for: XNNPACK on the CPU, and since 2026-10-04 Vulkan on the GPU, on any phone
   whose GPU runs the shaders (`research/vulkan-on-device.md`). Which is faster depends on the
-  GPU: on the Mali dev phone the CPU build decodes three times faster, on a Snapdragon 8 Elite
-  Gen 5 the GPU wins long prompts and loses short ones. Both are offered; the app does not yet
+  GPU: on the Mali dev phone the CPU build decodes 2.2 to 3.9 times faster with Qwen3-0.6B, on a
+  Snapdragon 8 Elite Gen 5 the GPU wins long prompts and loses short ones. Both are offered; the app does not yet
   recommend one.
 
 So there is no backend picker and no one-tap benchmark. Settings lists what the device
