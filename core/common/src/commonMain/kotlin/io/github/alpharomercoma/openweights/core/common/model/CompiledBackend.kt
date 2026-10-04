@@ -92,11 +92,22 @@ enum class CompiledBackend(val processor: Processor) {
          * rather than "broken": most published exports are XNNPACK, and refusing every
          * unlabelled model would hide almost all of them.
          */
+        /**
+         * The backend of the file at [path] in [repoId]: the path first, since a repository can
+         * hold several backends' folders and its own name speaks for at most one of them
+         * (`…-ExecuTorch-XNNPACK` holding `vulkan/model.pte` is a GPU file). The repository
+         * name answers only when the path is silent.
+         */
+        fun of(repoId: String, path: String): CompiledBackend =
+            of(path).takeUnless { it == UNKNOWN } ?: of(repoId)
+
         fun of(text: String): CompiledBackend {
             val name = text.lowercase()
             return when {
-                "xnnpack" in name -> XNNPACK
+                // GPU first: an installed name joins the repository's name to the file's, and a
+                // `…-XNNPACK` repository's `vulkan/` file must still read as a GPU file.
                 "vulkan" in name -> VULKAN
+                "xnnpack" in name -> XNNPACK
                 "vgf" in name -> VGF
                 "qnn" in name || "qualcomm" in name || "htp" in name -> QNN
                 "neuropilot" in name || "mediatek" in name || "mtk" in name -> NEUROPILOT

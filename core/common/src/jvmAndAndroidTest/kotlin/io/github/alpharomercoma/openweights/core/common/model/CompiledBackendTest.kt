@@ -127,4 +127,20 @@ class CompiledBackendTest {
         assertThat(CompiledBackend.socIn("xnnpack/Qwen3-0.6B-8da4w-2k.pte")).isNull()
         assertThat(CompiledBackend.socIn("model.pte")).isNull()
     }
+
+    @Test
+    fun aFilesOwnPathOutranksItsRepositoryName() {
+        // A repository can hold several backends' folders; its name speaks for one at most.
+        assertThat(CompiledBackend.of("someone/Qwen3-ExecuTorch-XNNPACK", "vulkan/model.pte"))
+            .isEqualTo(CompiledBackend.VULKAN)
+        assertThat(CompiledBackend.of("someone/Qwen3-ExecuTorch-XNNPACK", "model.pte"))
+            .isEqualTo(CompiledBackend.XNNPACK)
+        assertThat(
+            CompiledBackend.of(
+                "experimentalmachines/Qwen3-0.6B-ExecuTorch",
+                "xnnpack/Qwen3-0.6B-8da4w-2k.pte",
+            ),
+        )
+            .isEqualTo(CompiledBackend.XNNPACK)
+    }
 }

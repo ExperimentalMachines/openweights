@@ -28,6 +28,7 @@ import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.CachePolicy
 import coil3.svg.SvgDecoder
 import dagger.hilt.android.HiltAndroidApp
+import io.github.alpharomercoma.openweights.core.engine.VulkanSupport
 import io.github.alpharomercoma.openweights.core.tools.PublicOnlyDns
 import io.github.alpharomercoma.openweights.core.tools.SEARCH_USER_AGENT
 import io.github.alpharomercoma.openweights.core.tools.isPrivateLiteral
@@ -77,6 +78,9 @@ class OpenWeightsApplication :
      */
     override fun onCreate() {
         super.onCreate()
+        // Before any screen asks what this phone can run: a SharedPreferences read and one
+        // PackageManager feature check.
+        VulkanSupport.init(this)
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             runCatching { watches.sync() }
                 .onFailure { android.util.Log.w("OpenWeights", "watches not restored", it) }

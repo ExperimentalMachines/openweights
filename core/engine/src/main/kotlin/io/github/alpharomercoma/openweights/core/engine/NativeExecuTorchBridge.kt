@@ -127,7 +127,16 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
      */
     private fun Throwable.asOverflow(): ContextWindowExceededException? {
         val text = message.orEmpty()
-        if ("Max seq length exceeded" !in text && "max_context_len" !in text) return null
+        // The runner's own two diagnostics only (text_llm_runner.cpp: the conversation so far,
+        // and a single prompt, past the window). The wrapper appends recent runtime log lines
+        // to its messages, and those mention max_context_len in passing, so the name alone
+        // turned unrelated failures, a GPU that cannot run a Vulkan export among them, into a
+        // full window (codex QA).
+        if ("Max seq length exceeded" !in text &&
+            "Prompt exceeds KV cache capacity" !in text
+        ) {
+            return null
+        }
         return ContextWindowExceededException(
             "The conversation no longer fits this model's exported context window. " +
                 "Start a new chat, or use a model exported with a larger window.",

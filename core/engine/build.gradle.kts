@@ -256,18 +256,12 @@ dependencies {
     api(project(":core:common"))
     implementation(libs.kotlinx.coroutines.android)
 
-    // ExecuTorch's Android runtime. The XNNPACK build: the artifact is published per
-    // backend and MediaTek is not among the published ones, so reaching the NPU means
-    // building this from source against the NeuroPilot SDK. It carries native libraries
-    // for arm64-v8a and x86_64.
-    // -PexecutorchBackend=vulkan swaps in the Vulkan build of the same release, for measuring
-    // an export on the GPU delegate (docs/research/executorch-state-and-recipes.md). The app
-    // ships the XNNPACK artifact; nothing in a release build passes the property.
-    if (providers.gradleProperty("executorchBackend").orNull == "vulkan") {
-        implementation("org.pytorch:executorch-android-vulkan:${libs.versions.executorch.get()}")
-    } else {
-        implementation(libs.executorch.android)
-    }
+    // ExecuTorch's Android runtime, the Vulkan build: it registers both XnnpackBackend and
+    // VulkanBackend, so CPU and GPU exports open from one library (VulkanSupport decides
+    // whether this phone is offered GPU files). MediaTek is not among the published
+    // artifacts, so reaching the NPU means building that half from source against the
+    // NeuroPilot SDK. It carries native libraries for arm64-v8a and x86_64.
+    implementation(libs.executorch.android)
 
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)

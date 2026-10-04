@@ -266,6 +266,36 @@ class ExecuTorchEngine(
     /** A load refused for a reason the caller can show. */
     private fun refuse(message: String): Nothing = throw LlamaException(message)
 
+    /**
+     * Clears what a failed run held and rethrows. A Vulkan file that opens and then fails on
+     * its first run is the shape a missing device feature takes, since each shader is checked
+     * when it is dispatched rather than when the file loads, so that is recorded too; a
+     * cancelled turn is not a failure of the GPU and is not.
+     */
+    private fun abandonRun(failure: Throwable): Nothing {
+        fedText = ""
+        heldTokens = 0
+        runCatching { resetRuntime() }
+        throw failure
+    }
+
+    /**
+     * Runs one call into the runtime, and when it fails because this phone's GPU cannot run a
+     * Vulkan export at all (see [VulkanSupport.recordIfIncompatible]) records that, so GPU
+     * builds stop being offered here, and refuses with the way out. Every other failure
+     * passes through untouched: only the runtime's own incompatibility report costs the
+     * phone its GPU builds, never a bad file, a full window or an allocation.
+     */
+    private inline fun <T> gpuChecked(call: () -> T): T = try {
+        call()
+    } catch (failure: Throwable) {
+        val reason = VulkanSupport.recordIfIncompatible(failure) ?: throw failure
+        throw LlamaException(
+            "This phone's GPU cannot run this Vulkan build ($reason). GPU builds will not be " +
+                "offered on this phone again; the same model's CPU build runs anywhere.",
+        )
+    }
+
     override suspend fun unload() = turns.withLock { withContext(Dispatchers.IO) { closeModel() } }
 
     /** Under [turns]: the callers that already hold it cannot take it twice. */
@@ -287,12 +317,9 @@ class ExecuTorchEngine(
         // defaults for LFM2.5-VL).
         val heat = if (multimodal) VISION_TEMPERATURE else temperature
         val held = Opened(modelFile, tokenizer, heat, stateResetAtZero)
-        if (!bridge.load(
-                modelFile.absolutePath,
-                tokenizer.absolutePath,
-                heat,
-                multimodal,
-            )
+        if (!gpuChecked {
+                bridge.load(modelFile.absolutePath, tokenizer.absolutePath, heat, multimodal)
+            }
         ) {
             refuse("ExecuTorch could not open ${modelFile.name}")
         }
@@ -319,13 +346,14 @@ class ExecuTorchEngine(
             return
         }
         bridge.close()
-        val reopened =
+        val reopened = gpuChecked {
             bridge.load(
                 held.model.absolutePath,
                 held.tokenizer.absolutePath,
                 held.temperature,
                 multimodal,
             )
+        }
         if (!reopened) throw LlamaException("ExecuTorch could not reopen ${held.model.name}")
         moduleHasRun = false
     }
@@ -403,22 +431,21 @@ class ExecuTorchEngine(
         tailChars = fresh.length
         val outcome = try {
             moduleHasRun = true
-            bridge.generate(fresh, budget) { fragment ->
-                if (firstTokenAt == 0L) firstTokenAt = System.currentTimeMillis()
-                reply.accept(fragment)?.let { trySend(GenerationEvent.Token(it)) }
-                // Asked on every token rather than once from cancel(), because the
-                // runtime clears its stop flag when the token loop starts: a Stop that
-                // lands during the prefill ahead of it is erased, and a collector that
-                // has gone away has nobody left to call cancel() at all. Left running,
-                // the loop holds the module's lock until the window fills, and the next
-                // turn or a model switch waits behind it.
-                if (stopNow(discipline, fragment, reply, isClosedForSend)) bridge.stop()
+            gpuChecked {
+                bridge.generate(fresh, budget) { fragment ->
+                    if (firstTokenAt == 0L) firstTokenAt = System.currentTimeMillis()
+                    reply.accept(fragment)?.let { trySend(GenerationEvent.Token(it)) }
+                    // Asked on every token rather than once from cancel(), because the
+                    // runtime clears its stop flag when the token loop starts: a Stop that
+                    // lands during the prefill ahead of it is erased, and a collector that
+                    // has gone away has nobody left to call cancel() at all. Left running,
+                    // the loop holds the module's lock until the window fills, and the next
+                    // turn or a model switch waits behind it.
+                    if (stopNow(discipline, fragment, reply, isClosedForSend)) bridge.stop()
+                }
             }
         } catch (failure: Throwable) {
-            fedText = ""
-            heldTokens = 0
-            runCatching { resetRuntime() }
-            throw failure
+            abandonRun(failure)
         }
 
         // Whatever was held back in case it grew into a marker still belongs to the reply
@@ -628,7 +655,7 @@ class ExecuTorchEngine(
             val piece = warmPiece(rest, callChars)
             val before = System.currentTimeMillis()
             moduleHasRun = true
-            bridge.prefill(piece)
+            gpuChecked { bridge.prefill(piece) }
             fedAheadMs += System.currentTimeMillis() - before
             fedAheadChars += piece.length
             fedText += piece
@@ -664,12 +691,14 @@ class ExecuTorchEngine(
             if (cancelRequested) throw StoppedWhileFeeding()
             feedingPictures = true
             try {
-                bridge.prefillImage(
-                    readPicture(picture, spec),
-                    spec.side,
-                    spec.side,
-                    Letterbox.CHANNELS,
-                )
+                gpuChecked {
+                    bridge.prefillImage(
+                        readPicture(picture, spec),
+                        spec.side,
+                        spec.side,
+                        Letterbox.CHANNELS,
+                    )
+                }
             } finally {
                 feedingPictures = false
             }
@@ -808,7 +837,7 @@ class ExecuTorchEngine(
             while (fresh.isNotEmpty() && !warmStopped) {
                 val piece = warmPiece(fresh, callChars)
                 moduleHasRun = true
-                bridge.prefill(piece)
+                gpuChecked { bridge.prefill(piece) }
                 fedText += piece
                 val tokens = (piece.length / WARM_CHARS_PER_TOKEN).coerceAtLeast(1)
                 heldTokens += tokens

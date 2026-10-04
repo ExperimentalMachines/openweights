@@ -459,7 +459,7 @@ class DiscoverViewModel @Inject constructor(
      * read from the name because a `.pte` carries no metadata the app can inspect.
      */
     private fun runsHere(repoId: String, path: String): Boolean = ExecuTorchSupport.canRun(
-        CompiledBackend.of(repoId + path),
+        CompiledBackend.of(repoId, path),
         path,
         profiler.profile().socModel,
     )

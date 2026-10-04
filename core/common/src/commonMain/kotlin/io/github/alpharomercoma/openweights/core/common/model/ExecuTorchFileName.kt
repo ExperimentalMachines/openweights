@@ -69,10 +69,18 @@ object ExecuTorchFileName {
             ?.sanitized()
         val distinct = stem.sanitized().takeIf { it.isNotEmpty() && !it.equals("model", true) }
             ?: directory
-        return when (distinct) {
-            null -> repo + ModelFormat.PTE.suffix
-            else -> "$repo-$distinct" + ModelFormat.PTE.suffix
+        val name = when (distinct) {
+            null -> repo
+            else -> "$repo-$distinct"
         }
+        // The delegate is read off the installed name, so a GPU build whose folder alone says
+        // `vulkan/` keeps that in its name: otherwise it would install over the CPU build of
+        // the same file name and then be taken for one (codex QA).
+        // Decided by the file and its folder alone: the repository's own name can carry a
+        // backend marker and must not suppress this (codex QA).
+        val gpuOnlyByFolder = CompiledBackend.of(directory.orEmpty()) == CompiledBackend.VULKAN &&
+            CompiledBackend.of(distinct.orEmpty()) != CompiledBackend.VULKAN
+        return (if (gpuOnlyByFolder) "$name-vulkan" else name) + ModelFormat.PTE.suffix
     }
 
     /** Where the tokenizer for [modelFileName] lives: beside it, under the same stem. */

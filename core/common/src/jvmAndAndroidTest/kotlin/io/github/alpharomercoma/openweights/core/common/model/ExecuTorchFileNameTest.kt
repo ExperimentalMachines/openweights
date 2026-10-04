@@ -99,4 +99,40 @@ class ExecuTorchFileNameTest {
         assertThat(ModelFormat.of("Qwen3-1.7B-Q4_K_M.gguf")).isEqualTo(ModelFormat.GGUF)
         assertThat(ModelFormat.of("README.md")).isNull()
     }
+
+    @Test
+    fun aGpuBuildNamedOnlyByItsFolderKeepsVulkanInItsName() {
+        val cpu = ExecuTorchFileName.modelNameFor(
+            "publisher/Qwen3-ExecuTorch",
+            "xnnpack/Qwen3-8da4w.pte",
+        )
+        val gpu = ExecuTorchFileName.modelNameFor(
+            "publisher/Qwen3-ExecuTorch",
+            "vulkan/Qwen3-8da4w.pte",
+        )
+        // Two installs, not one overwriting the other, and the GPU one still reads as GPU.
+        assertThat(gpu).isNotEqualTo(cpu)
+        assertThat(CompiledBackend.of(gpu)).isEqualTo(CompiledBackend.VULKAN)
+        // A repository whose own name carries a backend marker still gets two installs.
+        val markedCpu = ExecuTorchFileName.modelNameFor(
+            "publisher/Qwen3-Vulkan",
+            "xnnpack/Qwen3-8da4w.pte",
+        )
+        val markedGpu = ExecuTorchFileName.modelNameFor(
+            "publisher/Qwen3-Vulkan",
+            "vulkan/Qwen3-8da4w.pte",
+        )
+        assertThat(markedGpu).isNotEqualTo(markedCpu)
+        val xnnpackRepoGpu = ExecuTorchFileName.modelNameFor(
+            "publisher/Qwen3-ExecuTorch-XNNPACK",
+            "vulkan/model.pte",
+        )
+        assertThat(CompiledBackend.of(xnnpackRepoGpu)).isEqualTo(CompiledBackend.VULKAN)
+        // A file that already says so is left as it was, which is what installed files are called.
+        val published = ExecuTorchFileName.modelNameFor(
+            "experimentalmachines/Qwen3-0.6B-ExecuTorch",
+            "vulkan/Qwen3-0.6B-vulkan-8da4w-2k.pte",
+        )
+        assertThat(published).isEqualTo("Qwen3-0.6B-ExecuTorch-Qwen3-0.6B-vulkan-8da4w-2k.pte")
+    }
 }

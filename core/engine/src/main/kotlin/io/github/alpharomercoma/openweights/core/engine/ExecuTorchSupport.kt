@@ -43,12 +43,19 @@ object ExecuTorchSupport {
      */
     val BACKENDS: Set<CompiledBackend> = setOf(
         CompiledBackend.XNNPACK,
+        CompiledBackend.VULKAN,
         CompiledBackend.NEUROPILOT,
         CompiledBackend.UNKNOWN,
     )
 
-    /** Whether this build could open a model compiled for [backend]. */
-    fun canRun(backend: CompiledBackend): Boolean = backend in BACKENDS
+    /**
+     * Whether this build could open a model compiled for [backend] on this phone.
+     *
+     * The build links Vulkan everywhere (the `executorch-android-vulkan` artifact carries
+     * XNNPACK too), but a GPU file still needs a GPU that runs its shaders: see [VulkanSupport].
+     */
+    fun canRun(backend: CompiledBackend): Boolean =
+        backend in BACKENDS && (backend != CompiledBackend.VULKAN || VulkanSupport.usable)
 
     /**
      * Whether this build could open the file at [path] on a device whose chip is [socModel].
