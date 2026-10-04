@@ -101,13 +101,13 @@ model search and downloads, and the three network tools. The
 
 | | llama.cpp | ExecuTorch |
 |---|---|---|
-| Files | GGUF, any architecture the pinned build reads | `.pte` compiled for XNNPACK |
+| Files | GGUF, any architecture the pinned build reads | `.pte` compiled for XNNPACK (CPU) or Vulkan (GPU) |
 | Families | All of llama.cpp's | Qwen3, Qwen3.5, Qwen2.5, SmolLM2, SmolLM3, Llama 3.2, Phi-4-mini, Gemma 3, and LFM2.5 including its VL variant |
 | Pictures | Any model with an `mmproj` projector | LFM2.5-VL and Gemma 3 exports |
 | Audio | Models with an audio projector | Not yet |
 | Tool use | Determined by the model's template | All families except SmolLM2 and Gemma 3 can write a call; whether a compiled model decides to is a property of how it was quantised (see below: the LFM2.5 1.2B exports were replaced on 2026-09-19 with ones that do, the 2.6B ones not yet) |
 | Thinking switch | Determined by the model's template | Qwen3, Qwen3.5 and SmolLM3; LFM2.5 decides for itself |
-| Compute | CPU with runtime-selected kernels (i8mm, SVE2, SME where present), KleidiAI, Adreno OpenCL where the driver works | CPU, KleidiAI kernels through XNNPACK |
+| Compute | CPU with runtime-selected kernels (i8mm, SVE2, SME where present), KleidiAI, Adreno OpenCL where the driver works | CPU, KleidiAI kernels through XNNPACK; the GPU through Vulkan for files exported for it, on phones whose GPU runs them (faster on a recent Adreno with long prompts, three times slower than the CPU on Mali: `docs/research/vulkan-on-device.md`) |
 | Context window | You choose; the app suggests one from the header and your memory | Fixed at export when reported; legacy files without window metadata show an adjustable app-side estimate, not a verified native limit |
 
 ### Chat

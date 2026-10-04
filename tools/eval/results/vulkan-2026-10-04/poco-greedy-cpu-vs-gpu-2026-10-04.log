@@ -1,0 +1,33 @@
+POCO X8 Pro Max, 2026-10-04 UTC: the same four questions, greedy (--temperature 0), through llama_main (v1.4.0 build,
+1.4.0 and 1.5.1 files both load on it), cpu.pte = xnnpack/Qwen3-0.6B-8da4w-2k.pte of 2026-10-03 (round to nearest),
+gpu.pte = vulkan/Qwen3-0.6B-vulkan-8da4w-2k.pte. The CPU file says Osaka; the GPU file does not.
+Transcribed from the session's terminal output (the command, then everything it printed),
+not captured to a file at the time. Keys are redacted; scratch paths shortened to $SCRATCH.
+
+##############################################################################
+# setup
+##############################################################################
+$ D=10.202.199.180:36171; cat > $SCRATCH/greedy.sh <<'EOF'
+cd /data/local/tmp/vkcmp
+for q in "What is the capital of Japan?" "What is the capital of France?" "Name the largest planet in the solar system." "What is 17 times 3?"; do
+  for m in cpu gpu; do
+    out=$(./llama_main --model_path $m.pte --tokenizer_path tokenizer.json --temperature 0 --max_new_tokens 40 --prompt "<|im_start|>user
+$q /no_think<|im_end|>
+<|im_start|>assistant
+" 2>/dev/null | tr '\n' ' ' | sed 's/.*<\/think>//; s/<|im_end|>.*//')
+    echo "[$m] $q => $out"
+  done
+done
+EOF
+adb -s $D push $SCRATCH/greedy.sh /data/local/tmp/vkcmp/ >/dev/null; adb -s $D shell sh /data/local/tmp/vkcmp/greedy.sh
+
+$SCRATCH/greedy.sh: 1 file pushed, 0 skipped. 5.2 MB/s (488 bytes in 0.000s)
+[cpu] What is the capital of Japan? =>   The capital of Japan is **Osaka**.
+[gpu] What is the capital of Japan? =>   The capital of Japan is **Tokyo**.
+[cpu] What is the capital of France? =>   The capital of France is Paris.
+[gpu] What is the capital of France? =>   The capital of France is **Paris**. It is a major city in both geography and culture, known for its historical significance and modern attractions.
+[cpu] Name the largest planet in the solar system. =>   The largest planet in the solar system is **Jupiter**.
+[gpu] Name the largest planet in the solar system. =>   The largest planet in the solar system is Jupiter.
+[cpu] What is 17 times 3? =>   17 multiplied by 3 is:  **17 × 3 = 51**.
+[gpu] What is 17 times 3? =>   To solve the problem:  **17 × 3**.  First, multiply 17 by 3:  $$ 17 	imes 3 = 51  PyTorchObserver {"prefill_token_per_sec":91.3043,"decode_token_per_sec":15.7195,"prompt_tokens":21,"generated_tokens":39,"model_load_start_ms":1791098789628,"model_load_end_ms":1791098791150,"inference_start_ms":1791098791150,"inference_end_ms":1791098793861,"prompt_eval_end_ms":1791098791380,"first_token_ms":1791098791380,"aggregate_sampling_time_ms":68,"SCALING_FACTOR_UNITS_PER_SECOND":1000}
+

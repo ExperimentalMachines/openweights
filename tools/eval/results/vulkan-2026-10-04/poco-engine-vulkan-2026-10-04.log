@@ -1,0 +1,56 @@
+POCO X8 Pro Max, Mali-G925, 2026-10-04 UTC, over the phone's hotspot (wireless debugging).
+openweights ExecuTorchOnDeviceTest at 55e4f68, Qwen3-0.6B Vulkan 2k. Device clock UTC+8.
+The raw am instrument output is beside this file (poco-engine-vulkan-2026-10-04.instrument.txt).
+Transcribed from the session's terminal output (the command, then everything it printed),
+not captured to a file at the time. Keys are redacted; scratch paths shortened to $SCRATCH.
+
+##############################################################################
+# device
+##############################################################################
+$ S=$SCRATCH; D=adb-EIHAIRFYORFADMCE-PreFuw._adb-tls-connect._tcp; ls -la $S/vkdev/q.pte $S/vkdev/t.json; adb -s $D shell 'getprop ro.soc.model; pm list features | grep vulkan.version; grep MemAvailable /proc/meminfo'; adb -s $D shell mkdir -p /data/local/tmp/openweights; date +%T; adb -s $D push $S/vkdev/q.pte /data/local/tmp/openweights/vktest-Qwen3-0.6B-vulkan-8da4w-2k.pte | tail -1; adb -s $D push $S/vkdev/t.json /data/local/tmp/openweights/vktest-Qwen3-0.6B-vulkan-8da4w-2k.tokenizer.json | tail -1; date +%T
+
+-rw-r--r--  1 alpha  wheel  616404352  4 Oct 11:16 $SCRATCH/vkdev/q.pte
+-rw-r--r--  1 alpha  wheel   11422654  4 Oct 10:51 $SCRATCH/vkdev/t.json
+MT6991
+feature:android.hardware.vulkan.version=4206592
+MemAvailable:    4710336 kB
+15:05:39
+$SCRATCH/vkdev/q.pte: 1 file pushed, 0 skipped. 20.2 MB/s (616404352 bytes in 29.124s)
+$SCRATCH/vkdev/t.json: 1 file pushed, 0 skipped. 93.9 MB/s (11422654 bytes in 0.116s)
+15:06:09
+
+##############################################################################
+# am instrument + the test tag from logcat
+##############################################################################
+$ D=10.202.199.180:36171; P=/data/local/tmp/openweights/vktest-Qwen3-0.6B-vulkan-8da4w-2k; adb -s $D logcat -c; adb -s $D shell am instrument -w -r -e class io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest -e pte $P.pte -e tokenizer $P.tokenizer.json io.github.alpharomercoma.openweights.core.engine.test/androidx.test.runner.AndroidJUnitRunner > $SCRATCH/poco-instr.txt 2>&1; echo "exit=$?"; grep -E "INSTRUMENTATION_STATUS: test=|INSTRUMENTATION_STATUS_CODE|Tests run|OK \(|FAILURES|INSTRUMENTATION_RESULT|shortMsg" $SCRATCH/poco-instr.txt | paste - - | awk '{print}' | tail -24; adb -s $D logcat -d | grep -E "ExecuTorchOnDevice: (reply|turn|second-turn|matrix turn|after)" | head -12
+
+exit=0
+INSTRUMENTATION_STATUS: test=stillAnswersWithReasoningOff	INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: test=stillAnswersWithReasoningOff	INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: test=prefillByPieceSize	INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: test=prefillByPieceSize	INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: test=aReplyCutForBudgetIsReportedAsSuch	INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: test=aReplyCutForBudgetIsReportedAsSuch	INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: test=opensACompiledModel	INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: test=opensACompiledModel	INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: test=answersInSomethingLegible	INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: test=answersInSomethingLegible	INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: test=warmHeadIsReusedByTheFirstTurn	INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: test=warmHeadIsReusedByTheFirstTurn	INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: test=reportsWhatASecondTurnCosts	INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: test=reportsWhatASecondTurnCosts	INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: test=aStopMidReplyHaltsTheRuntimeAndSaysSo	INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: test=aStopMidReplyHaltsTheRuntimeAndSaysSo	INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: test=throughputReport	INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: test=throughputReport	INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=	OK (9 tests)
+10-04 15:21:49.076 15936 15961 I ExecuTorchOnDevice: reply: The capital of Japan is **Osaka**, a city that has been the political and economic center of Japan since its inception. It is also home to many historical and cultural sites. As of the latest information, Osaka remains the capital of Japan.
+10-04 15:22:13.973 15936 15961 I ExecuTorchOnDevice: after warm: prompt=14 cached=1114 prefill=210ms reply=The system operates without network involvement, running language models on a device.
+10-04 15:24:06.048 15936 15961 I ExecuTorchOnDevice: turn 1: prompt=896 cached=0 prefill=2173ms
+10-04 15:24:06.049 15936 15961 I ExecuTorchOnDevice: turn 2: prompt=20 cached=1263 prefill=247ms
+10-04 15:24:06.049 15936 15961 I ExecuTorchOnDevice: second-turn prefill ratio: 0.11366774045098942 (well under 1 means the cache held)
+10-04 15:24:06.049 15936 15961 I ExecuTorchOnDevice: turn 2 reply: <think>
+10-04 15:24:21.163 15936 15961 I ExecuTorchOnDevice: matrix turn 0: prompt=937 prefillMs=2258 generated=118 decodeMs=9464 prefillTokS=415.0 decodeTokS=12.5 rssMb=2230
+10-04 15:24:30.144 15936 15961 I ExecuTorchOnDevice: matrix turn 1: prompt=937 prefillMs=2253 generated=92 decodeMs=6719 prefillTokS=415.9 decodeTokS=13.7 rssMb=2249
+10-04 15:24:41.059 15936 15961 I ExecuTorchOnDevice: matrix turn 2: prompt=937 prefillMs=2214 generated=116 decodeMs=8689 prefillTokS=423.2 decodeTokS=13.4 rssMb=2232
+

@@ -1,0 +1,59 @@
+POCO X8 Pro Max, 2026-10-04 UTC: ExecuServe debug at 13085b1 serving Qwen3-0.6B Vulkan 2k, then its compatibility suites
+(tools/compat in the ExecuServe repo) against it.
+Transcribed from the session's terminal output (the command, then everything it printed),
+not captured to a file at the time. Keys are redacted; scratch paths shortened to $SCRATCH.
+
+##############################################################################
+# models, chat, stream
+##############################################################################
+$ B=http://127.0.0.1:8080/v1; K=es-adb-<redacted>; curl -s -m 20 $B/models -H "Authorization: Bearer $K" | python3 -c "import json,sys; [print({k:m[k] for k in ('id','backend','loaded','context_length')}) for m in json.load(sys.stdin)['data']]"; for q in "What is the capital of Japan?" "Name the largest planet in the solar system."; do curl -s -m 120 $B/chat/completions -H "Authorization: Bearer $K" -H "Content-Type: application/json" -d "{\"model\":\"qwen3-0.6b-vulkan-8da4w-2k\",\"temperature\":0,\"messages\":[{\"role\":\"user\",\"content\":\"$q Answer in one sentence. /no_think\"}],\"max_tokens\":60}" | python3 -c "import json,sys; d=json.load(sys.stdin); print('reply:', d['choices'][0]['message']['content'].strip(), '| usage', d['usage']['prompt_tokens'], '+', d['usage']['completion_tokens'])"; done; echo "--- streaming:"; curl -s -N -m 120 $B/chat/completions -H "Authorization: Bearer $K" -H "Content-Type: application/json" -d '{"model":"qwen3-0.6b-vulkan-8da4w-2k","stream":true,"temperature":0,"messages":[{"role":"user","content":"Count from one to five in words. /no_think"}],"max_tokens":40}' | grep -o '"content":"[^"]*"' | sed 's/"content":"//; s/"$//' | tr -d '\n'; echo
+
+{'id': 'qwen3-0.6b-vulkan-8da4w-2k', 'backend': 'executorch-vulkan', 'loaded': True, 'context_length': 2048}
+reply: The capital of Japan is Tokyo. | usage 24 + 12
+reply: The largest planet in the solar system is Jupiter. | usage 26 + 15
+--- streaming:
+From one to five in words: **one, two, three, four, five**.
+
+##############################################################################
+# OpenAI SDK suite and edge cases
+##############################################################################
+$ cd ~/execuserve && B=http://127.0.0.1:8080/v1; K=es-adb-<redacted>; M=qwen3-0.6b-vulkan-8da4w-2k; uv run -q --with openai python tools/compat/openai_sdk_check.py $B $K $M 2>&1 | tail -12; echo "=== edge cases"; uv run -q --with httpx python tools/compat/edge_cases.py $B $K $M 2>&1 | tail -12
+
+PASS tools stream (9.6s) finish=tool_calls calls={0: {'name': 'get_weather', 'args': '{"city": "Manila"}'}}
+PASS errors (0.1s) 404, 400 and 401 map to the SDK's exception classes
+PASS early close (0.8s) lane idle 0.4 s after early close; last outcome=client_gone
+PASS responses (1.0s) status=completed output_text='Hello! How can I assist you today?'
+PASS responses stream (3.6s) 59 events, final status=completed, text='Count to five.  \n(Count to five in a rhythmic or p'
+PASS responses reasoning stream (76.9s) response.completed: items=['reasoning', 'message'] content_parts=2 text='Yes, 17 is a prime number. \n\n**Step-by-S'
+PASS responses tools (9.5s) model answered without a call: '<tool>\n{"name": "get_weather", "arguments": {"city": "Manila"}}\n</tool>'
+PASS responses errors (0.0s) an unknown previous_response_id is a 400 previous_response_not_found
+PASS responses chained (1.0s) three turns by id; the third reused 42 of 63 input tokens
+PASS concurrency (46.5s) 8 concurrent requests, all finished in 46.5s (over-limit ones retried after 429)
+
+16/16 passed
+=== edge cases
+PASS logprobs requested: 400 ignored=None
+PASS tool_choice names one function: 400 calls=[] ignored=None
+PASS keep-alive: ten requests on one connection: [200, 200, 200, 200, 200, 200, 200, 200, 200, 200]
+PASS unknown previous_response_id: 400 previous_response_not_found
+PASS a stored response continues by id and hits the cache: completed=True; third turn cached 41 of 62
+PASS apply-template renders without running: 200 '<|im_start|>user\nHi<|im_end|>\n<|im_start|>assistant\n'
+PASS metrics need a key and name no client: anonymous 401; 48 lines; threads line: ['execuserve_threads 7']
+PASS runs are the caller's own and agree with themselves: 39 runs, 0 with discrepancies []
+PASS prompt progress when asked, and only then: 5 progress chunks, last {'unit': 'characters', 'total': 3650, 'processed': 2405, 'cache_tokens': 0, 'time_ms': 1222}; unasked 0
+PASS system message in the middle: 200 ''
+
+28/28 as expected; flagged: []
+
+##############################################################################
+# Anthropic SDK suite
+##############################################################################
+$ cd ~/execuserve && uv run -q --with anthropic python tools/compat/anthropic_sdk_check.py http://127.0.0.1:8080 es-adb-<redacted> qwen3-0.6b-vulkan-8da4w-2k 2>&1 | tail -6
+
+PASS tools (11.8s) called get_weather({"city": "Manila"}); follow-up read 237 cached tokens, fed 27; then: ''
+PASS tools stream (7.6s) stop_reason=tool_use tool_use=get_weather({"city": "Manila"}) via 177 events
+PASS bearer auth (1.1s) Authorization: Bearer accepted, stop_reason=max_tokens
+PASS errors (0.2s) 404 NotFoundError, 401 AuthenticationError, 400 BadRequestError, 400 BadRequestError
+
+8/8 passed
+

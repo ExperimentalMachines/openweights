@@ -218,8 +218,10 @@ cannot open is filtered out before download rather than after a gigabyte. And th
 is displayed as a fact read from the repository name, since that is the only signal short
 of parsing the file.
 
-Also worth recording: `executorch-android-qnn` on Maven Central currently stops at **1.2.0**,
-while the base and Vulkan artifacts are at 1.4.0. And MediaTek has no Maven flavour at all —
+Also worth recording: `executorch-android-qnn` on Maven Central stopped at **1.2.0** when this
+was written, while the base and Vulkan artifacts were at 1.4.0. (By 2026-10-04 all three were
+published at 1.4.0 and 1.5.1, and the app ships `executorch-android-vulkan` 1.5.1, which links
+XNNPACK and Vulkan, so a Vulkan export now opens: `vulkan-on-device.md`.) And MediaTek has no Maven flavour at all —
 the release workflow defines XNNPACK, Vulkan, QNN and combined, and nothing else.
 
 ## Open

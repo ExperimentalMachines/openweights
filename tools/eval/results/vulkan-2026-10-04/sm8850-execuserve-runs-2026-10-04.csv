@@ -1,0 +1,16 @@
+# QDC SM8850, ExecuServe 0.1.0 (24) release at f46833d, 2026-10-04 ~09:05 UTC. /v1/execuserve/runs?format=csv after:
+# per model (GPU first, then CPU): load, then three times a 27-token prompt (max 128 out) and a 702-token prompt (max 64 out), temperature 0.
+# Newest first. Captured to this file when it ran.
+id,finished_at_ms,model,api,stream,outcome,prompt_tokens,cached_tokens,estimated_prompt_tokens,completion_tokens,queue_ms,load_ms,prefill_ms,first_token_ms,decode_ms,decode_wall_ms,total_ms,prefill_tokens_per_second,decode_tokens_per_second,threads,thermal,battery_percent,charging
+LM9kjz1iObFF3DXVgBb8Qohi,1791104785095,qwen3-0.6b-8da4w-gptq-2k,chat.completions,false,stop,702,0,447,64,0,0,941,942,1251,1251,2193,746.01,50.36,7,none,100,true
+nxz3qyXdRIRRybCPO2RGh1a3,1791104782892,qwen3-0.6b-8da4w-gptq-2k,chat.completions,false,stop,27,0,0,91,1,0,30,31,731,732,763,900.00,123.12,7,none,100,true
+KI0TS1Z35d2NhTuTt97AlQX2,1791104782123,qwen3-0.6b-8da4w-gptq-2k,chat.completions,false,stop,702,0,447,64,1,0,937,938,1270,1270,2208,749.20,49.61,7,none,100,true
+YSKYCdR3DeR6puYBuHSpS7gt,1791104779902,qwen3-0.6b-8da4w-gptq-2k,chat.completions,false,stop,27,0,0,91,0,0,29,30,721,720,750,931.03,124.83,7,none,100,true
+qhKAgdvml6uFAIjh2xW7f52g,1791104779146,qwen3-0.6b-8da4w-gptq-2k,chat.completions,false,stop,702,0,447,64,0,0,910,910,1225,1225,2135,771.43,51.43,7,none,100,true
+WEjPctctR7RC6OZCziKuwg8s,1791104777000,qwen3-0.6b-8da4w-gptq-2k,chat.completions,false,stop,27,0,0,91,0,0,50,51,706,706,757,540.00,127.48,7,none,100,true
+nXB8EsdjVcRlOoZtUcR1Lj9C,1791104775666,qwen3-0.6b-vulkan-8da4w-2k,chat.completions,false,stop,702,0,447,61,0,0,697,698,973,973,1671,1007.17,61.66,7,none,100,true
+jM2VTUL7OAgfuIZYRpXHLuFw,1791104773961,qwen3-0.6b-vulkan-8da4w-2k,chat.completions,false,stop,27,0,0,69,0,0,31,31,735,735,766,870.97,92.52,7,none,100,true
+NEh95dxGbzExA3F51Cot5g8r,1791104773175,qwen3-0.6b-vulkan-8da4w-2k,chat.completions,false,stop,702,0,447,61,0,0,595,595,939,939,1534,1179.83,63.90,7,none,100,true
+e1tvzpQmvALBwsbCwRPZqycM,1791104771611,qwen3-0.6b-vulkan-8da4w-2k,chat.completions,false,stop,27,0,0,69,0,0,30,31,841,841,873,900.00,80.86,7,none,100,true
+05nydB8G8Z6ImqVdYnHVDMyL,1791104770719,qwen3-0.6b-vulkan-8da4w-2k,chat.completions,false,stop,702,0,447,61,0,0,779,781,979,978,1759,901.16,61.29,7,none,100,true
+KEDzOy15PJWEN87caIqztlWK,1791104768927,qwen3-0.6b-vulkan-8da4w-2k,chat.completions,false,stop,27,0,0,69,0,0,34,35,749,749,784,794.12,90.79,7,none,100,true

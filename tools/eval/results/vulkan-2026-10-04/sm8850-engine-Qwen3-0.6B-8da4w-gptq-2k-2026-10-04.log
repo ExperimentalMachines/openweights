@@ -1,0 +1,61 @@
+QDC SM8850 (Snapdragon 8 Elite Gen 5), Android 16, 2026-10-04 ~09:10 UTC (device clock UTC-7).
+openweights ExecuTorchOnDeviceTest from the release commit (a23195d0), Qwen3-0.6B-8da4w-gptq-2k, captured to this file with:
+  adb logcat -c; am instrument ... ; adb logcat -d -s ExecuTorchOnDevice:I TestRunner:I
+
+--------- beginning of main
+10-04 02:11:14.740 20440 20455 I TestRunner: run started: 9 tests
+10-04 02:11:14.741 20440 20455 I TestRunner: started: stillAnswersWithReasoningOff(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+10-04 02:11:17.210 20440 20455 I ExecuTorchOnDevice: reasoning-off reply: One color can be named as **red**.
+10-04 02:11:17.233 20440 20455 I TestRunner: finished: stillAnswersWithReasoningOff(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+10-04 02:11:17.234 20440 20455 I TestRunner: started: prefillByPieceSize(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+10-04 02:11:19.390 20440 20455 I ExecuTorchOnDevice: pieces size=400 run=0 prompt=911 prefillMs=1537 tokS=592.7
+10-04 02:11:20.973 20440 20455 I ExecuTorchOnDevice: pieces size=400 run=1 prompt=911 prefillMs=1509 tokS=603.7
+10-04 02:11:22.650 20440 20455 I ExecuTorchOnDevice: pieces size=400 run=2 prompt=911 prefillMs=1603 tokS=568.3
+10-04 02:11:25.349 20440 20455 I ExecuTorchOnDevice: pieces size=800 run=0 prompt=912 prefillMs=1526 tokS=597.6
+10-04 02:11:27.366 20440 20455 I ExecuTorchOnDevice: pieces size=800 run=1 prompt=912 prefillMs=1546 tokS=589.9
+10-04 02:11:29.370 20440 20455 I ExecuTorchOnDevice: pieces size=800 run=2 prompt=912 prefillMs=1619 tokS=563.3
+10-04 02:11:32.092 20440 20455 I ExecuTorchOnDevice: pieces size=1600 run=0 prompt=911 prefillMs=1541 tokS=591.2
+10-04 02:11:33.771 20440 20455 I ExecuTorchOnDevice: pieces size=1600 run=1 prompt=911 prefillMs=1608 tokS=566.5
+10-04 02:11:35.528 20440 20455 I ExecuTorchOnDevice: pieces size=1600 run=2 prompt=911 prefillMs=1596 tokS=570.8
+10-04 02:11:38.050 20440 20455 I ExecuTorchOnDevice: pieces size=3200 run=0 prompt=894 prefillMs=1595 tokS=560.5
+10-04 02:11:40.051 20440 20455 I ExecuTorchOnDevice: pieces size=3200 run=1 prompt=894 prefillMs=1662 tokS=537.9
+10-04 02:11:41.973 20440 20455 I ExecuTorchOnDevice: pieces size=3200 run=2 prompt=894 prefillMs=1613 tokS=554.2
+10-04 02:11:44.692 20440 20455 I ExecuTorchOnDevice: pieces size=6400 run=0 prompt=894 prefillMs=1639 tokS=545.5
+10-04 02:11:46.955 20440 20455 I ExecuTorchOnDevice: pieces size=6400 run=1 prompt=894 prefillMs=1703 tokS=525.0
+10-04 02:11:49.157 20440 20455 I ExecuTorchOnDevice: pieces size=6400 run=2 prompt=894 prefillMs=1636 tokS=546.5
+10-04 02:11:49.175 20440 20455 I TestRunner: finished: prefillByPieceSize(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+10-04 02:11:49.177 20440 20455 I TestRunner: started: aReplyCutForBudgetIsReportedAsSuch(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+10-04 02:11:49.868 20440 20455 I ExecuTorchOnDevice: budget 8: 8 tokens, reason=MAX_TOKENS, text=<think> Okay, so the user wants
+10-04 02:11:49.879 20440 20455 I TestRunner: finished: aReplyCutForBudgetIsReportedAsSuch(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+10-04 02:11:49.880 20440 20455 I TestRunner: started: opensACompiledModel(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+10-04 02:11:50.434 20440 20455 I ExecuTorchOnDevice: loaded Qwen3-0.6B-8da4w-gptq-2k (496570368 bytes)
+10-04 02:11:50.446 20440 20455 I TestRunner: finished: opensACompiledModel(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+10-04 02:11:50.447 20440 20455 I TestRunner: started: answersInSomethingLegible(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+10-04 02:11:51.106 20440 20455 I ExecuTorchOnDevice: reply: The capital of Japan is **Osaka**.
+10-04 02:11:51.106 20440 20455 I ExecuTorchOnDevice: stats: GenerationStats(promptTokens=19, generatedTokens=11, prefillMs=33, decodeMs=77, timeToFirstTokenMs=33, contextUsed=29, contextSize=2048, thinkingPrefilled=true, cachedTokens=0)
+10-04 02:11:51.118 20440 20455 I TestRunner: finished: answersInSomethingLegible(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+10-04 02:11:51.120 20440 20455 I TestRunner: started: warmHeadIsReusedByTheFirstTurn(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+10-04 02:11:56.205 20440 20455 I ExecuTorchOnDevice: cold: prompt=907 prefill=1567ms
+10-04 02:11:57.834 20440 20455 I ExecuTorchOnDevice: warm: fed=1114 pieces in 1627ms
+10-04 02:12:01.386 20440 20455 I ExecuTorchOnDevice: after warm: prompt=14 cached=1114 prefill=55ms reply=This system runs language models on a phone, with no network involved during generation.
+10-04 02:12:01.402 20440 20455 I TestRunner: finished: warmHeadIsReusedByTheFirstTurn(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+10-04 02:12:01.403 20440 20455 I TestRunner: started: reportsWhatASecondTurnCosts(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+10-04 02:12:16.514 20440 20455 I ExecuTorchOnDevice: turn 1: prompt=896 cached=0 prefill=1541ms
+10-04 02:12:16.514 20440 20455 I ExecuTorchOnDevice: turn 2: prompt=20 cached=1205 prefill=78ms
+10-04 02:12:16.514 20440 20455 I ExecuTorchOnDevice: second-turn prefill ratio: 0.050616482803374434 (well under 1 means the cache held)
+10-04 02:12:16.514 20440 20455 I ExecuTorchOnDevice: turn 2 reply: <think>
+10-04 02:12:16.514 20440 20455 I ExecuTorchOnDevice: Okay, the user asked for a single-word summary of the previous description. Let me look at the key points again. The system runs language models on a phone with no network involved. So, the main elements are device-based, no internet, and using models locally.
+10-04 02:12:16.514 20440 20455 I ExecuTorchOnDevice: 
+10-04 02:12:16.514 20440 20455 I ExecuTorchOnDevice: I need to find the most concise word that captures all these elements. "Local" comes to mind because it's device-based and no internet. That's a strong and direct answer. Let me double-check if there's a better word, but "local" seems accurate. The user probably wants a simple acknowledgment. Yep, "local" fits.
+10-04 02:12:16.530 20440 20455 I TestRunner: finished: reportsWhatASecondTurnCosts(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+10-04 02:12:16.532 20440 20455 I TestRunner: started: aStopMidReplyHaltsTheRuntimeAndSaysSo(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+10-04 02:12:17.222 20440 20455 I ExecuTorchOnDevice: stopped after 6 tokens, reason=CANCELLED
+10-04 02:12:17.234 20440 20455 I TestRunner: finished: aStopMidReplyHaltsTheRuntimeAndSaysSo(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+10-04 02:12:17.235 20440 20455 I TestRunner: started: throughputReport(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+10-04 02:12:17.813 20440 20455 I ExecuTorchOnDevice: matrix load: window=2048 rssMb=1209
+10-04 02:12:21.636 20440 20455 I ExecuTorchOnDevice: matrix turn 0: prompt=937 prefillMs=1685 generated=83 decodeMs=2136 prefillTokS=556.1 decodeTokS=38.9 rssMb=1164
+10-04 02:12:21.636 20440 20455 I ExecuTorchOnDevice: matrix reply: A language model running on a phone means the model is powered entirely by the device itself, without needing a server or network. This approach allows for faster processing, lower latency, and greate
+10-04 02:12:26.603 20440 20455 I ExecuTorchOnDevice: matrix turn 1: prompt=937 prefillMs=1703 generated=124 decodeMs=3261 prefillTokS=550.2 decodeTokS=38.0 rssMb=1166
+10-04 02:12:31.459 20440 20455 I ExecuTorchOnDevice: matrix turn 2: prompt=937 prefillMs=1709 generated=120 decodeMs=3146 prefillTokS=548.3 decodeTokS=38.1 rssMb=1166
+10-04 02:12:31.473 20440 20455 I TestRunner: finished: throughputReport(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+10-04 02:12:31.475 20440 20455 I TestRunner: run finished: 9 tests, 0 failed, 0 ignored

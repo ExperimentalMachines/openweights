@@ -1,0 +1,143 @@
+POCO X8 Pro Max (MT6991, Mali-G925), Android 16, 2026-10-03 UTC.
+ExecuTorch v1.4.0 llama_main built for Android with XNNPACK + Vulkan, Qwen3-0.6B 2k:
+the published xnnpack/Qwen3-0.6B-8da4w-2k.pte of that day (round to nearest; since replaced by the GPTQ build)
+against vulkan/Qwen3-0.6B-vulkan-8da4w-2k.pte, then the 32k Vulkan file.
+Transcribed from the session's terminal output (the command, then everything it printed),
+not captured to a file at the time. Keys are redacted; scratch paths shortened to $SCRATCH.
+
+##############################################################################
+# XNNPACK 2k, default threads (8)
+##############################################################################
+$ S=$SCRATCH; mkdir -p $S/models && cd $S/models && for f in tokenizer.json xnnpack/Qwen3-0.6B-8da4w-2k.pte; do curl -sL -o $(basename $f) https://huggingface.co/experimentalmachines/Qwen3-0.6B-ExecuTorch/resolve/main/$f; done; ls -la; adb push tokenizer.json Qwen3-0.6B-8da4w-2k.pte /data/local/tmp/vk/ | tail -1; adb shell "cd /data/local/tmp/vk && ./llama_main --model_path Qwen3-0.6B-8da4w-2k.pte --tokenizer_path tokenizer.json --prompt '<|im_start|>user
+What is the capital of France? /no_think<|im_end|>
+<|im_start|>assistant
+' --max_new_tokens 48 --temperature 0 2>&1" | grep -v "^I tokenizers" | tail -25
+
+total 1007880
+drwxr-xr-x   4 alpha  wheel        128  4 Oct 04:48 .
+drwx------  12 alpha  wheel        384  4 Oct 04:48 ..
+-rw-r--r--   1 alpha  wheel  496570368  4 Oct 04:49 Qwen3-0.6B-8da4w-2k.pte
+-rw-r--r--   1 alpha  wheel   11422654  4 Oct 04:48 tokenizer.json
+tokenizer.json: 1 file pushed, 0 skipped. 39.8 MB/s (11422654 bytes in 0.273s)
+Qwen3-0.6B-8da4w-2k.pte: 1 file pushed, 0 skipped. 8.8 MB/s (496570368 bytes in 53.953s)
+2 files pushed, 0 skipped. 8.9 MB/s (507993022 bytes in 54.455s)
+I 00:00:00.677688 executorch:llm_runner_helper.cpp:275] Using method: forward
+I 00:00:01.959853 executorch:text_llm_runner.cpp:93] RSS after loading model: 1047.417969 MiB (0 if unsupported)
+<|im_start|>user
+What is the capital of France? /no_think<|im_end|>
+<|im_start|>assistant
+I 00:00:02.111014 executorch:text_prefiller.cpp:122] Prefill token result numel(): 151936
+I 00:00:02.111512 executorch:text_llm_runner.cpp:207] Max new tokens resolved: 48, given pos_ 19, num_prompt_tokens 19, max_context_len 2048
+<think>I 00:00:02.111623 executorch:text_llm_runner.cpp:230] RSS after prompt prefill: 1047.417969 MiB (0 if unsupported)
+
+
+</think>
+
+The capital of France is Paris.<|im_end|>I 00:00:02.322575 executorch:text_token_generator.h:181] 
+Reached to the end of generation
+I 00:00:02.322581 executorch:text_llm_runner.cpp:260] RSS after finishing text generation: 1047.417969 MiB (0 if unsupported)
+I 00:00:02.322620 executorch:stats.h:161] 	Prompt Tokens: 19    Generated Tokens: 11
+I 00:00:02.322623 executorch:stats.h:167] 	Model Load Time:		1.282000 (seconds)
+I 00:00:02.322625 executorch:stats.h:176] 	Total inference time:		0.362000 (seconds)		 Rate: 	30.386740 (tokens/second)
+I 00:00:02.322627 executorch:stats.h:185] 		Prompt evaluation:	0.151000 (seconds)		 Rate: 	125.827815 (tokens/second)
+I 00:00:02.322629 executorch:stats.h:197] 		Generated 11 tokens:	0.211000 (seconds)		 Rate: 	52.132701 (tokens/second)
+I 00:00:02.322631 executorch:stats.h:205] 	Time to first generated token:	0.151000 (seconds)
+I 00:00:02.322633 executorch:stats.h:212] 	Sampling time over 30 tokens:	0.003000 (seconds)
+
+
+PyTorchObserver {"prefill_token_per_sec":125.828,"decode_token_per_sec":52.1327,"prompt_tokens":19,"generated_tokens":11,"model_load_start_ms":1791060634494,"model_load_end_ms":1791060635776,"inference_start_ms":1791060635776,"inference_end_ms":1791060636138,"prompt_eval_end_ms":1791060635927,"first_token_ms":1791060635927,"aggregate_sampling_time_ms":3,"SCALING_FACTOR_UNITS_PER_SECOND":1000}
+
+##############################################################################
+# Vulkan 2k, default threads
+##############################################################################
+$ S=$SCRATCH; adb push $S/vkart/vulkan-Qwen--Qwen3-0.6B-2048/vulkan/Qwen3-0.6B-vulkan-8da4w-2k.pte /data/local/tmp/vk/ | tail -1; adb shell "cd /data/local/tmp/vk && ./llama_main --model_path Qwen3-0.6B-vulkan-8da4w-2k.pte --tokenizer_path tokenizer.json --prompt '<|im_start|>user
+What is the capital of France? /no_think<|im_end|>
+<|im_start|>assistant
+' --max_new_tokens 48 --temperature 0 2>&1" | grep -v "^I tokenizers" | tail -40
+
+$SCRATCH/vkart/vulkan-Qwen--Qwen3-0.6B-2048/vulkan/Qwen3-0.6B-vulkan-8da4w-2k.pte: 1 file pushed, 0 skipped. 10.3 MB/s (616404352 bytes in 57.222s)
+I 00:00:00.005083 executorch:threadpool.cpp:66] Resetting threadpool to 8 threads.
+I 00:00:00.005170 executorch:runner.cpp:69] Creating LLaMa runner: model_path=Qwen3-0.6B-vulkan-8da4w-2k.pte, tokenizer_path=tokenizer.json
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1791061090.670247   19218 re2.cc:237] Error parsing '((?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s...': invalid perl operator: (?!
+This may be ok if a fallback regex is used.
+I 00:00:00.628480 executorch:llm_runner_helper.cpp:55] Loaded json tokenizer
+I 00:00:00.628644 executorch:llm_runner_helper.cpp:255] Reading metadata from model
+I 00:00:00.631152 executorch:llm_runner_helper.cpp:137] Metadata: use_sdpa_with_kv_cache = 1
+I 00:00:00.631181 executorch:llm_runner_helper.cpp:137] Metadata: use_kv_cache = 1
+I 00:00:00.631188 executorch:llm_runner_helper.cpp:137] Metadata: get_max_context_len = 2048
+I 00:00:00.631192 executorch:llm_runner_helper.cpp:137] Metadata: get_max_seq_len = 2048
+I 00:00:00.631198 executorch:llm_runner_helper.cpp:137] Metadata: enable_dynamic_shape = 1
+I 00:00:00.631208 executorch:llm_runner_helper.cpp:179] eos_id = 151645
+I 00:00:00.631209 executorch:llm_runner_helper.cpp:179] eos_id = 151643
+I 00:00:00.631233 executorch:llm_runner_helper.cpp:275] Using method: forward
+Could not open module param file '/sys/module/mali_kbase/parameters/large_page_conf'
+I 00:00:02.386493 executorch:text_llm_runner.cpp:93] RSS after loading model: 1679.867188 MiB (0 if unsupported)
+<|im_start|>user
+What is the capital of France? /no_think<|im_end|>
+<|im_start|>assistant
+I 00:00:02.813290 executorch:text_prefiller.cpp:122] Prefill token result numel(): 151936
+I 00:00:02.814431 executorch:text_llm_runner.cpp:207] Max new tokens resolved: 48, given pos_ 19, num_prompt_tokens 19, max_context_len 2048
+<think>I 00:00:02.814633 executorch:text_llm_runner.cpp:230] RSS after prompt prefill: 2041.804688 MiB (0 if unsupported)
+
+
+</think>
+
+The capital of France is **Paris**. It is a major city in both geography and culture, known for its historical significance and modern attractions.<|im_end|>I 00:00:04.636132 executorch:text_token_generator.h:181] 
+Reached to the end of generation
+I 00:00:04.636143 executorch:text_llm_runner.cpp:260] RSS after finishing text generation: 2201.156250 MiB (0 if unsupported)
+I 00:00:04.636240 executorch:stats.h:161] 	Prompt Tokens: 19    Generated Tokens: 33
+I 00:00:04.636265 executorch:stats.h:167] 	Model Load Time:		1.755000 (seconds)
+I 00:00:04.636270 executorch:stats.h:176] 	Total inference time:		2.249000 (seconds)		 Rate: 	14.673188 (tokens/second)
+I 00:00:04.636275 executorch:stats.h:185] 		Prompt evaluation:	0.427000 (seconds)		 Rate: 	44.496487 (tokens/second)
+I 00:00:04.636280 executorch:stats.h:197] 		Generated 33 tokens:	1.822000 (seconds)		 Rate: 	18.111965 (tokens/second)
+I 00:00:04.636284 executorch:stats.h:205] 	Time to first generated token:	0.427000 (seconds)
+I 00:00:04.636288 executorch:stats.h:212] 	Sampling time over 52 tokens:	0.031000 (seconds)
+
+
+PyTorchObserver {"prefill_token_per_sec":44.4965,"decode_token_per_sec":18.112,"prompt_tokens":19,"generated_tokens":33,"model_load_start_ms":1791061090891,"model_load_end_ms":1791061092646,"inference_start_ms":1791061092647,"inference_end_ms":1791061094896,"prompt_eval_end_ms":1791061093074,"first_token_ms":1791061093074,"aggregate_sampling_time_ms":31,"SCALING_FACTOR_UNITS_PER_SECOND":1000}
+
+##############################################################################
+# Vulkan then XNNPACK with --cpu_threads 1 (is the work on the GPU?)
+##############################################################################
+$ adb shell "cd /data/local/tmp/vk && ./llama_main --model_path Qwen3-0.6B-vulkan-8da4w-2k.pte --tokenizer_path tokenizer.json --cpu_threads 1 --prompt '<|im_start|>user
+What is the capital of France? /no_think<|im_end|>
+<|im_start|>assistant
+' --max_new_tokens 48 --temperature 0 2>&1" | grep -E "PyTorchObserver|Paris" | head -3; adb shell "cd /data/local/tmp/vk && ./llama_main --model_path Qwen3-0.6B-8da4w-2k.pte --tokenizer_path tokenizer.json --cpu_threads 1 --prompt '<|im_start|>user
+What is the capital of France? /no_think<|im_end|>
+<|im_start|>assistant
+' --max_new_tokens 48 --temperature 0 2>&1" | grep -E "PyTorchObserver" | head -2
+
+The capital of France is **Paris**. It is a major city in both geography and culture, known for its historical significance and modern attractions.<|im_end|>I 00:00:05.125424 executorch:text_token_generator.h:181] 
+PyTorchObserver {"prefill_token_per_sec":29.4118,"decode_token_per_sec":18.7394,"prompt_tokens":19,"generated_tokens":33,"model_load_start_ms":1791061108476,"model_load_end_ms":1791061110597,"inference_start_ms":1791061110609,"inference_end_ms":1791061113016,"prompt_eval_end_ms":1791061111255,"first_token_ms":1791061111255,"aggregate_sampling_time_ms":28,"SCALING_FACTOR_UNITS_PER_SECOND":1000}
+PyTorchObserver {"prefill_token_per_sec":70.3704,"decode_token_per_sec":32.2581,"prompt_tokens":19,"generated_tokens":11,"model_load_start_ms":1791061114168,"model_load_end_ms":1791061115454,"inference_start_ms":1791061115455,"inference_end_ms":1791061116066,"prompt_eval_end_ms":1791061115725,"first_token_ms":1791061115725,"aggregate_sampling_time_ms":3,"SCALING_FACTOR_UNITS_PER_SECOND":1000}
+
+##############################################################################
+# Vulkan 32k: killed while allocating its KV cache; adb dropped, so the output stops at load
+##############################################################################
+$ adb shell "cd /data/local/tmp/vk && ./llama_main --model_path Qwen3-0.6B-vulkan-8da4w-32k.pte --tokenizer_path tokenizer.json --prompt '<|im_start|>user
+What is the capital of France? /no_think<|im_end|>
+<|im_start|>assistant
+' --max_new_tokens 48 --temperature 0 2>&1; echo EXIT=\$?" | grep -v -E "^I tokenizers|re2.cc|fallback regex|InitializeLog" | tail -25
+
+I 00:00:00.004091 executorch:cpuinfo_utils.cpp:71] Reading file /sys/devices/soc0/image_version
+I 00:00:00.004210 executorch:cpuinfo_utils.cpp:87] Failed to open midr file /sys/devices/soc0/image_version
+I 00:00:00.004216 executorch:cpuinfo_utils.cpp:167] Number of efficient cores 0
+I 00:00:00.004218 executorch:main.cpp:159] Resetting threadpool with num threads = 8
+I 00:00:00.004221 executorch:cpuinfo_utils.cpp:71] Reading file /sys/devices/soc0/image_version
+I 00:00:00.004230 executorch:cpuinfo_utils.cpp:87] Failed to open midr file /sys/devices/soc0/image_version
+I 00:00:00.004232 executorch:cpuinfo_utils.cpp:167] Number of efficient cores 0
+I 00:00:00.004715 executorch:threadpool.cpp:66] Resetting threadpool to 8 threads.
+I 00:00:00.004742 executorch:runner.cpp:69] Creating LLaMa runner: model_path=Qwen3-0.6B-vulkan-8da4w-32k.pte, tokenizer_path=tokenizer.json
+I 00:00:00.366091 executorch:llm_runner_helper.cpp:55] Loaded json tokenizer
+I 00:00:00.366149 executorch:llm_runner_helper.cpp:255] Reading metadata from model
+I 00:00:00.366241 executorch:llm_runner_helper.cpp:137] Metadata: use_sdpa_with_kv_cache = 1
+I 00:00:00.366248 executorch:llm_runner_helper.cpp:137] Metadata: use_kv_cache = 1
+I 00:00:00.366251 executorch:llm_runner_helper.cpp:137] Metadata: get_max_context_len = 32768
+I 00:00:00.366255 executorch:llm_runner_helper.cpp:137] Metadata: get_max_seq_len = 2048
+I 00:00:00.366258 executorch:llm_runner_helper.cpp:137] Metadata: enable_dynamic_shape = 1
+I 00:00:00.366264 executorch:llm_runner_helper.cpp:179] eos_id = 151645
+I 00:00:00.366266 executorch:llm_runner_helper.cpp:179] eos_id = 151643
+I 00:00:00.366268 executorch:llm_runner_helper.cpp:275] Using method: forward
+Could not open module param file '/sys/module/mali_kbase/parameters/large_page_conf'
+

@@ -1,0 +1,56 @@
+Qualcomm Device Cloud, Snapdragon 8 Gen 3 (SM8650, Adreno 750), Android 14, Vulkan 1.3, 2026-10-04 UTC.
+openweights ExecuTorchOnDeviceTest at 55e4f68's parent (vulkan branch), Qwen3-0.6B Vulkan 2k
+downloaded on the device from the Hub. Device clock is UTC-7.
+Transcribed from the session's terminal output (the command, then everything it printed),
+not captured to a file at the time. Keys are redacted; scratch paths shortened to $SCRATCH.
+
+##############################################################################
+# device
+##############################################################################
+$ ps -p 96384 -o pid,etime,command | tail -1; adb shell getprop ro.soc.model; adb shell getprop ro.product.model; adb shell getprop ro.build.version.release; adb shell pm list features | grep -i vulkan; adb shell cat /proc/meminfo | head -2; adb shell df -h /data/local/tmp | tail -1
+
+96384   00:16 ssh -i <qdc key> -o StrictHostKeyChecking=accept-new -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -L 5037:sa871580.sa.svc.cluster.local:5037 -N sshtunnel@ssh.qdc.qualcomm.com
+SM8650
+Pineapple for arm64
+14
+feature:android.hardware.vulkan.compute
+feature:android.hardware.vulkan.level=1
+feature:android.hardware.vulkan.version=4206592
+feature:android.software.vulkan.deqp.level=132580097
+MemTotal:       11544332 kB
+MemFree:         6144952 kB
+/dev/block/dm-51  45G 2.3G   43G   6% /mnt/pass_through/0/emulated
+
+##############################################################################
+# one test first
+##############################################################################
+$ S=$SCRATCH; cd ~/mobile-inference && git branch --show-current; export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home ANDROID_HOME=/opt/homebrew/share/android-commandlinetools; export ADB_SERVER_SOCKET=tcp:127.0.0.1:5037; adb logcat -c; ./gradlew :core:engine:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest#answersInSomethingLegible -Pandroid.testInstrumentationRunnerArguments.pte=/data/local/tmp/openweights/vktest-Qwen3-0.6B-vulkan-8da4w-2k.pte -Pandroid.testInstrumentationRunnerArguments.tokenizer=/data/local/tmp/openweights/vktest-Qwen3-0.6B-vulkan-8da4w-2k.tokenizer.json -q > $S/qdc-ow.log 2>&1; echo "exit=$?"; grep -E "FAILED|INSTALL_FAILED|tests completed" $S/qdc-ow.log | head -3; adb logcat -d | grep -E "ExecuTorchOnDevice|VulkanBackend|vulkan|Vulkan" | grep -v -E "^.*D " | head -15
+
+vulkan
+exit=0
+10-03 23:11:18.874  9644  9667 I TestRunner: started: answersInSomethingLegible(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+10-03 23:11:19.263  9644  9670 I AdrenoVK-0: Driver Path             : /vendor/lib64/hw/vulkan.adreno.so
+10-03 23:11:19.263  9644  9670 I AdrenoVK-0: Application Name    : ExecuTorch Vulkan Delegate
+10-03 23:11:20.809  9644  9667 I ExecuTorchOnDevice: reply: The capital of Japan is **Tokyo**.
+10-03 23:11:20.810  9644  9667 I ExecuTorchOnDevice: stats: GenerationStats(promptTokens=19, generatedTokens=11, prefillMs=262, decodeMs=338, timeToFirstTokenMs=262, contextUsed=29, contextSize=2048, thinkingPrefilled=true, cachedTokens=0)
+10-03 23:11:20.915  9644  9667 I TestRunner: finished: answersInSomethingLegible(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+
+##############################################################################
+# the whole class: 9 tests, 0 failed
+##############################################################################
+$ S=$SCRATCH; cd ~/mobile-inference && export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home ANDROID_HOME=/opt/homebrew/share/android-commandlinetools ADB_SERVER_SOCKET=tcp:127.0.0.1:5037; adb logcat -c; ./gradlew :core:engine:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest -Pandroid.testInstrumentationRunnerArguments.pte=/data/local/tmp/openweights/vktest-Qwen3-0.6B-vulkan-8da4w-2k.pte -Pandroid.testInstrumentationRunnerArguments.tokenizer=/data/local/tmp/openweights/vktest-Qwen3-0.6B-vulkan-8da4w-2k.tokenizer.json -q > $S/qdc-ow2.log 2>&1; echo "exit=$?"; grep -E "FAILED" -A3 $S/qdc-ow2.log | head -8; adb logcat -d | grep -E "TestRunner: (run finished|failed)|ExecuTorchOnDevice: (turn|second-turn|matrix|reply|after)" | head -14
+
+exit=0
+10-03 23:15:56.477 10824 10844 I ExecuTorchOnDevice: reply: The capital of Japan is Tokyo.
+10-03 23:16:06.977 10824 10844 I ExecuTorchOnDevice: after warm: prompt=14 cached=1114 prefill=97ms reply=I'm running a language model on a phone without internet access.
+10-03 23:16:18.879 10824 10844 I ExecuTorchOnDevice: turn 1: prompt=896 cached=0 prefill=1419ms
+10-03 23:16:18.880 10824 10844 I ExecuTorchOnDevice: turn 2: prompt=20 cached=1157 prefill=97ms
+10-03 23:16:18.880 10824 10844 I ExecuTorchOnDevice: second-turn prefill ratio: 0.06835799859055673 (well under 1 means the cache held)
+10-03 23:16:18.880 10824 10844 I ExecuTorchOnDevice: turn 2 reply: <think>
+10-03 23:16:20.802 10824 10844 I ExecuTorchOnDevice: matrix load: window=2048 rssMb=328
+10-03 23:16:25.718 10824 10844 I ExecuTorchOnDevice: matrix turn 0: prompt=937 prefillMs=1600 generated=134 decodeMs=3299 prefillTokS=585.6 decodeTokS=40.6 rssMb=249
+10-03 23:16:25.718 10824 10844 I ExecuTorchOnDevice: matrix reply: A language model may run on a phone instead of a server due to several reasons. First, the device can be more flexible in terms of processing power and resource allocation, making it suitable for real
+10-03 23:16:29.208 10824 10844 I ExecuTorchOnDevice: matrix turn 1: prompt=937 prefillMs=1467 generated=81 decodeMs=2006 prefillTokS=638.7 decodeTokS=40.4 rssMb=222
+10-03 23:16:33.279 10824 10844 I ExecuTorchOnDevice: matrix turn 2: prompt=937 prefillMs=1466 generated=105 decodeMs=2583 prefillTokS=639.2 decodeTokS=40.7 rssMb=225
+10-03 23:16:33.400 10824 10844 I TestRunner: run finished: 9 tests, 0 failed, 0 ignored
+

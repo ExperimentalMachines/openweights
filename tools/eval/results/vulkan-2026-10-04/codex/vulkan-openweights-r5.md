@@ -1,0 +1,3 @@
+- **P2** [ModelStore.kt:259](~/mobile-inference/app/src/main/kotlin/io/github/alpharomercoma/openweights/model/ModelStore.kt:259): Legacy partial downloads are missed because the fallback checks only the completed `.pte`. After cancelling an old download and tapping Download again, `Qwen3-Vulkan-Qwen3-8da4w.pte.part` is ignored and downloading starts at the new suffixed destination, leaving the old bytes behind. **Fix:** also recognize the legacy `.part` when selecting the destination, so weights and tokenizer resume under the legacy name.
+
+No other mismatches found in completed-install discovery, tokenizer placement, deletion, last-model selection, or per-file preferences.

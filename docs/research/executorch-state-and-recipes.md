@@ -736,7 +736,9 @@ patch that is meant to travel has to be written in the smallest vocabulary. And 
 Vulkan, with that fixed, loads in 4.2 seconds and then segfaults inside the runtime at the
 first prefill (`quantlab/logs/ftl-vulkan-4w-crash2.logcat`): ExecuTorch 1.4.0's Vulkan
 delegate does not yet run the hybrid graph. That is upstream's, and it is why the hybrid
-families stay on XNNPACK for now.
+families stay on XNNPACK for now. (Since 2026-10-04 the app itself links the Vulkan delegate,
+at 1.5.1, and plain transformers run on it on Mali and Adreno; LFM2.5 on 1.5.1's Vulkan
+delegate has not been tried: `vulkan-on-device.md`.)
 
 What carries to a backend and what does not, as measured rather than argued: the solver and
 the codes carry (symmetric int4, groups of 32); the activation scheme is the recipe's

@@ -48,7 +48,12 @@ suspend fun unload()
 Two implementations ship, and a third class chooses between them. `LlamaCppEngine` runs
 any GGUF the pinned llama.cpp reads, the supported architecture list is code-generated at
 build time from llama.cpp's own table, so it tracks the submodule instead of a hand-kept
-list. `ExecuTorchEngine` runs compiled `.pte` files on XNNPACK. The app supplies the chat
+list. `ExecuTorchEngine` runs compiled `.pte` files on the delegate each was exported for,
+XNNPACK (CPU) or Vulkan (GPU), from the one `executorch-android-vulkan` library that links
+both. `VulkanSupport` decides which phones are offered GPU files: Android must report Vulkan
+1.1, and no earlier refusal from the runtime may be on record; the first time the runtime
+says this GPU cannot run its shaders, at any call into it, GPU files stop being offered
+(`docs/research/vulkan-on-device.md`). The app supplies the chat
 template, stop tokens and tool syntax from `PromptTemplates`, and refuses unknown families.
 Parity against llama.cpp is measured case-for-case in `docs/research/backend-parity.md`.
 The engine adds a family's BOS only when its tokenizer does not already supply one.

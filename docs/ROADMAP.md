@@ -46,15 +46,21 @@ that is what the measurements kept saying, and Settings explains rather than off
 - **GPU (OpenCL)**. Built and registered. On the Immortalis G925 in the dev phone it logs
   `unsupported GPU` and drops the device, so the backend is present and unusable, which is
   a more honest outcome than not shipping it.
-- **GPU (Vulkan)**. Not built. Frequently slower than a tuned CPU path on Mali, and adding
-  a second GPU backend to be slower twice was not worth the binary.
+- **GPU (Vulkan) for GGUFs**. Not built into llama.cpp. Frequently slower than a tuned CPU
+  path on Mali, and adding a second GPU backend to be slower twice was not worth the binary.
+  Compiled `.pte` files are another matter: see the ExecuTorch bullet below.
 - **NPU**. Not built, on measurement rather than principle: against a KleidiAI-repacked
   CPU the MediaTek MDLA was level at decode and worth 1.3x to 2.1x at prefill, and real
   multi-turn conversations prefill a median of 50 tokens after cache reuse
   (`research/mediatek-npu.md`, `research/npu-prefill-multiturn.md`).
-- **A second engine did ship**, and it is the CPU one: ExecuTorch with XNNPACK, for
-  compiled `.pte` files. It is not a curated catalogue; Discover searches the Hub for
-  compiled repositories the same way it does for GGUFs (`research/executorch.md`).
+- **A second engine did ship**: ExecuTorch, for compiled `.pte` files. It is not a curated
+  catalogue; Discover searches the Hub for compiled repositories the same way it does for
+  GGUFs (`research/executorch.md`). It runs a file on whichever delegate the file was
+  exported for: XNNPACK on the CPU, and since 2026-10-04 Vulkan on the GPU, on any phone
+  whose GPU runs the shaders (`research/vulkan-on-device.md`). Which is faster depends on the
+  GPU: on the Mali dev phone the CPU build decodes three times faster, on a Snapdragon 8 Elite
+  Gen 5 the GPU wins long prompts and loses short ones. Both are offered; the app does not yet
+  recommend one.
 
 So there is no backend picker and no one-tap benchmark. Settings lists what the device
 actually reports, including the CPU feature flags, and says in a sentence why there is

@@ -1,0 +1,160 @@
+QDC Snapdragon 8 Elite Gen 5 (SM8850, Adreno), Android 16, Vulkan 1.4, 2026-10-04 UTC.
+ExecuServe release APK 0.1.0 (24) at f46833d: catalog pulls, recorded backends, GPU answers, stream, status.
+The API was called from the phone's shell: with a remote adb server, adb forward binds on QDC's host, not this Mac.
+Transcribed from the session's terminal output (the command, then everything it printed),
+not captured to a file at the time. Keys are redacted; scratch paths shortened to $SCRATCH.
+
+##############################################################################
+# device
+##############################################################################
+$ nohup ssh -i <qdc key> -o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30 -o ExitOnForwardFailure=yes -L 127.0.0.1:5037:sa872792.sa.svc.cluster.local:5037 -N sshtunnel@ssh.qdc.qualcomm.com > $SCRATCH/tunnel.log 2>&1 &
+for i in $(seq 1 20); do lsof -nP -iTCP:5037 -sTCP:LISTEN >/dev/null && break; sleep 1; done; cat $SCRATCH/tunnel.log; ADB_SERVER_SOCKET=tcp:127.0.0.1:5037 adb devices -l; adb shell getprop ro.soc.model; adb shell getprop ro.product.model; adb shell getprop ro.build.version.release
+
+Welcome to the Qualcomm Device Cloud Server! 
+Refer back to the ssh instructions to establish a connection to your device 
+For support, contact: qdc.support@qti.qualcomm.com
+
+Please keep this window open to remain connected to the server
+
+
+List of devices attached
+4816891                device product:canoe model:Canoe_for_arm64 device:canoe transport_id:1
+
+SM8850
+Canoe for arm64
+16
+
+##############################################################################
+# Vulkan features
+##############################################################################
+$ cd ~/execuserve && sed -n 1,60p tools/execuserve | grep -n "^\s*[a-z-]*)\|usage\|Usage" | head -30; adb shell getprop ro.hardware.vulkan; adb shell pm list features | grep -i vulkan; adb shell df -h /data | tail -1
+
+35:usage() { sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+39:    --model) MODEL="${2:?}"; shift ;;
+40:    --port) PORT="${2:?}"; shift ;;
+41:    --network) BIND="network" ;;
+42:    --threads) THREADS="${2:?}"; shift ;;
+44:    --key) KEY="${2:?}"; shift ;;
+45:    --debug) PKG="$PKG.debug" ;;
+46:    --no-forward) FORWARD=0 ;;
+48:    install) COMMAND="install"; APK="${2:?install needs an .apk}"; shift ;;
+49:    pull) COMMAND="pull"; REPO="${2:?pull needs a repository}"; PULL_FILE="${3:?pull needs a file name}"; shift 2 ;;
+50:    -h|--help) usage 0 ;;
+51:    *) echo "unknown argument: $1" >&2; usage 2 ;;
+adreno
+feature:android.hardware.vulkan.compute
+feature:android.hardware.vulkan.level=1
+feature:android.hardware.vulkan.version=4210688
+feature:android.software.vulkan.deqp.level=132711169
+/dev/block/dm-56  45G 3.1G   42G   8% /mnt/pass_through/0/emulated
+
+##############################################################################
+# pull the GPU build
+##############################################################################
+$ cd ~/execuserve && tools/execuserve pull experimentalmachines/Qwen3-0.6B-ExecuTorch vulkan/Qwen3-0.6B-vulkan-8da4w-2k.pte 2>&1 | tail -5; echo ---; curl -s https://huggingface.co/api/models/experimentalmachines/Qwen3-0.6B-ExecuTorch | python3 -c "import json,sys; print([s['rfilename'] for s in json.load(sys.stdin)['siblings'] if s['rfilename'].endswith('2k.pte')])"
+
+Downloading vulkan/Qwen3-0.6B-vulkan-8da4w-2k.pte on 4816891...
+
+  48 MB
+  209 MB
+  399 MB
+  587 MB
+Installed as qwen3-0.6b-vulkan-8da4w-2k.
+---
+['vulkan/Qwen3-0.6B-vulkan-8da4w-2k.pte', 'vulkan/Qwen3-0.6B-vulkan-8da4w-32k.pte', 'xnnpack/Qwen3-0.6B-8da4w-gptq-2k.pte', 'xnnpack/Qwen3-0.6B-8da4w-gptq-32k.pte']
+
+##############################################################################
+# pull the CPU build
+##############################################################################
+$ cd ~/execuserve && tools/execuserve pull experimentalmachines/Qwen3-0.6B-ExecuTorch xnnpack/Qwen3-0.6B-8da4w-gptq-2k.pte 2>&1 | tail -2; adb shell run-as org.experimentalmachines.execuserve ls 2>&1 | head -2; adb shell "ls /sdcard/Android/data/org.experimentalmachines.execuserve/files/models/ 2>&1"
+
+
+  30 MB
+  221 MB
+  404 MB
+Installed as qwen3-0.6b-8da4w-gptq-2k.
+run-as: package not debuggable: org.experimentalmachines.execuserve
+qwen3-0.6b-8da4w-gptq-2k
+qwen3-0.6b-vulkan-8da4w-2k
+
+##############################################################################
+# recorded backends; the CLI timed out while the server was still loading
+##############################################################################
+$ D=/sdcard/Android/data/org.experimentalmachines.execuserve/files/models; adb shell "grep -H backend $D/*/execuserve.json"; cd ~/execuserve && tools/execuserve --model qwen3-0.6b-vulkan-8da4w-2k --port 8080 2>&1 | tail -4
+
+/sdcard/Android/data/org.experimentalmachines.execuserve/files/models/qwen3-0.6b-8da4w-gptq-2k/execuserve.json:    "backend": "xnnpack"
+/sdcard/Android/data/org.experimentalmachines.execuserve/files/models/qwen3-0.6b-vulkan-8da4w-2k/execuserve.json:    "backend": "vulkan"
+Starting ExecuServe on 4816891............................................................
+execuserve: the server did not come up; open the app to see why
+
+##############################################################################
+# server up, checked from the phone
+##############################################################################
+$ adb shell "curl -s -m 5 http://127.0.0.1:8080/health; echo; ss -ltnp 2>/dev/null | grep 8080"; adb shell dumpsys notification --noredact 2>/dev/null | grep -A3 "pkg=org.experimentalmachines.execuserve" | grep -E "android.title|android.text" | head
+
+{"status":"ok"}
+LISTEN      0      511      [::1]:8080                  [::]:*                   users:(("ines.execuserve",pid=12491,fd=106))
+LISTEN      0      511     [::ffff:127.0.0.1]:8080                     *:*                   users:(("ines.execuserve",pid=12491,fd=105))
+
+##############################################################################
+# load and /v1/models
+##############################################################################
+$ KEY=$(cat ~/.config/execuserve/4816891.key); H="Authorization: Bearer $KEY"
+adb shell "curl -s -m 300 -X POST -H '$H' http://127.0.0.1:8080/v1/execuserve/models/qwen3-0.6b-vulkan-8da4w-2k/load; echo; curl -s -H '$H' http://127.0.0.1:8080/v1/models" | python3 -c "
+import sys,json
+lines=sys.stdin.read().strip().split('\n')
+print('load:', lines[0][:300])
+for m in json.loads(lines[-1])['data']: print(m['id'], m['backend'], 'loaded' if m['loaded'] else '')"
+
+load: {"version":"0.1.0","lane":"idle","threads":7,"admission":"open","queued":0,"resident":[{"id":"qwen3-0.6b-vulkan-8da4w-2k","context_length":2048,"held_tokens":0,"loaded_at_ms":1791103648173,"last_used_ms":1791103765298}],"broken":{},"totals":{"completed":0,"failed":0,"refused":0,"prompt_tokens":0,"co
+qwen3-0.6b-8da4w-gptq-2k executorch-xnnpack 
+qwen3-0.6b-vulkan-8da4w-2k executorch-vulkan loaded
+
+##############################################################################
+# greedy questions
+##############################################################################
+$ KEY=$(cat ~/.config/execuserve/4816891.key)
+cat > $SCRATCH/q.sh <<EOF
+H="Authorization: Bearer $KEY"
+for q in "What is the capital of Japan? Answer in one word." "What is 17 times 3? Answer with the number only." "Name the largest planet in our solar system in one word."; do
+  curl -s -m 120 -H "\$H" -H 'Content-Type: application/json' http://127.0.0.1:8080/v1/chat/completions -d "{\"model\":\"qwen3-0.6b-vulkan-8da4w-2k\",\"temperature\":0,\"max_tokens\":200,\"messages\":[{\"role\":\"user\",\"content\":\"\$q /no_think\"}]}"
+  echo
+done
+curl -s -N -m 120 -H "\$H" -H 'Content-Type: application/json' http://127.0.0.1:8080/v1/chat/completions -d '{"model":"qwen3-0.6b-vulkan-8da4w-2k","stream":true,"temperature":0,"max_tokens":40,"messages":[{"role":"user","content":"Count from 1 to 5. /no_think"}]}' | grep -c '^data:'
+curl -s -H "\$H" http://127.0.0.1:8080/v1/execuserve/status
+EOF
+adb push $SCRATCH/q.sh /data/local/tmp/es-q.sh >/dev/null && adb shell sh /data/local/tmp/es-q.sh | python3 -c "
+import sys,json
+for line in sys.stdin:
+    line=line.strip()
+    if not line: continue
+    try: d=json.loads(line)
+    except: print('stream chunks:', line); continue
+    if 'choices' in d: print(repr(d['choices'][0]['message']['content'].strip()[:80]), d.get('usage',{}).get('completion_tokens'))
+    elif 'totals' in d: print('totals', {k:d['totals'][k] for k in ('completed','failed')}, 'metrics', {k:v for k,v in d.items() if 'tok' in k.lower() or 'rate' in k.lower()})
+    else: print(line[:300])
+"; adb shell rm /data/local/tmp/es-q.sh
+
+$SCRATCH/q.sh: 1 file pushed, 0 skipped. 4.6 MB/s (855 bytes in 0.000s)
+Traceback (most recent call last):
+  File "<string>", line 8, in <module>
+    if 'choices' in d: print(repr(d['choices'][0]['message']['content'].strip()[:80]), d.get('usage',{}).get('completion_tokens'))
+       ^^^^^^^^^^^^^^
+TypeError: argument of type 'int' is not iterable
+"Japan's capital is **Tokyo**." 14
+'17 × 3 = 51. So the answer is **51**.' 24
+'Jupiter' 7
+
+##############################################################################
+# stream and status
+##############################################################################
+$ adb shell sh /dev/stdin <<EOF | tail -3
+H="Authorization: Bearer $(cat ~/.config/execuserve/4816891.key)"
+curl -s -N -m 120 -H "\$H" -H 'Content-Type: application/json' http://127.0.0.1:8080/v1/chat/completions -d '{"model":"qwen3-0.6b-vulkan-8da4w-2k","stream":true,"temperature":0,"max_tokens":40,"messages":[{"role":"user","content":"Count from 1 to 5. /no_think"}]}' > /data/local/tmp/es-s.txt
+echo "stream data lines: \$(grep -c '^data:' /data/local/tmp/es-s.txt), done: \$(grep -c 'DONE' /data/local/tmp/es-s.txt)"
+rm /data/local/tmp/es-s.txt
+curl -s -H "\$H" http://127.0.0.1:8080/v1/execuserve/status | tr ',' '\n' | grep -iE 'completed|failed|per_s|tps|rate' | head -8 | tr '\n' ' '
+EOF
+
+sh: /dev/stdin: No such device or address
+

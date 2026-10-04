@@ -1,0 +1,36 @@
+POCO X8 Pro Max, 2026-10-04 UTC: openweights ExecuTorchOnDeviceTest on the 1.5.1 runtime (the AAR bump, before Vulkan),
+with a 1.4.0 export (Qwen3-1.7B-INT8-INT4-ExecuTorch-XNNPACK) and a 1.5.1 export (SmolLM2-135M GPTQ 2k).
+Device clock is UTC+8.
+Transcribed from the session's terminal output (the command, then everything it printed),
+not captured to a file at the time. Keys are redacted; scratch paths shortened to $SCRATCH.
+
+##############################################################################
+# 1.4.0 file on the 1.5.1 runtime
+##############################################################################
+$ cd ~/mobile-inference && find core/engine/build/outputs/androidTest-results -name "*.xml" -newer gradle/libs.versions.toml | head -3 | xargs grep -h -o -E '<testsuite [^>]*>' | head -3; grep -n 'const val TAG' core/engine/src/androidTest/kotlin/io/github/alpharomercoma/openweights/core/engine/ExecuTorchOnDeviceTest.kt; T=$(grep -o 'const val TAG = "[^"]*"' core/engine/src/androidTest/kotlin/io/github/alpharomercoma/openweights/core/engine/ExecuTorchOnDeviceTest.kt | cut -d'"' -f2); adb logcat -d | grep "$T" | grep -E "reply|stats|loaded|turn" | head -10
+
+grep: core/engine/build/outputs/androidTest-results/connected/debug/TEST-2602BPC18G: No such file or directory
+grep: 16-_core_engine-.xml: No such file or directory
+394:        const val TAG = "ExecuTorchOnDevice"
+10-04 09:31:31.312 32632 32708 I ExecuTorchOnDevice: reasoning-off reply: Red.
+10-04 09:33:54.160 32632 32708 I ExecuTorchOnDevice: loaded Qwen3-1.7B-INT8-INT4-ExecuTorch-XNNPACK (1280617088 bytes)
+10-04 09:33:58.518 32632 32708 I ExecuTorchOnDevice: reply: The capital of Japan is **Tokyo**.
+10-04 09:33:58.519 32632 32708 I ExecuTorchOnDevice: stats: GenerationStats(promptTokens=19, generatedTokens=11, prefillMs=184, decodeMs=399, timeToFirstTokenMs=185, contextUsed=29, contextSize=2048, thinkingPrefilled=true, cachedTokens=0)
+10-04 09:34:39.319 32632 32708 I ExecuTorchOnDevice: after warm: prompt=14 cached=1114 prefill=173ms reply=Acknowledged.
+10-04 09:36:29.640 32632 32708 I ExecuTorchOnDevice: turn 1: prompt=896 cached=0 prefill=6391ms
+10-04 09:36:29.640 32632 32708 I ExecuTorchOnDevice: turn 2: prompt=20 cached=1410 prefill=265ms
+10-04 09:36:29.641 32632 32708 I ExecuTorchOnDevice: second-turn prefill ratio: 0.041464559536848695 (well under 1 means the cache held)
+10-04 09:36:29.641 32632 32708 I ExecuTorchOnDevice: turn 2 reply: **local** (or **on-device**).
+10-04 09:36:55.176 32632 32708 I ExecuTorchOnDevice: matrix turn 0: prompt=937 prefillMs=7098 generated=125 decodeMs=8912 prefillTokS=132.0 decodeTokS=14.0 rssMb=2798
+
+##############################################################################
+# 1.5.1 export (the first attempt failed only because the tokenizer was misnamed)
+##############################################################################
+$ adb shell mv /data/local/tmp/openweights/et151-SmolLM2-135M.tokenizer.json /data/local/tmp/openweights/et151-SmolLM2-135M-gptq-2k.tokenizer.json && adb shell ls /data/local/tmp/openweights/ | grep et151; S=$SCRATCH; cd ~/mobile-inference && export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home ANDROID_HOME=/opt/homebrew/share/android-commandlinetools; adb logcat -c; ./gradlew :core:engine:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest#answersInSomethingLegible -Pandroid.testInstrumentationRunnerArguments.pte=/data/local/tmp/openweights/et151-SmolLM2-135M-gptq-2k.pte -Pandroid.testInstrumentationRunnerArguments.tokenizer=/data/local/tmp/openweights/et151-SmolLM2-135M-gptq-2k.tokenizer.json -q > $S/ow-device2.log 2>&1; echo "exit=$?"; grep -E "INSTALL_FAILED|FAILED" $S/ow-device2.log | head -3; adb logcat -d | grep "ExecuTorchOnDevice" | grep -E "reply|stats" | head -4
+
+et151-SmolLM2-135M-gptq-2k.pte
+et151-SmolLM2-135M-gptq-2k.tokenizer.json
+exit=0
+10-04 10:08:14.063 14602 14627 I ExecuTorchOnDevice: reply: The capital of Japan is Tokyo, with its complex network of streets, temples, and shrines. It is also home to the Tokyo Metropolitan Government Centre, Tokyo's main port, and the Tokyo Skyline.
+10-04 10:08:14.063 14602 14627 I ExecuTorchOnDevice: stats: GenerationStats(promptTokens=37, generatedTokens=42, prefillMs=53, decodeMs=209, timeToFirstTokenMs=54, contextUsed=78, contextSize=2048, thinkingPrefilled=false, cachedTokens=0)
+

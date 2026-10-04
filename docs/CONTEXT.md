@@ -49,7 +49,7 @@ Fully open source under **Apache-2.0**, aimed at a developer audience.
 | Decision | Value | Rationale |
 |---|---|---|
 | Language / UI | Kotlin + Jetpack Compose | True native; best perf and UX control |
-| Inference engines | llama.cpp (GGUF) and ExecuTorch (`.pte`, XNNPACK), both behind `InferenceEngine`, routed by file format | llama.cpp runs *any* HF GGUF; ExecuTorch runs compiled exports of named families up to twice as fast; see `docs/research/inference-engines.md` and `docs/research/executorch.md` |
+| Inference engines | llama.cpp (GGUF) and ExecuTorch (`.pte`, XNNPACK or Vulkan), both behind `InferenceEngine`, routed by file format | llama.cpp runs *any* HF GGUF; ExecuTorch runs compiled exports of named families up to twice as fast; see `docs/research/inference-engines.md` and `docs/research/executorch.md` |
 | Application ID | `io.github.alpharomercoma.openweights` | Permanent once published to Play |
 | License | Apache-2.0 | Permissive + patent grant; compatible with llama.cpp (MIT) |
 | minSdk / targetSdk / compileSdk | 31 / 36 / 37 | Play requires API 36 for new apps from 2026-08-31; current AndroidX needs compileSdk 37 |
