@@ -123,6 +123,32 @@ class ExecuTorchFileNameTest {
             "vulkan/Qwen3-8da4w.pte",
         )
         assertThat(markedGpu).isNotEqualTo(markedCpu)
+        // And the CPU file from a repository named for Vulkan still reads as CPU.
+        assertThat(CompiledBackend.of(markedCpu)).isEqualTo(CompiledBackend.XNNPACK)
+        assertThat(CompiledBackend.of(markedGpu)).isEqualTo(CompiledBackend.VULKAN)
+        val vulkanRepoCpu = ExecuTorchFileName.modelNameFor(
+            "publisher/Qwen3-Vulkan",
+            "xnnpack/model.pte",
+        )
+        assertThat(CompiledBackend.of(vulkanRepoCpu)).isEqualTo(CompiledBackend.XNNPACK)
+        // What an earlier release called that file is still recognised as it.
+        assertThat(markedCpu).isEqualTo("Qwen3-Vulkan-Qwen3-8da4w-xnnpack.pte")
+        assertThat(
+            ExecuTorchFileName.installedNamesFor(
+                "publisher/Qwen3-Vulkan",
+                "xnnpack/Qwen3-8da4w.pte",
+            ),
+        )
+            .containsExactly(markedCpu, "Qwen3-Vulkan-Qwen3-8da4w.pte")
+            .inOrder()
+        // Files whose name never conflicted have only the one name.
+        assertThat(
+            ExecuTorchFileName.installedNamesFor(
+                "publisher/Qwen3-ExecuTorch",
+                "xnnpack/Qwen3-8da4w.pte",
+            ),
+        )
+            .containsExactly(cpu)
         val xnnpackRepoGpu = ExecuTorchFileName.modelNameFor(
             "publisher/Qwen3-ExecuTorch-XNNPACK",
             "vulkan/model.pte",

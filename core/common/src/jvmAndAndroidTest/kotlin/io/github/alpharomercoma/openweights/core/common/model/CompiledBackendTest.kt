@@ -129,6 +129,17 @@ class CompiledBackendTest {
     }
 
     @Test
+    fun theBackendNamedLastWins() {
+        // An installed name is the repository's name, then the file's.
+        assertThat(CompiledBackend.of("Qwen3-ExecuTorch-XNNPACK-model-vulkan.pte"))
+            .isEqualTo(CompiledBackend.VULKAN)
+        assertThat(CompiledBackend.of("Qwen3-Vulkan-xnnpack.pte"))
+            .isEqualTo(CompiledBackend.XNNPACK)
+        assertThat(CompiledBackend.of("Qwen3-ExecuTorch-XNNPACK-sm8650-qnn-2k.pte"))
+            .isEqualTo(CompiledBackend.QNN)
+    }
+
+    @Test
     fun aFilesOwnPathOutranksItsRepositoryName() {
         // A repository can hold several backends' folders; its name speaks for one at most.
         assertThat(CompiledBackend.of("someone/Qwen3-ExecuTorch-XNNPACK", "vulkan/model.pte"))

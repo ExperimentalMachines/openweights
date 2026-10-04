@@ -51,7 +51,22 @@ object ExecuTorchFileName {
      * of one family (`1_7b/xnnpack/smollm2_1_7b_xnnpack_8da4w.pte`), and naming them all
      * after the repository would make the second download silently overwrite the first.
      */
-    fun modelNameFor(repoId: String, weightsPath: String = ""): String {
+    fun modelNameFor(repoId: String, weightsPath: String = ""): String =
+        names(repoId, weightsPath).first
+
+    /**
+     * Every name [weightsPath] in [repoId] may be installed under, the current one first.
+     *
+     * The second, when there is one, is what a release before the path's backend was added
+     * to a conflicting name called it (`…-Vulkan` repository, `xnnpack/` file). A copy saved
+     * under it is still this file: it is reported as installed and resumed in place rather
+     * than downloaded again beside itself, and keeps any setting stored under its name (codex QA).
+     */
+    fun installedNamesFor(repoId: String, weightsPath: String = ""): List<String> =
+        names(repoId, weightsPath).toList().distinct()
+
+    /** The current installed name and the one before the backend-conflict suffix. */
+    private fun names(repoId: String, weightsPath: String): Pair<String, String> {
         val repo = repoId.substringAfterLast('/').sanitized()
         val file = weightsPath.substringAfterLast('/')
         val stem = if (file.endsWith(ModelFormat.PTE.suffix, ignoreCase = true)) {
@@ -80,7 +95,19 @@ object ExecuTorchFileName {
         // backend marker and must not suppress this (codex QA).
         val gpuOnlyByFolder = CompiledBackend.of(directory.orEmpty()) == CompiledBackend.VULKAN &&
             CompiledBackend.of(distinct.orEmpty()) != CompiledBackend.VULKAN
-        return (if (gpuOnlyByFolder) "$name-vulkan" else name) + ModelFormat.PTE.suffix
+        val named = if (gpuOnlyByFolder) "$name-vulkan" else name
+        // A repository named for one backend can hold another's folder (`…-Vulkan` holding
+        // `xnnpack/…`). When the name would read as the repository's backend, the path's is
+        // added last, which is the one CompiledBackend.of believes (codex QA). Names that read
+        // as nothing are left alone, which is what every installed file is already called.
+        val pathBackend = CompiledBackend.of(weightsPath)
+        val nameBackend = CompiledBackend.of(named)
+        val fixed = when {
+            pathBackend == CompiledBackend.UNKNOWN -> named
+            nameBackend == CompiledBackend.UNKNOWN || nameBackend == pathBackend -> named
+            else -> "$named-${pathBackend.name.lowercase()}"
+        }
+        return fixed + ModelFormat.PTE.suffix to named + ModelFormat.PTE.suffix
     }
 
     /** Where the tokenizer for [modelFileName] lives: beside it, under the same stem. */

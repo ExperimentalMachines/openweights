@@ -522,7 +522,8 @@ class DiscoverViewModel @Inject constructor(
                                     // repository, the file) once installed, so that is
                                     // what says whether it is already here.
                                     isDownloaded = ExecuTorchFileName
-                                        .modelNameFor(repoId, file.path) in downloaded,
+                                        .installedNamesFor(repoId, file.path)
+                                        .any { it in downloaded },
                                 )
                             } + ggufs.map { file ->
                                 InspectedFile(
@@ -592,14 +593,14 @@ class DiscoverViewModel @Inject constructor(
         _uiState.update { state ->
             state.copy(
                 files = state.files.map { inspected ->
-                    val name = when (ModelFormat.of(inspected.file.fileName)) {
-                        ModelFormat.PTE -> ExecuTorchFileName.modelNameFor(
+                    val names = when (ModelFormat.of(inspected.file.fileName)) {
+                        ModelFormat.PTE -> ExecuTorchFileName.installedNamesFor(
                             repoId,
                             inspected.file.path,
                         )
-                        else -> inspected.file.fileName
+                        else -> listOf(inspected.file.fileName)
                     }
-                    inspected.copy(isDownloaded = name in installed)
+                    inspected.copy(isDownloaded = names.any { it in installed })
                 },
             )
         }

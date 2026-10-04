@@ -80,6 +80,15 @@ enum class CompiledBackend(val processor: Processor) {
 
     companion object {
         /**
+         * The backend of the file at [path] in [repoId]: the path first, since a repository can
+         * hold several backends' folders and its own name speaks for at most one of them
+         * (`…-ExecuTorch-XNNPACK` holding `vulkan/model.pte` is a GPU file). The repository
+         * name answers only when the path is silent.
+         */
+        fun of(repoId: String, path: String): CompiledBackend =
+            of(path).takeUnless { it == UNKNOWN } ?: of(repoId)
+
+        /**
          * The backend named in [text], which is a file or repository name.
          *
          * Read from the name because a `.pte` carries no metadata the app can inspect and
@@ -91,35 +100,38 @@ enum class CompiledBackend(val processor: Processor) {
          * [UNKNOWN] when the name is silent, and callers treat that as "worth trying"
          * rather than "broken": most published exports are XNNPACK, and refusing every
          * unlabelled model would hide almost all of them.
+         *
+         * When [text] names more than one backend, the one named last wins. An installed name
+         * is the repository's name followed by the file's, so the file, which is the more
+         * specific, comes last: a `…-XNNPACK` repository's `vulkan/` file installs as
+         * `…-XNNPACK-…-vulkan.pte` and a `…-Vulkan` repository's `xnnpack/` file as
+         * `…-Vulkan-…-xnnpack.pte` (codex QA), and each reads as what it is.
          */
-        /**
-         * The backend of the file at [path] in [repoId]: the path first, since a repository can
-         * hold several backends' folders and its own name speaks for at most one of them
-         * (`…-ExecuTorch-XNNPACK` holding `vulkan/model.pte` is a GPU file). The repository
-         * name answers only when the path is silent.
-         */
-        fun of(repoId: String, path: String): CompiledBackend =
-            of(path).takeUnless { it == UNKNOWN } ?: of(repoId)
-
         fun of(text: String): CompiledBackend {
             val name = text.lowercase()
-            return when {
-                // GPU first: an installed name joins the repository's name to the file's, and a
-                // `…-XNNPACK` repository's `vulkan/` file must still read as a GPU file.
-                "vulkan" in name -> VULKAN
-                "xnnpack" in name -> XNNPACK
-                "vgf" in name -> VGF
-                "qnn" in name || "qualcomm" in name || "htp" in name -> QNN
-                "neuropilot" in name || "mediatek" in name || "mtk" in name -> NEUROPILOT
-                // "enn" is three letters that fall inside ordinary words, so it counts only
-                // as a whole segment of a path or name; "exynos" is safe anywhere.
-                "exynos" in name || ENN_SEGMENT.containsMatchIn(name) -> ENN
-                "mlx" in name -> MLX
-                else -> UNKNOWN
-            }
+            return MARKERS
+                .mapNotNull { (backend, marker) ->
+                    marker.findAll(name).lastOrNull()?.let {
+                        backend to
+                            it.range.last
+                    }
+                }
+                .maxByOrNull { it.second }
+                ?.first
+                ?: UNKNOWN
         }
 
-        private val ENN_SEGMENT = Regex("(^|[/_.-])enn([/_.-]|\$)")
+        private val MARKERS: List<Pair<CompiledBackend, Regex>> = listOf(
+            VULKAN to Regex("vulkan"),
+            XNNPACK to Regex("xnnpack"),
+            VGF to Regex("vgf"),
+            QNN to Regex("qnn|qualcomm|htp"),
+            NEUROPILOT to Regex("neuropilot|mediatek|mtk"),
+            // "enn" is three letters that fall inside ordinary words, so it counts only
+            // as a whole segment of a path or name; "exynos" is safe anywhere.
+            ENN to Regex("exynos|(?:^|[/_.-])enn(?=[/_.-]|\$)"),
+            MLX to Regex("mlx"),
+        )
 
         /**
          * The chip a chip-locked file was compiled for, read from its path, or null.
