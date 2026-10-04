@@ -17,8 +17,8 @@ of the code, is in [`tools/eval/results/vulkan-2026-10-04/`](../../tools/eval/re
   correctly on each, and, on the Poco, ExecuServe's OpenAI (16/16), edge-case (28/28) and
   Anthropic (8/8) suites.
 - **Whether the GPU is the faster choice depends on the GPU.** On the Mali phone the CPU
-  build decodes 2.9 to 3.3 times faster than the GPU build, and nothing measured favours
-  the GPU there. On the newest Adreno (SM8850) the GPU reads long prompts 1.4 to 1.9 times
+  build decodes 2.2 to 3.7 times faster than the GPU build (the gap narrows as the context
+  fills), and the GPU's only win is reading a long prompt, 1.2 to 1.5 times as fast. On the newest Adreno (SM8850) the GPU reads long prompts 1.4 to 1.9 times
   as fast and decodes 1.2 to 1.4 times as fast with a long prompt in the cache, but decodes
   short replies at 0.7 times the CPU's speed. This is the same lesson as
   [gpu-backends.md](gpu-backends.md) for llama.cpp: "GPU is faster" is a property of a
@@ -162,7 +162,7 @@ same kernels, so speed is comparable; answers are not.
 | Phone | Harness | Result |
 |---|---|---|
 | Poco (Mali) | `llama_main`, 2026-10-03 | "The capital of France is **Paris**" |
-| Poco (Mali) | openweights engine tests | 9 of 9 |
+| Poco (Mali) | openweights engine tests | 9 of 9 on the GPU build (twice: once over the hotspot, once at home) and 9 of 9 on the GPTQ CPU build |
 | Poco (Mali) | ExecuServe debug (`13085b1`) | Tokyo, Jupiter, a correct stream; `executorch-vulkan`; OpenAI 16/16, edge cases 28/28, Anthropic 8/8 |
 | SM8650 | openweights engine tests | 9 of 9 |
 | SM8650 | ExecuServe debug (`c67ec10`) | Tokyo; `/v1/models` said `executorch-xnnpack` for the GPU file, which is what `13085b1` fixed |
@@ -172,8 +172,9 @@ same kernels, so speed is comparable; answers are not.
 
 **The "Osaka" reply is the model, not the GPU.** The engine test's legibility check samples
 at the app's default temperature of 0.8 and asks for the capital of Japan. It got "Osaka"
-from the GPU build on the Poco and, on the SM8850, from both the GPU build and the GPTQ CPU
-build; it got "Tokyo" on the SM8650 twice. (The check passes either way: it tests that the
+from the GPU build on the Poco's first run and from the GPTQ CPU build on its second, and on
+the SM8850 from both builds; it got "Tokyo" from the GPU build on the Poco's second run and
+on the SM8650 twice. (The check passes either way: it tests that the
 reply is legible, not that it is right.) Greedy through `llama_main` on the Poco, four
 questions on both files:
 
@@ -208,8 +209,30 @@ is on the GPU. The engine's throughput matrix on the same phone, with the app's 
 | Prefill, tok/s | 415.0 | 415.9 | 423.2 |
 | Decode, tok/s | 12.5 | 13.7 | 13.4 |
 
-No CPU file was run on a long prompt on this phone, so which backend reads long prompts
-faster here is not measured.
+That first engine run was over the phone's hotspot. Both builds were run again later at
+home, back to back, with the GPTQ CPU file (battery 55 to 53%, unplugged, thermal status 0
+throughout):
+
+| Poco, engine, 937-token prompt | CPU (GPTQ) | GPU | GPU ÷ CPU |
+|---|---:|---:|---:|
+| Prefill, tok/s | 274.2, 279.4, 278.7 | **405.6, 401.8, 426.7** | 1.5 |
+| Decode, tok/s | **24.8, 24.8, 24.8** | 9.5, 9.5, 10.4 | 0.4 |
+
+The GPU decoded slower in this run than in the first (9.5 to 10.4 against 12.5 to 13.7 tok/s,
+same file); prefill matched. ExecuServe's debug build (the phone's Play-signed release blocks
+installing the upload-key build over it without deleting its data) served the same twelve
+requests as on the SM8850, sent from the Mac through `adb forward`; its run history:
+
+| Poco, ExecuServe | CPU (GPTQ) | GPU | GPU ÷ CPU |
+|---|---:|---:|---:|
+| 27-token prompt: prefill, tok/s | 197, 380, 391 | 173, 178, 189 | about 0.5 |
+| 27-token prompt: decode, tok/s | **56.4, 59.3, 59.5** | 15.3, 15.8, 16.3 | 0.27 |
+| 702-token prompt: prefill, tok/s | 325, 328, 335 | **371, 431, 432** | 1.2 to 1.3 |
+| 702-token prompt: decode, tok/s | **29.7, 29.9, 30.4** | 13.3, 13.5, 13.6 | 0.45 |
+
+On Mali the GPU wins only the long prompt's read, and the CPU decodes 2.2 to 3.7 times faster
+at every length. A 900-token first turn with a 100-token reply is therefore about 2.7 + 3.3 =
+6.0 s on the CPU against 2.1 + 7.4 = 9.5 s on the GPU, by ExecuServe's long-prompt figures.
 
 **Snapdragon 8 Gen 3 (SM8650, Adreno 750).** Engine matrix, Vulkan: prefill 585.6, 638.7
 and 639.2 tok/s, decode 40.6, 40.4 and 40.7 tok/s. No CPU file was run on this phone.
@@ -244,7 +267,8 @@ trails with a short one.
 
 - **Resident memory is not comparable across GPU families.** The same Vulkan file showed
   222 to 249 MB resident on the SM8650 and 264 to 268 MB on the SM8850 (where the CPU file
-  showed 1,164 to 1,166 MB), but 2,230 to 2,249 MB on the Mali phone. On the Poco, `llama_main` reported 1,047 MiB for the CPU file and 1,680
+  showed 1,164 to 1,166 MB), but 2,208 to 2,249 MB on the Mali phone (where the CPU file showed
+  1,186 to 1,189 MB). On the Poco, `llama_main` reported 1,047 MiB for the CPU file and 1,680
   MiB after loading the GPU file, rising to 2,201 MiB by the end of the reply. Where a driver
   places GPU buffers decides what the process is charged for; the number is not the model's
   size.
@@ -270,7 +294,8 @@ should.
   costs no second library, and a phone whose driver cannot run the shaders loses only its
   GPU offers, once, with the reason recorded.
 - **On Mali, the CPU build is the one to use.** Decode is what a reader waits on, and the
-  Mali GPU decodes at a third of the CPU's speed with this delegate. That matches
+  Mali GPU decodes at a quarter to a half of the CPU's speed with this delegate; its 1.2 to
+  1.5 times faster read of a long prompt does not pay for that on any turn measured. That matches
   llama.cpp's Vulkan on the same GPU in [gpu-backends.md](gpu-backends.md) only in its
   verdict, not its shape: there prefill was the loss and decode a small win.
 - **On a recent Adreno, it depends on the conversation.** On the SM8850 the GPU reads long
@@ -315,16 +340,19 @@ record the numbers?" Mostly no, at the time, and this is the account.
   after the server restarted). Both were re-measured on the same phone while it was still
   connected, captured to files this time: the engine test on both builds (which also gave
   the SM8850 its CPU engine numbers), and ExecuServe's CSV of twelve runs.
-- **Never measured:** ExecuServe's decode speed on the Poco (its replies were checked, not
-  timed), a CPU long-prompt run on the Poco, and any CPU run on the SM8650.
+- **Measured later, when asked:** the Poco had no like-for-like CPU run and no ExecuServe
+  timing, so both builds were run again there at home through the engine and through
+  ExecuServe's debug build, captured to files (`poco-engine-*-home-*`,
+  `poco-execuserve-runs-2026-10-04.csv`).
+- **Never measured:** any CPU run on the SM8650.
 - **QDC's own session logs** (`/data/local/tmp/QDC_logs` on the device) were not pulled, and
   the device is wiped when a session ends.
 
 ## Open
 
 - **Recommend the CPU build where it is faster.** Both apps offer the two builds without a
-  preference. The data says CPU on Mali and depends-on-length on Adreno; a rule needs a CPU
-  long-prompt run on the Poco and a CPU run on an SM8650 first.
+  preference. The data says CPU on Mali at every length, and depends-on-length on the
+  SM8850's Adreno; a rule for older Adrenos needs a CPU run on an SM8650 first.
 - **Larger models and the hybrid families on 1.5.1's Vulkan delegate.**
 - **Sustained runs.** Every number here is from a cool phone over a few minutes.
 

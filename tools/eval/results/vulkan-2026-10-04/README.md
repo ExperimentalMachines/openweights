@@ -22,4 +22,7 @@ UTC+8, the QDC handsets UTC-7.
 | `sm8850-execuserve-runs-2026-10-04.csv`, `sm8850-execuserve-long-prompt.txt` | SM8850 | ExecuServe's run history after three short and three 702-token prompts on each build, and that prompt | captured |
 | `sm8850-engine-Qwen3-0.6B-vulkan-8da4w-2k-2026-10-04.*` | SM8850 | Engine tests on the GPU build again, logcat captured | captured |
 | `sm8850-engine-Qwen3-0.6B-8da4w-gptq-2k-2026-10-04.*` | SM8850 | Engine tests on the GPTQ CPU build | captured |
+| `poco-engine-Qwen3-0.6B-vulkan-8da4w-2k-home-2026-10-04.*` | Poco | Engine tests on the GPU build again, at home, logcat captured | captured |
+| `poco-engine-Qwen3-0.6B-8da4w-gptq-2k-home-2026-10-04.*` | Poco | Engine tests on the GPTQ CPU build, straight after | captured |
+| `poco-execuserve-runs-2026-10-04.csv` | Poco | ExecuServe (debug build) run history, the SM8850's twelve requests on both builds | captured |
 | `codex/` | | Every Codex review of the 1.5.1 bump and the Vulkan work, and `PROMPTS.md` with each round's prompt | captured |

@@ -1,0 +1,16 @@
+# POCO X8 Pro Max, ExecuServe debug build at 57a292f (the Play-signed 0.1.0 (20) on the phone blocks installing the upload-key release over it), 2026-10-04 ~10:35 UTC, home Wi-Fi, unplugged, thermal 0.
+# Same requests as the SM8850 CSV, sent from the Mac through adb forward (the phone has no curl): per model (GPU first), load, then three times a 27-token prompt (max 128 out) and the 702-token prompt in sm8850-execuserve-long-prompt.txt (max 64 out), temperature 0.
+# Newest first. Captured to this file when it ran.
+id,finished_at_ms,model,api,stream,outcome,prompt_tokens,cached_tokens,estimated_prompt_tokens,completion_tokens,queue_ms,load_ms,prefill_ms,first_token_ms,decode_ms,decode_wall_ms,total_ms,prefill_tokens_per_second,decode_tokens_per_second,threads,thermal,battery_percent,charging
+CrRQwPxVrDRKk7kIs4YVKLpV,1791109914409,qwen3-0.6b-8da4w-gptq-2k,chat.completions,false,stop,702,0,447,64,1,0,2160,2164,2121,2122,4287,325.00,29.70,7,none,52,false
+gGgNmrtxl6T2vS7YaHKLIpEO,1791109910044,qwen3-0.6b-8da4w-gptq-2k,chat.completions,false,stop,27,0,0,91,2,0,71,74,1597,1597,1672,380.28,56.36,7,none,52,false
+r3JGB8Lw24J1EGjYVtyhqHKJ,1791109908298,qwen3-0.6b-8da4w-gptq-2k,chat.completions,false,stop,702,0,447,64,2,0,2141,2145,2110,2110,4257,327.88,29.86,7,none,52,false
+UNFdkE2F8mlfVjtmca7GM56g,1791109903920,qwen3-0.6b-8da4w-gptq-2k,chat.completions,false,stop,27,0,0,91,2,0,69,72,1518,1518,1590,391.30,59.29,7,none,52,false
+cBvHwf6ZKvEAFf5XZ9GTpfG1,1791109902263,qwen3-0.6b-8da4w-gptq-2k,chat.completions,false,stop,702,0,447,64,1,0,2098,2102,2072,2073,4176,334.60,30.41,7,none,52,false
+8Ywu5zBa8QnYbNekO1MUqo9t,1791109898008,qwen3-0.6b-8da4w-gptq-2k,chat.completions,false,stop,27,0,0,91,1,0,137,139,1514,1515,1654,197.08,59.45,7,none,52,false
+Hkly8h6PqfPr5YUeqom6owmt,1791109894171,qwen3-0.6b-vulkan-8da4w-2k,chat.completions,false,stop,702,0,447,64,1,0,1625,1636,4679,4681,6326,432.00,13.46,7,none,52,false
+hfe1etwqPNOq36KkcFOU2zwd,1791109887754,qwen3-0.6b-vulkan-8da4w-2k,chat.completions,false,stop,27,0,0,79,1,0,156,160,5109,5112,5274,173.08,15.27,7,none,52,false
+xne6zLDukeWVaCnbKoDQE3RB,1791109882386,qwen3-0.6b-vulkan-8da4w-2k,chat.completions,false,stop,702,0,447,64,2,0,1628,1637,4745,4747,6394,431.20,13.28,7,none,53,false
+00YCwzI3bPnl4yBu8YdF6KMo,1791109875920,qwen3-0.6b-vulkan-8da4w-2k,chat.completions,false,stop,27,0,0,79,1,0,143,147,4780,4781,4930,188.81,16.32,7,none,53,false
+vcjDxLJASMEYa8zkY2X6NxFm,1791109870886,qwen3-0.6b-vulkan-8da4w-2k,chat.completions,false,stop,702,0,447,64,1,0,1893,1905,4647,4648,6560,370.84,13.56,7,none,53,false
+vhNv1UOU7uSKkGhzeKWazrYW,1791109864223,qwen3-0.6b-vulkan-8da4w-2k,chat.completions,false,stop,27,0,0,79,0,0,152,155,4940,4943,5100,177.63,15.79,7,none,53,false
