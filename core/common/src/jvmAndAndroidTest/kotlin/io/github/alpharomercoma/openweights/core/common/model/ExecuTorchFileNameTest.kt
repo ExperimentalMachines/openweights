@@ -161,4 +161,32 @@ class ExecuTorchFileNameTest {
         )
         assertThat(published).isEqualTo("Qwen3-0.6B-ExecuTorch-Qwen3-0.6B-vulkan-8da4w-2k.pte")
     }
+
+    @Test
+    fun `one part of a split model is recognised whatever backend it names`() {
+        // The published MediaTek parts, and the same shape from a repository that names no chip.
+        assertThat(
+            ExecuTorchFileName.isPartOfSplit(
+                "mtk/mt6991/LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte",
+            ),
+        )
+            .isTrue()
+        assertThat(ExecuTorchFileName.isPartOfSplit("Qwen3-0.6B-a16w8-4k-CHUNK4OF4.pte")).isTrue()
+        assertThat(ExecuTorchFileName.isPartOfSplit("model-part-00002-of-00004.pte")).isTrue()
+        assertThat(ExecuTorchFileName.isPartOfSplit("model_shard_1_of_3.pte")).isTrue()
+    }
+
+    @Test
+    fun `a whole model is not mistaken for a part`() {
+        assertThat(
+            ExecuTorchFileName.isPartOfSplit("xnnpack/LFM2.5-1.2B-Instruct-8da4w-gptq-2k.pte"),
+        )
+            .isFalse()
+        assertThat(
+            ExecuTorchFileName.isPartOfSplit("qnn/sm8750/Qwen3-0.6B-qnn-hybrid-2k.pte"),
+        ).isFalse()
+        assertThat(ExecuTorchFileName.isPartOfSplit("chunked-prefill-2k.pte")).isFalse()
+        // A directory that happens to say "chunk" does not make the file in it one.
+        assertThat(ExecuTorchFileName.isPartOfSplit("chunk1of2/model.pte")).isFalse()
+    }
 }

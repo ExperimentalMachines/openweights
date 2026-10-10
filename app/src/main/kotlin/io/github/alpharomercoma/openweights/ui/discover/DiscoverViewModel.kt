@@ -458,11 +458,14 @@ class DiscoverViewModel @Inject constructor(
      * a QNN or NeuroPilot binary reports itself unavailable anywhere else. The backend is
      * read from the name because a `.pte` carries no metadata the app can inspect.
      */
-    private fun runsHere(repoId: String, path: String): Boolean = ExecuTorchSupport.canRun(
-        CompiledBackend.of(repoId, path),
-        path,
-        profiler.profile().socModel,
-    )
+    private fun runsHere(repoId: String, path: String): Boolean =
+        // One part of a split model is not something to download on its own; see isPartOfSplit.
+        !ExecuTorchFileName.isPartOfSplit(path) &&
+            ExecuTorchSupport.canRun(
+                CompiledBackend.of(repoId, path),
+                path,
+                profiler.profile().socModel,
+            )
 
     /** Opens a repository and starts inspecting its files against this device. */
     fun openModel(repoId: String) {

@@ -38,6 +38,23 @@ object ExecuTorchFileName {
     val REMOTE_TOKENIZERS: List<String> = listOf("tokenizer.json", "tokenizer.model")
 
     /**
+     * Whether [path] is one part of a model split across several files, such as a MediaTek
+     * NPU export's `...-2k-chunk1of4.pte`.
+     *
+     * A part is never a model: it opens only beside its siblings and whatever runner joins
+     * them, and on its own the runtime refuses it. Offered one file at a time, the parts of
+     * the first recommended model were sixteen separate downloads on MT6991 phones, each of
+     * which closed the app when opened (2026-10-09). Read from the name, whatever backend it
+     * names, so a split export from a repository that does not say MediaTek is not offered
+     * either.
+     */
+    fun isPartOfSplit(path: String): Boolean =
+        SPLIT_PART.containsMatchIn(path.substringAfterLast('/'))
+
+    private val SPLIT_PART =
+        Regex("(chunk|part|shard)[-_]?\\d+[-_]?of[-_]?\\d+", RegexOption.IGNORE_CASE)
+
+    /**
      * What to save the weights of [repoId] as: the repository's own name, plus `.pte`.
      *
      * `larryliu0820/Qwen3-1.7B-INT8-INT4-ExecuTorch-XNNPACK` becomes
