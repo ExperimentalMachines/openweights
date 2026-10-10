@@ -5,8 +5,16 @@ plugins {
 android {
     namespace = "io.github.alpharomercoma.openweights.core.engine"
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // The ExecuTorch release this build links, from the version catalogue rather than
+        // typed again: records of what the runtime refused belong to one release, and an
+        // update has to ask afresh (VulkanSupport, PteProbe).
+        buildConfigField("String", "EXECUTORCH_VERSION", "\"${libs.versions.executorch.get()}\"")
 
         externalNativeBuild {
             cmake {

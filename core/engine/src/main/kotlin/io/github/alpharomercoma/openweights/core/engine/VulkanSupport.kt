@@ -40,7 +40,7 @@ object VulkanSupport {
     private const val VULKAN_1_1 = (1 shl 22) or (1 shl 12)
 
     /** The runtime release the record belongs to; see the class comment. */
-    private const val RUNTIME = "1.5.1"
+    private const val RUNTIME = BuildConfig.EXECUTORCH_VERSION
     private const val PREFS = "vulkan_support"
     private const val KEY_REFUSED = "refused:$RUNTIME"
 

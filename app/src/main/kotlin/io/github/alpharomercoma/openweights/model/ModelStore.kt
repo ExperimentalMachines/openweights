@@ -23,6 +23,7 @@ import io.github.alpharomercoma.openweights.core.common.model.GgufFileName
 import io.github.alpharomercoma.openweights.core.common.model.ModelFormat
 import io.github.alpharomercoma.openweights.core.engine.ExecuTorchSupport
 import io.github.alpharomercoma.openweights.core.engine.ExportFacts
+import io.github.alpharomercoma.openweights.core.engine.PteProbe
 import io.github.alpharomercoma.openweights.core.hub.DOWNLOAD_PARTIAL_SUFFIX
 import java.io.File
 import javax.inject.Inject
@@ -37,6 +38,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class ModelStore @Inject constructor(@ApplicationContext private val context: Context) {
+
+    private val probe by lazy { PteProbe(context) }
     val directory: File
         get() = File(context.getExternalFilesDir(null) ?: context.filesDir, MODELS_DIRECTORY)
             .apply { mkdirs() }
@@ -81,9 +84,13 @@ class ModelStore @Inject constructor(@ApplicationContext private val context: Co
         // One probe at a time: two refreshes racing on a 3 GB file would map it twice, and
         // a probe that fails is not remembered, so it is asked again next time rather than
         // standing as "text-only" for the rest of the process (codex QA).
+        // Read in the probe process and never here, even when that process cannot answer:
+        // this runs on every refresh of the list, so a file the runtime crashes on, read in
+        // the app's own process, closed the app at every launch (SIGSEGV on the Poco,
+        // 2026-10-11). Without an answer the file is asked about again next time.
         synchronized(facts) {
             facts[key]?.let { return it }
-            return runCatching { ExecuTorchSupport.bridge().probe(model.absolutePath) }
+            return runCatching { probe.probe(model.absolutePath) }
                 .getOrNull()
                 ?.also { facts[key] = it }
         }

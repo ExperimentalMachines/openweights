@@ -56,4 +56,16 @@ class UnopenableTest {
 
         assertThat(unopenable(statesPrefill = true, backends, registered)).isNull()
     }
+
+    @Test
+    fun `only the methods a runner loads decide the delegates`() {
+        // A text export's unused audio encoder compiled for a missing delegate must not count.
+        val text = setOf("forward", "get_max_seq_len", "audio_encoder", "npu_calibration")
+        val vision = setOf("text_decoder", "token_embedding", "vision_encoder", "get_max_seq_len")
+
+        assertThat(runnerMethods(text)).containsExactly("forward")
+        assertThat(runnerMethods(vision))
+            .containsExactly("text_decoder", "token_embedding", "vision_encoder")
+        assertThat(runnerMethods(setOf("custom"))).containsExactly("custom")
+    }
 }

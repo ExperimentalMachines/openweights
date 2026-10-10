@@ -87,7 +87,14 @@ interface ExecuTorchBridge {
      * QA: a probe that failed once under memory pressure used to be remembered as
      * "text-only, no window" for the rest of the process).
      */
-    fun probe(modelPath: String): ExportFacts = ExportFacts(exportedContextLength(modelPath), false)
+    fun probe(modelPath: String): ExportFacts = ExportFacts(contextLength = null, hasVision = false)
+
+    /**
+     * Why [load] must not be asked to open this pair, found by opening it somewhere a crash
+     * cannot reach the app (see [PteProbeService]), or null to go ahead. The default checks
+     * nothing: a bridge with no other process to try in has only [probe]'s refusals.
+     */
+    fun verify(modelPath: String, tokenizerPath: String, multimodal: Boolean): String? = null
 
     /**
      * Opens a `.pte` and the tokenizer it was exported against.
@@ -121,18 +128,6 @@ interface ExecuTorchBridge {
      */
     fun prefillImage(pixels: FloatArray, width: Int, height: Int, channels: Int): Unit =
         throw LlamaException("This runtime cannot read pictures")
-
-    /**
-     * The window the file was exported with, or null when the file does not say.
-     *
-     * A `.pte` carries its window as a constant method (`get_max_context_len`), and it is
-     * the only number that matters: the runtime clamps to it whatever a caller asks for.
-     * The engine used to report the user's preference instead, so a model exported at
-     * 2048 was shown as 4096, the tool prefix alone took two thirds of the real window,
-     * nothing upstream trimmed a search result to fit, and the runtime refused the turn
-     * with "Max seq length exceeded" (2026-09-06, LFM2.5 1.2B xnnpack).
-     */
-    fun exportedContextLength(modelPath: String): Int? = null
 
     /**
      * Runs one generation, calling [onToken] with each fragment as it is produced.

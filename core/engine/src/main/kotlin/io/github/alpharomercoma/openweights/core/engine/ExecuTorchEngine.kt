@@ -98,9 +98,17 @@ class ExecuTorchEngine(
     private var opened: Opened? = null
     private var moduleHasRun = false
 
+    /**
+     * The runner was closed for a reopen that did not happen: its check refused the files, was
+     * cancelled, or the open failed. The model is still the one chosen, so the next turn opens
+     * it again rather than reaching a prefill with nothing loaded (codex QA).
+     */
+    private var closedForReopen = false
+
     private val needsReloadOnReset: Boolean
         get() {
             val held = opened ?: return false
+            if (closedForReopen) return true
             val normalized = held.model.name.lowercase().filter { it.isLetterOrDigit() }
             return moduleHasRun && "lfm2" in normalized && held.stateResetAtZero != true
         }
@@ -197,6 +205,12 @@ class ExecuTorchEngine(
                     "graph and nothing that says how to tokenize for it, so both files " +
                     "have to be installed together.",
             )
+        // An empty tokenizer opens: the runtime falls back to an empty TikToken and the model
+        // loads, then every prompt fails to encode ("Tokenizer error: 5", on the Poco). Said
+        // here instead of as a failure on the first message.
+        if (tokenizer.length() == 0L) {
+            refuse("${modelFile.name} cannot be opened: its tokenizer file is empty.")
+        }
 
         // Refuse rather than guess. A wrong template does not fail: the model answers, a
         // little worse, and its tool calls stop parsing, which reads as a bad model.
@@ -242,6 +256,10 @@ class ExecuTorchEngine(
                     "runtime needs to read pictures. Ask its publisher for a current export.",
             )
         }
+        // The runner opens the file once where a crash cannot reach the app, before it opens
+        // it here: a damaged program or an unreadable tokenizer ends that process instead.
+        bridge.verify(modelFile.absolutePath, tokenizer.absolutePath, multimodal)
+            ?.let { refuse("${modelFile.name} cannot be opened: $it.") }
         open(modelFile, tokenizer, facts.stateResetAtZero)
 
         // Publish the fixed export window, not a smaller preference the runner ignores.
@@ -315,6 +333,7 @@ class ExecuTorchEngine(
         template = null
         opened = null
         moduleHasRun = false
+        closedForReopen = false
     }
 
     /** Opens the file and remembers how, so [resetRuntime] can open it again. */
@@ -353,6 +372,14 @@ class ExecuTorchEngine(
             return
         }
         bridge.close()
+        moduleHasRun = false
+        closedForReopen = true
+        // Checked again before it is opened again: the files are paths, and a download that
+        // replaced the tokenizer while the model was held would otherwise reach the runtime
+        // here, in the app's process (codex QA). Unchanged files answer from the record.
+        bridge.verify(held.model.absolutePath, held.tokenizer.absolutePath, multimodal)?.let {
+            throw LlamaException("${held.model.name} cannot be opened again: $it.")
+        }
         val reopened = gpuChecked {
             bridge.load(
                 held.model.absolutePath,
@@ -362,7 +389,7 @@ class ExecuTorchEngine(
             )
         }
         if (!reopened) throw LlamaException("ExecuTorch could not reopen ${held.model.name}")
-        moduleHasRun = false
+        closedForReopen = false
     }
 
     override fun chat(
@@ -615,7 +642,10 @@ class ExecuTorchEngine(
     private fun forgetHeld() {
         fedText = ""
         heldTokens = 0
-        runCatching { resetRuntime() }
+        // Not when the failure was the reopen itself: the runner is already closed, and trying
+        // again here would run the whole check, and its wait, a second time inside the same
+        // failure (codex QA). The next turn reopens it.
+        if (!closedForReopen) runCatching { resetRuntime() }
     }
 
     /**

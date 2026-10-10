@@ -435,6 +435,49 @@ class ExecuTorchEngineTest {
         }
 
     @Test
+    fun `a reopen on reset is checked again, and a pair that fails it is not reopened`() = runTest {
+        // The reopen used to call load() directly, so a tokenizer replaced while the model
+        // was held reached the runtime in the app's process (codex QA).
+        var checks = 0
+        var refuse = false
+        val checked = object : ExecuTorchBridge by bridge {
+            override fun verify(
+                modelPath: String,
+                tokenizerPath: String,
+                multimodal: Boolean,
+            ): String? {
+                checks++
+                return "the ExecuTorch runtime crashed opening it".takeIf { refuse }
+            }
+        }
+        bridge.reply = "Hello.<|im_end|>"
+        val engine = ExecuTorchEngine(checked)
+        engine.load(installed("LFM2.5-1.2B-Instruct-8da4w-32k.pte"), PARAMS)
+        engine.chat(listOf(user("Hi"))).toList()
+        refuse = true
+
+        val failed = runCatching {
+            engine.chat(listOf(user("Something else entirely"))).toList()
+        }.exceptionOrNull()
+
+        // One at load and one at the reopen; not a third from the error path's own reset.
+        assertThat(checks).isEqualTo(2)
+        assertThat(failed).hasMessageThat().contains("cannot be opened again")
+        assertThat(bridge.loads).isEqualTo(1)
+
+        // The model is still the one chosen: once its files check out, the next turn opens it
+        // again instead of reaching a prefill with nothing loaded (codex QA).
+        refuse = false
+        val retried = runCatching {
+            engine.chat(listOf(user("Try that again"))).toList()
+        }.exceptionOrNull()
+
+        assertThat(retried).isNull()
+        assertThat(checks).isEqualTo(3)
+        assertThat(bridge.loads).isEqualTo(2)
+    }
+
+    @Test
     fun `an LFM2 export that clears its own state keeps the cheap reset`() = runTest {
         bridge.reply = "Hello.<|im_end|>"
         bridge.stateResetAtZero = true
@@ -638,6 +681,36 @@ class ExecuTorchEngineTest {
         assertThat(refused).hasMessageThat().contains("get_max_seq_len")
         assertThat(bridge.loads).isEqualTo(0)
         assertThat(engine.loadedModel).isNull()
+    }
+
+    @Test
+    fun `a pair the isolated trial open refuses is never opened in the app`() = runTest {
+        // A damaged program or an unreadable tokenizer passes every check the probe can make
+        // and ends the trial process instead; the engine must take that answer.
+        val crashes = object : ExecuTorchBridge by bridge {
+            override fun verify(modelPath: String, tokenizerPath: String, multimodal: Boolean) =
+                "the ExecuTorch runtime crashed reading it"
+        }
+        val engine = ExecuTorchEngine(crashes)
+
+        val refused = runCatching { engine.load(installed(MODEL), PARAMS) }.exceptionOrNull()
+
+        assertThat(refused).isInstanceOf(LlamaException::class.java)
+        assertThat(refused).hasMessageThat().contains("crashed reading it")
+        assertThat(bridge.loads).isEqualTo(0)
+        assertThat(engine.loadedModel).isNull()
+    }
+
+    @Test
+    fun `an empty tokenizer is refused before the model opens`() = runTest {
+        // The runtime opens it as an empty TikToken and then fails every prompt.
+        val model = installed(MODEL)
+        File(model.parentFile, model.nameWithoutExtension + ".tokenizer.json").writeText("")
+
+        val refused = runCatching { engine.load(model, PARAMS) }.exceptionOrNull()
+
+        assertThat(refused).hasMessageThat().contains("tokenizer file is empty")
+        assertThat(bridge.loads).isEqualTo(0)
     }
 
     @Test
@@ -1270,7 +1343,7 @@ class ExecuTorchEngineTest {
 
     private fun installed(name: String): File {
         val model = folder.newFile(name)
-        folder.newFile(model.nameWithoutExtension + ".tokenizer.json")
+        folder.newFile(model.nameWithoutExtension + ".tokenizer.json").writeText("{}")
         return model
     }
 

@@ -43,9 +43,6 @@ class DisaggregatedExecuTorchBridge(
 
     override fun probe(modelPath: String): ExportFacts = fallback.probe(modelPath)
 
-    override fun exportedContextLength(modelPath: String): Int? =
-        fallback.exportedContextLength(modelPath)
-
     override fun load(
         modelPath: String,
         tokenizerPath: String,

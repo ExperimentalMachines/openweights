@@ -16,6 +16,7 @@
 
 package io.github.alpharomercoma.openweights.core.engine
 
+import android.content.Context
 import io.github.alpharomercoma.openweights.core.common.model.CompiledBackend
 
 /**
@@ -97,4 +98,11 @@ object ExecuTorchSupport {
     /** A bridge onto the runtime, prefilling on the NPU where the phone has one. */
     fun bridge(): ExecuTorchBridge =
         if (hasNpu()) DisaggregatedExecuTorchBridge() else NativeExecuTorchBridge()
+
+    /**
+     * The bridge the app uses: [bridge], with every first read of a file done in
+     * [PteProbeService]'s process, where a crash in the runtime costs that process alone.
+     */
+    fun bridge(context: Context): ExecuTorchBridge =
+        IsolatedProbeBridge(PteProbe(context), bridge())
 }

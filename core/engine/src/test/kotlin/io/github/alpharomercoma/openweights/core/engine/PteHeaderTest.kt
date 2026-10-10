@@ -21,6 +21,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -77,14 +78,47 @@ class PteHeaderTest {
         assertThat(PteHeader.damage(File(folder.root, "absent.pte"))).contains("missing")
     }
 
-    private fun header(program: Long, segmentsAt: Long, segmentBytes: Long): ByteArray =
-        ByteBuffer.allocate(40).order(ByteOrder.LITTLE_ENDIAN)
-            .putInt(0x40)
-            .put("ET12".toByteArray())
-            .put("eh00".toByteArray())
-            .putInt(32)
-            .putLong(program)
-            .putLong(segmentsAt)
-            .putLong(segmentBytes)
-            .array()
+    @Test
+    fun `a whole file over 2 GiB passes`() {
+        // The length used to be narrowed to an Int before it was capped, so a 3 GiB file
+        // made a negative array size and was refused (codex QA). Sparse, so it costs no disk.
+        val size = 3L * 1024 * 1024 * 1024
+        val head = header(program = 64, segmentsAt = 64, segmentBytes = size - 64)
+        val big = File(folder.root, "big.pte")
+        RandomAccessFile(big, "rw").use {
+            it.write(head)
+            it.setLength(size)
+        }
+
+        assertThat(PteHeader.damage(big)).isNull()
+    }
+
+    @Test
+    fun `a header length too short for its own sizes is damaged`() {
+        val head = header(program = 64, segmentsAt = 64, segmentBytes = 936, headerLength = 8)
+
+        assertThat(PteHeader.damage(head, length = 1_000)).contains("damaged")
+    }
+
+    @Test
+    fun `segment sizes that overflow are damaged rather than wrapped`() {
+        val head = header(program = 64, segmentsAt = Long.MAX_VALUE - 10, segmentBytes = 100)
+
+        assertThat(PteHeader.damage(head, length = 1_000)).contains("damaged")
+    }
+
+    private fun header(
+        program: Long,
+        segmentsAt: Long,
+        segmentBytes: Long,
+        headerLength: Int = 32,
+    ): ByteArray = ByteBuffer.allocate(40).order(ByteOrder.LITTLE_ENDIAN)
+        .putInt(0x40)
+        .put("ET12".toByteArray())
+        .put("eh00".toByteArray())
+        .putInt(headerLength)
+        .putLong(program)
+        .putLong(segmentsAt)
+        .putLong(segmentBytes)
+        .array()
 }

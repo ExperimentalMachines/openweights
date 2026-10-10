@@ -32,6 +32,15 @@
         <uses-native-library
             android:name="libOpenCL.so"
             android:required="false" />
+
+        <!--
+          Where a .pte is first handed to ExecuTorch, so that a file the runtime crashes on
+          ends this process and not the app (PteProbeService). Not exported: only the app binds it.
+        -->
+        <service
+            android:name="io.github.alpharomercoma.openweights.core.engine.PteProbeService"
+            android:exported="false"
+            android:process=":pte_probe" />
     </application>
 
 </manifest>

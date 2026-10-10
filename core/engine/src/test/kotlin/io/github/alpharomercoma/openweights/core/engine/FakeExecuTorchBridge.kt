@@ -86,8 +86,6 @@ class FakeExecuTorchBridge : ExecuTorchBridge {
     /** Everything fed before generate, text and pictures, in the order it arrived. */
     val fed: MutableList<String> = mutableListOf()
 
-    override fun exportedContextLength(modelPath: String): Int? = exportedContextLength
-
     /** What the file's `get_state_reset_at_zero` says; null is a file exported without it. */
     var stateResetAtZero: Boolean? = null
 

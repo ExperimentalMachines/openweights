@@ -16,9 +16,11 @@
 
 package io.github.alpharomercoma.openweights.di
 
+import android.content.Context
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.github.alpharomercoma.openweights.core.common.context.CompactionPolicy
 import io.github.alpharomercoma.openweights.core.common.model.ModelFormat
@@ -44,17 +46,18 @@ object EngineModule {
      */
     @Provides
     @Singleton
-    fun provideInferenceEngine(): InferenceEngine = RoutingInferenceEngine(
-        backends = buildMap<ModelFormat, () -> InferenceEngine> {
-            put(ModelFormat.GGUF) { LlamaCppEngine() }
-            // Registered only where there is something to run: in the standard flavour a
-            // .pte is never offered, downloaded or listed, so a router entry for it could
-            // only ever produce a failure.
-            if (ExecuTorchSupport.AVAILABLE) {
-                put(ModelFormat.PTE) { ExecuTorchEngine(ExecuTorchSupport.bridge()) }
-            }
-        },
-    )
+    fun provideInferenceEngine(@ApplicationContext context: Context): InferenceEngine =
+        RoutingInferenceEngine(
+            backends = buildMap<ModelFormat, () -> InferenceEngine> {
+                put(ModelFormat.GGUF) { LlamaCppEngine() }
+                // Registered only where there is something to run: in the standard flavour a
+                // .pte is never offered, downloaded or listed, so a router entry for it could
+                // only ever produce a failure.
+                if (ExecuTorchSupport.AVAILABLE) {
+                    put(ModelFormat.PTE) { ExecuTorchEngine(ExecuTorchSupport.bridge(context)) }
+                }
+            },
+        )
 
     /** Defaults are tuned for phone-sized context windows; see the policy's documentation. */
     @Provides

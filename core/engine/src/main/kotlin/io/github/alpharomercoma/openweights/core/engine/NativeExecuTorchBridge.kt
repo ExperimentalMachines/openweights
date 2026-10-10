@@ -71,15 +71,16 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
     }
 
     /**
-     * Reads the window off the file through the plain module API.
+     * Reads the window and the rest of [ExportFacts] off the file through the plain module API.
      *
      * A second, short-lived handle on the same file: mapped rather than read, and only the
-     * metadata method is loaded, so it costs a few milliseconds and no copy of the weights.
-     * The LLM wrapper reads the same constants itself and logs them, but offers no way to
-     * ask, so this is the only route to the number before the first turn overflows.
+     * metadata methods run, so it costs a few milliseconds and no copy of the weights. The LLM
+     * wrapper reads the same constants itself and logs them, but offers no way to ask, so this
+     * is the only route to the window before the first turn overflows. The window matters
+     * because the runtime clamps to it whatever a caller asks for: reported as the user's
+     * preference instead, a 2048 export showed as 4096 and the runtime refused the turn
+     * (2026-09-06, LFM2.5 1.2B xnnpack).
      */
-    override fun exportedContextLength(modelPath: String): Int? = probe(modelPath).contextLength
-
     override fun probe(modelPath: String): ExportFacts {
         // Before the runtime sees the file at all: a download that stopped early would
         // otherwise be reported by the loader, through the path that aborts.
@@ -101,7 +102,7 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
                 stateResetAtZero = read("get_state_reset_at_zero")?.let { it != 0 },
                 unopenable = unopenable(
                     statesPrefill = PREFILL_METHOD in methods,
-                    backends = methods.associateWith { method ->
+                    backends = runnerMethods(methods).associateWith { method ->
                         program.getMethodMetadata(method).backends.toList()
                     },
                     registered = registeredBackends,
@@ -336,6 +337,22 @@ internal fun unopenable(
         else -> null
     }
 }
+
+/**
+ * The methods a runner loads, whose delegates therefore have to be linked. A file with
+ * `forward` is opened by the text runner, which loads that and nothing else; one without it is
+ * the multimodal layout, whose runner loads its decoder, embedding and encoders. A method no
+ * runner loads, an auxiliary one compiled for some other delegate, does not decide whether the
+ * model opens (codex QA). A file with none of these names is judged on all of its methods.
+ */
+internal fun runnerMethods(methods: Set<String>): Set<String> = when {
+    TEXT_METHOD in methods -> setOf(TEXT_METHOD)
+    else -> (methods intersect MULTIMODAL_METHODS).ifEmpty { methods }
+}
+
+private const val TEXT_METHOD = "forward"
+private val MULTIMODAL_METHODS =
+    setOf("text_decoder", "token_embedding", "vision_encoder", "audio_encoder")
 
 /** The AAR defaults each call to 0.8, which otherwise overrides the loaded sampler. */
 internal fun generationConfig(maxNewTokens: Int, temperature: Float): LlmGenerationConfig =

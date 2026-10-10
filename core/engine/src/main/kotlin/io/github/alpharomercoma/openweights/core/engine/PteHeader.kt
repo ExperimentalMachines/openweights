@@ -39,7 +39,8 @@ internal object PteHeader {
         if (!file.isFile) return "the file is missing"
         val length = file.length()
         if (length < IDENTIFIER_END) return "the file is too short to be an ExecuTorch program"
-        val head = ByteArray(HEADER_BYTES.coerceAtMost(length.toInt()))
+        // Capped as a Long before it is an Int: a 3 GB file narrowed first is negative.
+        val head = ByteArray(length.coerceAtMost(HEADER_BYTES.toLong()).toInt())
         RandomAccessFile(file, "r").use { it.readFully(head) }
         return damage(head, length)
     }
@@ -68,7 +69,9 @@ internal object PteHeader {
         } else {
             0L
         }
-        if (programSize <= 0 || segmentsAt < 0 || segmentBytes < 0) {
+        val sizesFit =
+            segmentsAt >= 0 && segmentBytes >= 0 && segmentBytes <= Long.MAX_VALUE - segmentsAt
+        if (headerLength < SIZES_END - MAGIC_AT || programSize <= 0 || !sizesFit) {
             return "the file's header is damaged"
         }
         val end = maxOf(programSize, if (segmentBytes > 0) segmentsAt + segmentBytes else 0L)
