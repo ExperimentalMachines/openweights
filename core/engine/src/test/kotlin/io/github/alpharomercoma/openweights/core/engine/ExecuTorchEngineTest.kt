@@ -619,6 +619,43 @@ class ExecuTorchEngineTest {
     }
 
     @Test
+    fun `a file the probe reads as unopenable never reaches the runner`() = runTest {
+        // Every refusal the runner makes while opening aborts the process (fbjni 'ptr',
+        // measured on release and debug builds alike), so the probe's reason is the only
+        // refusal that can come back as a message.
+        val chunk = object : ExecuTorchBridge by bridge {
+            override fun probe(modelPath: String) = ExportFacts(
+                contextLength = null,
+                hasVision = false,
+                unopenable = "it does not state get_max_seq_len",
+            )
+        }
+        val engine = ExecuTorchEngine(chunk)
+
+        val refused = runCatching { engine.load(installed(MODEL), PARAMS) }.exceptionOrNull()
+
+        assertThat(refused).isInstanceOf(LlamaException::class.java)
+        assertThat(refused).hasMessageThat().contains("get_max_seq_len")
+        assertThat(bridge.loads).isEqualTo(0)
+        assertThat(engine.loadedModel).isNull()
+    }
+
+    @Test
+    fun `a file the probe cannot read is refused rather than handed to the runner`() = runTest {
+        val unreadable = object : ExecuTorchBridge by bridge {
+            override fun probe(modelPath: String): ExportFacts =
+                error("program could not be parsed")
+        }
+        val engine = ExecuTorchEngine(unreadable)
+
+        val refused = runCatching { engine.load(installed(MODEL), PARAMS) }.exceptionOrNull()
+
+        assertThat(refused).isInstanceOf(LlamaException::class.java)
+        assertThat(refused).hasMessageThat().contains("program could not be parsed")
+        assertThat(bridge.loads).isEqualTo(0)
+    }
+
+    @Test
     fun `a vision export without a window is refused before the runner can abort on it`() =
         runTest {
             // Seen on the phone with an older exporter's SmolVLM2: the multimodal runner reads

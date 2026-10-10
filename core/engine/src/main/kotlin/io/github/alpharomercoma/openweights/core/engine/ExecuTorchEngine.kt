@@ -209,10 +209,17 @@ class ExecuTorchEngine(
         closeModel()
         // The window is the file's, not the preference's. The runtime cannot resize its
         // compiled cache, so neither a larger nor a smaller preference changes the limit.
-        // A file that cannot be probed is not refused here; the runner's own open below is
-        // the authority on whether it can be run, and says so with a message.
+        // A file the probe cannot read, or reads as one the runner would refuse, is refused
+        // here. The runner used to be the authority, but every refusal it makes while
+        // opening aborts the process instead of returning a message (ExportFacts.unopenable).
         val facts = runCatching { bridge.probe(modelFile.absolutePath) }
-            .getOrDefault(ExportFacts(contextLength = null, hasVision = false))
+            .getOrElse { cause ->
+                refuse(
+                    "ExecuTorch could not read ${modelFile.name}: " +
+                        (cause.message ?: cause::class.java.simpleName),
+                )
+            }
+        facts.unopenable?.let { refuse("${modelFile.name} cannot be opened: $it.") }
         val exported = facts.contextLength
         callChars = facts.callChars()
         // Older text exports without metadata retain the preference as an estimate only.

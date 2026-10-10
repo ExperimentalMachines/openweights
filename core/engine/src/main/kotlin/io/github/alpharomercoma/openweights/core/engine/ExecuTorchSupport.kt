@@ -40,11 +40,17 @@ object ExecuTorchSupport {
      * download is the difference between refusing a model up front and refusing it after a
      * gigabyte. UNKNOWN is included because most published exports are XNNPACK and do not
      * say so in their name; excluding it would hide nearly all of them.
+     *
+     * NeuroPilot is not among them, because nothing a user can download opens through it.
+     * A published NeuroPilot file is one chunk of a disaggregated model: the NPU half runs
+     * only through [DisaggregatedBridge], whose libraries the release build does not
+     * package, and only beside a CPU `.pte` with the chunks staged next to it. Listed here
+     * (047b8b92), it put sixteen chunks of 270 to 400 MB each in front of every MT6991 phone,
+     * and opening one killed the app (2026-10-09).
      */
     val BACKENDS: Set<CompiledBackend> = setOf(
         CompiledBackend.XNNPACK,
         CompiledBackend.VULKAN,
-        CompiledBackend.NEUROPILOT,
         CompiledBackend.UNKNOWN,
     )
 

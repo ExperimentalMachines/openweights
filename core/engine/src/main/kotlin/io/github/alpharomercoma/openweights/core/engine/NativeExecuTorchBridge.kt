@@ -16,10 +16,12 @@
 
 package io.github.alpharomercoma.openweights.core.engine
 
+import org.pytorch.executorch.ExecuTorchRuntime
 import org.pytorch.executorch.Module
 import org.pytorch.executorch.extension.llm.LlmCallback
 import org.pytorch.executorch.extension.llm.LlmGenerationConfig
 import org.pytorch.executorch.extension.llm.LlmModule
+import java.io.File
 
 /**
  * The real ExecuTorch runtime, through `org.pytorch:executorch-android`.
@@ -79,6 +81,11 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
     override fun exportedContextLength(modelPath: String): Int? = probe(modelPath).contextLength
 
     override fun probe(modelPath: String): ExportFacts {
+        // Before the runtime sees the file at all: a download that stopped early would
+        // otherwise be reported by the loader, through the path that aborts.
+        PteHeader.damage(File(modelPath))?.let { damage ->
+            return ExportFacts(contextLength = null, hasVision = false, unopenable = damage)
+        }
         val program = Module.load(modelPath, Module.LOAD_MODE_MMAP)
         try {
             val methods = program.getMethods().toSet()
@@ -86,11 +93,19 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
                 program.execute(it).firstOrNull()?.takeIf { v -> v.isInt }?.toInt()?.toInt()
             }?.takeIf { it > 0 }
             val window = WINDOW_METHODS.firstNotNullOfOrNull(::read)
+            val prefill = read(PREFILL_METHOD)
             return ExportFacts(
                 contextLength = window,
                 hasVision = VISION_ENCODER_METHOD in methods,
-                prefillLength = read(PREFILL_METHOD),
+                prefillLength = prefill,
                 stateResetAtZero = read("get_state_reset_at_zero")?.let { it != 0 },
+                unopenable = unopenable(
+                    statesPrefill = PREFILL_METHOD in methods,
+                    backends = methods.associateWith { method ->
+                        program.getMethodMetadata(method).backends.toList()
+                    },
+                    registered = registeredBackends,
+                ),
             )
         } finally {
             program.destroy()
@@ -206,6 +221,15 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
     }
 
     private companion object {
+        /**
+         * The delegates linked into this build: XnnpackBackend and VulkanBackend from the
+         * Vulkan AAR. Asked of the runtime rather than written down, so a different AAR
+         * answers for itself.
+         */
+        val registeredBackends: Set<String> by lazy {
+            ExecuTorchRuntime.getRegisteredBackends().toSet()
+        }
+
         /** What exporters call the window, most specific first. */
         val WINDOW_METHODS = listOf("get_max_context_len", "get_max_seq_len")
 
@@ -279,6 +303,37 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
             .map { this[it] }
             .joinToString("")
             .toLongOrNull() ?: 0
+    }
+}
+
+/**
+ * Why the runner would refuse a file, decided from what the plain module API can read.
+ *
+ * Two refusals the runner is known to make while opening, both of which abort the process
+ * rather than raise (see [ExportFacts.unopenable]):
+ * - no `get_max_seq_len`: the text and multimodal runners both require it before anything
+ *   else ("Required metadata method get_max_seq_len not found in model"). A MediaTek NPU
+ *   chunk, which is half of a disaggregated model and never a model alone, is one.
+ * - a delegate this build did not link: the runtime reports the backend as not registered.
+ *   NeuroPilot is the one a published file names (`NeuropilotBackend`); this AAR carries
+ *   XNNPACK and Vulkan.
+ *
+ * @param backends each method's delegates, as [org.pytorch.executorch.MethodMetadata] lists them.
+ */
+internal fun unopenable(
+    statesPrefill: Boolean,
+    backends: Map<String, List<String>>,
+    registered: Set<String>,
+): String? {
+    val missing = backends.values.flatten().toSortedSet() - registered
+    return when {
+        missing.isNotEmpty() ->
+            "it was compiled for ${missing.joinToString(" and ")}, which this build of the app " +
+                "does not include"
+        !statesPrefill ->
+            "it does not state get_max_seq_len, which the runtime needs to open a model; it may " +
+                "be part of a model rather than a whole one, or come from an older exporter"
+        else -> null
     }
 }
 

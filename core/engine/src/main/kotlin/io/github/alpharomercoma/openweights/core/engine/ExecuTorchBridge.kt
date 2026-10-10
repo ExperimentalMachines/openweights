@@ -55,12 +55,19 @@ data class ExecuTorchOutcome(
  * when the export states it apart from the window. The exporter bounds the token input at
  * one less than this, and the runtime chunks a long prompt at exactly this, so a single
  * call of that many tokens fails. The engine caps characters as a pre-tokenization heuristic.
+ * @property unopenable why this runtime cannot open the file, found before the runner is
+ * asked to. The runner cannot be asked: in the AAR this app ships, any error it raises while
+ * opening reaches fbjni with no C++ exception in flight, and fbjni aborts the process with
+ * the message 'ptr' (measured 2026-10-09 on vc615, vc650 and a debug build alike, with a
+ * MediaTek NPU chunk that lacks `get_max_seq_len`). A refusal from here is a message; the
+ * same refusal from the runner is a crash.
  */
 data class ExportFacts(
     val contextLength: Int?,
     val hasVision: Boolean,
     val prefillLength: Int? = null,
     val stateResetAtZero: Boolean? = null,
+    val unopenable: String? = null,
 )
 
 interface ExecuTorchBridge {
