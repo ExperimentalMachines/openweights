@@ -28,12 +28,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         MessageEntity::class,
         UsageEntity::class,
         CompactionEntity::class,
-        WatchEntity::class,
-        WatchRunEntity::class,
         ToolStepEntity::class,
         EngineHistoryEntity::class,
     ],
-    version = 20,
+    version = 21,
     exportSchema = true,
 )
 abstract class OpenWeightsDatabase : RoomDatabase() {
@@ -43,8 +41,6 @@ abstract class OpenWeightsDatabase : RoomDatabase() {
     abstract fun messages(): MessageDao
     abstract fun usage(): UsageDao
     abstract fun compactions(): CompactionDao
-    abstract fun watches(): WatchDao
-    abstract fun watchRuns(): WatchRunDao
     abstract fun toolSteps(): ToolStepDao
     abstract fun engineHistory(): EngineHistoryDao
 
@@ -56,6 +52,19 @@ abstract class OpenWeightsDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE watches ADD COLUMN summaryUntrusted INTEGER")
                 db.execSQL("ALTER TABLE watches ADD COLUMN summaryPrivate INTEGER")
+            }
+        }
+
+        /**
+         * Drops the watches and their history, because the feature is gone (2026-10-11).
+         *
+         * Their periodic checks are cancelled at start-up by the application, and nothing reads
+         * these tables any more. Children first, for the foreign key.
+         */
+        val MIGRATION_20_21 = object : Migration(20, 21) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS watch_runs")
+                db.execSQL("DROP TABLE IF EXISTS watches")
             }
         }
 
@@ -216,7 +225,7 @@ abstract class OpenWeightsDatabase : RoomDatabase() {
          * A new table rather than a column on `messages`: one reply can hold several calls,
          * and cramming a variable-length list into one row is the JSON-in-a-column shape this
          * database avoids everywhere else it has this same choice — [CompactionEntity] and
-         * [WatchRunEntity] both chose a child table over a blob for it. Nothing to backfill:
+         * `WatchRunEntity` both chose a child table over a blob for it. Nothing to backfill:
          * a reply written before this migration never had its steps recorded anywhere, so
          * there is nothing to construct rows from, and a conversation with turns on both
          * sides of the upgrade shows chips only for the ones after it.

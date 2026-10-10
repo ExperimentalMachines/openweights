@@ -36,7 +36,6 @@ import io.github.alpharomercoma.openweights.core.engine.InferenceEngine
 import io.github.alpharomercoma.openweights.core.engine.Judgement
 import io.github.alpharomercoma.openweights.core.engine.StopReason
 import io.github.alpharomercoma.openweights.core.engine.WarmResult
-import io.github.alpharomercoma.openweights.core.tools.AdvanceTool
 import io.github.alpharomercoma.openweights.core.tools.AgentDecision
 import io.github.alpharomercoma.openweights.core.tools.AgentMode
 import io.github.alpharomercoma.openweights.core.tools.AgentRunner
@@ -195,8 +194,8 @@ class TurnRunner @Inject constructor(
      *
      * The engine holds one model and one KV cache, so two turns at once is not slow, it is
      * wrong: the second one's prefill lands on the first one's context. Nothing needed this
-     * while the only caller was a screen a person is looking at, and then watches arrived,
-     * which come due on a timer with no idea what the user is doing.
+     * while the only caller was a screen a person is looking at, and then goals arrived,
+     * which take their next step with no idea what the user is doing.
      *
      * Held here rather than in the engine because this is the boundary a turn has: the
      * engine's own calls are individual decodes, and a lock down there would serialise
@@ -272,7 +271,6 @@ class TurnRunner @Inject constructor(
         listener: TurnListener,
         offerAsk: Boolean? = null,
         question: String = "",
-        offerPlan: Boolean = true,
     ): String {
         // A warm holds the engine for as long as a cold prefill takes, and it exists to
         // serve exactly the turn that is arriving now: interrupt it, keep what it read,
@@ -296,8 +294,14 @@ class TurnRunner @Inject constructor(
         }
         return try {
             turn(
-                conversation, params, mode, withTools, notes, listener,
-                offerAsk, question, offerPlan,
+                conversation,
+                params,
+                mode,
+                withTools,
+                notes,
+                listener,
+                offerAsk,
+                question,
             )
         } finally {
             engineInUse.unlock()
@@ -348,115 +352,18 @@ class TurnRunner @Inject constructor(
     }
 
     /**
-     * Runs only if nothing else is using the engine, and returns null rather than waiting.
-     *
-     * For a caller whose work has a moment: a watch coming due while the user is mid
-     * conversation should record that it was skipped, not join a queue. By the time it
-     * reached the front the thing it was checking would have moved on, and every skipped
-     * tick would run at once when the user put the phone down.
-     */
-    suspend fun tryRun(
-        conversation: List<ChatMessage>,
-        params: SamplerParams,
-        mode: AgentMode,
-        withTools: Boolean,
-        notes: ToolNotes,
-        listener: TurnListener,
-        offerAsk: Boolean? = null,
-        question: String = "",
-        offerPlan: Boolean = true,
-        /** Watch ownership boundaries must run while this turn owns the engine. */
-        beforeTurn: () -> Unit = {},
-        afterTurn: () -> Unit = {},
-    ): String? {
-        turnsWaiting.incrementAndGet()
-        try {
-            // Busy with a real turn: skip, as documented above. Busy with a warm: kill
-            // it, repeatedly if need be -- see run() -- rather than recording a skip for
-            // work nobody was waiting on.
-            while (!engineInUse.tryLock()) {
-                if (!warming) return null
-                engine.cancel()
-                delay(WARM_INTERRUPT_RETRY_MS)
-            }
-        } finally {
-            turnsWaiting.decrementAndGet()
-        }
-        return try {
-            beforeTurn()
-            turn(
-                conversation,
-                params,
-                mode,
-                withTools,
-                notes,
-                listener,
-                offerAsk,
-                question,
-                offerPlan,
-            )
-        } finally {
-            try {
-                afterTurn()
-            } finally {
-                engineInUse.unlock()
-            }
-        }
-    }
-
-    /**
-     * Puts a closed question to the conversation the last turn left in the engine, extended
-     * by [following], if the engine is free: null when something holds or is waiting for the
-     * engine, when the last turn left no record, or when the engine cannot judge.
-     *
-     * The last turn's own prompt and tools, not a reconstruction of them: the question is
-     * cheap only when its prompt extends what that turn left in the cache, and a model whose
-     * template drops tools had their descriptions written into that prompt, which a rebuilt
-     * conversation would leave out (Codex, reviewing the first version). A caller waiting for
-     * a real turn goes first; a background question is never worth holding one up.
-     */
-    suspend fun tryJudge(
-        following: List<ChatMessage>,
-        instruction: String,
-        options: List<String>,
-        params: SamplerParams,
-    ): Judgement? {
-        if (turnsWaiting.get() > 0 || !engineInUse.tryLock()) return null
-        return try {
-            val record = lastEngineRecord ?: return null
-            engine.judge(record.messages + following, instruction, options, record.tools, params)
-        } finally {
-            engineInUse.unlock()
-        }
-    }
-
-    /** The prompt and tools a finished turn left in the engine. See [tryJudge]. */
-    private class EngineRecord(val messages: List<ChatMessage>, val tools: List<ToolDefinition>)
-
-    /** Written as a turn finishes, cleared as one starts. Read under [engineInUse]. */
-    @Volatile
-    private var lastEngineRecord: EngineRecord? = null
-
-    /**
      * The tools a turn in [mode] would offer, exactly as [turn] decides them.
      *
      * One function because two callers must agree to the byte: the turn that answers, and
      * the warm that reads the same prefix in ahead of it. A selection that drifted between
      * them is a warm that warmed a prompt nobody will ever send.
      */
-    private fun selectTools(mode: AgentMode, offerPlan: Boolean, offerAsk: Boolean?): ToolRegistry {
+    private fun selectTools(mode: AgentMode, offerAsk: Boolean?): ToolRegistry {
         asks.offered = offerAsk ?: (mode == AgentMode.PLAN)
         // The switches only govern what the user was offered a switch for. Plan mode's own
         // two tools are machinery, so they follow availability alone; a stale "off" left in
         // the preferences by the screen that used to list them must not disable them now.
         val offered = tools.all.filter { it.isAvailable }
-            // The plan belongs to the conversation the user is looking at, and the board
-            // holding it is one object for the whole process. Anything that is not that
-            // conversation must not be handed `advance`: a watch coming due mid-plan runs
-            // through this same loop, in AUTO, with no approval on the way, and was offered
-            // a tick for a step it knows nothing about. It also inherited the longer round
-            // budget, because ticking a plan is a chaining tool.
-            .filter { offerPlan || it.definition.name != AdvanceTool.NAME }
         return tools.enabled(
             offered
                 // Plan mode gets the machinery and nothing else.
@@ -553,7 +460,7 @@ class TurnRunner @Inject constructor(
         if (!engineInUse.tryLock()) return null
         warming = true
         return try {
-            val active = selectTools(AgentMode.AUTO, offerPlan = true, offerAsk = null)
+            val active = selectTools(AgentMode.AUTO, offerAsk = null)
             val native = engine.loadedModel?.supportsTools == true
             val renderTools = withTools && native && ToolBudget(headroomTokens()).hasRoom
             val messages = conversation.describing(active, needed = withTools && !native)
@@ -588,7 +495,6 @@ class TurnRunner @Inject constructor(
         listener: TurnListener,
         offerAsk: Boolean? = null,
         question: String = "",
-        offerPlan: Boolean = true,
     ): String {
         // Read once per turn, not once per app start: a tool switched off mid-conversation
         // should be off for the next thing asked, and a registry captured at construction
@@ -608,7 +514,7 @@ class TurnRunner @Inject constructor(
         // this tool exists for, and offering it anyway is what let a small model ask who
         // the subject was instead of researching it. Null everywhere else, which is every
         // other turn there is.
-        val active = selectTools(mode, offerPlan, offerAsk)
+        val active = selectTools(mode, offerAsk)
 
         // Two rounds is search then answer, which is the whole shape of a turn that looks
         // something up. A turn that works with files is a different shape: find it, read it,
@@ -673,7 +579,6 @@ class TurnRunner @Inject constructor(
 
         return Turn(
             active,
-            offerPlan,
             agent,
             ceiling,
             withTools,
@@ -684,7 +589,7 @@ class TurnRunner @Inject constructor(
             namedSubject,
             // What the app searches for when the model says it will and does not: the
             // question as typed, or the last thing the user said where a caller passed
-            // none (the goal runner, the watch).
+            // none (the goal runner).
             question.ifBlank {
                 conversation.lastOrNull { it.role == ChatRole.USER }?.text.orEmpty()
             }.plainQuotes(),
@@ -705,8 +610,6 @@ class TurnRunner @Inject constructor(
     @Suppress("LongParameterList")
     private inner class Turn(
         private val active: ToolRegistry,
-        /** Whether the plan on the board belongs to this run. See [turn]'s `offerPlan`. */
-        private val ownsPlan: Boolean,
         private val agent: AgentRunner,
         /**
          * The most rounds this turn could reach, if it earns them. See [maxRounds].
@@ -814,7 +717,6 @@ class TurnRunner @Inject constructor(
 
         suspend fun run(params: SamplerParams, mode: AgentMode, listener: TurnListener): String {
             turnParams = params
-            lastEngineRecord = null
             open(mode, listener)
             while (true) {
                 // Tools are offered from the first pass, which was tried the other way and
@@ -838,11 +740,7 @@ class TurnRunner @Inject constructor(
                 // very end or it moves tokens the cache has already read. Grounding is the
                 // opposite case — the same words every pass — so it lives in [messages]
                 // and is not re-attached here.
-                // Withheld whole, not merely the tool. Taking `advance` away stopped a watch
-                // ticking somebody's plan and still pinned the plan's text to the end of its
-                // prompt, which is the position a small model attends to best: a scheduled
-                // check would answer about the steps of a chat it has never seen.
-                val plan = plans.plan.value.takeIf { ownsPlan }
+                val plan = plans.plan.value
                 pinned = pinned || !plan?.statusBlock().isNullOrEmpty()
                 val streamed = try {
                     streamOnce(
@@ -883,7 +781,6 @@ class TurnRunner @Inject constructor(
                     // accumulator never carried.
                     if (!pinned) {
                         listener.onEngineHistory(messages)
-                        lastEngineRecord = EngineRecord(messages, renderedTools())
                     }
                     return lastRaw
                 }
@@ -1271,7 +1168,7 @@ class TurnRunner @Inject constructor(
          * conversation the model is not about to continue.
          */
         private fun pinnedPrompt(): List<ChatMessage> {
-            val plan = plans.plan.value.takeIf { ownsPlan }
+            val plan = plans.plan.value
             pinned = pinned || !plan?.statusBlock().isNullOrEmpty()
             return messages.pinning(plan)
         }

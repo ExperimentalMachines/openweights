@@ -120,8 +120,8 @@ interface Tool {
      * The bar for setting this is narrow on purpose, or AUTO stops meaning anything. It is
      * not "this is important" or "this writes something". It is: the effect is still there
      * after the conversation ends, so a wrong call cannot be undone by closing the chat.
-     * That is `remember`, which edits every future prompt, and `watch`, which schedules
-     * unattended work. Everything else answers to [needsApproval].
+     * That is `remember`, which edits every future prompt. Everything else answers to
+     * [needsApproval].
      */
     val alwaysAsks: Boolean get() = false
 

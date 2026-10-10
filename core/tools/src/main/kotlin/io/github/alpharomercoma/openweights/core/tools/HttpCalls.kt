@@ -32,8 +32,8 @@ import kotlin.coroutines.resumeWithException
  * `execute()` blocks the thread it is on and answers to nothing until the socket does: the
  * tools ran it inside `withContext(Dispatchers.IO)`, where a cancellation from Stop marks
  * the coroutine and then waits for the read to finish, which a server dripping a byte a
- * minute makes never. The engine stays claimed for the whole of it, so no turn and no
- * watch can run. Enqueued instead, the call is cancelled the moment the coroutine is, and
+ * minute makes never. The engine stays claimed for the whole of it, so no other turn can
+ * run. Enqueued instead, the call is cancelled the moment the coroutine is, and
  * the socket goes with it.
  */
 internal suspend fun Call.await(): Response = suspendCancellableCoroutine { continuation ->

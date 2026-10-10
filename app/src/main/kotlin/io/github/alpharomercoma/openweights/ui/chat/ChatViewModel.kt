@@ -3091,9 +3091,9 @@ class ChatViewModel @Inject constructor(
 
     /** Stops the running generation, keeping whatever has been produced so far. */
     fun stop() {
-        // Only what this screen is running. The runtime is shared with the watches and the
-        // goal, and a reopen or a delete with no turn in flight used to cancel whichever of
-        // those had the engine at that moment, truncating a reply nobody had asked to stop.
+        // Only what this screen is running. The runtime is shared with the goal, and a reopen
+        // or a delete with no turn in flight used to cancel it if it had the engine at that
+        // moment, truncating a reply nobody had asked to stop.
         val job = generationJob?.takeIf { it.isActive } ?: return
         runtime.cancel()
         job.cancel()

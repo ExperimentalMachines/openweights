@@ -40,8 +40,7 @@ import io.github.alpharomercoma.openweights.R
  * when the user does.
  *
  * That is survivable for a chat app where every reply is watched. It is fatal for anything
- * that runs on its own, which is what a goal is and what a Watch's own tick is, so this
- * exists before either does.
+ * that runs on its own, which is what a goal is, so this exists before goals do.
  *
  * ### Why `specialUse`
  *
@@ -101,18 +100,12 @@ class GenerationService : Service() {
         intent?.getStringExtra(EXTRA_LABEL)?.let { label ->
             // Checked here, where the words are actually applied, rather than only where
             // they were sent. These arrive as intents, so two writers a millisecond apart
-            // are delivered in an order neither of them chose: without this a watch's
-            // countdown could land on top of a chat turn that had taken the notification
-            // over in between, and stay there for a period.
+            // are delivered in an order neither of them chose, and the earlier one must not
+            // land on top of whoever took the notification over in between.
             val sender = intent.getStringExtra(EXTRA_HOLDER)
             val stale = sender != null && synchronized(holders) { owner != sender }
             if (!stale) {
-                promote(
-                    label = label,
-                    detail = intent.getStringExtra(EXTRA_DETAIL),
-                    countdownTo = intent.getLongExtra(EXTRA_COUNTDOWN_TO, 0L)
-                        .takeIf { at -> at > 0 },
-                )
+                promote(label = label, detail = intent.getStringExtra(EXTRA_DETAIL))
             }
         }
         // Not sticky. If the system kills the process the turn died with it, and restarting
@@ -128,12 +121,12 @@ class GenerationService : Service() {
      * reply is what the user asked for, and a turn that might be frozen is better than a
      * crash.
      */
-    private fun promote(label: String, detail: String? = null, countdownTo: Long? = null) {
+    private fun promote(label: String, detail: String? = null) {
         runCatching {
             ServiceCompat.startForeground(
                 this,
                 NOTIFICATION_ID,
-                notification(label, detail, countdownTo),
+                notification(label, detail),
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
                 } else {
@@ -143,21 +136,8 @@ class GenerationService : Service() {
         }.onFailure { android.util.Log.e("OpenWeights", "startForeground refused", it) }
     }
 
-    /**
-     * The one notification this app keeps up, for whoever is holding the process.
-     *
-     * [countdownTo] is drawn by the system rather than by this app, which is the whole
-     * reason it is a timestamp and not a string. A watch waiting five minutes for its next
-     * check would otherwise have to wake up to rewrite "in 4 minutes", then "in 3", for as
-     * long as it lives — the exact battery this feature is supposed to be careful with.
-     * Handed a deadline, the platform ticks the digits itself while the app sleeps.
-     *
-     * Both extras are cleared by whoever writes next. That is the same last-writer-wins the
-     * label has always had: a turn that starts while a watch is waiting takes the
-     * notification over, and a stale countdown under a turn's label would be a lie about
-     * the wrong thing entirely.
-     */
-    private fun notification(label: String, detail: String?, countdownTo: Long?) =
+    /** The one notification this app keeps up, for whoever is holding the process. */
+    private fun notification(label: String, detail: String?) =
         NotificationCompat.Builder(this, CHANNEL)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(label)
@@ -166,15 +146,7 @@ class GenerationService : Service() {
             .setOnlyAlertOnce(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setContentIntent(openApp())
-            .apply {
-                if (countdownTo != null) {
-                    setWhen(countdownTo)
-                    setUsesChronometer(true)
-                    setChronometerCountDown(true)
-                } else {
-                    setShowWhen(false)
-                }
-            }
+            .setShowWhen(false)
             .build()
 
     private fun openApp() = packageManager.getLaunchIntentForPackage(packageName)?.let {
@@ -204,7 +176,6 @@ class GenerationService : Service() {
         private const val EXTRA_LABEL = "label"
         private const val EXTRA_DETAIL = "detail"
         private const val EXTRA_HOLDER = "holder"
-        private const val EXTRA_COUNTDOWN_TO = "countdownTo"
 
         /** Asks the service to stop itself, once it has promoted and once nobody holds it. */
         private const val ACTION_STOP = "io.github.alpharomercoma.openweights.STOP_GENERATION"
@@ -233,26 +204,17 @@ class GenerationService : Service() {
          * So the goal takes its own hold for its whole life and the per-turn hold nests
          * inside it. The service stops when the last holder lets go.
          *
-         * A count per key, not merely a key's presence: `TURN` and `GOAL` are each held by
-         * exactly one owner at a time, but a Watch's holder name is its own id, reused every
-         * time its ticker restarts (an edited interval, for one), and a restart cancels the
-         * old ticker rather than waiting for it. The new ticker can call [hold] again for
-         * that same name before the old one's `finally` reaches [release] — a presence set
-         * would treat the second `hold` as a no-op and then let the old ticker's `release`
-         * remove the name outright, stopping the service out from under the ticker that
-         * replaced it.
+         * A count per key, not merely a key's presence, so a holder that restarts and holds
+         * again before its old self has released cannot have its new hold removed by the
+         * old release.
          */
         private val holders = mutableMapOf<String, Int>()
 
         /**
          * Whose words are on the notification at the moment.
          *
-         * The label has always been last-writer-wins, which was harmless when only a turn
-         * ever wrote it. A watch that refreshes a countdown every period is a second writer,
-         * and without an owner it would paint over a turn that is generating right now, or
-         * leave its own name and a running countdown up after it had ended while another
-         * holder kept the service alive. Writing is allowed to whoever took the last hold;
-         * a watch that is not the owner refreshes nothing and stays quiet.
+         * Writing the label is allowed to whoever took the last hold, so a holder that has
+         * been overtaken cannot paint its words over the one that is working now.
          */
         private var owner: String? = null
 
@@ -264,33 +226,6 @@ class GenerationService : Service() {
          * and the right response is to generate anyway: the reply is what the user asked
          * for and a crash is worse than a turn that might be frozen.
          */
-        /**
-         * Rewrites what the notification says, for a holder that already has it.
-         *
-         * Separate from [hold] because [hold] counts: a watch that called it once per tick
-         * to refresh its countdown would raise the count every minute and never let the
-         * service stop. This changes the words and the deadline and touches nothing else.
-         */
-        fun relabel(
-            context: Context,
-            holder: String,
-            label: String,
-            detail: String?,
-            countdownTo: Long?,
-        ) {
-            val mine = synchronized(holders) { holders.containsKey(holder) && owner == holder }
-            if (!mine) return
-            runCatching {
-                context.startForegroundService(
-                    Intent(context, GenerationService::class.java)
-                        .putExtra(EXTRA_LABEL, label)
-                        .putExtra(EXTRA_DETAIL, detail)
-                        .putExtra(EXTRA_HOLDER, holder)
-                        .putExtra(EXTRA_COUNTDOWN_TO, countdownTo ?: 0L),
-                )
-            }
-        }
-
         fun hold(context: Context, holder: String, label: String) {
             synchronized(holders) {
                 holders[holder] = (holders[holder] ?: 0) + 1
@@ -325,11 +260,9 @@ class GenerationService : Service() {
                 val remaining = (holders[holder] ?: 0) - 1
                 if (remaining > 0) holders[holder] = remaining else holders.remove(holder)
                 val gone = !holders.containsKey(holder)
-                // Handed on rather than merely dropped. Clearing the owner and leaving it
-                // clear meant that after a chat turn had taken the notification over and
-                // ended, a watch still holding the process could never write to it again:
-                // nobody owned it, so every refresh was refused as stale, and its countdown
-                // stopped moving for the rest of its life.
+                // Handed on rather than merely dropped: a holder left without an owner above
+                // it could never write to the notification again, every write refused as
+                // stale.
                 val next = if (gone && owner == holder) holders.keys.firstOrNull() else null
                 if (next != null || (gone && owner == holder)) owner = next
                 holders.isEmpty() to next

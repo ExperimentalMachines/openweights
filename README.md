@@ -18,7 +18,7 @@ No account, no telemetry. Inference runs on your own hardware.
 OpenWeights is an Android app for running open-weight language models locally. Search
 Hugging Face from inside the app, check whether a model fits your phone before you download
 it, and chat on the device. Optional agent tools can use the web, work in a folder you share,
-run sandboxed JavaScript, keep memory, schedule checks, and carry out a plan.
+run sandboxed JavaScript, keep memory, and carry out a plan.
 
 Get it on [Google Play](https://play.google.com/store/apps/details?id=io.github.alpharomercoma.openweights),
 or build it from this repository.
@@ -69,7 +69,7 @@ while you type, snapshotted, and kept on disk. On the reference phone, that redu
 chat's time to first token from about 18.5 seconds to under one second
 ([measured](docs/research/first-turn-latency.md)).
 
-**An agent within limits you set.** Eighteen tools, four run modes, and individual switches
+**An agent within limits you set.** Seventeen tools, four run modes, and individual switches
 for the three tools that use the internet. Every tool call is a row in the reply naming what
 it was given.
 
@@ -123,7 +123,7 @@ model search and downloads, and the three network tools. The
 
 ### The agent
 
-The registry holds eighteen tools, sixteen of them user-facing. Three use the internet, sit
+The registry holds seventeen tools, fifteen of them user-facing. Three use the internet, sit
 under a heading that says so, and have individual switches. A fresh install has one switch
 on, `web_search`; the rest are off until you turn them on.
 
@@ -135,7 +135,6 @@ on, `web_search`; the rest are off until you turn them on.
 | `find_files`, `read_file`, `write_file`, `delete_file` | Work inside a folder you share, revocable at any time | No |
 | `show_website`, `show_document`, `show_slides` | Render a saved page, Markdown document or slide deck live on the Canvas | No |
 | `run_script` | Runs JavaScript in an isolated-process sandbox with no network or file system | No |
-| `watch` | Re-checks something on a schedule; always asks before it is created | No |
 | `read_memory`, `save_memory`, `update_memory`, `forget_memory` | Short facts kept across conversations; one switch for reading, one for the three writers | No |
 | `advance`, `ask_user` | Tick a plan step; ask you a question with options (not shown on the Tools screen) | No |
 
@@ -146,11 +145,11 @@ on, `web_search`; the rest are off until you turn them on.
 | `/ask` | Ask first | Approve each tool call before it runs |
 | `/auto` | Auto (default) | Low-risk enabled tools run directly; sensitive actions pause for approval |
 | `/plan` | Plan | The assistant says what it would do and runs nothing |
-| `/yolo` | Everything | Waives Auto's two network checks for this process only; memory writes, watch creation and untrusted durable writes still ask |
+| `/yolo` | Everything | Waives Auto's two network checks for this process only; memory writes and untrusted durable writes still ask |
 
 Auto pauses for approval when a model-chosen fetch follows untrusted content, or when data
 would leave after private tool data was read. Provenance survives compaction and carried
-branch history; watch summaries retain it across ticks. `/yolo` waives those two network
+branch history. `/yolo` waives those two network
 checks for the current process and is never saved.
 
 The Canvas stays local inside the app. Open in browser asks each time, because an external
@@ -166,10 +165,9 @@ question from the model appear at the end of the transcript, and the composer, t
 field on the screen, steers the next step or answers the question. The reasoning is in
 [docs/design/goal-surface.md](docs/design/goal-surface.md).
 
-### Canvas, Watch, Memory
+### Canvas, Memory
 
 - **Canvas** renders a website, an A4 document or a 16:9 deck from files in your shared folder, served from a loopback server that refuses every request off the device.
-- **Watch** re-runs a check on a schedule between one minute and a day, with limits on runs and lifetime.
 - **Memory** keeps short facts across conversations, capped in count and size, visible and editable on the Tools screen even when its switches are off.
 
 ### Settings and platform
@@ -271,14 +269,14 @@ A multi-module Gradle project; each module has one job.
 
 | Module | Responsibility |
 |---|---|
-| `:app` | Compose UI, navigation, view models, downloads, the watch scheduler |
+| `:app` | Compose UI, navigation, view models, downloads |
 | `:core:common` | Multiplatform domain models and the compiled-model chat templates |
 | `:core:designsystem` | Theme, tokens, reusable composables |
 | `:core:engine` | The `InferenceEngine` contract, the llama.cpp JNI runtime, the ExecuTorch runtime, and the router between them |
 | `:core:hub` | Hugging Face client, GGUF header parser, resumable downloader |
 | `:core:data` | Room database, settings, encrypted token vault, usage ledger |
 | `:core:device` | Device profiling, model fit estimation, thermal policy |
-| `:core:tools` | The agent loop and the eighteen tools it may call |
+| `:core:tools` | The agent loop and the seventeen tools it may call |
 | `:core:sandbox` | QuickJS in an isolated process, for the script tool |
 | `:baselineprofile` | Records the startup profile the release build carries |
 

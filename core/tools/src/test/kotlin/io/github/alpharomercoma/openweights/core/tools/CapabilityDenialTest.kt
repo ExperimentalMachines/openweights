@@ -138,15 +138,14 @@ class CapabilityDenialTest {
     }
 
     @Test
-    fun `a denial about reminders names the watch tool`() {
-        // "Ability", not "capability" or "tool": the word the model actually used when it
-        // refused a reminder with a working watch tool in its prompt.
+    fun `a denial about reminders names no tool, because there is none`() {
+        // The watch tool that once answered this is gone, so the refusal is true and no
+        // retry may claim a tool can do it.
         val denial = "I’m sorry, but I don’t have the ability to set reminders or " +
             "schedule actions directly."
 
-        assertThat(CapabilityDenial.denies(denial)).isTrue()
         assertThat(CapabilityDenial.fitting(denial, "remind me to drink water every hour"))
-            .containsExactly(WatchTool.NAME)
+            .isEmpty()
     }
 
     @Test

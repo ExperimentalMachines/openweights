@@ -48,8 +48,9 @@ index of research notes at `docs/research/README.md`.
 ## Git
 
 - Commit subjects follow the log: a scope, a colon, and a sentence that says what changed
-  and why (`watch: a fast watch sleeps on an alarm, because ...`). The body says what was
-  measured or found. Agents append their own attribution trailer.
+  and why (`engine: a .pte the runner would refuse is refused before it opens, because
+  ...`). The body says what was measured or found. Agents append their own attribution
+  trailer.
 - Push with the GitHub CLI's credentials on this machine:
   `git -c credential.helper='!gh auth git-credential' push https://github.com/ExperimentalMachines/openweights.git main`
 - The version code is the commit count on `main`. Never rewrite published history; a

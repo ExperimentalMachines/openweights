@@ -57,8 +57,6 @@ import io.github.alpharomercoma.openweights.ui.settings.SettingsScreen
 import io.github.alpharomercoma.openweights.ui.settings.SettingsViewModel
 import io.github.alpharomercoma.openweights.ui.tools.ToolsScreen
 import io.github.alpharomercoma.openweights.ui.tools.ToolsViewModel
-import io.github.alpharomercoma.openweights.ui.watch.WatchScreen
-import io.github.alpharomercoma.openweights.ui.watch.WatchViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -83,7 +81,6 @@ private object Routes {
     const val DISCOVER = "discover"
     const val TOOLS = "tools"
     const val USAGE = "usage"
-    const val WATCHES = "watches"
     const val ARCHIVE = "archive"
     const val SETTINGS = "settings"
     const val CANVAS = "canvas"
@@ -237,7 +234,6 @@ fun OpenWeightsApp(
                 destinations = ChatDestinations(
                     onOpenTools = { navController.push(Routes.TOOLS) },
                     onOpenUsage = { navController.push(Routes.USAGE) },
-                    onOpenWatches = { navController.push(Routes.WATCHES) },
                     onOpenArchive = { navController.push(Routes.ARCHIVE) },
                     onOpenSettings = { navController.push(Routes.SETTINGS) },
                     onBrowseModels = { navController.push(Routes.DISCOVER) },
@@ -432,18 +428,6 @@ fun OpenWeightsApp(
 
         composable(Routes.CANVAS) {
             CanvasScreen(onBack = { navController.popBackStack() })
-        }
-
-        composable(Routes.WATCHES) {
-            val viewModel: WatchViewModel = hiltViewModel()
-            val watches by viewModel.state.collectAsStateWithLifecycle()
-
-            WatchScreen(
-                watches = watches,
-                onStop = viewModel::stop,
-                onForget = viewModel::forget,
-                onBack = navController::popBackStack,
-            )
         }
 
         composable(Routes.SETTINGS) {

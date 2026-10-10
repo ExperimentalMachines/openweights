@@ -1,6 +1,6 @@
 # OpenWeights privacy policy
 
-Last updated 2026-09-21.
+Last updated 2026-10-11.
 
 OpenWeights runs language models on your phone. There is no OpenWeights account, no
 OpenWeights server, and no analytics or crash reporting of any kind. Nothing in this app
@@ -51,10 +51,9 @@ In Auto mode, fetching an address chosen by the model after reading untrusted co
 approval. Searches have configured destinations, so untrusted text alone does not impose
 that particular check. Once the conversation carries private tool data, every outbound tool
 call also needs approval. These flags survive later turns, compaction and branches that
-carry the relevant history. Scheduled watches persist their summary's provenance, rather
-than treating earlier tool output as trusted system instructions.
+carry the relevant history.
 
-Memory writes and creating a watch always need approval. Durable writes after untrusted
+Memory writes always need approval. Durable writes after untrusted
 content also need approval, including a page fetch that saves into your shared folder.
 These safeguards remain in effect in `/yolo` mode.
 
@@ -79,7 +78,7 @@ because a generated page can navigate to the internet and send data from its can
 **The `/yolo` exception.** This process-only mode waives Auto's two network checks, so private
 data can leave through an enabled tool without another prompt and untrusted content can
 choose a fetched address. It does not enable disabled tools, bypass file-identity checks,
-or waive memory, watch-creation and untrusted durable-write approvals. Every call remains
+or waive memory and untrusted durable-write approvals. Every call remains
 visible in the reply.
 
 ## Third parties

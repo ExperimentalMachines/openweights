@@ -17,8 +17,10 @@
 package io.github.alpharomercoma.openweights
 
 import android.app.Application
+import android.app.NotificationManager
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import androidx.work.WorkManager
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
@@ -28,11 +30,11 @@ import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.CachePolicy
 import coil3.svg.SvgDecoder
 import dagger.hilt.android.HiltAndroidApp
+import io.github.alpharomercoma.openweights.core.engine.PTE_PROBE_PROCESS
 import io.github.alpharomercoma.openweights.core.engine.VulkanSupport
 import io.github.alpharomercoma.openweights.core.tools.PublicOnlyDns
 import io.github.alpharomercoma.openweights.core.tools.SEARCH_USER_AGENT
 import io.github.alpharomercoma.openweights.core.tools.isPrivateLiteral
-import io.github.alpharomercoma.openweights.watch.WatchScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -57,34 +59,46 @@ class OpenWeightsApplication :
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
-    @Inject
-    lateinit var watches: WatchScheduler
-
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
             .build()
 
     /**
-     * Puts every active watch back on its schedule.
+     * Start-up, which in the probe process is nothing at all.
      *
-     * A watch lives on disk precisely so it survives the process, and a process that comes
-     * back without rebuilding the schedule has a row in a table that does nothing. The
-     * scheduled half would be restored by WorkManager on its own; the in-process ticker for
-     * the fast ones would not, and that is the half a user notices stopping.
-     *
-     * On a background scope because `onCreate` blocks the first frame, and reading a table
-     * is not worth a frame.
+     * On a background scope, the clean-up of what watches left behind: `onCreate` blocks the
+     * first frame, and WorkManager's database is not worth one.
      */
     override fun onCreate() {
         super.onCreate()
+        // The model checker (PteProbeService) runs in a process of its own, and Android runs
+        // this there too. Nothing below belongs in it.
+        if (getProcessName().endsWith(PTE_PROBE_PROCESS)) return
         // Before any screen asks what this phone can run: a SharedPreferences read and one
         // PackageManager feature check.
         VulkanSupport.init(this)
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
-            runCatching { watches.sync() }
-                .onFailure { android.util.Log.w("OpenWeights", "watches not restored", it) }
+            runCatching { retireWatches() }
+                .onFailure { android.util.Log.w("OpenWeights", "watch clean-up failed", it) }
         }
+    }
+
+    /**
+     * Takes away what the watch feature left on a phone that ran it, once it is gone.
+     *
+     * Watches were removed. A watch's periodic check is persisted by WorkManager under its
+     * worker's class name, and with that class gone WorkManager would fail to build it at
+     * every period, indefinitely; its alert channel would stay in the system settings. Both
+     * are cleared on every start, which costs nothing once there is nothing left. The watches
+     * table goes with schema 21. Alarms a watch was waiting on name a receiver that no longer
+     * exists, and the system drops them when they fire.
+     */
+    private fun retireWatches() {
+        WorkManager.getInstance(this).cancelAllWorkByTag(RETIRED_WATCH_WORKER)
+        getSystemService(
+            NotificationManager::class.java,
+        )?.deleteNotificationChannel(RETIRED_WATCH_CHANNEL)
     }
 
     /**
@@ -149,3 +163,9 @@ class OpenWeightsApplication :
 
 /** 100 MB of thumbnails and avatars: large enough for history, bounded on the phone. */
 private const val IMAGE_CACHE_MAX_BYTES = 100L * 1024L * 1024L
+
+/** The class WorkManager tagged every watch's periodic check with. */
+private const val RETIRED_WATCH_WORKER = "io.github.alpharomercoma.openweights.watch.WatchWorker"
+
+/** The channel watch alerts were posted on. */
+private const val RETIRED_WATCH_CHANNEL = "watch-alert"

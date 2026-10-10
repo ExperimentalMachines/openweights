@@ -264,10 +264,6 @@ fun ChatScreen(
                         scope.launch { drawerState.close() }
                         destinations.onOpenUsage()
                     },
-                    onOpenWatches = {
-                        scope.launch { drawerState.close() }
-                        destinations.onOpenWatches()
-                    },
                     onOpenSettings = {
                         scope.launch { drawerState.close() }
                         destinations.onOpenSettings()

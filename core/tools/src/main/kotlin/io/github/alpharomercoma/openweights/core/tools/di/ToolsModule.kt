@@ -40,8 +40,6 @@ import io.github.alpharomercoma.openweights.core.tools.ShowSlidesTool
 import io.github.alpharomercoma.openweights.core.tools.ShowWebsiteTool
 import io.github.alpharomercoma.openweights.core.tools.ToolRegistry
 import io.github.alpharomercoma.openweights.core.tools.UpdateMemoryTool
-import io.github.alpharomercoma.openweights.core.tools.WatchTool
-import io.github.alpharomercoma.openweights.core.tools.Watches
 import io.github.alpharomercoma.openweights.core.tools.WebSearchTool
 import io.github.alpharomercoma.openweights.core.tools.WebViewPageChecker
 import io.github.alpharomercoma.openweights.core.tools.WriteFileTool
@@ -93,7 +91,6 @@ object ToolsModule {
         runScript: RunScriptTool,
         advance: AdvanceTool,
         askUser: AskUserTool,
-        watch: WatchTool,
         // Last, and off unless asked for. They are the only family that carries anything
         // out of one conversation and into the next: read comes back, and the three
         // writing verbs — save, update, forget — all answer to save's switch.
@@ -105,17 +102,7 @@ object ToolsModule {
         listOf(
             search, media, fetch, searchFiles, readFile, writeFile, deleteFile,
             showWebsite, showDocument, showSlides, runScript,
-            advance, askUser, watch, readMemory, saveMemory, updateMemory, forgetMemory,
+            advance, askUser, readMemory, saveMemory, updateMemory, forgetMemory,
         ),
     )
-
-    /**
-     * The watch tool, given whatever the app uses to store watches.
-     *
-     * Constructed here rather than injected because `core:tools` has no database and should
-     * not gain one: the app binds [Watches] to its own repository.
-     */
-    @Provides
-    @Singleton
-    fun watchTool(watches: Watches): WatchTool = WatchTool(watches)
 }

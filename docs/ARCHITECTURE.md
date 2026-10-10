@@ -4,13 +4,13 @@ OpenWeights is a multi-module Gradle project. Every module has one job, a small 
 surface, and no knowledge of the UI above it.
 
 ```
-:app Compose UI, navigation, ViewModels, downloads, watch scheduler
+:app Compose UI, navigation, ViewModels, downloads
  ├── :core:designsystem theme, tokens, telemetry components, markdown
  ├── :core:engine InferenceEngine + two runtimes and the router between them
  ├── :core:hub Hugging Face client, GGUF parser, resumable downloader
  ├── :core:data Room, DataStore, token vault, usage ledger
  ├── :core:device device profiling, model fit estimation, thermal policy
- ├── :core:tools the agent loop, eighteen tools, the boards they report to
+ ├── :core:tools the agent loop, seventeen tools, the boards they report to
  ├── :core:sandbox QuickJS in an isolated process, for the script tool
  └── :core:common multiplatform domain models and compiled-model templates
 :baselineprofile records the startup profile the release APK carries
@@ -126,7 +126,7 @@ deliberately not built, against measurement (`docs/research/gpu-backends.md`).
 
 `:core:tools` owns everything between "the model asked for a tool" and "the result went
 back in" (how a running goal is shown in the chat, one pinned strip and the rest in the
-transcript, is in `docs/design/goal-surface.md`): eighteen tools, sixteen of them user-facing, three of which leave the device
+transcript, is in `docs/design/goal-surface.md`): seventeen tools, fifteen of them user-facing, three of which leave the device
 (`web_search`, `show_pictures`, `fetch_url`) and say so in the UI. `AgentRunner` decides
 one round, what was requested, what may run, what was skipped and why, and the turn
 loop in `:app` (`TurnRunner`) owns cancellation and the pass-to-pass conversation. Files
@@ -136,10 +136,12 @@ an `isolatedProcess` service with no filesystem, no sockets and no libc to reach
 loopback-only server that resolves every path through the workspace so `../` is inert.
 
 Approval provenance belongs to the conversation, including its compacted summary and
-carried branch history. Watch summaries store nullable private/untrusted flags in Room
-schema 20; older unknown provenance is treated conservatively. Watch summary text is
-sanitized USER content, never a system instruction. Chat and watch artifact ownership is
-isolated under `TurnRunner`'s mutex.
+carried branch history. Artifact ownership is isolated under `TurnRunner`'s mutex.
+
+Every first read of a `.pte` happens in a process of its own (`PteProbeService`), because
+the ExecuTorch runtime aborts or segfaults on a file it cannot open rather than raising; a
+crash there costs that process and is remembered as a refusal
+(`docs/research/executorch-open-abort.md`).
 
 Session-created file exemptions use exact paths, provider document identity and metadata,
 plus folder-grant and session revisions. Write, delete and fetch-save operations retain the
@@ -160,8 +162,6 @@ Tools screen.
 The boards are how the model and the user share state without sharing a prompt: a plan
 the user ticks (`PlanBoard`), a goal that survives process death (`GoalBoard`), a canvas
 naming what is on screen (`CanvasBoard`), a question waiting for an answer (`AskBoard`).
-Watches also outlive the conversation, so creating one always asks first. A WorkManager
-scheduler runs them within battery and thermal limits.
 
 Routing a 1B model to the right tool, and to no tool, is measured work, not prompt
 folklore: the suites and their verdicts live in `docs/research/tool-calling.md`, and the

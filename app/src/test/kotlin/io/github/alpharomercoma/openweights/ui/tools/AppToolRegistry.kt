@@ -101,7 +101,6 @@ internal object AppToolRegistry {
             runScript = RunScriptTool(Sandbox(context), workspace),
             advance = AdvanceTool(PlanBoard()),
             askUser = AskUserTool(AskBoard()),
-            watch = ToolsModule.watchTool { _, _ -> null },
             readMemory = ReadMemoryTool(memory),
             saveMemory = SaveMemoryTool(memory),
             updateMemory = UpdateMemoryTool(memory),

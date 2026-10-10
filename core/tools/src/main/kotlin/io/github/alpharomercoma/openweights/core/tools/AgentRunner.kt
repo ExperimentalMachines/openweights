@@ -474,9 +474,9 @@ class AgentRunner(
         // by a fetch. So that one is still gated on anything leaving the device at all.
         //
         // A persistent or destructive effect is not an egress question and YOLO must not
-        // waive it. YOLO disappears with the process; remember, watch and replacement do
-        // not. Checking this before the YOLO return prevents an injected page from turning
-        // a temporary mode into permanent prompt text or recurring unattended work.
+        // waive it. YOLO disappears with the process; remember and replacement do not.
+        // Checking this before the YOLO return prevents an injected page from turning a
+        // temporary mode into permanent prompt text.
         if (tool.asksInAuto(call)) return approve(call)
 
         // Untrusted pages and tool results must not be able to persist their instructions
@@ -505,9 +505,9 @@ class AgentRunner(
 
         // A tool whose effect outlives the conversation asks in every mode. `needsApproval`
         // is documented as an ASK-mode question and behaves as one, so setting it on
-        // `remember` and `watch` bought nothing in AUTO, which is the default. An injected
-        // instruction could therefore write itself into the permanent system prefix, or
-        // schedule recurring unattended work, without the user seeing anything.
+        // `remember` bought nothing in AUTO, which is the default. An injected instruction
+        // could therefore write itself into the permanent system prefix without the user
+        // seeing anything.
         return mode == AgentMode.AUTO || !tool.needsApproval || approve(call)
     }
 

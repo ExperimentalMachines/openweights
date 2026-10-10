@@ -70,6 +70,7 @@ class MigrationTest {
         OpenWeightsDatabase.MIGRATION_17_18,
         OpenWeightsDatabase.MIGRATION_18_19,
         OpenWeightsDatabase.MIGRATION_19_20,
+        OpenWeightsDatabase.MIGRATION_20_21,
     )
 
     @Test
@@ -527,6 +528,33 @@ class MigrationTest {
             assertThat(db.intAt("SELECT nextRunAt FROM watches WHERE id = 1")).isEqualTo(900)
             assertThat(db.isNullAt("SELECT summaryUntrusted FROM watches WHERE id = 1")).isTrue()
             assertThat(db.isNullAt("SELECT summaryPrivate FROM watches WHERE id = 1")).isTrue()
+        }
+    }
+
+    @Test
+    fun `the watches and their history are dropped, and nothing else is touched`() {
+        helper.createDatabase(20).use { db ->
+            db.execSQL(
+                "INSERT INTO watches " +
+                    "(id, task, everyMinutes, state, createdAt, lastSummary, runs, " +
+                    "consecutiveFailures, nextRunAt) " +
+                    "VALUES (1, 'check the tides', 15, 'ACTIVE', 5, 'Old finding', 2, 0, 900)",
+            )
+            db.execSQL(
+                "INSERT INTO watch_runs (id, watchId, at, outcome, summary) " +
+                    "VALUES (1, 1, 10, 'CHECKED', 'Old finding')",
+            )
+            db.execSQL(
+                "INSERT INTO conversations " +
+                    "(id, title, modelName, createdAt, updatedAt, compactionThroughIndex, draft) " +
+                    "VALUES (1, 'Kept', 'qwen', 10, 20, -1, '')",
+            )
+        }
+
+        helper.runMigrationsAndValidate(21, migrations.toList()).use { db ->
+            assertThat(db.intAt("SELECT COUNT(*) FROM sqlite_master WHERE name LIKE 'watch%'"))
+                .isEqualTo(0)
+            assertThat(db.textAt("SELECT title FROM conversations WHERE id = 1")).isEqualTo("Kept")
         }
     }
 }

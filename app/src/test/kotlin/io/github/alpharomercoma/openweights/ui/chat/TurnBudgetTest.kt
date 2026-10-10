@@ -25,7 +25,6 @@ import io.github.alpharomercoma.openweights.core.common.model.SamplerParams
 import io.github.alpharomercoma.openweights.core.common.model.ToolCall
 import io.github.alpharomercoma.openweights.core.common.model.ToolDefinition
 import io.github.alpharomercoma.openweights.core.engine.GenerationEvent
-import io.github.alpharomercoma.openweights.core.tools.AdvanceTool
 import io.github.alpharomercoma.openweights.core.tools.AgentMode
 import io.github.alpharomercoma.openweights.core.tools.AgentRunner
 import io.github.alpharomercoma.openweights.core.tools.AgentStep
@@ -125,27 +124,6 @@ class TurnBudgetTest {
     }
 
     @Test
-    fun `a run that does not own the plan is never offered advance`() = runBlocking {
-        // A watch coming due mid-plan runs through this same loop, in AUTO, with nothing to
-        // approve it, and the board holding the plan is one object for the whole process.
-        // Being offered `advance` there means a scheduled check can tick a step of work the
-        // user was doing in a conversation it has never seen.
-        val plans = PlanBoard()
-        plans.propose(
-            "1. Read the notes\n2. Write the summary\n3. Check it",
-        )
-        engine.scripted += ScriptedPass("Nothing has changed since the last check.")
-
-        runUnowned(plans)
-
-        assertThat(engine.offered.last().map { it.name }).doesNotContain(AdvanceTool.NAME)
-        // And the plan's own text is not pinned to the tail of the prompt either, which is
-        // the position a small model attends to best: withholding only the tool would still
-        // have a scheduled check answering about the steps of a chat it has never seen.
-        assertThat(engine.prompts.last().joinToString { it.text }).doesNotContain("Read the notes")
-    }
-
-    @Test
     fun `a chaining call on a full window earns no round`() = runBlocking {
         // Two reasons a pass may not call: the round cap, and no room for what comes
         // back. Asking for a chaining tool earns past the first, and it earned past the
@@ -186,27 +164,6 @@ class TurnBudgetTest {
             withTools = true,
             notes = ToolNotes(),
             listener = Collecting,
-        )
-    }
-
-    /** A turn that is not the conversation the plan belongs to, as a watch's tick is. */
-    private suspend fun runUnowned(plans: PlanBoard) {
-        engine.load(modelFile(), ModelLoadParams(contextLength = CONTEXT))
-        val runner = TurnRunner(
-            engine = engine,
-            tools = ToolRegistry(listOf(search, AdvanceTool(plans))),
-            switches = ToolSwitches(ApplicationProvider.getApplicationContext()),
-            plans = plans,
-            asks = AskBoard(),
-        )
-        runner.run(
-            conversation = listOf(ChatMessage.text(ChatRole.USER, "Anything new?")),
-            params = SamplerParams(),
-            mode = AgentMode.AUTO,
-            withTools = true,
-            notes = ToolNotes(),
-            listener = Collecting,
-            offerPlan = false,
         )
     }
 

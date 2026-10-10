@@ -118,7 +118,6 @@ object CapabilityDenial {
             question.contains("http", ignoreCase = true) ->
                 listOf(FetchUrlTool.NAME, WebSearchTool.NAME)
             COMPUTE_SHAPED.containsMatchIn(refused) -> listOf(RunScriptTool.NAME)
-            SCHEDULE_SHAPED.containsMatchIn(refused) -> listOf(WatchTool.NAME)
             LOOKUP_SHAPED.containsMatchIn(refused) -> listOf(WebSearchTool.NAME)
             else -> emptyList()
         }
@@ -126,7 +125,7 @@ object CapabilityDenial {
 
     /** Every tool [fitting] can name, which is every tool a denial can be repaired towards. */
     val REPAIRABLE: List<String> =
-        listOf(WebSearchTool.NAME, FetchUrlTool.NAME, RunScriptTool.NAME, WatchTool.NAME)
+        listOf(WebSearchTool.NAME, FetchUrlTool.NAME, RunScriptTool.NAME)
 
     /** The corrective line when the retry needs an available tool. */
     fun retryRequest(fitting: String): String =
@@ -222,8 +221,6 @@ object CapabilityDenial {
     private val CLARIFYING = Regex("you mean|you're asking|you are asking|clarify")
 
     private val COMPUTE_SHAPED = Regex("calculat|arithmetic|comput|perform that")
-
-    private val SCHEDULE_SHAPED = Regex("remind|schedul|monitor|alert|notif")
 
     /**
      * Two sentences of apology, roughly. Longer than any observed denial prefix and short
