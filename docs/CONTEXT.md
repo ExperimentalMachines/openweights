@@ -3,9 +3,25 @@
 > Living state file. Update at every milestone so no information is lost across sessions
 > or context compaction. Newest facts win; keep it accurate rather than exhaustive.
 
-Last updated: 2026-09-21. Older dated sections run from 2026-08-10; detailed findings are in
+Last updated: 2026-10-11. Older dated sections run from 2026-08-10; detailed findings are in
 the research notes under `research/`. The current capability summary is in the top-level
 `README.md` and `ARCHITECTURE.md`.
+
+## 2026-10-11: compiled-model crashes contained, watches removed
+
+vc650 (ExecuTorch 1.5.1, the Vulkan AAR) shipped to production at 100% on 2026-10-04. QA found
+that any `.pte` the runner refuses aborts the app through fbjni (`ptr`) in every build since
+1.4.0, that a damaged one segfaults the loader from the model picker's probe at every launch,
+and that vc650 listed sixteen MediaTek NPU chunks it cannot run on MT6991 phones. Every first
+read of a file now happens in `PteProbeService`'s own process and a crash there is remembered
+as a refusal; Discover offers only what the build opens. Verified on the Poco with the
+minified build: [`research/executorch-open-abort.md`](research/executorch-open-abort.md).
+
+Watches were removed on the maintainer's decision: the tool, the screen, the scheduler, the
+alarm receiver, the exact-alarm and wake-lock permissions, and the tables (Room schema 21
+drops them). The application cancels the periodic work WorkManager still holds for them and
+deletes their notification channel at start-up. Play's `specialUse` subtype no longer
+mentions a schedule; the Console declaration has to be changed to match (`play-store.md`).
 
 ## 2026-09-21: security and mobile harness audit
 
@@ -111,7 +127,7 @@ Single source of truth: `gradle/libs.versions.toml`.
 
 | Module | Responsibility | Status |
 |---|---|---|
-| `:app` | Compose UI, navigation, ViewModels, downloads, the watch scheduler | done |
+| `:app` | Compose UI, navigation, ViewModels, downloads | done |
 | `:core:common` | Multiplatform domain models and the compiled-model chat templates | done |
 | `:core:designsystem` | Theme, colour/type tokens, telemetry components | done |
 | `:core:engine` | `InferenceEngine`, llama.cpp JNI, the ExecuTorch runtime, the router | done |
