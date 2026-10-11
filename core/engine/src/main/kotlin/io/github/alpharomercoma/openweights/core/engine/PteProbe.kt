@@ -131,7 +131,7 @@ class PteProbe(context: Context) {
                         answer.bundle,
                     )
                 ) {
-                    again("it could not read a prompt in its trial")
+                    again("it could not answer its trial prompt")
                 } else {
                     null
                 }

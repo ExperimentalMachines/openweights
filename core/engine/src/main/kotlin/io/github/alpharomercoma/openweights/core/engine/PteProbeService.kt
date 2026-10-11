@@ -98,9 +98,12 @@ class PteProbeService : Service() {
         var npu: Boolean? = null
         try {
             bridge.load(path, tokenizer, temperature = 0f, multimodal = multimodal)
-            // An NPU graph can open and still fail on its first call, so the trial reads a
-            // prompt with it: the app's process opens the half only after this has (codex QA).
-            if (bridge.prefillingOnNpu) npu = runCatching { bridge.prefill(TRIAL_PROMPT) }.isSuccess
+            // An NPU graph can open and still fail on its first call, and the handoff of its
+            // cache to the CPU half runs only when a reply starts, so the trial writes one
+            // token: the app's process opens the half only after this has (codex QA).
+            if (bridge.prefillingOnNpu) {
+                npu = runCatching { bridge.generate(TRIAL_PROMPT, maxNewTokens = 1) {} }.isSuccess
+            }
         } finally {
             bridge.close()
         }
@@ -116,7 +119,7 @@ class PteProbeService : Service() {
         const val KEY_MULTIMODAL = "multimodal"
         const val KEY_FAILED = "failed"
 
-        /** Present when the trial opened an NPU half: whether it read [TRIAL_PROMPT]. */
+        /** Present when the trial opened an NPU half: whether it answered [TRIAL_PROMPT]. */
         const val KEY_NPU_READ = "npuRead"
         private const val TRIAL_PROMPT = "Hello"
         private const val KEY_WINDOW = "window"

@@ -836,8 +836,18 @@ public:
                     // window of a K cache: capacity / heads floats per head, at a stride of the
                     // window. Copying a whole window per head, as this did, was only right when
                     // the window happened to be 512 (8 rows of 64).
-                    const size_t per_head = capacity / m.kv_heads;
+                    // Checked as the attention branch checks: a CPU state wider than the NPU's
+                    // window rows, or a buffer shorter than the last head's slice, refuses the
+                    // handoff instead of reading past the NPU buffer.
                     const size_t stride = npu_cache_size_ * m.head_dim;
+                    const size_t per_head = m.kv_heads ? capacity / m.kv_heads : 0;
+                    const size_t npu_floats = llama_chunk->GetInputBuffer(conv_in_idx).nbytes / sizeof(float);
+                    if (m.kv_heads == 0 || per_head > stride ||
+                        (m.kv_heads - 1) * stride + per_head > npu_floats) {
+                        LOGE("DisaggregatedSession: conv state shapes do not match (%zu heads, %zu per head, stride %zu, NPU %zu floats)",
+                             m.kv_heads, per_head, stride, npu_floats);
+                        return false;
+                    }
                     for (size_t h = 0; h < m.kv_heads; ++h) {
                         std::memcpy(cpu_conv_ptr + h * per_head, src_conv + h * stride, per_head * sizeof(float));
                     }

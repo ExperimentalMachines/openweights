@@ -122,7 +122,7 @@ object NpuInstall {
     }
 
     /**
-     * Records that the probe process opened [model]'s NPU half and read a prompt with it. The
+     * Records that the probe process opened [model]'s NPU half and answered a prompt with it. The
      * app's process opens a half only after that: a trial that fell back to the CPU, for want
      * of memory, said nothing about the chunks, and the app could then open them untried once
      * memory was free (codex QA).
@@ -131,7 +131,7 @@ object NpuInstall {
         runCatching { File(directoryFor(model), TRIED).writeText("") }
     }
 
-    /** Whether the probe process has read a prompt with [model]'s NPU half as it is now. */
+    /** Whether the probe process has answered a prompt with [model]'s NPU half as it is now. */
     fun tried(model: File): Boolean = File(directoryFor(model), TRIED).isFile
 
     /** When [model]'s install was last started, in epoch milliseconds, or 0 when it never was. */
