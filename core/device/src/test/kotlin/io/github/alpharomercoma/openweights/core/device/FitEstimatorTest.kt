@@ -295,4 +295,20 @@ class FitEstimatorTest {
         assertThat(calibrated.estimatedDecodeTokensPerSecond).isWithin(0.1).of(9.0)
         assertThat(calibrated.estimatedPrefillTokensPerSecond).isWithin(0.1).of(35.0)
     }
+
+    @Test
+    fun `a known footprint is taken as it is, not multiplied like a compiled file`() {
+        // LFM2.5-1.2B's 2k NPU install: 2.38 GB of files, 3.9 GB estimated in all. Run through
+        // the compiled allowance it came to 10 GB and was refused on a 12 GB phone.
+        val known = estimator.estimateKnownNeed(
+            phone,
+            requiredBytes = 3900 * MIB,
+            downloadBytes = 2440 * MIB,
+            decodeSizeBytes = 760 * MIB,
+        )
+        assertThat(known.requiredMemoryBytes).isEqualTo(3900 * MIB)
+        assertThat(known.verdict).isNotEqualTo(FitVerdict.WONT_RUN)
+        assertThat(estimator.estimateCompiled(phone, 3900 * MIB).requiredMemoryBytes)
+            .isGreaterThan(known.requiredMemoryBytes)
+    }
 }

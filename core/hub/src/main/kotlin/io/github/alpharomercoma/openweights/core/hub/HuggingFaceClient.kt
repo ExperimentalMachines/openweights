@@ -16,6 +16,7 @@
 
 package io.github.alpharomercoma.openweights.core.hub
 
+import io.github.alpharomercoma.openweights.core.common.model.CompiledBackend
 import io.github.alpharomercoma.openweights.core.common.model.ExecuTorchFileName
 import io.github.alpharomercoma.openweights.core.common.model.GgufFileName
 import io.github.alpharomercoma.openweights.core.common.model.GgufFileName.GGUF_SUFFIX
@@ -173,6 +174,12 @@ data class HubModelDetail(
      * [tokenizerFor] for how a weights file finds its own.
      */
     val tokenizers: List<HubFile> = emptyList(),
+    /**
+     * MediaTek NPU builds, one per context window, each offered as one install: the compiled
+     * chunks and embedding table the NPU prefills with, and the CPU build of the same window
+     * that decodes. Never the parts one at a time; a part is not a model.
+     */
+    val npuBundles: List<NpuBundle> = emptyList(),
     val license: String?,
     val architecture: String?,
     val parameterCount: Long?,
@@ -494,6 +501,64 @@ class HuggingFaceClient @Inject constructor(
         map { file -> windows[file.path]?.let { file.copy(contextWindow = it) } ?: file }
     }
 
+    /**
+     * The MediaTek NPU builds this repository publishes (`mtk/<soc>/config.json`), one per
+     * window, each paired with the CPU build of the same window in the repository, which is
+     * what decodes. A window whose parts are not all present, or with no CPU build to pair, is
+     * left out: offered, it would download and then not run.
+     */
+    private suspend fun npuBundlesIn(
+        repoId: String,
+        siblings: List<Sibling>,
+        compiled: List<HubFile>,
+    ): List<NpuBundle> = coroutineScope {
+        val byPath = siblings.associateBy { it.rfilename }
+        fun hubFile(path: String) = byPath[path]?.let {
+            HubFile(path, it.lfs?.size ?: it.size ?: 0L, it.lfs?.sha256)
+        }
+        val configs = siblings.map { it.rfilename }
+            .filter {
+                it.substringAfterLast('/') == EXPORT_CONFIG &&
+                    NPU_FOLDER.matches(it.substringBeforeLast('/', ""))
+            }
+        val cpuBuilds = compiled.filter {
+            it.contextWindow != null && CompiledBackend.of(repoId + "/" + it.path) in CPU_BACKENDS
+        }
+        configs.map { configPath ->
+            async {
+                val folder = configPath.substringBeforeLast('/')
+                val variants = runCatching {
+                    ExportConfig.npuVariantsIn(
+                        get(downloadUrl(repoId, configPath), MAX_EXPORT_CONFIG_BYTES),
+                    )
+                }.getOrDefault(emptyList())
+                variants.mapNotNull { variant ->
+                    val chunks = variant.chunks.map {
+                        hubFile("$folder/$it")
+                            ?: return@mapNotNull null
+                    }
+                    val embedding =
+                        hubFile("$folder/${variant.embedding}") ?: return@mapNotNull null
+                    // The same model's CPU build of the same window: the state handoff copies
+                    // the NPU's caches into it, so any other model is wrong in kind.
+                    val cpu = cpuBuilds
+                        .filter { it.contextWindow == variant.window }
+                        .filter { it.fileName.startsWith(variant.model + "-", ignoreCase = true) }
+                        .minByOrNull { it.sizeBytes }
+                        ?: return@mapNotNull null
+                    NpuBundle(
+                        soc = folder.substringAfterLast('/'),
+                        window = variant.window,
+                        chunks = chunks,
+                        embedding = embedding,
+                        runnerJson = variant.runnerJson,
+                        cpu = cpu,
+                    )
+                }
+            }
+        }.awaitAll().flatten().sortedBy { it.window }
+    }
+
     /** Full detail for one repository, including its downloadable files. */
     suspend fun detail(repoId: String): HubModelDetail {
         val url = apiUrl("models", repoId)
@@ -533,12 +598,15 @@ class HuggingFaceClient @Inject constructor(
             // phone can actually run.
             .take(MAX_FILES_PER_REPO)
 
+        val npuBundles = npuBundlesIn(repoId, siblings, compiled)
+
         return HubModelDetail(
             model = payload.toModel(),
             files = gguf.filterNot { it.isProjector },
             projectors = gguf.filter { it.isProjector },
             compiled = compiled,
             tokenizers = tokenizers,
+            npuBundles = npuBundles,
             license = payload.cardData?.license,
             architecture = payload.gguf?.architecture,
             parameterCount = payload.gguf?.total,
@@ -1070,6 +1138,12 @@ private const val MAX_FILES_PER_REPO = 40
 
 /** What Software Mansion calls the file beside each export that describes it. */
 private const val EXPORT_CONFIG = "config.json"
+
+/** Where a MediaTek NPU export keeps one chip's build: `mtk/<soc>`. */
+private val NPU_FOLDER = Regex("mtk/[A-Za-z0-9]+")
+
+/** The CPU builds a MediaTek NPU build can decode with. */
+private val CPU_BACKENDS = setOf(CompiledBackend.XNNPACK, CompiledBackend.UNKNOWN)
 
 /** Four bounded config bodies in flight, independent of gigabyte model downloads. */
 private const val MAX_CONFIG_READS = 4

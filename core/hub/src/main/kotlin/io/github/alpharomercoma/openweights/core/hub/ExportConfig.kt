@@ -63,6 +63,52 @@ object ExportConfig {
         }.toMap()
     }
 
+    /**
+     * One context window of a MediaTek NPU export, as the folder's `config.json` lists it: the
+     * compiled chunks in order, the token embedding table they take as input, the runner's
+     * options for them, verbatim, and the model they were compiled from (`LFM2.5-1.2B-Instruct`
+     * from `source_model`), which is how the CPU build that decodes for them is found.
+     */
+    data class NpuVariant(
+        val window: Int,
+        val chunks: List<String>,
+        val embedding: String,
+        val runnerJson: String,
+        val model: String,
+    )
+
+    /**
+     * The NPU windows a MediaTek export's `config.json` offers (`backend: mtk`), each only when
+     * it is whole: chunks, an embedding table, the runner block and the window, because a part
+     * missing any of them installs and then cannot run (ExecuServe offers them the same way).
+     * Empty for any other config, and for one that does not name its source model.
+     */
+    fun npuVariantsIn(configJson: String): List<NpuVariant> {
+        val root = runCatching { json.parseToJsonElement(configJson).jsonObject }.getOrNull()
+            ?.takeIf { (it["backend"] as? JsonPrimitive)?.content == NPU_BACKEND }
+        // Without the source model the CPU half could only be chosen by window, and a
+        // repository with two models at one window would pair the NPU with the wrong one.
+        val model = (root?.get("source_model") as? JsonPrimitive)?.content
+            ?.substringAfterLast('/')?.takeIf { it.isNotBlank() }
+        val variants = root?.get("variants") as? JsonArray
+        if (model == null || variants == null) return emptyList()
+        return variants.mapNotNull { variant ->
+            val entry = variant as? JsonObject ?: return@mapNotNull null
+            val window = entry.int("context") ?: return@mapNotNull null
+            val chunks = (entry["files"] as? JsonArray)
+                ?.mapNotNull { (it as? JsonPrimitive)?.content }
+                ?.takeIf { it.isNotEmpty() }
+                ?: return@mapNotNull null
+            val embedding =
+                (entry["embedding"] as? JsonPrimitive)?.content ?: return@mapNotNull null
+            val runner = entry["runner"] as? JsonObject ?: return@mapNotNull null
+            NpuVariant(window, chunks, embedding, runner.toString(), model)
+        }
+    }
+
+    /** What a MediaTek export's config calls its backend. */
+    private const val NPU_BACKEND = "mtk"
+
     private fun JsonObject.int(key: String): Int? =
         (this[key] as? JsonPrimitive)?.intOrNull?.takeIf { it > 0 }
 

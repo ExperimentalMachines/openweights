@@ -115,6 +115,47 @@ class FitEstimator @Inject constructor() {
     }
 
     /**
+     * The same question for an install whose whole footprint is already known, measured
+     * rather than a multiple of its files: a MediaTek NPU build, whose runner options describe
+     * its caches. [requiredBytes] is taken as it is, with nothing added, because it already
+     * counts the files, the caches and a margin. [downloadBytes] is what lands on storage, and
+     * the speeds are the CPU build's at [decodeSizeBytes], which decodes for it.
+     */
+    fun estimateKnownNeed(
+        device: DeviceProfile,
+        requiredBytes: Long,
+        downloadBytes: Long,
+        decodeSizeBytes: Long,
+        calibration: ThroughputCalibration? = null,
+    ): FitReport = FitReport(
+        verdict = compiledVerdict(device, requiredBytes, downloadBytes),
+        requiredMemoryBytes = requiredBytes,
+        usableMemoryBytes = device.usableMemoryBytes,
+        kvCacheBytes = 0,
+        estimatedDecodeTokensPerSecond = calibration?.predictFor(decodeSizeBytes),
+        maxContextLength = 0,
+        // The NPU prefills, and nothing has measured it on this phone yet.
+        estimatedPrefillTokensPerSecond = null,
+    )
+
+    private fun compiledVerdict(
+        device: DeviceProfile,
+        required: Long,
+        downloadBytes: Long,
+    ): FitVerdict {
+        val usable = device.usableMemoryBytes
+        return when {
+            device.freeStorageBytes < saturatedSum(downloadBytes, STORAGE_MARGIN_BYTES) ->
+                FitVerdict.NO_ROOM_TO_DOWNLOAD
+
+            required > usable -> FitVerdict.WONT_RUN
+            required > usable * TIGHT_FRACTION -> FitVerdict.TIGHT
+            required > device.availableMemoryBytes -> FitVerdict.TIGHT
+            else -> FitVerdict.COMFORTABLE
+        }
+    }
+
+    /**
      * The same question for weights compiled ahead of time, which carry no metadata.
      *
      * A GGUF describes itself — layers, heads, training window — so the KV cache can be
@@ -141,16 +182,7 @@ class FitEstimator @Inject constructor() {
             RUNTIME_OVERHEAD_BYTES,
         )
         val usable = device.usableMemoryBytes
-
-        val verdict = when {
-            device.freeStorageBytes < saturatedSum(fileSizeBytes, STORAGE_MARGIN_BYTES) ->
-                FitVerdict.NO_ROOM_TO_DOWNLOAD
-
-            required > usable -> FitVerdict.WONT_RUN
-            required > usable * TIGHT_FRACTION -> FitVerdict.TIGHT
-            required > device.availableMemoryBytes -> FitVerdict.TIGHT
-            else -> FitVerdict.COMFORTABLE
-        }
+        val verdict = compiledVerdict(device, required, fileSizeBytes)
 
         return FitReport(
             verdict = verdict,
