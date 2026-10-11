@@ -1,0 +1,22 @@
+{
+  "device": "Snapdragon 8 Elite (SM8750), Qualcomm Device Cloud, Android 16",
+  "build": "e2da0095 (.rc package)",
+  "model": "Qwen/Qwen3-1.7B-GGUF Qwen3-1.7B-Q8_0.gguf on the CPU (llama.cpp), 29,696-token window, thinking off",
+  "tools": "a shared folder (Documents); find/read/save file and show website/document/slides on; internet tools off",
+  "prompt": "Build a one-page website for Crumb and Co, a neighbourhood bakery: a bold header, a menu with prices, opening hours and a contact section. Use warm colours. Save it as bakery/index.html and show it.",
+  "takes": {
+    "canvas-sm8750.mp4": "send at 3.55 s (since the command); the model writes the page as a write_file call; the app asks 'Run write_file?' at about 66 s",
+    "canvas2-sm8750.mp4": "Run tapped at 3.56 s (since the command); the Canvas shows bakery/index.html about a second later"
+  },
+  "note": "the page has a header, menu with prices and contact section; it left out the opening hours",
+  "recorded": "2026-10-11 06:01 to 06:06 phone time",
+  "clip": "canvas-ask.mp4 / canvas-write.mp4 / canvas-run.mp4",
+  "clip_marks": {
+    "ask_sent": 1.98,
+    "write_from_recording_s": 20.0,
+    "approval_card_recording_s": 66.0,
+    "run_tapped": 2.01,
+    "page_shown": 2.35
+  },
+  "clip_note": "canvas-ask: recording 0-8 s; canvas-write: recording 20-40 s (the page as a write_file call, streaming); canvas-run: the second recording, Run tapped at 2.01 s and the Canvas shows the page about a third of a second later."
+}

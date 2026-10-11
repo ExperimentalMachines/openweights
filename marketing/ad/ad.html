@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>OpenWeights ad</title>
+<style>
+  @font-face { font-family: Display; src: url(assets/fonts/schibsted_grotesk.ttf); font-weight: 400 900; }
+  @font-face { font-family: Body; src: url(assets/fonts/hanken_grotesk.ttf); font-weight: 100 900; }
+  @font-face { font-family: Mono; src: url(assets/fonts/geist_mono.ttf); font-weight: 100 900; }
+  /* The app's light palette (core/designsystem Color.kt). Lime is a fill carrying ink, never text on white. */
+  :root {
+    --canvas: #FFFFFF; --raised: #F4F5F3; --raised-2: #E7E8E4; --ink: #052B42; --dim: #52555B;
+    --lime: #E0FF4F; --bezel: #0D0E10;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+  body { font-family: Body, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; font-kerning: normal; }
+  #stage { position: absolute; inset: 0; overflow: hidden; background: var(--canvas); }
+  .scene { position: absolute; inset: 0; overflow: hidden; visibility: hidden; background: var(--canvas); }
+  .abs { position: absolute; left: 0; top: 0; will-change: transform, opacity; }
+  .h { font-family: Display, sans-serif; font-weight: 700; letter-spacing: -0.035em; line-height: 1.0; color: var(--ink); }
+  .sub { font-family: Body, sans-serif; font-weight: 500; letter-spacing: -0.01em; color: var(--dim); }
+  .mono { font-family: Mono, monospace; font-weight: 500; letter-spacing: -0.01em; }
+  .mask { overflow: hidden; display: block; white-space: nowrap; }
+  .mask > span { display: block; will-change: transform; }
+  /* A word carried on lime: the brand's one way to colour a word on white. */
+  .hl { position: relative; display: inline-block; z-index: 0; }
+  .hl::before { content: ''; position: absolute; left: -0.08em; right: -0.08em; top: 0.1em; bottom: 0.02em; background: var(--lime);
+    border-radius: 0.14em; z-index: -1; transform-origin: left center; transform: scaleX(var(--hl, 1)); }
+  .dots { position: absolute; inset: 0; opacity: 0.5;
+    background-image: radial-gradient(circle, #D9DBD5 1.5px, transparent 1.8px); background-size: 44px 44px; }
+
+  .phone { position: absolute; border-radius: 66px; background: var(--bezel); padding: 14px; transform-origin: 0 0;
+    box-shadow: 0 60px 120px rgba(5,43,66,0.20), 0 18px 40px rgba(5,43,66,0.12), 0 0 0 2px #2A2C30 inset; }
+  .phone .screen { position: relative; overflow: hidden; border-radius: 52px; background: #fff; }
+  .phone .screen img { position: absolute; left: 0; top: 0; width: 100%; display: block; }
+  .tap { position: absolute; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%; background: var(--lime); mix-blend-mode: multiply; }
+  .ring { position: absolute; border: 3px solid var(--ink); border-radius: 999px; pointer-events: none; }
+
+  .pill { position: absolute; display: inline-flex; align-items: center; height: 76px; padding: 0 36px; border-radius: 999px;
+    font: 600 34px Body, sans-serif; letter-spacing: -0.01em; white-space: nowrap; background: var(--ink); color: #fff; }
+  .pill.lime { background: var(--lime); color: var(--ink); }
+  .chip { position: absolute; display: inline-flex; align-items: center; height: 58px; padding: 0 28px; border-radius: 999px;
+    font: 500 29px Mono, monospace; white-space: nowrap; background: var(--raised); color: var(--dim); box-shadow: 0 0 0 1.5px var(--raised-2) inset; }
+  .chip.ink { background: var(--ink); color: #fff; box-shadow: none; }
+  .stat .num { font: 700 132px Display, sans-serif; letter-spacing: -0.045em; line-height: 1; color: var(--ink); white-space: nowrap; }
+  .stat .num small { font-size: 0.5em; letter-spacing: -0.02em; color: var(--dim); margin-left: 0.12em; }
+  .stat .lab { margin-top: 14px; font: 500 36px Body, sans-serif; color: var(--dim); white-space: nowrap; }
+  .doc { position: absolute; width: 620px; padding: 54px 56px 0; height: 740px; border-radius: 34px; background: #fff; overflow: hidden;
+    box-shadow: 0 50px 110px rgba(5,43,66,0.16), 0 0 0 2px var(--raised-2) inset; }
+  .doc h3 { font: 600 22px Mono, monospace; letter-spacing: 0.08em; color: var(--dim); }
+  .doc h2 { margin-top: 18px; font: 700 46px Display, sans-serif; letter-spacing: -0.03em; color: var(--ink); }
+  .doc p { margin-top: 22px; font: 400 25px/1.6 Body, sans-serif; color: #2B3A44; }
+  .doc .fade { position: absolute; left: 0; right: 0; bottom: 0; height: 220px; background: linear-gradient(to bottom, rgba(255,255,255,0), #fff 80%); }
+  .qrcard { position: absolute; width: 380px; padding: 36px; border-radius: 32px; background: #fff; text-align: center;
+    box-shadow: 0 30px 70px rgba(5,43,66,0.12), 0 0 0 2px var(--raised-2) inset; }
+  .qrcard img { width: 308px; height: 308px; display: block; }
+  .qrcard p { margin-top: 18px; font: 600 27px Body, sans-serif; }
+  .fine { position: absolute; font: 400 26px/1.45 Body, sans-serif; color: var(--dim); white-space: nowrap; }
+  .wipe { position: absolute; top: -10%; height: 120%; background: var(--lime); z-index: 90; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script src="assets/data.js"></script>
+<script>
+// ---------------------------------------------------------------------------------------
+// Time: 120 BPM, so a bar is exactly two seconds; scenes cut on bar lines. music.py uses the
+// same grid and the same moments, all derived from the recordings' marks (assets/clips/*.json).
+const BEAT = 0.5, BAR = 2, bar = (n, beat = 0) => n * BAR + beat * BEAT;
+const LENGTH = 29 * BAR + 0.9;
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const lerp = (a, b, x) => a + (b - a) * x;
+const E = {
+  // The app's own easing (Material emphasized), approximated; nothing here overshoots except the
+  // mark's bars, which catch the beat like a level meter.
+  emph: (x) => (x >= 1 ? 1 : 1 - Math.pow(1 - x, 4)),
+  outExpo: (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * x)),
+  inCubic: (x) => x * x * x,
+  inOut: (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2),
+  outBack: (x) => { if (x <= 0) return 0; const c1 = 1.4, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); },
+};
+const D = window.AD_DATA;
+
+// The story's moments. Clip offsets put each recorded tap on a beat.
+const S = { hook: 0, logo: bar(3), lease: bar(5), tools: bar(12), fit: bar(16), build: bar(20), end: bar(25) };
+// The lease: Send lands on bar 5 beat 3; the phone comes forward on bar 8 beat 2.
+const LEASE_SEND = bar(5, 3), LEASE_FROM = D.lease.sent - (LEASE_SEND - S.lease), LEASE_FWD = bar(8, 2);
+// The switches: the first one goes off on bar 12 beat 2; the phone moves in on the section first.
+const TOOLS_FROM = D.tools.off[0] - bar(0, 2);
+const OFF = D.tools.off.map((c) => S.tools + (c - TOOLS_FROM));
+// Fit: the search on the Snapdragon; the cut to the POCO, which opens a model's MediaTek NPU builds
+// on bar 17 beat 3; the phone moves in on the verdicts a beat later.
+const FIT_A = { at: S.fit, from: D.fit.search - 0.9 };
+const FIT_B = { at: bar(17, 2), from: D.poco.open - (bar(17, 3) - bar(17, 2)) };
+const VERDICTS = bar(17, 3);
+// Build: the ask (sent on bar 20 beat 2), the page being written, then a minute later the app's
+// request to save it, Run, and the page in the Canvas.
+const ASK = { at: S.build, from: D.canvas.ask_sent - bar(0, 2) };
+const WRITE = { at: bar(21, 2), from: 3.0 };
+const LATER = bar(22, 2);
+const RUN = { at: LATER, from: D.canvas.run_tapped - bar(1, 0) };
+const RUN_TAP = bar(23, 2), PAGE = RUN_TAP + (D.canvas.page_shown - D.canvas.run_tapped);
+
+function el(tag, cls, parent, html) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (html !== undefined) e.innerHTML = html;
+  (parent || stage).appendChild(e);
+  return e;
+}
+function put(e, { x = 0, y = 0, s = 1, o = 1, r = 0 } = {}) {
+  e.style.transform = `translate(${x}px, ${y}px) rotate(${r}deg) scale(${s})`;
+  e.style.opacity = o;
+}
+function line(parent, html, cls, x, y, size) {
+  const m = el('div', 'abs mask', parent);
+  m.style.left = x + 'px'; m.style.top = y + 'px';
+  m.style.paddingBottom = Math.round(size * 0.24) + 'px';
+  const s = el('span', cls, m, html);
+  s.style.fontSize = size + 'px';
+  return { m, s };
+}
+function reveal(ln, t, t0, dur = 0.55, out = null) {
+  const p = E.outExpo(prog(t, t0, t0 + dur));
+  let y = (1 - p) * 115;
+  if (out !== null) y -= E.inCubic(prog(t, out, out + 0.28)) * 115;
+  ln.s.style.transform = `translateY(${y}%)`;
+  ln.m.style.opacity = p > 0 ? 1 : 0;
+}
+function lime(ln, t, t0) { ln.s.querySelectorAll('.hl').forEach((h) => h.style.setProperty('--hl', E.emph(prog(t, t0, t0 + 0.45)).toFixed(4))); }
+const rise = (e, t, t0, { x, y, d = 18, o = 1 } = {}) => { const k = E.emph(prog(t, t0, t0 + 0.45)); put(e, { x, y: y + (1 - k) * d, o: k * o }); return k; };
+
+// The mark: three bars, 1, 0.7 and 0.41 of the longest, 0.22 as thick, 0.32 apart, lime on an
+// ink tile (Mark.kt and ic_launcher_foreground.xml draw it from the same five numbers).
+function tile(size) {
+  const t = el('div', 'abs');
+  t.style.width = size + 'px'; t.style.height = size + 'px'; t.style.borderRadius = Math.round(size * 0.28) + 'px';
+  t.style.background = 'var(--ink)';
+  const L = size * 50 / 108, thick = L * 0.22, pitch = L * 0.32, x0 = size * 29 / 108, yc = size / 2;
+  const bars = [1, 0.7, 0.41].map((f, i) => {
+    const b = el('div', 'abs', t);
+    b.style.left = x0 + 'px'; b.style.top = (yc + (i - 1) * pitch - thick / 2) + 'px';
+    b.style.width = L * f + 'px'; b.style.height = thick + 'px'; b.style.borderRadius = thick / 2 + 'px';
+    b.style.background = 'var(--lime)'; b.style.transformOrigin = 'left center';
+    return b;
+  });
+  return { t, bars };
+}
+// Each bar grows like a level meter catching a beat: past its length, then settling back.
+function build(bars, t, at, step = BEAT) {
+  bars.forEach((b, i) => {
+    const p = prog(t, at + i * step, at + i * step + 0.42);
+    b.style.transform = `scaleX(${p <= 0 ? 0 : E.outBack(p)})`;
+  });
+}
+
+// Real footage, one frame at a time. renderAt waits for each frame to decode, so every frame of
+// the ad renders the same however fast the renderer asks.
+const pending = [];
+function frame(img, clip, ct) {
+  const c = D.clips[clip];
+  const i = clamp(Math.round(ct * c.fps), 0, c.count - 1) + 1;
+  const src = `frames/clips/${clip}/${String(i).padStart(4, '0')}.jpg`;
+  if (img.dataset.src !== src) {
+    img.dataset.src = src; img.src = src;
+    pending.push(img.decode().catch(() => { throw new Error('frame failed: ' + src); }));
+  }
+}
+// A phone at a given screen width, for a recording of a given size (the Snapdragon records
+// 1440 x 3200, the POCO 1280 x 2772).
+const QDC = [1440, 3200], POCO = [1280, 2772];
+function phone(parent, w, src = QDC) {
+  const p = el('div', 'phone abs', parent);
+  const sc = el('div', 'screen', p);
+  const h = Math.round(w * src[1] / src[0]);
+  sc.style.width = w + 'px'; sc.style.height = h + 'px';
+  const img = el('img', '', sc);
+  return { p, sc, img, w, h, src };
+}
+// The POCO's status bar carries its owner's notification icons; a blank strip covers it.
+function statusMask(ph) {
+  const m = el('div', 'abs', ph.sc);
+  m.style.width = '100%'; m.style.height = Math.round(ph.h * 0.035) + 'px'; m.style.background = '#fff'; m.style.zIndex = 2;
+}
+// Where a point of the recording sits on the page, for a phone at (x, y) and scale s.
+const at = (ph, px, py, x, y, s = 1) => [x + (14 + px * ph.w / ph.src[0]) * s, y + (14 + py * ph.h / ph.src[1]) * s];
+// The camera: a phone placed so that a point of its recording lands at (tx, ty) at scale s. The
+// screen stays the recording, only nearer, so its own text is readable at a phone's feed width.
+function lens(ph, px, py, tx, ty, s) {
+  return { x: tx - (14 + px * ph.w / ph.src[0]) * s, y: ty - (14 + py * ph.h / ph.src[1]) * s, s };
+}
+const mix = (a, b, k) => ({ x: lerp(a.x, b.x, k), y: lerp(a.y, b.y, k), s: lerp(a.s, b.s, k) });
+
+// ---------------------------------------------------------------------------------------
+const stage = document.getElementById('stage');
+const scenes = [];
+function scene(from, to, draw) {
+  const root = el('div', 'scene', stage);
+  scenes.push({ root, from, to, draw });
+}
+// A lime field crosses two cuts on the downbeat: into the logo, and into the end card.
+const wipeEl = el('div', 'wipe', stage);
+function wipe(t, cut, dur = 0.5) {
+  const p = prog(t, cut - dur / 2, cut + dur / 2);
+  if (p <= 0 || p >= 1) return false;
+  wipeEl.style.left = '0px'; wipeEl.style.width = '2200px';
+  wipeEl.style.transform = `translateX(${lerp(-2400, 2100, E.inOut(p))}px) skewX(-12deg)`; wipeEl.style.opacity = 1;
+  return true;
+}
+
+// 1. Hook: a private document, and where it should be read. Its text is the prompt's own.
+const LEASE_TEXT = 'Monthly rent is 1,850 dollars, due on the first day of each month. A late fee of 75 dollars applies after the third day, ' +
+  'plus 10 dollars for each additional day the rent remains unpaid. <b class="hl" style="--hl:0">The security deposit equals two months of rent</b> ' +
+  'and is returned within 45 days after the tenant moves out, minus any cost of cleaning, repainting or repairs the landlord considers necessary.';
+scene(S.hook, S.logo, (() => {
+  let r;
+  return (t, root) => {
+    if (!r) {
+      el('div', 'dots', root);
+      const doc = el('div', 'doc abs', root, `<h3>EXAMPLE LEASE · UNIT 4B</h3><h2>Lease Agreement</h2><p>${LEASE_TEXT}</p><div class="fade"></div>`);
+      r = {
+        doc, hl: doc.querySelector('.hl'),
+        a: line(root, 'Some things shouldn’t', 'h', 150, 320, 96),
+        b: line(root, 'leave your phone.', 'h', 150, 426, 96),
+        c: line(root, 'So bring <span class="hl" style="--hl:0">the AI</span> to them.', 'h', 150, 610, 78),
+      };
+    }
+    const lt = t - S.hook;
+    const pin = E.emph(prog(lt, 0.15, 1.1));
+    put(r.doc, { x: 1250 + (1 - pin) * 160, y: 170 + (1 - pin) * 300, r: lerp(9, -4, pin), o: pin });
+    r.hl.style.setProperty('--hl', E.emph(prog(lt, 1.5, 2.1)).toFixed(4));
+    reveal(r.a, lt, 0.35); reveal(r.b, lt, 0.5);
+    reveal(r.c, lt, 2.5); lime(r.c, lt, 2.9);
+  };
+})());
+
+// 2. Logo: the bars build on the beat, the name follows at once.
+scene(S.logo, S.lease, (() => {
+  let r;
+  return (t, root) => {
+    if (!r) {
+      const m = tile(196); root.appendChild(m.t);
+      const word = line(root, 'OpenWeights', 'h', 0, 0, 168);
+      const tag = line(root, 'Open-weight AI that runs on your phone.', 'sub', 0, 0, 48);
+      const pills = ['Free', 'Open source', 'No account'].map((p) => el('div', 'pill', root, p));
+      r = { m, word, tag, pills };
+    }
+    const lt = t - S.logo;
+    // The tile builds alone in the centre, then makes room for the name.
+    const wordW = r.word.s.offsetWidth, total = 196 + 52 + wordW, x0 = (1920 - total) / 2;
+    const slide = E.emph(prog(lt, 0.75, 1.25));
+    put(r.m.t, { x: lerp((1920 - 196) / 2, x0, slide), y: 300, s: lerp(0.7, 1, E.emph(prog(lt, 0, 0.35))), o: prog(lt, 0, 0.08) });
+    build(r.m.bars, t, S.logo + 0.12);
+    r.word.m.style.left = x0 + 196 + 52 + 'px'; r.word.m.style.top = '298px';
+    reveal(r.word, lt, 0.9, 0.6);
+    const tw = r.tag.s.offsetWidth; r.tag.m.style.left = (1920 - tw) / 2 + 'px'; r.tag.m.style.top = '556px';
+    reveal(r.tag, lt, 1.3);
+    // All three land together, and stay.
+    const widths = r.pills.map((p) => p.offsetWidth), gap = 22, pw = widths.reduce((a, b) => a + b, 0) + gap * 2;
+    let px = (1920 - pw) / 2;
+    r.pills.forEach((p, i) => { rise(p, t, S.logo + 1.65 + i * 0.08, { x: px, y: 690 }); px += widths[i] + gap; });
+  };
+})());
+
+// 3. The lease, read on the Snapdragon's NPU, at the pace it was recorded.
+scene(S.lease, S.tools, (() => {
+  let r;
+  const PW = 420;
+  return (t, root) => {
+    if (!r) {
+      el('div', 'dots', root);
+      const ph = phone(root, PW);
+      r = {
+        ph,
+        a: line(root, 'Your lease,', 'h', 150, 190, 92),
+        b: line(root, 'read by this phone’s <span class="hl" style="--hl:0">NPU</span>.', 'h', 150, 292, 92),
+        cap: el('div', 'chip', root, 'Snapdragon 8 Elite · Qwen3-1.7B · real time'),
+        note: el('div', 'fine', root, 'The model’s answer, unedited and unchecked.'),
+        tap: el('div', 'tap', root),
+        stat: el('div', 'abs stat', root, `<div class="num">${D.lease.runtime.prefill_s.toFixed(2)}<small>s</small></div><div class="lab">to read all ${D.lease.runtime.prompt_tokens} tokens of it</div>`),
+        stat2: el('div', 'abs stat', root, `<div class="num" style="font-size:84px">${Math.round(D.lease.runtime.decode_tok_s)}<small>tokens a second</small></div><div class="lab">as it writes the answer</div>`),
+      };
+    }
+    const lt = t - S.lease;
+    const enter = E.emph(prog(lt, 0, 0.7));
+    // Once the numbers have landed, the words step aside and the phone comes forward, so the
+    // answer can be read as it streams.
+    const fwd = E.inOut(prog(t, LEASE_FWD, LEASE_FWD + 0.9));
+    const home = { x: 1320 + (1 - enter) * 300, y: 62 + (1 - enter) * 40, s: 1 };
+    const near = lens(r.ph, 720, 1250, 1330, 560, 1.5);
+    const cam = mix(home, near, fwd);
+    put(r.ph.p, cam);
+    frame(r.ph.img, 'npu-lease', LEASE_FROM + lt);
+    reveal(r.a, lt, 0.3, 0.55, LEASE_FWD - S.lease - 0.3); reveal(r.b, lt, 0.48, 0.55, LEASE_FWD - S.lease - 0.25); lime(r.b, lt, 0.9);
+    const kc = E.emph(prog(lt, 0.9, 1.4));
+    put(r.cap, { x: 156, y: fwd < 0.5 ? 444 + (1 - kc) * 16 : 860, o: kc * Math.abs(1 - 2 * fwd) });
+    put(r.note, { x: 158, y: 940, o: E.emph(prog(t, LEASE_FWD + 0.6, LEASE_FWD + 1.1)) });
+    // The tap on Send (recorded at 1258..1328 x 2871..2941).
+    const [sx, sy] = at(r.ph, 1293, 2906, cam.x, cam.y, cam.s);
+    const tp = prog(t, LEASE_SEND - 0.05, LEASE_SEND + 0.45);
+    r.tap.style.left = sx + 'px'; r.tap.style.top = sy + 'px';
+    put(r.tap, { s: lerp(0.3, 1.4, E.outExpo(tp)), o: tp > 0 && tp < 1 ? 0.8 * (1 - tp) : 0 });
+    // The runtime's own numbers for this reply, settled the moment they land (never counted up).
+    const first = LEASE_SEND + (D.lease.first_text - D.lease.sent);
+    const k1 = E.emph(prog(t, first, first + 0.5)), k2 = E.emph(prog(t, first + 2.5, first + 3));
+    // In the close-up the two numbers move up into the space the headline leaves.
+    put(r.stat, { x: 150, y: lerp(590 + (1 - k1) * 40, 220, fwd), o: k1 });
+    put(r.stat2, { x: 150, y: lerp(830 + (1 - k2) * 30, 500, fwd), o: k2 });
+  };
+})());
+
+// 4. The switches: the tools that go online are named, and each one turns off.
+scene(S.tools, S.fit, (() => {
+  let r;
+  const PW = 420;
+  return (t, root) => {
+    if (!r) {
+      el('div', 'dots', root);
+      const ph = phone(root, PW);
+      r = {
+        ph, ring: el('div', 'ring', root),
+        a: line(root, 'The tools that go online', 'h', 800, 250, 88),
+        b: line(root, 'say so.', 'h', 800, 352, 88),
+        c: line(root, 'And they <span class="hl" style="--hl:0">switch off</span>.', 'h', 800, 510, 88),
+        d: line(root, 'No account. No analytics.', 'sub', 804, 690, 48),
+        e: el('div', 'chip', root, 'Search and downloads still use the internet'),
+      };
+    }
+    const lt = t - S.tools;
+    const enter = E.emph(prog(lt, 0, 0.6)), zoom = E.inOut(prog(lt, 0.25, 0.95));
+    const home = { x: 240 - (1 - enter) * 300, y: 62, s: 1 };
+    // In on the "Leaves the device" section (rows 1524 to 2740 of the recording).
+    const near = lens(r.ph, 720, 2150, 400, 520, 1.62);
+    const cam = mix(home, near, zoom);
+    put(r.ph.p, cam);
+    frame(r.ph.img, 'tools', TOOLS_FROM + lt);
+    reveal(r.a, lt, 0.3); reveal(r.b, lt, 0.48);
+    reveal(r.c, t, OFF[1] - 0.6); lime(r.c, t, OFF[1] - 0.2);
+    reveal(r.d, t, OFF[2] - 0.6);
+    rise(r.e, t, OFF[2] + 0.4, { x: 806, y: 790 });
+    // One thin outline travels from switch to switch as each goes off (x 1153..1335).
+    const ys = [1882, 2318, 2653];
+    let k = 0; for (let i = 0; i < 3; i++) if (t >= OFF[i] - 0.3) k = i;
+    const prev = Math.max(0, k - 1), mv = E.emph(prog(t, OFF[k] - 0.3, OFF[k] + 0.1));
+    const y = lerp(ys[prev], ys[k], k === 0 ? 1 : mv);
+    const [cx, cy] = at(r.ph, 1244, y, cam.x, cam.y, cam.s);
+    const w = 118 * cam.s * PW / 444, h = 80 * cam.s * PW / 444;
+    r.ring.style.left = cx - w / 2 + 'px'; r.ring.style.top = cy - h / 2 + 'px'; r.ring.style.width = w + 'px'; r.ring.style.height = h + 'px';
+    put(r.ring, { o: E.emph(prog(t, OFF[0] - 0.4, OFF[0])) * (1 - prog(t, OFF[2] + 1.2, OFF[2] + 1.6)) });
+  };
+})());
+
+// 5. Fit: search Hugging Face on the Snapdragon; then the POCO, a model's MediaTek NPU builds and
+// a verdict on each for this phone, before any download.
+scene(S.fit, S.build, (() => {
+  let r;
+  const PW = 420;
+  return (t, root) => {
+    if (!r) {
+      el('div', 'dots', root);
+      const ph = phone(root, PW), poco = phone(root, 432, POCO);
+      statusMask(poco);
+      r = {
+        ph, poco,
+        a: line(root, 'Search Hugging Face.', 'h', 150, 300, 100),
+        b: line(root, 'See what fits', 'h', 150, 300, 92),
+        c: line(root, '<span class="hl" style="--hl:0">before</span> you download.', 'h', 150, 404, 92),
+        cap: el('div', 'chip', root, 'POCO X8 Pro Max · estimated for this phone'),
+      };
+    }
+    const lt = t - S.fit;
+    const enter = E.emph(prog(lt, 0, 0.7)), swap = E.emph(prog(t, FIT_B.at, FIT_B.at + 0.5));
+    const onA = t < FIT_B.at;
+    r.ph.p.style.visibility = onA ? 'visible' : 'hidden';
+    r.poco.p.style.visibility = onA ? 'hidden' : 'visible';
+    if (onA) {
+      put(r.ph.p, { x: 1320 + (1 - enter) * 300, y: 62 });
+      frame(r.ph.img, 'fit', FIT_A.from + (t - FIT_A.at));
+    } else {
+      // In on the three verdicts (rows 1000 to 2420 of the recording) a beat after they appear.
+      const home = { x: 1314 + (1 - swap) * 120, y: 62, s: 1 };
+      const near = lens(r.poco, 640, 1620, 1490, 540, 1.48);
+      const cam = mix(home, near, E.inOut(prog(t, VERDICTS + 0.5, VERDICTS + 1.3)));
+      put(r.poco.p, { ...cam, o: clamp(swap * 4) });
+      frame(r.poco.img, 'poco-fit', FIT_B.from + (t - FIT_B.at));
+    }
+    reveal(r.a, lt, 0.3, 0.55, FIT_B.at - S.fit - 0.3);
+    reveal(r.b, t, FIT_B.at + 0.1); reveal(r.c, t, FIT_B.at + 0.28); lime(r.c, t, VERDICTS + 0.2);
+    rise(r.cap, t, FIT_B.at + 0.3, { x: 156, y: 560 });
+  };
+})());
+
+// 6. Build: ask for a page, the model writes it, the app waits for an OK, and the page opens in
+// the app's own Canvas.
+scene(S.build, S.end, (() => {
+  let r;
+  const PW = 420;
+  return (t, root) => {
+    if (!r) {
+      el('div', 'dots', root);
+      const ph = phone(root, PW);
+      r = {
+        ph, tap: el('div', 'tap', root),
+        a: line(root, 'Ask for a page.', 'h', 150, 300, 104),
+        b: line(root, 'It waits for your OK.', 'h', 150, 300, 92),
+        c: line(root, 'Then it opens.', 'h', 150, 300, 92),
+        d: line(root, 'Right <span class="hl" style="--hl:0">here</span>.', 'h', 150, 404, 92),
+        cap: el('div', 'chip', root, 'Qwen3-1.7B · on the phone’s CPU'),
+        later: el('div', 'chip ink', root, 'About a minute later'),
+      };
+    }
+    const lt = t - S.build;
+    const enter = E.emph(prog(lt, 0, 0.7));
+    const home = { x: 1320 + (1 - enter) * 300, y: 62, s: 1 };
+    let cam = home;
+    if (t < WRITE.at) frame(r.ph.img, 'canvas-ask', ASK.from + (t - ASK.at));
+    else if (t < RUN.at) frame(r.ph.img, 'canvas-write', WRITE.from + (t - WRITE.at));
+    else {
+      frame(r.ph.img, 'canvas-run', RUN.from + (t - RUN.at));
+      // In on the request to save (its card spans rows 1700 to 2520), then out to the page.
+      const card = lens(r.ph, 720, 2140, 1480, 600, 1.45);
+      const page = lens(r.ph, 720, 1100, 1480, 560, 1.32);
+      cam = t < PAGE ? mix(home, card, E.inOut(prog(t, LATER + 0.1, LATER + 0.8))) : mix(card, page, E.inOut(prog(t, PAGE, PAGE + 0.7)));
+    }
+    put(r.ph.p, cam);
+    reveal(r.a, lt, 0.3, 0.55, LATER - S.build - 0.3);
+    rise(r.cap, t, S.build + 0.8, { x: 156, y: 440, o: 1 - prog(t, LATER - 0.3, LATER) });
+    rise(r.later, t, LATER, { x: 156, y: 430, o: 1 - prog(t, RUN_TAP - 0.2, RUN_TAP + 0.2) });
+    reveal(r.b, t, LATER + 0.15, 0.55, PAGE - 0.25);
+    reveal(r.c, t, PAGE + 0.1); reveal(r.d, t, PAGE + 0.28); lime(r.d, t, PAGE + 0.6);
+    // The tap on Run (recorded at 1174..1258 x 2454..2518).
+    const [sx, sy] = at(r.ph, 1216, 2486, cam.x, cam.y, cam.s);
+    const tp = prog(t, RUN_TAP - 0.05, RUN_TAP + 0.45);
+    r.tap.style.left = sx + 'px'; r.tap.style.top = sy + 'px';
+    put(r.tap, { s: lerp(0.3, 1.4, E.outExpo(tp)), o: tp > 0 && tp < 1 ? 0.8 * (1 - tp) : 0 });
+  };
+})());
+
+// 7. End card: everything settled within a bar and a half, then held.
+scene(S.end, LENGTH + 1, (() => {
+  let r;
+  return (t, root) => {
+    if (!r) {
+      const m = tile(150); root.appendChild(m.t);
+      const qr = el('div', 'qrcard', root, '<img src="assets/qr.svg"><p>Scan for Google Play</p>');
+      r = {
+        m, qr,
+        word: line(root, 'OpenWeights', 'h', 150, 322, 150),
+        tag: line(root, 'Open-weight AI that runs on your phone.', 'sub', 154, 508, 48),
+        play: el('div', 'pill lime', root, 'Get it on Google Play'),
+        free: el('div', 'pill', root, 'Free and open source'),
+        gh: line(root, 'github.com/ExperimentalMachines/openweights', 'mono', 154, 760, 32),
+        fine: el('div', 'fine', root, 'An independent project. Real recordings, never sped up: a POCO X8 Pro Max and a Snapdragon 8 Elite (Qualcomm Device Cloud).<br>Android 12 or later, 64-bit. Models can make mistakes, and are published by others under their own licences.'),
+      };
+    }
+    const lt = t - S.end;
+    put(r.m.t, { x: 150, y: 150, s: lerp(0.7, 1, E.emph(prog(lt, 0, 0.35))), o: prog(lt, 0, 0.08) });
+    build(r.m.bars, t, S.end + 0.12);
+    reveal(r.word, lt, 0.55, 0.6); reveal(r.tag, lt, 0.85);
+    rise(r.play, t, S.end + 1.15, { x: 150, y: 620 });
+    rise(r.free, t, S.end + 1.25, { x: 150 + r.play.offsetWidth + 22, y: 620 });
+    reveal(r.gh, lt, 1.4);
+    rise(r.qr, t, S.end + 1.2, { x: 1390, y: 290, d: 40 });
+    rise(r.fine, t, S.end + 1.6, { x: 150, y: 930, d: 10 });
+  };
+})());
+
+window.renderAt = async (t) => {
+  pending.length = 0;
+  for (const s of scenes) {
+    const on = t >= s.from && t < s.to;
+    s.root.style.visibility = on ? 'visible' : 'hidden';
+    if (on) s.draw(t, s.root);
+  }
+  wipeEl.style.opacity = 0;
+  wipe(t, S.logo) || wipe(t, S.end);
+  await Promise.all(pending);
+};
+window.ready = Promise.all([document.fonts.ready, ...['Display', 'Body', 'Mono'].map((f) => document.fonts.load(`600 40px ${f}`))]);
+window.LENGTH = LENGTH;
+</script>
+</body>
+</html>
