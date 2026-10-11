@@ -2,324 +2,315 @@
 # requires-python = ">=3.11"
 # dependencies = ["numpy", "scipy"]
 # ///
-# The ad's track: 120 BPM bright electro in E major, synthesised from scratch (no samples, nothing
-# licensed). Seeded, so every run writes the same file. A bar is two seconds and scene cuts land
-# on bar lines; bar() in ad.html uses the same grid, and both read the recordings' moments from
-# assets/clips/*.json.
+# The ad's track: 128 BPM in A major, synthesised from scratch with synth.py (no samples, nothing
+# licensed, seeded). Scenes start on beats of this grid and the hits inside them are moments read
+# from the recordings (assets/clips/*.json). music.json lists every picture event with the sound
+# designed for it; music.py measures each cue's level against the mix around it, and sync.py checks
+# the timing in the rendered and the encoded audio.
 #
-# The sound follows the story. The hook is sparse: a pad and a heartbeat under a question. The
-# logo drops the groove and plays the sonic logo: three plucks whose lengths follow the mark's
-# three bars (1, 0.7, 0.41), falling to the tonic. Under the proof scenes the groove sits lower.
-# The switches get a breakdown and one soft click per switch, then the groove returns for the
-# Hub, peaks on the build and resolves on the end card.
-#   uv run music.py   -> out/music.wav, out/music.json
+# The arc: a dry question (Airplane mode, a tap); the groove under the first answer, the bass on its
+# first words; the bed drops back as the photo goes in and returns with its answer; the sonic logo on
+# the brand; a lighter bed with the logo's motif under the model choice; a build through the two
+# closing lines into a breath; and the biggest arrival, resolving on A, for the call to action.
+#   uv run music.py   -> out/music.wav, out/fx.wav, out/music.json
 import json
 import wave
 from pathlib import Path
 
 import numpy as np
-from scipy.signal import butter, sosfilt
+
+import synth as s
 
 HERE = Path(__file__).parent
-SR = 48000
-BPM = 120
+SR = s.SR
+BPM = 128
 BEAT = 60 / BPM
 BAR = 4 * BEAT
-BARS = 29
-LENGTH = BARS * BAR + 0.9  # the last chord rings out
-N = int(LENGTH * SR)
-rng = np.random.default_rng(20261011)
 
 
-def t_of(bar, beat=0.0):
+def at(bar, beat=0.0):
     return (bar * 4 + beat) * BEAT
 
 
-def clip(name):
+def marks(name):
     return json.loads((HERE / 'assets/clips' / name).read_text())['clip_marks']
 
 
-# The story, as ad.html places it.
-LOGO, LEASE, TOOLS, FIT, BUILD, END = 3, 5, 12, 16, 20, 25
-_lease, _tools, _fit, _canvas = clip('npu-lease.json'), clip('tools.json'), clip('fit.json'), clip('canvas.json')
-SEND = t_of(5, 3)
-FIRST_TEXT = SEND + (_lease['first_text'] - _lease['sent'])
-_from = _tools['off'][0] - t_of(0, 2)
-OFF = [t_of(TOOLS) + (c - _from) for c in _tools['off']]
-SEARCH = t_of(FIT) + 0.9
-VERDICTS = t_of(17, 3)  # the Poco opens its NPU builds
-ASK = t_of(20, 2)
-LATER = t_of(22, 2)
-RUN_TAP = t_of(23, 2)
-PAGE = RUN_TAP + (_canvas['page_shown'] - _canvas['run_tapped'])
+SC = {'hook': at(0), 'chat': at(1), 'photo': at(4), 'logo': at(6), 'fit': at(7),
+      'values': at(9), 'end': at(11), 'out': at(13, 2)}
+TAIL = 0.8
+LENGTH = SC['out'] + TAIL
+N = int(LENGTH * SR)
+_air, _pae = marks('airplane-bill.json'), marks('paella.json')
+MO = {
+    'air_tap': at(0, 1),
+    'chat_send': at(1, 1),
+    'chat_quote': at(2, 3),       # the whole phrase is on the phone by then (clip 13.4 s)
+    'photo_send': at(4, 1),
+    'photo_cut': at(4, 2),
+    'photo_quote': at(5),         # "paella" is on the phone by then
+    'fits': at(8),
+    'line1': SC['values'],
+    'line2': at(10),
+}
+MO['chat_text'] = MO['chat_send'] + (_air['first_text'] - _air['sent'])
+MO['photo_text'] = MO['photo_cut'] + 0.2
+
+A_, E_, Fm, D_ = [57, 61, 64], [52, 56, 59], [54, 57, 61], [50, 54, 57]
+ROOT = {id(A_): 33, id(E_): 28, id(Fm): 30, id(D_): 26}
+# One chord a bar, written out so the call to action lands on A whatever the bar count.
+PROG = [A_, A_, E_, Fm, D_, E_, A_, Fm, D_, D_, E_, A_, A_, A_, A_]
 
 
-def empty():
+def chord_at(t):
+    return PROG[min(len(PROG) - 1, int(t / BAR + 1e-6))]
+
+
+def root_at(t):
+    return ROOT[id(chord_at(t))]
+
+
+LOGO_NOTES = [(81, 0.62), (76, 0.44), (69, 0.26)]
+
+
+def buf():
     return np.zeros(N)
 
 
-def place(buf, start, sig, gain=1.0):
+def place(b, start, sig, gain=1.0):
     i = int(round(start * SR))
     if i >= N or i < 0:
         return
     j = min(N, i + len(sig))
-    buf[i:j] += sig[: j - i] * gain
+    b[i:j] += sig[: j - i] * gain
 
 
-def env(n, a=0.002, d=0.2, curve=4.0):
-    t = np.arange(n) / SR
-    return np.clip(t / max(a, 1e-6), 0, 1) * np.exp(-curve * np.clip(t - a, 0, None) / max(d, 1e-6))
+kick_b, clap_b, bass_b, lead_b, fx_b, rise_b, verb_send, delay_send = (buf() for _ in range(8))
+hatsS = np.zeros((N, 2)); keysS = np.zeros((N, 2)); leadS = np.zeros((N, 2))
+K, CL = s.kick(), s.clap()
+kicks = []
 
 
-def hz(midi):
-    return 440.0 * 2 ** ((midi - 69) / 12)
+def place_st(b, start, sig, p, gain=1.0):
+    place(b[:, 0], start, sig, gain * np.cos((p + 1) * np.pi / 4))
+    place(b[:, 1], start, sig, gain * np.sin((p + 1) * np.pi / 4))
 
 
-def filt(sig, kind, f, order=2):
-    w = np.clip(np.array(f, dtype=float) / (SR / 2), 1e-4, 0.999)
-    return sosfilt(butter(order, w, btype=kind, output='sos'), sig)
+def beats(t0, t1):
+    return [k * BEAT for k in range(int(round(t0 / BEAT)), int(round(t1 / BEAT)))]
 
 
-def saw(freq, n, phase=0.0):
-    return 2 * ((freq * np.arange(n) / SR + phase) % 1.0) - 1
+def drums(t0, t1, *, clap=True, hats='closed', gain=1.0, kick=True):
+    for b in beats(t0, t1):
+        k = int(round(b / BEAT)) % 4
+        if kick:
+            place(kick_b, b, K, 0.95 * gain)
+            kicks.append(b)
+        if clap and k in (1, 3):
+            place(clap_b, b, CL, 0.7 * gain)
+            place(verb_send, b, CL, 0.3 * gain)
+        if hats in ('closed', 'full'):
+            for i, q in enumerate((0.25, 0.75)):
+                place_st(hatsS, b + q * BEAT, s.hat(vel=0.55 + 0.15 * i), -0.3 if i == 0 else 0.3, gain)
+        if hats == 'full':
+            place_st(hatsS, b + 0.5 * BEAT, s.hat(open_=True, vel=0.7, choke=0.25 * BEAT), 0.15, gain)
 
 
-# --- instruments ---------------------------------------------------------------------
-
-def kick(soft=False):
-    n = int(0.42 * SR)
-    t = np.arange(n) / SR
-    f = 46 + (95 if soft else 135) * np.exp(-t * 32)
-    body = np.sin(2 * np.pi * np.cumsum(f) / SR) * env(n, 0.002, 0.34, 4.2)
-    click = filt(rng.standard_normal(n), 'band', (1800, 6000)) * env(n, 0.0005, 0.004, 6) * (0.07 if soft else 0.2)
-    return np.tanh((body + click) * 1.5)
+# The bass: syncopated, with rests, root and octave and a fifth.
+BASS_PATTERN = [(0, 0), (2, 0), (3, 12), (5, 0), (6, 7), (7, 12)]   # (eighth, interval)
 
 
-def clap():
-    n = int(0.3 * SR)
-    noise = filt(rng.standard_normal(n), 'band', (1100, 6000))
-    e = np.zeros(n)
-    for k, off in enumerate((0, 0.009, 0.019)):
-        i = int(off * SR)
-        e[i:] += env(n - i, 0.0005, 0.01 if k < 2 else 0.14, 5)
-    return noise * e * 0.48
+def bassline(t0, t1, gain=1.0):
+    for bstart in [k * BAR for k in range(int(t0 / BAR - 1e-6), int(np.ceil(t1 / BAR)))]:
+        for e, iv in BASS_PATTERN:
+            tt = bstart + e * BEAT / 2
+            if t0 - 1e-6 <= tt < t1:
+                place(bass_b, tt, s.bass(root_at(tt) + iv, BEAT / 2 * 0.85), 0.85 * gain)
 
 
-def hat(open_=False, accent=1.0):
-    n = int((0.22 if open_ else 0.05) * SR)
-    return filt(rng.standard_normal(n), 'high', 7500) * env(n, 0.001, 0.12 if open_ else 0.02, 4) * 0.2 * accent
+def stabs(t0, t1, gain=1.0):
+    for i, b in enumerate(beats(t0, t1)):
+        if int(round(b / BEAT)) % 4 in (1, 3):
+            st = s.chord([n + 12 for n in chord_at(b)], BEAT * 0.8, vel=0.8)
+            place_st(keysS, b + BEAT / 2, st, -0.25 if i % 4 < 2 else 0.25, 0.55 * gain)
+            place(verb_send, b + BEAT / 2, st, 0.15 * gain)
 
 
-def fm(midi, dur, ratio=2.0, index=1.3, decay=7.0):
-    """A clean FM pluck: the sonic logo and the arp."""
-    n = int(dur * SR)
-    t = np.arange(n) / SR
-    mod = np.sin(2 * np.pi * hz(midi) * ratio * t) * index * np.exp(-t * decay)
-    return np.sin(2 * np.pi * hz(midi) * t + mod) * env(n, 0.002, dur * 0.7, 4)
+def motif(t0, t1, gain=0.14):
+    """The sonic logo's three notes as a quiet figure, once a bar: the film's one tune."""
+    for bstart in [k * BAR for k in range(int(round(t0 / BAR)), int(round(t1 / BAR)))]:
+        for i, (note, dur) in enumerate(LOGO_NOTES):
+            p = s.pluck(note - 12, dur * 0.8, bright=0.6)
+            place_st(leadS, bstart + (1.5 + i) * BEAT, p, (-0.35, 0.0, 0.35)[i], gain)
+            place(delay_send, bstart + (1.5 + i) * BEAT, p, gain * 0.5)
 
 
-def bell(midi, dur=1.2):
-    n = int(dur * SR)
-    t = np.arange(n) / SR
-    mod = np.sin(2 * np.pi * hz(midi) * 3.5 * t) * 1.7 * np.exp(-t * 5)
-    return np.sin(2 * np.pi * hz(midi) * t + mod) * env(n, 0.001, dur * 0.6, 4) * 0.25
+LOGO_HITS = []   # each logo note with the bar it draws, checked like an event
 
 
-def pad(notes, dur, cutoff=1600, attack=0.4):
-    n = int(dur * SR)
-    out = np.zeros(n)
-    for m in notes:
-        for d in (-0.08, 0.0, 0.08):
-            out += saw(hz(m) * 2 ** (d / 12), n, rng.random())
-    out = filt(out / (len(notes) * 3), 'low', cutoff)
-    return out * env(n, attack, dur, 0.8)
-
-
-def bass(midi, dur):
-    n = int(dur * SR)
-    t = np.arange(n) / SR
-    tone = np.sin(2 * np.pi * hz(midi) * t) * 0.85 + filt(saw(hz(midi), n), 'low', 600) * 0.38
-    return tone * env(n, 0.004, dur * 0.85, 2.4)
-
-
-def riser(dur):
-    n = int(dur * SR)
-    t = np.arange(n) / SR
-    noise = rng.standard_normal(n)
-    out = np.zeros(n)
-    for s in range(24):
-        a, b = s * n // 24, (s + 1) * n // 24
-        lo = 300 + 5200 * (s / 24) ** 2
-        out[a:b] = filt(noise[a:b], 'band', (lo, min(lo * 2.2, 18000)))
-    return out * (t / dur) ** 2 * 0.33
-
-
-def swell(dur=0.6):
-    n = int(dur * SR)
-    t = np.arange(n) / SR
-    return filt(rng.standard_normal(n), 'band', (700, 6500)) * np.sin(np.pi * t / dur) ** 2 * 0.15
-
-
-def thump(size=1.0):
-    """A clean hit: a sub drop with a little air, no crash."""
-    n = int(1.4 * SR)
-    t = np.arange(n) / SR
-    sub = np.sin(2 * np.pi * np.cumsum(42 + 54 * np.exp(-t * 8)) / SR) * env(n, 0.002, 1.0, 3)
-    air = filt(rng.standard_normal(n), 'band', (2200, 10000)) * env(n, 0.002, 0.45, 4) * 0.12
-    return np.tanh((sub + air) * 1.2) * size
-
-
-def switch():
-    """A toggle going off: a small, dry, low click. Felt more than heard."""
-    n = int(0.08 * SR)
-    t = np.arange(n) / SR
-    body = np.sin(2 * np.pi * 900 * t) * env(n, 0.0003, 0.012, 6)
-    tick = filt(rng.standard_normal(n), 'band', (2500, 6000)) * env(n, 0.0003, 0.004, 6) * 0.5
-    return (body * 0.6 + tick) * 0.5
-
-
-def tap(at, gain=0.22):
-    """A finger on glass."""
-    place(fx, at, fm(96, 0.06, index=0.5, decay=60), gain)
-
-
-# --- arrangement ----------------------------------------------------------------------
-# E - B - C#m - A, a chord a bar: bright and moving.
-CHORDS = [[64, 68, 71], [59, 63, 66], [61, 64, 68], [57, 61, 64]]
-ROOTS = [40, 35, 37, 33]
-# The sonic logo: B, G#, E, as long as the mark's bars are long.
-LOGO_NOTES = [(83, 0.9), (80, 0.63), (76, 0.37)]
-# The arp: the chord, up and back, in sixteenths.
-ARP = [0, 1, 2, 1, 2, 1, 0, 1]
-
-drums, low, keys, lead, fx = empty(), empty(), empty(), empty(), empty()
-K, KS, CL = kick(), kick(soft=True), clap()
-
-
-def groove(b, clapping=True, gain=1.0, from_beat=0, to_beat=4):
-    start, root, chord = t_of(b), ROOTS[b % 4], CHORDS[b % 4]
-    for k in range(from_beat, to_beat):
-        place(drums, start + k * BEAT, K, 0.95 * gain)
-        place(drums, start + k * BEAT + BEAT / 2, hat(open_=True), 0.8 * gain)
-        place(drums, start + k * BEAT + BEAT / 4, hat(accent=0.6), gain)
-        place(drums, start + k * BEAT + 3 * BEAT / 4, hat(accent=0.6), gain)
-        if clapping and k in (1, 3):
-            place(drums, start + k * BEAT, CL, 0.8 * gain)
-    for e in range(from_beat * 2, to_beat * 2):
-        note = root + (12 if e % 2 else 0)
-        place(low, start + e * BEAT / 2, bass(note, BEAT / 2), 0.8 * gain)
-    place(keys, start + from_beat * BEAT, pad(chord, BEAT * (to_beat - from_beat), cutoff=2400, attack=0.04), 0.34 * gain)
-
-
-def arp(b, gain=0.16, octave=12):
-    start, chord = t_of(b), CHORDS[b % 4]
-    for s in range(16):
-        place(lead, start + s * BEAT / 4, fm(chord[ARP[s % 8]] + octave, 0.22, index=0.9, decay=14), gain)
-
-
-def sonic_logo(at, gain=0.42):
+def sonic_logo(t, gain=0.5, key='logo'):
     for i, (note, dur) in enumerate(LOGO_NOTES):
-        place(lead, at + i * BEAT, fm(note, dur, index=1.6, decay=5), gain)
+        p = s.pluck(note, dur, bright=1.0)
+        place(lead_b, t + i * BEAT, p, gain)
+        b = buf(); place(b, t + i * BEAT, p, gain)
+        LOGO_HITS.append({'t': round(t + i * BEAT, 4), 'picture': f'{key} bar {i + 1}', 'key': f'{key}{i}', 'cue': b})
+        place(verb_send, t + i * BEAT, p, gain * 0.6)
+        place(delay_send, t + i * BEAT, p, gain * 0.35)
 
 
-for b in range(BARS):
-    start, chord, root = t_of(b), CHORDS[b % 4], ROOTS[b % 4]
-    if b < LOGO:
-        # The question: a pad, and a heartbeat from bar 1; a riser into the logo.
-        place(keys, start, pad(chord, BAR, cutoff=900 if b < 2 else 1300, attack=0.6), 0.48)
-        if b >= 1:
-            place(drums, start, KS, 0.55)
-            place(drums, start + 2 * BEAT, KS, 0.45)
-        if b == 2:
-            place(fx, start + BEAT, riser(BAR - BEAT * 1.4), 0.9)
-    elif b < LEASE:
-        groove(b)
-    elif b < TOOLS:
-        # The proof: the groove a step lower, no clap until the answer is streaming.
-        groove(b, clapping=b >= LEASE + 2, gain=0.8)
-    elif b < FIT:
-        # The switches: a breakdown, the bass held, a soft heartbeat; a riser back in.
-        place(keys, start, pad(chord, BAR, cutoff=1200, attack=0.3), 0.5)
-        place(low, start, bass(root, BAR * 0.9), 0.5)
-        place(drums, start, KS, 0.5)
-        place(drums, start + 2 * BEAT, KS, 0.4)
-        if b == FIT - 1:
-            place(fx, start + BEAT, riser(BAR - BEAT * 1.4), 0.8)
-    elif b < BUILD:
-        groove(b)
-        if b >= FIT + 2:
-            arp(b, gain=0.12)
-    elif b < END:
-        # The build: everything.
-        groove(b)
-        arp(b, gain=0.17)
-    elif b < BARS - 1:
-        groove(b, clapping=False, gain=0.85)
-    # A swell into each cut.
-    if b in (LEASE, TOOLS, FIT, BUILD):
-        place(fx, start - 0.55, swell(), 1.0)
+EVENTS = []
+cue_b = {}   # each event's own sound, alone, for the audibility check
 
-# The moments.
-place(fx, 1.5, swell(0.5), 0.7)                     # the highlighter on the deposit clause
-tap(2.5, 0.16)                                      # "So bring the AI to them."
-place(fx, t_of(LOGO), thump(1.0), 0.9)
-sonic_logo(t_of(LOGO) + 0.12)                       # the mark's bars build on these
-place(fx, t_of(LOGO) + 0.9, bell(88, 1.2), 0.4)     # the wordmark
-place(fx, t_of(LOGO) + 1.65, bell(83, 0.8), 0.3)    # Free, Open source, No account, together
-tap(SEND)
-place(fx, FIRST_TEXT, bell(88, 1.4), 0.7)           # the answer starts: 0.23 s for the whole lease
-place(fx, FIRST_TEXT + 2.5, bell(83, 1.0), 0.35)    # and how fast it writes
-for i, at in enumerate(OFF):                        # one soft click per switch, nothing more
-    place(fx, at, switch(), 0.9)
-tap(SEARCH, 0.16)
-place(fx, VERDICTS, bell(88, 1.0), 0.5)             # the verdicts
-tap(ASK)
-place(fx, LATER - 0.5, swell(0.5), 0.9)            # a minute later
-place(fx, LATER, thump(0.45), 0.5)
-tap(RUN_TAP, 0.3)
-place(fx, PAGE, thump(0.6), 0.6)                    # and it is live
-place(fx, PAGE, bell(88, 1.4), 0.55)
-place(fx, t_of(END), thump(0.95), 0.85)
-sonic_logo(t_of(END) + 0.12, 0.45)
-# The final chord rings out after the last bar.
-place(keys, t_of(BARS - 1), pad(CHORDS[0] + [76], BAR + 0.9, cutoff=2600, attack=0.02), 0.6)
-place(lead, t_of(BARS - 1), fm(83, 2.2, decay=3), 0.3)
-place(fx, t_of(BARS - 1), thump(0.55), 0.55)
 
-# Sidechain: the kick gently ducks the melodic parts wherever the groove runs.
+def event(t, what, sound, sig, gain=1.0, key=None):
+    place(fx_b, t, sig, gain)
+    b = buf(); place(b, t, sig, gain); cue_b[len(EVENTS)] = b
+    EVENTS.append({'t': round(t, 4), 'picture': what, 'sound': sound, 'key': key})
+
+
+# --- the film -------------------------------------------------------------------------
+def whoosh_at(t, what, gain=0.9, tail=0.22):
+    sig = s.whoosh(0.36, tail)
+    place(fx_b, t - 0.36, sig, gain)
+    b = buf(); place(b, t - 0.36, sig, gain); cue_b[len(EVENTS)] = b
+    EVENTS.append({'t': round(t, 4), 'picture': what, 'sound': 'whoosh peak', 'key': 'cut'})
+
+
+place(kick_b, 0, K, 0.6); kicks.append(0)
+place_st(keysS, 0, s.pad(A_, BAR, cutoff=900, attack=0.25), 0, 0.55)
+event(MO['air_tap'], 'Airplane mode turns on', 'tick', s.tick(), 1.3, 'tap')
+
+
+whoosh_at(SC['chat'], 'cut to the chat')
+drums(SC['chat'], at(2), clap=False, hats='closed', gain=0.8)
+event(MO['chat_send'], 'Send', 'tick', s.tick(), 2.2, 'tap')
+event(MO['chat_text'], 'the answer starts; "Still answers."', 'chime + bass entry', s.chime(88), 0.9, 't2')
+place(bass_b, MO['chat_text'], s.bass(root_at(MO['chat_text']), at(2) - MO['chat_text'] - 0.01), 0.8)
+drums(at(2), SC['photo'], clap=True, hats='closed')
+bassline(at(2), SC['photo'])
+stabs(at(2), SC['photo'], 0.8)
+event(MO['chat_quote'], 'the phrase, word for word', 'soft pluck (logo note)', s.pluck(81, 0.4, bright=0.6), 1.5, 'quote1')
+
+# The photo: the bed drops back (no stabs, no clap, softer kick) as the photo goes in, the cut past
+# the wait lands on a whoosh with the bed held, and it rebuilds on the answer.
+whoosh_at(SC['photo'], 'cut to the photo', 1.3)
+drums(SC['photo'], MO['photo_cut'], clap=False, hats='closed', gain=0.62)
+event(MO['photo_send'], 'Send', 'tick', s.tick(), 2.4, 'tap')
+whoosh_at(MO['photo_cut'], 'cut past the wait', 1.1, 0.3)
+event(MO['photo_text'], 'the paella answer starts; "Still offline."', 'chime', s.chime(91), 1.0, 't4')
+drums(at(4, 3), SC['logo'], clap=True, hats='full')
+bassline(at(4, 3), SC['logo'])
+stabs(at(5), SC['logo'], 0.8)
+event(MO['photo_quote'], 'the identification, word for word', 'soft pluck (logo note)', s.pluck(76, 0.4, bright=0.6), 1.5, 'quote2')
+place(rise_b, at(5, 1), s.riser(SC['logo'] - at(5, 1)), 0.75)
+
+# The brand: a modest accent (the big one is saved for the call to action) and the sonic logo.
+event(SC['logo'], 'brand', 'impact + sonic logo', s.impact(0.6, 0.9), 0.7, 'word')
+sonic_logo(SC['logo'] + 0.01, 0.48, 'logo')
+drums(SC['logo'] + BEAT, SC['fit'], clap=True, hats='closed', gain=0.85)
+bassline(SC['logo'], SC['fit'], 0.85)
+
+# Choose a model: a lighter bed with the logo's motif.
+whoosh_at(SC['fit'], 'cut to the model', 1.3)
+drums(SC['fit'], SC['values'], clap=True, hats='closed', gain=0.7)
+bassline(SC['fit'], SC['values'], 0.7)
+motif(SC['fit'], SC['values'], 0.16)
+event(MO['fits'], '"It shows what fits."', 'soft pluck (logo note)', s.pluck(81, 0.4, bright=0.6), 1.0, 't3')
+
+# The two lines: the bed builds, a short hit on each, then a breath before the arrival.
+drums(SC['values'], at(10, 3), clap=True, hats='full')
+bassline(SC['values'], at(10, 3))
+stabs(SC['values'], at(10, 3))
+motif(SC['values'], SC['end'], 0.2)
+event(MO['line1'], '"Free and open source."', 'short hit', s.impact(0.5, 0.45), 0.7, 'line1')
+event(MO['line2'], '"No account. No analytics."', 'short hit', s.impact(0.5, 0.45), 0.7, 'line2')
+place(rise_b, at(10, 1), s.riser(SC['end'] - at(10, 1)), 1.0)
+
+# The call to action: the biggest arrival, on A, wide and full; then the chord.
+event(SC['end'], 'end card: Get it on Google Play', 'big impact + sonic logo + A chord', s.impact(1.0, 1.6), 1.0, 'cta')
+sonic_logo(SC['end'] + 0.01, 0.6, 'end')
+for p_, v in ((-0.5, 0.75), (0.5, 0.75)):
+    st = s.chord([n + 12 for n in A_] + [76], BAR * 0.95, vel=1.0)
+    place_st(keysS, SC['end'], st, p_, v)
+place(verb_send, SC['end'], s.chord([n + 12 for n in A_] + [76], BAR * 0.95), 0.35)
+drums(SC['end'], at(12), clap=True, hats='full', gain=1.0)
+bassline(SC['end'], at(12), 1.0)
+stabs(SC['end'] + BEAT, at(12), 1.0)
+drums(at(12), at(13), clap=False, hats='none', gain=0.55)
+place_st(keysS, at(12), s.pad(A_ + [69], SC['out'] - at(12) + TAIL, cutoff=2400, attack=0.05), 0, 0.8)
+place(lead_b, at(13), s.pluck(69, 1.4, bright=0.5), 0.3)
+
+# --- the mix ---------------------------------------------------------------------------
+# Sidechain: a 3 ms dip after each kick, released over ~120 ms and tapered to exactly unity.
 duck = np.ones(N)
-for b in range(BARS - 1):
-    if b < LOGO or TOOLS <= b < FIT:
-        continue
-    for k in range(4):
-        i, n = int(t_of(b, k) * SR), int(BEAT * SR)
-        curve = 1 - 0.45 * np.exp(-np.arange(n) / SR * 12)
-        duck[i:i + n] = np.minimum(duck[i:i + n], curve[: len(duck[i:i + n])])
+for k in kicks:
+    i = int(k * SR); n = int(0.3 * SR)
+    tt = np.arange(n) / SR
+    curve = 1 - 0.35 * np.minimum(1, tt / 0.003) * np.exp(-np.maximum(0, tt - 0.003) / 0.12)
+    taper = np.clip((0.3 - tt) / 0.02, 0, 1)
+    curve = 1 - (1 - curve) * taper
+    j = min(N, i + n)
+    duck[i:j] = np.minimum(duck[i:j], curve[: j - i])
 
-# A dotted-eighth echo on the lead, wider in the right channel.
-d = int(BEAT * 0.75 * SR)
-echo = np.zeros(N)
-echo[d:] = lead[:-d] * 0.3
-time = np.arange(N) / SR
-mix = drums * 0.85 + (low * 0.85 + keys * 0.7 + lead * 0.8) * duck + fx
-mix[(time >= t_of(LOGO) - BEAT / 2) & (time < t_of(LOGO))] *= 0.1  # a breath before the drop
-mix = filt(mix, 'high', 28)
-left = np.tanh((mix + echo * 0.55) * 1.15)
-right = np.tanh((mix + np.roll(echo, d // 2) * 0.55) * 1.15)
-fade = np.ones(N)
-tail = int(1.6 * SR)
-fade[-tail:] = np.linspace(1, 0, tail) ** 2
-st = np.stack([left * fade, right * fade], axis=1)
-st /= np.max(np.abs(st)) / 10 ** (-1 / 20)
+
+def bus(kick, clap, hats, keys, bass, lead, leadst, fx, rise, verb, dly):
+    mix = np.zeros((N, 2))
+    mix += s.pan(kick, 0) * 0.9 + s.pan(clap, 0) * 0.85 + hats * 0.6
+    mix += keys * duck[:, None] * 0.6 + s.pan(bass * duck, 0) * 0.85
+    mix += s.pan(lead, 0) * 0.8 + leadst * 0.8 + s.pan(fx, 0) * 0.85 + s.pan(rise, 0.1) * 0.8
+    mix += verb * 0.7 + dly * 0.45
+    return mix
+
+
+rvL, rvR = s.fdn_reverb(verb_send)
+verb = np.stack([rvL, rvR], axis=1)
+dly = np.stack([s.delay(delay_send, BEAT * 0.75), s.delay(delay_send, BEAT * 0.75, offset=BEAT * 0.25)], axis=1)
+mix = bus(kick_b, clap_b, hatsS, keysS, bass_b, lead_b, leadS, fx_b, rise_b, verb, dly)
+mix = np.stack([s.filt(mix[:, 0], 'high', 28), s.filt(mix[:, 1], 'high', 28)], axis=1)
+# Breaths: an eighth before the brand and a quarter before the call to action, ramped, not gated.
+tt = np.arange(N) / SR
+keep_all = np.ones(N)   # the breaths' gain on everything but the riser, kept for the audibility check
+for a0, a1, depth in ((SC['logo'] - BEAT / 2, SC['logo'], 0.7), (SC['end'] - BEAT, SC['end'], 0.85)):
+    ramp = np.clip(np.minimum((tt - a0) / 0.02, (a1 - tt) / 0.02), 0, 1)
+    keep = np.ones(N) - depth * ramp
+    keep_all *= keep
+    # Keep the riser through the breath: it is what the breath is for.
+    riser_part = s.pan(rise_b, 0.1) * 0.8
+    mix = (mix - riser_part) * keep[:, None] + riser_part
+level = 0.5 / (np.sqrt((mix ** 2).mean()) * 4 + 1e-9)
+mix *= level
+mix, gr = s.compress(mix, thresh_db=-20, ratio=1.5, knee_db=5)
+mix, lim_g = s.limiter(mix * 1.6, ceiling_db=-1.5, gain=True)
+fade = np.ones(N); tail = int(0.9 * SR); fade[-tail:] = np.linspace(1, 0, tail) ** 2
+mix *= fade[:, None]
+
+# Audibility: each cue alone through the gains the mix actually applied to it (centre pan, breath,
+# level, compressor, limiter, fade), against the rest of the mix with that cue taken out.
+chain = 0.85 * np.cos(np.pi / 4) * keep_all * level * 10 ** (-gr / 20) * 1.6 * lim_g * fade
+mono = mix.mean(axis=1)
+for i, e in enumerate(EVENTS):
+    cue = cue_b[i] * chain
+    # The window is the cue's own length (a 30 ms tick is not judged over 120 ms).
+    w_ = 0.2 if e['sound'].startswith('whoosh') else (0.03 if e['sound'] == 'tick' else 0.12)
+    a = int((e['t'] - (0.15 if e['sound'].startswith('whoosh') else 0)) * SR); b = a + int(w_ * SR)
+    r_cue = np.sqrt((cue[a:b] ** 2).mean() + 1e-12); r_bed = np.sqrt(((mono[a:b] - cue[a:b]) ** 2).mean() + 1e-12)
+    e['cue_to_mix_db'] = round(20 * np.log10(r_cue / r_bed), 1)
 
 OUT = HERE / 'out'
 OUT.mkdir(exist_ok=True)
 with wave.open(str(OUT / 'music.wav'), 'wb') as w:
-    w.setnchannels(2)
-    w.setsampwidth(2)
-    w.setframerate(SR)
-    w.writeframes((st * 32767).astype('<i2').tobytes())
-json.dump({'bpm': BPM, 'beat': BEAT, 'bar': BAR, 'bars': BARS, 'length': LENGTH,
-           'moments': {'send': SEND, 'first_text': FIRST_TEXT, 'off': OFF, 'verdicts': VERDICTS,
-                       'ask': ASK, 'later': LATER, 'run': RUN_TAP, 'page': PAGE}}, open(OUT / 'music.json', 'w'), indent=1)
-print(f'music: {LENGTH:.2f} s, {BARS} bars at {BPM} BPM; switches at {[round(x, 2) for x in OFF]}')
+    w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR)
+    w.writeframes((np.clip(mix, -1, 1) * 32767).astype('<i2').tobytes())
+# The two stems sync.py times cues in: effects (every picture event) and lead (the logo notes).
+for name, stem in (('fx', fx_b), ('lead', lead_b)):
+    with wave.open(str(OUT / f'{name}.wav'), 'wb') as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR)
+        w.writeframes((np.clip(stem / (np.abs(stem).max() + 1e-9), -1, 1) * 32767).astype('<i2').tobytes())
+# Each cue alone (events, then logo notes), so sync.py times every one without its neighbours.
+np.savez_compressed(OUT / 'cues.npz', **{f'e{i}': cue_b[i].astype(np.float32) for i in range(len(EVENTS))},
+                    **{f'l{i}': h['cue'].astype(np.float32) for i, h in enumerate(LOGO_HITS)})
+json.dump({'bpm': BPM, 'beat': BEAT, 'bar': BAR, 'length': LENGTH, 'scenes': SC, 'moments': MO, 'events': EVENTS, 'logo_hits': [{k: v for k, v in h.items() if k != 'cue'} for h in LOGO_HITS],
+           'gain_reduction_db_max': float(gr.max())}, open(OUT / 'music.json', 'w'), indent=1)
+quiet = [e for e in EVENTS if e['cue_to_mix_db'] < -12]
+print(f'music: {LENGTH:.2f} s at {BPM} BPM; {len(EVENTS)} picture events; max gain reduction {gr.max():.1f} dB; '
+      f'cues below -12 dB of the mix: {[(e["picture"], e["cue_to_mix_db"]) for e in quiet] or "none"}')

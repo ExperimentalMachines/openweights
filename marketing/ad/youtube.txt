@@ -1,17 +1,17 @@
 TITLE
-OpenWeights: open-weight AI that runs on your phone
+OpenWeights: open-weight AI that runs on your phone, even in Airplane mode
 
 DESCRIPTION
-Some things shouldn't leave your phone. OpenWeights brings the AI to them.
+Airplane mode on. It still answers.
 
 OpenWeights is a free, open-source Android app that runs open-weight AI models on the phone itself. No account, no analytics.
 
-• Runs on the phone's own chip: the CPU, the GPU, and the NPU on Snapdragon 8 Elite and MediaTek Dimensity 9500 phones. In the video a Snapdragon 8 Elite reads a 398-token lease on its NPU in 0.23 s and answers at 31 tokens a second (Qwen3-1.7B, the runtime's own figures for that reply).
-• The tools that go online are named "Leaves the device", each with its own switch. Model search and downloads use the internet; the privacy policy says exactly what leaves and when.
-• Hugging Face is the model list: search it in the app and get an estimate of whether each file fits your phone before you download it.
-• Optional agent tools: a folder you share, sandboxed JavaScript, memory, and a Canvas where the model builds a page, a document or a slide deck. Saving waits for your OK in the mode shown.
+• Works offline once a model is downloaded. In the video a Snapdragon 8 Elite phone in Airplane mode gives a Spanish phrase for asking for the bill (Qwen3-4B-Instruct-2507) and recognises a photo of paella (Qwen2.5-VL-3B), both on the phone.
+• Hugging Face is the model list: search it in the app and see an estimate of whether each file fits your phone before you download it. In the video a POCO X8 Pro Max shows one model at three context lengths: runs comfortably, tight, will not run.
+• Runs GGUF models through llama.cpp, including vision models, and compiled ExecuTorch models on the CPU, GPU and NPU of supported phones.
+• Optional tools, each with its own switch. The ones that go online are grouped under "Leaves the device"; model search and downloads use the internet, and the privacy policy says exactly what leaves and when.
 
-Everything in the video is real: the phones' own screen recordings on a Snapdragon 8 Elite (Qualcomm Device Cloud) and a POCO X8 Pro Max, on the build released on Google Play. Nothing is sped up; the one cut, a minute while the model writes the page, is labelled. Models can make mistakes: the lease answer is the model's, unchecked.
+Everything in the video is real: the phones' own screen recordings on the build released on Google Play, at recorded speed. The cuts skip navigation and, once, about 11 seconds while the vision model reads the photo; that cut is labelled. Models can make mistakes. Photo: "Paella de fruit de mer", Wikimedia Commons, CC0.
 
 Get it on Google Play: https://play.google.com/store/apps/details?id=io.github.alpharomercoma.openweights
 Source (Apache-2.0): https://github.com/ExperimentalMachines/openweights

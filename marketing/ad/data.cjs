@@ -1,27 +1,18 @@
-// Bundles what the page needs to know about the recordings into assets/data.js: how many frames
-// each clip has and the moments read from it (assets/clips/*.json). Refuses recordings that no
-// longer fit their scenes, so a re-recorded take cannot quietly break the ad.
+// Bundles what the page needs into assets/data.js: each clip's frame count and the moments read
+// from it (assets/clips/*.json), and the music's moments (out/music.json, written by music.py from
+// the same marks). Refuses recordings that no longer fit their scenes.
 const fs = require('fs');
 const path = require('path');
 const here = __dirname;
-const json = (f) => JSON.parse(fs.readFileSync(path.join(here, 'assets/clips', f), 'utf8'));
+const json = (f) => JSON.parse(fs.readFileSync(path.join(here, f), 'utf8'));
 const count = (c) => fs.readdirSync(path.join(here, 'frames/clips', c)).filter((f) => f.endsWith('.jpg')).length;
 const clips = {};
-for (const c of ['npu-lease', 'tools', 'fit', 'poco-fit', 'canvas-ask', 'canvas-write', 'canvas-run']) clips[c] = { fps: 30, count: count(c) };
-const lease = json('npu-lease.json'), tools = json('tools.json'), fit = json('fit.json'), poco = json('poco-fit.json'), canvas = json('canvas.json');
+for (const c of ['airplane-bill', 'paella', 'poco-fit']) clips[c] = { fps: 30, count: count(c) };
+const air = json('assets/clips/airplane-bill.json').clip_marks, paella = json('assets/clips/paella.json').clip_marks;
+const poco = json('assets/clips/poco-fit.json').clip_marks, music = json('out/music.json');
 const fail = (m) => { console.error('data.cjs: ' + m); process.exit(1); };
-const m = lease.clip_marks;
-if (!(m.sent < m.first_text && m.first_text < m.catches_heading && m.catches_heading < m.arithmetic_slip_from)) fail('lease marks out of order');
-if (clips['npu-lease'].count / 30 < m.catches_heading) fail('lease clip ends before its marks');
-if (tools.clip_marks.off.length !== 3) fail('expected three switches');
-if (!(fit.clip_marks.search < fit.clip_marks.open)) fail('fit marks out of order');
-const data = {
-  clips,
-  lease: { ...m, runtime: lease.runtime_log, footer: lease.app_footer, model: lease.model, device: lease.device },
-  tools: tools.clip_marks,
-  fit: fit.clip_marks,
-  poco: poco.clip_marks,
-  canvas: canvas.clip_marks,
-};
-fs.writeFileSync(path.join(here, 'assets/data.js'), 'window.AD_DATA = ' + JSON.stringify(data, null, 1) + ';\n');
+if (!(air.qs_open < air.airplane_on && air.airplane_on < air.sent && air.sent < air.first_text)) fail('airplane marks out of order');
+if (!(paella.sent < paella.first_text && paella.first_text < paella.done)) fail('paella marks out of order');
+if (clips['airplane-bill'].count / 30 < air.first_text + 4) fail('airplane clip too short for its answer');
+fs.writeFileSync(path.join(here, 'assets/data.js'), 'window.AD_DATA = ' + JSON.stringify({ clips, air, paella, poco, music }, null, 1) + ';\n');
 console.log('data.js:', Object.entries(clips).map(([k, v]) => `${k} ${v.count}`).join(', '));
