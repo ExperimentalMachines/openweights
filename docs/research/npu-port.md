@@ -11,9 +11,11 @@ and answers correctly. It does not make chat faster on this phone, which is what
 port changes: the NPU reads a prompt at 120 to 195 tok/s, one call of at most 128 tokens
 costing about half a second, where the app's own CPU path reads the same prompt at 187 to
 230 tok/s. Measured again on the rebuilt runtime with the phone's apps closed: the
-same answers as the CPU, 1.0 s a turn against 0.5 to 0.7 s. The Qualcomm path (QNN) is ported and untested here; ExecuServe measured it at
-1,700 tok/s against the CPU's 340 on a Snapdragon 8 Elite Gen 5, and that is where an NPU
-pays. It needs a Snapdragon run before anything is said about it in this app.
+same answers as the CPU, 1.0 s a turn against 0.5 to 0.7 s. The Qualcomm path (QNN) runs on a Snapdragon 8 Elite through Discover's published files
+and reads a 305-token prompt faster than the GPU and the CPU there (774 tok/s against 684
+and 465 on Qwen3-0.6B); it also killed
+the app whenever a conversation reached the last prefill block of its window, which the
+runtime now refuses as a full window instead (see "Qualcomm" below).
 
 ## What came across
 
@@ -177,3 +179,48 @@ screen with 5.9 GB free.
 The same answers and the same per-turn cost as the `.2` runtime, now with the bounds check
 in the binary, a trial that proves both halves, and a prompt rate the stats line takes
 from the runner rather than from the clock around it.
+
+## Qualcomm: Snapdragon 8 Elite (SM8750) through QDC
+
+Qualcomm Device Cloud, SM8750 (`sun`), Android 16, 2026-10-11 around 03:00 phone time, the
+same `.rc` build of `bdd97f91`. Everything went through the app as a user would: Discover
+offered the `qnn/sm8750` files of `experimentalmachines/Qwen3-0.6B-ExecuTorch` and
+`Qwen3-1.7B-ExecuTorch` as "Compiled for NPU", downloaded and hash-checked them, the probe
+process passed them (0.66 s for the 1.7B), and the top bar said NPU. The runtime picked the
+V79 skeleton the app carries and reported QNN API 2.29 (qnn-runtime 2.39) running context
+binaries compiled with QAIRT 2.37; the load took about 0.3 s.
+
+| Qwen3, 2k window | Prompt of ~305 tokens | Decode | Warm prefix, 984 tokens |
+|---|---:|---:|---:|
+| 0.6B, NPU (QNN) | 0.39 s (774 tok/s) | 34 tok/s | 1.39 to 1.54 s |
+| 0.6B, GPU (Vulkan) | 0.45 s (684 tok/s) | 40 tok/s | 0.95 to 0.96 s |
+| 0.6B, CPU | 0.67 s (465 tok/s) | 26 to 34 tok/s | 1.43 to 1.46 s |
+| 1.7B, NPU (QNN) | 75-token question in 57 ms (1,316 tok/s) | 32 to 36 tok/s | 0.57 to 0.58 s |
+
+Answers: "Paris" on all three. Follow-ups were uneven on Qwen3 whatever the processor: the
+CPU answered "the Seine"; the 0.6B NPU export twice ended its reasoning without closing it
+(the app then shows no answer), and the GPU did once on a first turn. That is the model's,
+not the delegate's, and stays the open Qwen3 item. A stray character in the earlier
+follow-up tests was the test script tapping the keyboard, not the app.
+
+The warm prefix is where the NPU loses on the small model: the app feeds it in seven pieces,
+and the QNN runner pads each to a 128-token block (877 tokens took 1,408 slots). The 1.7B
+export reads the same pieces in 0.58 s, so the cost is per block, not per piece.
+
+**The crash.** Three times in ten minutes the app was killed by the QNN runner's assert in
+`PromptProcessor::prefill`: after the 1.7B's 546-token follow-up, when that conversation was
+reopened, and after a long-prompt reply. The runner asserts that a prompt ends at least one
+prefill block (128 tokens) short of the window; `patch_qnn.py` guarded at the window itself,
+so a conversation ending in that last block (984 held plus 982 fed, past 1,920) reached the
+assert. With the ~1,000-token tool prompt and Qwen3's reasoning, a 2k QNN export reaches it
+within two or three turns. The guards in both `generate` and `prefill` now use the prompt
+processor's bound and return the overflow error, which the app already answers: the warm
+fails quietly and the next turn says the conversation no longer fits, as the CPU runner did
+on the same phone when the 1.7B's 859-token reasoning filled its window. Built into
+`1.5.1-openweights.4`; the reservation ended before the crash could be replayed on the
+Snapdragon with it, so that replay is the first thing owed to the next QDC session.
+
+No QNN export exists for the Snapdragon 8 Elite Gen 5 (SM8850) on the Hub: every published
+folder is `qnn/sm8750`, so Discover rightly offers none there. Qwen3-0.6B and SmolLM2-135M
+were exported for it at 2k (execupack's Export QNN workflow, publishing off, artifacts only)
+for that session.

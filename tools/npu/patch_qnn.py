@@ -12,7 +12,11 @@ building something that only looks patched.
    position on every call (token_generator.cpp init_attention_mask), so stale cache entries
    past it are never attended.
 3. A prompt that does not fit the window aborted the process (ET_CHECK_MSG). It now returns
-   an error whose log line names the overflow, as the XNNPACK runner's does.
+   an error whose log line names the overflow, as the XNNPACK runner's does. The bound is
+   the prompt processor's, not the window's: it asserts that a prompt ends at most one
+   prefill block (ar_len) short of the window, so a guard at the window let a history ending
+   in that last block through to the assert, which killed the app (Snapdragon 8 Elite,
+   2026-10-11: a reopened 1,966-token conversation on a 2,048 export with 128-token blocks).
 4. prefill(): not implemented (IRunner's default returns NotSupported). Text-only prefill at
    the current position, so a long prompt can be fed in pieces.
 5. The JNI layer hard-codes decoder_model "llama3", which picks Llama 3's stop tokens for every
@@ -59,6 +63,11 @@ for name in ("token_generator.cpp", "lhd_token_generator.cpp"):
     )])
 
 edit(R / "runner.h", [(
+    "  int32_t context_len_{0};\n",
+    "  int32_t context_len_{0};\n"
+    "  // The prompt processor's block; a prompt must end this far short of the window.\n"
+    "  int32_t prompt_ar_len_{0};\n",
+), (
     "  void stop() override {};\n  void reset() override {};\n",
     "  void stop() override;\n  void reset() override;\n"
     "  executorch::runtime::Result<uint64_t> prefill(\n"
@@ -78,16 +87,22 @@ edit(R / "runner.cpp", [(
     """  int64_t end_pos = 0;
   if (c10::add_overflows(
           cur_pos_, static_cast<int64_t>(num_prompt_tokens), &end_pos) ||
-      end_pos >= static_cast<int64_t>(seq_len)) {
+      end_pos >= static_cast<int64_t>(seq_len) ||
+      (attention_sink_rope_runner_ == nullptr &&
+       end_pos > static_cast<int64_t>(context_len_) - prompt_ar_len_)) {
     ET_LOG(
         Error,
-        "Prompt exceeds KV cache capacity: %lld held + %d new >= %d",
+        "Prompt exceeds KV cache capacity: %lld held + %d new, past %d",
         static_cast<long long>(cur_pos_),
         num_prompt_tokens,
-        seq_len);
+        std::min(seq_len - 1, context_len_ - prompt_ar_len_));
     return Error::InvalidArgument;
   }
 """,
+), (
+    "  max_ar_len = std::max(token_generator_ar_len, prompt_processor_ar_len);\n",
+    "  max_ar_len = std::max(token_generator_ar_len, prompt_processor_ar_len);\n"
+    "  prompt_ar_len_ = prompt_processor_ar_len;\n",
 ), (
     "Error Runner::generate(\n",
     """void Runner::stop() {
@@ -123,13 +138,14 @@ Result<uint64_t> Runner::prefill(
     return Error::InvalidArgument;
   }
   int64_t end_pos = cur_pos_ + static_cast<int64_t>(tokens.size());
-  if (attention_sink_rope_runner_ == nullptr && end_pos >= context_len_) {
+  if (attention_sink_rope_runner_ == nullptr &&
+      end_pos > static_cast<int64_t>(context_len_) - prompt_ar_len_) {
     ET_LOG(
         Error,
-        "Prompt exceeds KV cache capacity: %lld held + %zu new >= %d",
+        "Prompt exceeds KV cache capacity: %lld held + %zu new, past %d",
         static_cast<long long>(cur_pos_),
         tokens.size(),
-        context_len_);
+        context_len_ - prompt_ar_len_);
     return Error::InvalidArgument;
   }
   auto result = prompt_processor_->prefill(
