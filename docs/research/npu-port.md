@@ -46,7 +46,7 @@ pays. It needs a Snapdragon run before anything is said about it in this app.
 - **The top bar said CPU.** It read the processor from the file name, and the decoding half
   is a CPU build. It now asks the engine.
 
-## What review found (Codex, three rounds)
+## What review found (Codex, four rounds)
 
 - **The new runtime could not have shipped.** ExecuServe's `libexecutorch.so`, its QNN
   backend and both MediaTek libraries were linked for 4 KB pages (NDK r26c's default), and
@@ -107,9 +107,18 @@ pays. It needs a Snapdragon run before anything is said about it in this app.
 - **Deleting and reinstalling at once** could let the late sweep for a deleted install's
   stragglers remove the new install's parts. The sweep now runs only when no install started
   after the delete.
-- **Left open:** the runner's prefill time is subtracted from wall time measured around the
-  JNI call, which can understate a short tail's prefill in the stats line. Fixing it needs
-  the runner to return its own total from prefill.
+- **A one-token trial never ran the CPU half** (round 4). The first token comes from the
+  NPU's logits at the handoff, so a trial asking for one token passed without the CPU half
+  ever decoding. The trial now asks for four and passes only when at least two came back.
+- **The tried mark outlived what it tried** (round 4). It named the model alone, so a
+  runtime update, a new runner config or a replaced chunk kept a mark for something never
+  tried. It now names the runtime build, the runner config's hash and every part, and the
+  probe's cache and the Vulkan and QNN refusals are keyed on the full artifact version
+  (`1.5.1-openweights.3`), so a rebuild of one release is seen as new.
+- **The stats line's prompt time** came from wall time around the JNI call minus the
+  runner's earlier total, which could understate a short tail. The runner now reports its
+  own prefill clock (`nativePrefillMs`), shipped in `1.5.1-openweights.3` with the
+  conv-state bounds check.
 
 ## Measured
 
@@ -152,3 +161,19 @@ The Qwen3-0.6B follow-up came back with no answer on the GPU twice: the reasonin
 literal `<|endoftext|>` without closing, and names the wrong river. Its CPU build does the
 same on the same two turns, so it is the model or the app's Qwen3 follow-up prompt, not the
 GPU, and it is left open as its own item.
+
+## Runtime `1.5.1-openweights.3` on the phone
+
+Commit `bdd97f91`, minified `.rc` build, 2026-10-11 15:28 to 15:32, phone idle on the home
+screen with 5.9 GB free.
+
+| | Result |
+|---|---|
+| Probe trial | Opens the half, the NPU reads the 5-token trial prompt, hands off, and the CPU half decodes 4 tokens (23 tok/s); verified in 8.0 s with the tried mark written |
+| App load | NPU runtime 2.4 s, CPU half 2.7 s; top bar says NPU; warm prefix 860 tokens in 4.7 to 4.9 s |
+| Turn 1 | "The capital of France is Paris."; 71 tokens read in 586 ms on the runner's clock, which the stats line now shows (121 tok/s); 0.9 s send to answer; context 46% |
+| Turn 2 | "The river that runs through Paris is the Seine River."; 14 tokens read in 581 ms (24 tok/s, the half-second floor of one NPU call); 1.0 s; context 48% |
+
+The same answers and the same per-turn cost as the `.2` runtime, now with the bounds check
+in the binary, a trial that proves both halves, and a prompt rate the stats line takes
+from the runner rather than from the clock around it.
