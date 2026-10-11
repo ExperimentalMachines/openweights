@@ -49,8 +49,12 @@ Two implementations ship, and a third class chooses between them. `LlamaCppEngin
 any GGUF the pinned llama.cpp reads, the supported architecture list is code-generated at
 build time from llama.cpp's own table, so it tracks the submodule instead of a hand-kept
 list. `ExecuTorchEngine` runs compiled `.pte` files on the delegate each was exported for,
-XNNPACK (CPU) or Vulkan (GPU), from the one `executorch-android-vulkan` library that links
-both. `VulkanSupport` decides which phones are offered GPU files: Android must report Vulkan
+XNNPACK (CPU), Vulkan (GPU) or QNN (Qualcomm NPU), from one runtime library assembled for
+this app (`tools/npu/assemble_runtime.sh`). On a phone whose NeuroPilot adapter loads,
+`DisaggregatedExecuTorchBridge` reads prompts with a MediaTek NPU half installed beside the
+CPU build and writes the reply with the CPU build, falling back to the CPU alone and saying
+why when the half is refused, untried or too large for the memory free
+(`docs/research/npu-port.md`). `VulkanSupport` decides which phones are offered GPU files: Android must report Vulkan
 1.1, and no earlier refusal from the runtime may be on record; the first time the runtime
 says this GPU cannot run its shaders, at any call into it, GPU files stop being offered
 (`docs/research/vulkan-on-device.md`). The app supplies the chat

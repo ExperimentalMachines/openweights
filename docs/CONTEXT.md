@@ -7,6 +7,25 @@ Last updated: 2026-10-11. Older dated sections run from 2026-08-10; detailed fin
 the research notes under `research/`. The current capability summary is in the top-level
 `README.md` and `ARCHITECTURE.md`.
 
+## 2026-10-11: the NPU port from ExecuServe
+
+The app's ExecuTorch runtime is now its own build, `org.experimentalmachines.executorch:
+executorch-android:1.5.1-openweights.2` in `core/engine/maven`: ExecuTorch 1.5.1 with XNNPACK,
+Vulkan and QNN in one `libexecutorch.so` (ExecuServe's recipe and Qualcomm runner fixes), and
+MediaTek's NPU-prefill, CPU-decode runner beside it. Every arm64 library is linked for 16 KB
+pages; ExecuServe's were 4 KB, which Play refuses, and MediaTek's prebuilt buffer allocator is
+replaced by `tools/npu/neuron_buffer_allocator.cpp`. Built on an EC2 c7i.4xlarge with
+`tools/npu/build_*_linux.sh`, packaged by `tools/npu/assemble_runtime.sh`, which refuses a
+library below 16 KB or of the wrong ABI.
+
+A MediaTek NPU install is one download per window (chunks, embedding, and the CPU build of the
+same model named by the export's `source_model`) shown as one row, kept in a `.npu` folder
+beside the model. The app opens a half only after the probe process has opened it and read a
+prompt with it, only when memory fits (estimate plus 1 GB), and says in the chat when it does
+not. On the Poco the half is ported and correct but not faster than the CPU path, and with the
+owner's apps open it did not fit at all; QNN is untested here and needs a Snapdragon run.
+[`research/npu-port.md`](research/npu-port.md).
+
 ## 2026-10-11: compiled-model crashes contained, watches removed
 
 vc650 (ExecuTorch 1.5.1, the Vulkan AAR) shipped to production at 100% on 2026-10-04. QA found
