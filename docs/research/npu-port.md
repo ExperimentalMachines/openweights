@@ -10,7 +10,8 @@ and answers correctly. It does not make chat faster on this phone, which is what
 [`npu-pd-disaggregation.md`](npu-pd-disaggregation.md) found in September and nothing in the
 port changes: the NPU reads a prompt at 120 to 195 tok/s, one call of at most 128 tokens
 costing about half a second, where the app's own CPU path reads the same prompt at 187 to
-230 tok/s. The Qualcomm path (QNN) is ported and untested here; ExecuServe measured it at
+230 tok/s. Measured again on the rebuilt runtime with the phone's apps closed: the
+same answers as the CPU, 1.0 s a turn against 0.5 to 0.7 s. The Qualcomm path (QNN) is ported and untested here; ExecuServe measured it at
 1,700 tok/s against the CPU's 340 on a Snapdragon 8 Elite Gen 5, and that is where an NPU
 pays. It needs a Snapdragon run before anything is said about it in this app.
 
@@ -133,11 +134,21 @@ a social app left open in the background as the phone's owner had them.
 | CPU, LFM2.5-1.2B 2k | Loads; warm prefix 860 tokens in 3.8 to 4.0 s; "Paris", then "the Seine" on the follow-up; send to answer 0.73 s and 0.48 s; 148 and 109 tok/s read, 28 to 30 tok/s decode |
 | GPU, Qwen3-0.6B Vulkan 2k | Passes the probe process and loads on Vulkan; top bar says GPU; warm prefix 984 tokens in 2.2 to 2.6 s; "Paris"; the follow-up resolves "it" to Paris; 254 tok/s read, 12 tok/s decode |
 | NPU bundle | Discover offers one card per window; the download is one row (2.39 GB) that reuses the CPU build already present; the half survives a force stop and relaunch |
-| NPU load | Refused by the memory gate on every try: estimate 4,091 MB plus the 1 GB reserve against 2.7 to 4.5 GB free with those apps open |
+| NPU load, apps open | Refused by the memory gate on every try: estimate 4,091 MB plus the 1 GB reserve against 2.7 to 4.5 GB free with those apps open; the chat says so |
+| NPU load, apps closed (12:59, 6.3 GB free) | The probe process's trial opens the half, prefills, hands off and writes a token in 6.8 s; the app's process then opens it (NPU runtime 2.6 s, CPU half 2.5 s) with the 16 KB libraries and this repository's buffer allocator; top bar says NPU; warm prefix 860 tokens in 4.9 to 6.1 s |
+| NPU turns | "Paris", then "the Seine", word for word the CPU's answers; send to answer 0.98 s and 1.00 s against the CPU's 0.73 s and 0.48 s; the follow-up fed 14 tokens to the NPU in 0.60 s; context gauge 46% and 48%, the CPU's figures |
 
-The memory gate is the finding: on a 12 GB phone in ordinary use, the 2k NPU half does not
+The memory gate is the finding for ordinary use: on a 12 GB phone, the 2k NPU half does not
 fit beside what the owner keeps open, so the NPU path runs only after apps are closed. The
 reserve is ExecuServe's and has no measurement behind it; it stays until one says otherwise.
-The Qwen3-0.6B follow-up ended its reasoning with `<|endoftext|>` before writing an answer,
-and named the wrong river in it; that is the 0.6B model, and the same build answered the
-first turn correctly.
+With room, the NPU answers exactly as the CPU does and is slower per turn, because one NPU
+call costs about half a second however few tokens it reads, and a follow-up is a few tokens.
+
+The phone run found one more bug: a verdict the probe had cached before the tried mark
+existed kept the half off for good ("not been tried yet", and no trial). A cached pass
+without the mark is now tried again whenever the half would fit.
+
+The Qwen3-0.6B follow-up came back with no answer on the GPU twice: the reasoning ends in a
+literal `<|endoftext|>` without closing, and names the wrong river. Its CPU build does the
+same on the same two turns, so it is the model or the app's Qwen3 follow-up prompt, not the
+GPU, and it is left open as its own item.
