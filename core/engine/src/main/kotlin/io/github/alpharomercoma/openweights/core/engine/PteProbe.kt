@@ -101,7 +101,7 @@ class PteProbe(context: Context) {
         // the app opens it (codex QA).
         val key = keyFor("$VERIFY_KEY:$multimodal", file, File(tokenizer)) + npuIdentity(file)
         val known = remembered.getString(key, null)
-        if (known != null && !triesAgain(known, file)) {
+        if (known != null && !triesAgain(known, file, File(tokenizer))) {
             return known.takeUnless { it == VERIFIED || it == VERIFIED_CPU }
         }
         val data = request(path).apply {
@@ -114,22 +114,17 @@ class PteProbe(context: Context) {
             PteProbeService.TAG,
             "verified ${file.name} in ${(System.nanoTime() - started) / NANOS_PER_MS} ms: $answer",
         )
-        // A half that crashed the trial or could not read its prompt is refused, and the CPU
-        // build is judged again on its own.
+        // A half that crashed the trial or could not answer its prompt is refused, and the
+        // CPU build is judged again on its own. Once: a refusal that could not be written
+        // would otherwise send it round again for ever (codex QA), so then the file is refused.
         val again = { why: String ->
             NpuInstall.refuse(file, why)
-            verify(path, tokenizer, multimodal)
+            if (NpuInstall.refusal(file) == null) why else verify(path, tokenizer, multimodal)
         }
         return when (answer) {
-            is Answer.Read -> passed(answer.bundle, file, key) ?: run {
-                if (npuFailed(
-                        answer.bundle,
-                    )
-                ) {
-                    again("it could not answer its trial prompt")
-                } else {
-                    null
-                }
+            is Answer.Read -> when {
+                npuFailed(answer.bundle) -> again("it could not answer its trial prompt")
+                else -> passed(answer.bundle, file, File(tokenizer), key)
             }
             // The trial opened the pair, and either half can be what crashed it: a garbage
             // tokenizer beside a sound model ends the process the same way (on the Poco). The
@@ -149,8 +144,9 @@ class PteProbe(context: Context) {
      * without the half's tried mark is the same case, whatever wrote it: a verdict from before
      * the mark existed kept a half off for good on the Poco (2026-10-11).
      */
-    private fun triesAgain(known: String, file: File): Boolean {
-        val untried = known == VERIFIED_CPU || known == VERIFIED && !NpuInstall.tried(file)
+    private fun triesAgain(known: String, file: File, tokenizer: File): Boolean {
+        val untried =
+            known == VERIFIED_CPU || known == VERIFIED && !NpuInstall.tried(file, tokenizer)
         return untried && npuWouldOpen(file)
     }
 
@@ -160,12 +156,11 @@ class PteProbe(context: Context) {
 
     /**
      * Why a trial that ran to the end refuses the file, remembered when it is the file's, or
-     * null when it passed or its NPU half failed, which [verify] answers itself.
+     * null when it passed. A failed NPU half is [verify]'s to answer, before this.
      */
-    private fun passed(bundle: Bundle, file: File, key: String): String? {
-        if (npuFailed(bundle)) return null
+    private fun passed(bundle: Bundle, file: File, tokenizer: File, key: String): String? {
         val npuRead = bundle.getBoolean(PteProbeService.KEY_NPU_READ, false)
-        if (npuRead) NpuInstall.markTried(file)
+        if (npuRead) NpuInstall.markTried(file, tokenizer)
         val verdict = if (npuRead || !npuUsable(file)) VERIFIED else VERIFIED_CPU
         // A Java-level failure is shown and not remembered: it is not known to be the file's,
         // and the next open should be allowed to try again.

@@ -130,6 +130,7 @@ class NpuInstallTest {
     @Test
     fun `a half is tried once per install, and a new install is told from a straggler`() {
         val model = folder.newFile("m-2k.pte")
+        val tokenizer = folder.newFile("m-2k.tokenizer.json")
         assertThat(NpuInstall.startedAt(model)).isEqualTo(0L)
         val write = {
             NpuInstall.write(
@@ -138,16 +139,24 @@ class NpuInstallTest {
                 NpuInstall.Part("e.bin", 1),
                 runner,
             )
+            File(NpuInstall.directoryFor(model), "c.pte").writeText("c")
+            File(NpuInstall.directoryFor(model), "e.bin").writeText("e")
         }
         write()
         assertThat(NpuInstall.startedAt(model)).isGreaterThan(0L)
-        // Not tried until the probe process has read a prompt with it.
-        assertThat(NpuInstall.tried(model)).isFalse()
-        NpuInstall.markTried(model)
-        assertThat(NpuInstall.tried(model)).isTrue()
+        // Not tried until the probe process has answered a prompt with it.
+        assertThat(NpuInstall.tried(model, tokenizer)).isFalse()
+        NpuInstall.markTried(model, tokenizer)
+        assertThat(NpuInstall.tried(model, tokenizer)).isTrue()
+
+        // A replaced CPU build is a pair nobody tried.
+        model.writeText("a different build")
+        assertThat(NpuInstall.tried(model, tokenizer)).isFalse()
+        NpuInstall.markTried(model, tokenizer)
+        assertThat(NpuInstall.tried(model, tokenizer)).isTrue()
 
         // Downloaded again, it is new chunks, which no trial has read.
         write()
-        assertThat(NpuInstall.tried(model)).isFalse()
+        assertThat(NpuInstall.tried(model, tokenizer)).isFalse()
     }
 }

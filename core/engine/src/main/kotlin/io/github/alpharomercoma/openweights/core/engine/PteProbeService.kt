@@ -98,11 +98,16 @@ class PteProbeService : Service() {
         var npu: Boolean? = null
         try {
             bridge.load(path, tokenizer, temperature = 0f, multimodal = multimodal)
-            // An NPU graph can open and still fail on its first call, and the handoff of its
-            // cache to the CPU half runs only when a reply starts, so the trial writes one
-            // token: the app's process opens the half only after this has (codex QA).
+            // An NPU graph can open and still fail on its first call, the handoff of its cache
+            // to the CPU half runs only when a reply starts, and the first token comes from
+            // the NPU's logits, so the trial writes until the CPU half has decoded at least one
+            // token: the app's process opens the half only after that (codex QA). A reply that
+            // stopped before the CPU ran proves nothing either way and is not a failure.
             if (bridge.prefillingOnNpu) {
-                npu = runCatching { bridge.generate(TRIAL_PROMPT, maxNewTokens = 1) {} }.isSuccess
+                npu = runCatching { bridge.generate(TRIAL_PROMPT, TRIAL_TOKENS) {} }.fold(
+                    onSuccess = { reply -> (reply.generatedTokens >= 2).takeIf { it } },
+                    onFailure = { false },
+                )
             }
         } finally {
             bridge.close()
@@ -121,7 +126,10 @@ class PteProbeService : Service() {
 
         /** Present when the trial opened an NPU half: whether it answered [TRIAL_PROMPT]. */
         const val KEY_NPU_READ = "npuRead"
-        private const val TRIAL_PROMPT = "Hello"
+
+        // Text the model continues rather than answers, so it does not stop at once.
+        private const val TRIAL_PROMPT = "The capital of France is"
+        private const val TRIAL_TOKENS = 4
         private const val KEY_WINDOW = "window"
         private const val KEY_VISION = "vision"
         private const val KEY_PREFILL = "prefill"

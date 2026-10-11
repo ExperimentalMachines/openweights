@@ -561,6 +561,9 @@ class ModelsViewModel @Inject constructor(
             }
             return
         }
+        // Taken before anything is removed: an install started while this one was being
+        // deleted wrote its part list after this moment, and the late sweep spares it (codex QA).
+        val deletedAt = System.currentTimeMillis()
         if (!removeCompanions(model)) {
             local.update {
                 it.copy(notice = context.getString(R.string.model_delete_failed, model.name))
@@ -581,7 +584,6 @@ class ModelsViewModel @Inject constructor(
         // model has been asked for again since. A new install writes its part list before any
         // part, and a worker never does, so a list newer than this delete is a new install
         // whose CPU build has not landed yet; the model file alone was not proof (codex QA).
-        val deletedAt = System.currentTimeMillis()
         viewModelScope.launch(Dispatchers.IO) {
             delay(STRAGGLER_MILLIS)
             if (!model.file.exists() && NpuInstall.startedAt(model.file) <= deletedAt) {

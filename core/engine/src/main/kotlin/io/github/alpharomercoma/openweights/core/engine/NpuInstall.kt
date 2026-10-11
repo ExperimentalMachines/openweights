@@ -127,12 +127,37 @@ object NpuInstall {
      * of memory, said nothing about the chunks, and the app could then open them untried once
      * memory was free (codex QA).
      */
-    fun markTried(model: File) {
-        runCatching { File(directoryFor(model), TRIED).writeText("") }
+    fun markTried(model: File, tokenizer: File) {
+        val tried = trialIdentity(model, tokenizer) ?: return
+        runCatching { File(directoryFor(model), TRIED).writeText(tried) }
     }
 
-    /** Whether the probe process has answered a prompt with [model]'s NPU half as it is now. */
-    fun tried(model: File): Boolean = File(directoryFor(model), TRIED).isFile
+    /**
+     * Whether the probe process has answered a prompt with [model]'s NPU half as it is now:
+     * the same runtime build, CPU build, tokenizer, parts and runner options. A bare mark
+     * outlived a runtime update or a replaced CPU build and authorized a pair nobody had
+     * tried (codex QA).
+     */
+    fun tried(model: File, tokenizer: File): Boolean {
+        val mark = File(directoryFor(model), TRIED).takeIf { it.isFile } ?: return false
+        return trialIdentity(model, tokenizer)?.let {
+            it ==
+                runCatching { mark.readText() }.getOrNull()
+        } ==
+            true
+    }
+
+    /** Everything a trial of [model]'s NPU half opened, or null when it has no complete half. */
+    private fun trialIdentity(model: File, tokenizer: File): String? {
+        val half = read(model) ?: return null
+        val files = listOf(model, tokenizer) + half.chunks + half.embedding
+        return (
+            listOf(BuildConfig.EXECUTORCH_VERSION, half.runnerJson.hashCode().toString()) +
+                files.map {
+                    "${it.absolutePath}:${it.length()}:${it.lastModified()}"
+                }
+            ).joinToString("|")
+    }
 
     /** When [model]'s install was last started, in epoch milliseconds, or 0 when it never was. */
     fun startedAt(model: File): Long = File(directoryFor(model), PARTS).lastModified()

@@ -110,9 +110,15 @@ class DisaggregatedExecuTorchBridge(
             else -> Reopen.CPU
         }
         if (!same) npuSkipped = null
-        return open(modelPath, tokenizerPath, temperature, multimodal, reopen).also {
-            remember(modelPath)
+        val opened = open(modelPath, tokenizerPath, temperature, multimodal, reopen)
+        // A session that read on the NPU and cannot again is not reopened on the CPU under the
+        // NPU's name: the reopen fails, the engine says so, and the next load decides afresh
+        // and says what it chose (codex QA).
+        if (opened && reopen == Reopen.NPU && !prefillingOnNpu) {
+            close()
+            return false
         }
+        return opened.also { remember(modelPath) }
     }
 
     private fun remember(modelPath: String) {
@@ -137,12 +143,11 @@ class DisaggregatedExecuTorchBridge(
         }
 
         val modelFile = File(modelPath)
-        val npuPair = if (reopen ==
-            Reopen.CPU
-        ) {
+        val keepCpu = reopen == Reopen.CPU
+        val npuPair = if (keepCpu) {
             null
         } else {
-            resolveNpuComponents(modelFile, reopen == Reopen.NPU)
+            resolveNpuComponents(modelFile, File(tokenizerPath), reopen == Reopen.NPU)
         }
 
         if (npuPair == null) {
@@ -251,11 +256,12 @@ class DisaggregatedExecuTorchBridge(
         if (h == 0L) throw LlamaException("No disaggregated model loaded")
         // A refused prefill used to pass unnoticed and leave the next generate reading a cache
         // that did not hold the prompt.
-        val before = System.currentTimeMillis()
         val total = nativeBridge.nativePrefill(h, prompt)
         if (total <= 0) throw failure(h, "could not prefill")
         fedTokens = total
-        fedMs += System.currentTimeMillis() - before
+        // The runner's own total, on the clock generate reports: wall time around this call
+        // also counted tokenizing and JNI, and could leave a short tail's prefill at zero.
+        fedMs = nativeBridge.nativePrefillMs(h)
         openedNpu()
     }
 
@@ -332,11 +338,20 @@ class DisaggregatedExecuTorchBridge(
      * the model is used whenever it is complete, fits and is not refused, because downloading
      * it was the user asking for it.
      */
-    private fun resolveNpuComponents(modelFile: File, memoryJustFreed: Boolean): NpuComponents? {
+    private fun resolveNpuComponents(
+        modelFile: File,
+        tokenizer: File,
+        memoryJustFreed: Boolean,
+    ): NpuComponents? {
         val installed = NpuInstall.read(modelFile)
         val root = stagingRoot
         return when {
-            installed != null -> installedComponents(modelFile, installed, memoryJustFreed)
+            installed != null -> installedComponents(
+                modelFile,
+                tokenizer,
+                installed,
+                memoryJustFreed,
+            )
             root != null -> stagedComponents(root)
             else -> null
         }
@@ -350,6 +365,7 @@ class DisaggregatedExecuTorchBridge(
      */
     private fun installedComponents(
         modelFile: File,
+        tokenizer: File,
         installed: NpuInstall.Complete,
         memoryJustFreed: Boolean,
     ): NpuComponents? {
@@ -363,7 +379,7 @@ class DisaggregatedExecuTorchBridge(
                 "The NPU half of this model is turned off because $refusal. " +
                     "Prompts are read on the CPU until it is downloaded again."
             short != null -> memoryNote(short.first + NpuMemory.RESERVE_BYTES, short.second)
-            !trial && !NpuInstall.tried(modelFile) ->
+            !trial && !NpuInstall.tried(modelFile, tokenizer) ->
                 "The NPU half of this model has not been " +
                     "tried yet, so prompts are read on the CPU. Load the model again to try it."
             else -> null
