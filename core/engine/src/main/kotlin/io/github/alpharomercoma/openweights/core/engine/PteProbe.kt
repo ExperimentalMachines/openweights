@@ -101,12 +101,7 @@ class PteProbe(context: Context) {
         // the app opens it (codex QA).
         val key = keyFor("$VERIFY_KEY:$multimodal", file, File(tokenizer)) + npuIdentity(file)
         val known = remembered.getString(key, null)
-        // The CPU build passed and the NPU half was not tried, for want of memory: tried again
-        // once it would fit, and the CPU goes ahead until then.
-        val retry = known == VERIFIED_CPU && npuWouldOpen(file)
-        if (known != null &&
-            !retry
-        ) {
+        if (known != null && !triesAgain(known, file)) {
             return known.takeUnless { it == VERIFIED || it == VERIFIED_CPU }
         }
         val data = request(path).apply {
@@ -146,6 +141,17 @@ class PteProbe(context: Context) {
             }
             is Answer.Inconclusive -> answer.why
         }
+    }
+
+    /**
+     * Whether a remembered pass is tried again: the CPU build passed and the NPU half was not
+     * tried, for want of memory, and would fit now; the CPU goes ahead until then. A pass
+     * without the half's tried mark is the same case, whatever wrote it: a verdict from before
+     * the mark existed kept a half off for good on the Poco (2026-10-11).
+     */
+    private fun triesAgain(known: String, file: File): Boolean {
+        val untried = known == VERIFIED_CPU || known == VERIFIED && !NpuInstall.tried(file)
+        return untried && npuWouldOpen(file)
     }
 
     private fun npuFailed(bundle: Bundle): Boolean =
