@@ -39,12 +39,21 @@ class DisaggregatedBridge {
         temperature: Float,
     ): Long
 
+    /** Tokens held after feeding [prompt], or 0 when it was refused ([nativeLastError] says why). */
     external fun nativePrefill(handle: Long, prompt: String): Int
 
+    /** Why the last call returned nothing: [ERROR_OVERFLOW], [ERROR_RUNTIME], or 0. */
+    external fun nativeLastError(handle: Long): Int
+
+    /**
+     * [reason, promptTokens, generatedTokens, prefillMs, decodeMs], or null on failure. Greedy at
+     * [temperature] 0 and sampled above it, from the first token on.
+     */
     external fun nativeGenerate(
         handle: Long,
         prompt: String,
         maxTokens: Int,
+        temperature: Float,
         callback: DisaggregatedCallback,
     ): LongArray?
 
@@ -56,6 +65,12 @@ class DisaggregatedBridge {
 
     companion object {
         private const val TAG = "OpenWeightsPD"
+
+        /** The prompt does not fit the NPU's compiled window. */
+        const val ERROR_OVERFLOW = 1
+
+        /** The runtime failed: a step that did not run, a buffer that could not be copied. */
+        const val ERROR_RUNTIME = 2
 
         /**
          * Whether this phone can run the NPU half at all, answered by loading the

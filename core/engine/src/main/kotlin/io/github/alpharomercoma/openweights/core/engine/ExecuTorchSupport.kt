@@ -52,6 +52,7 @@ object ExecuTorchSupport {
     val BACKENDS: Set<CompiledBackend> = setOf(
         CompiledBackend.XNNPACK,
         CompiledBackend.VULKAN,
+        CompiledBackend.QNN,
         CompiledBackend.UNKNOWN,
     )
 
@@ -61,8 +62,14 @@ object ExecuTorchSupport {
      * The build links Vulkan everywhere (the `executorch-android-vulkan` artifact carries
      * XNNPACK too), but a GPU file still needs a GPU that runs its shaders: see [VulkanSupport].
      */
-    fun canRun(backend: CompiledBackend): Boolean =
-        backend in BACKENDS && (backend != CompiledBackend.VULKAN || VulkanSupport.usable)
+    fun canRun(backend: CompiledBackend): Boolean = backend in BACKENDS &&
+        when (backend) {
+            CompiledBackend.VULKAN -> VulkanSupport.usable
+            // The runtime links QNN, and Qualcomm's HTP drivers ship with the app; whether this
+            // phone has an HTP that starts is QnnSupport's to say.
+            CompiledBackend.QNN -> QnnSupport.usable
+            else -> true
+        }
 
     /**
      * Whether this build could open the file at [path] on a device whose chip is [socModel].
@@ -95,9 +102,12 @@ object ExecuTorchSupport {
      */
     fun hasNpu(): Boolean = DisaggregatedBridge.isAvailable
 
-    /** A bridge onto the runtime, prefilling on the NPU where the phone has one. */
-    fun bridge(): ExecuTorchBridge =
-        if (hasNpu()) DisaggregatedExecuTorchBridge() else NativeExecuTorchBridge()
+    /**
+     * A bridge onto the runtime, prefilling on the NPU where the phone has one. [trial] is the
+     * probe process's, which opens an NPU half nobody has tried yet (DisaggregatedExecuTorchBridge).
+     */
+    fun bridge(trial: Boolean = false): ExecuTorchBridge =
+        if (hasNpu()) DisaggregatedExecuTorchBridge(trial = trial) else NativeExecuTorchBridge()
 
     /**
      * The bridge the app uses: [bridge], with every first read of a file done in

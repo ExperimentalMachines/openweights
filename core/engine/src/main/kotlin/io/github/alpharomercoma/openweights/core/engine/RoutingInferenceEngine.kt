@@ -127,6 +127,8 @@ class RoutingInferenceEngine(
 
     override fun computeDevices(): List<ComputeDevice> = describing().computeDevices()
 
+    override fun acceleratorNote(): String? = describing().acceleratorNote()
+
     override fun close() {
         built.values.forEach { it.close() }
         built.clear()

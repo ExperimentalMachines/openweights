@@ -20,24 +20,64 @@ import android.os.Build
 import android.util.Log
 import org.json.JSONObject
 import java.io.File
+import java.util.Locale
 
 /**
  * Executes models using Prefill/Decode (PD) Disaggregation: the MediaTek NPU reads the prompt,
  * then the CPU writes the reply from the same `.pte` the CPU path loads.
  *
  * Falls back to [NativeExecuTorchBridge] when NPU chunks or native libraries are unavailable.
+ *
+ * [stagingRoot] is for the instrumented test alone: chunks pushed by adb under it, beside an
+ * `enable-pd` marker, are used when the model has no installed NPU half. The app passes none.
+ * On this ROM a file adb pushes into Android/data is invisible to the app, so a bench can only
+ * stage there; searched in the shipped app it once stood in, unnoticed, for an install the
+ * start-up sweep had deleted (2026-10-11).
+ *
+ * [trial] is the probe process's bridge, whose open is what [NpuInstall.markTried] records:
+ * it opens a half the probe has not tried yet, and leaves the opening mark alone, since a
+ * crash there is the probe's to judge. The app's bridge opens only a half that was tried.
  */
 class DisaggregatedExecuTorchBridge(
     private val fallback: ExecuTorchBridge = NativeExecuTorchBridge(),
+    private val stagingRoot: File? = null,
+    private val trial: Boolean = false,
 ) : ExecuTorchBridge {
 
     private val nativeBridge = DisaggregatedBridge()
     private var handle: Long = 0L
     private var usingFallback = false
 
+    /** The temperature the session was opened at, which the runner samples with per reply. */
+    private var temperature = 0f
+
+    /**
+     * Tokens and milliseconds the runner had already prefilled when the next generate call
+     * starts. The runner reports totals since its last reset, and the engine reads the
+     * generate call's own tail: counted as totals, every turn charged the conversation to the
+     * context twice (84% shown against the CPU path's 46% on the same turn, 2026-10-11).
+     */
+    private var fedTokens = 0
+    private var fedMs = 0L
+
+    /** The model whose NPU half is marked as opening, until its first prompt is read. */
+    private var openingModel: File? = null
+
+    private fun openedNpu() {
+        openingModel?.let(NpuInstall::opened)
+        openingModel = null
+    }
+
     /** Whether the loaded session is prefilling on the NPU rather than on the CPU runtime. */
-    val prefillingOnNpu: Boolean
+    override val prefillingOnNpu: Boolean
         get() = handle != 0L && !usingFallback
+
+    override var npuSkipped: String? = null
+        private set
+
+    /** The file the last session opened and whether it read prompts on the NPU, for [reload]. */
+    private var lastPath: String? = null
+    private var lastOnNpu = false
 
     override fun tokenizerAddsBos(tokenizerPath: String): Boolean = false
 
@@ -50,7 +90,46 @@ class DisaggregatedExecuTorchBridge(
         multimodal: Boolean,
     ): Boolean {
         close()
+        npuSkipped = null
+        return open(modelPath, tokenizerPath, temperature, multimodal, Reopen.NO).also {
+            remember(modelPath)
+        }
+    }
 
+    override fun reload(
+        modelPath: String,
+        tokenizerPath: String,
+        temperature: Float,
+        multimodal: Boolean,
+    ): Boolean {
+        val same = modelPath == lastPath
+        close()
+        val reopen = when {
+            !same -> Reopen.NO
+            lastOnNpu -> Reopen.NPU
+            else -> Reopen.CPU
+        }
+        if (!same) npuSkipped = null
+        return open(modelPath, tokenizerPath, temperature, multimodal, reopen).also {
+            remember(modelPath)
+        }
+    }
+
+    private fun remember(modelPath: String) {
+        lastPath = modelPath
+        lastOnNpu = prefillingOnNpu
+    }
+
+    /** How [open] chooses the processor: afresh, or as the session it reopens had it. */
+    private enum class Reopen { NO, NPU, CPU }
+
+    private fun open(
+        modelPath: String,
+        tokenizerPath: String,
+        temperature: Float,
+        multimodal: Boolean,
+        reopen: Reopen,
+    ): Boolean {
         if (!DisaggregatedBridge.isAvailable || multimodal) {
             Log.i(TAG, "DisaggregatedBridge unavailable or multimodal requested; using fallback")
             usingFallback = true
@@ -58,7 +137,13 @@ class DisaggregatedExecuTorchBridge(
         }
 
         val modelFile = File(modelPath)
-        val npuPair = resolveNpuComponents(modelFile)
+        val npuPair = if (reopen ==
+            Reopen.CPU
+        ) {
+            null
+        } else {
+            resolveNpuComponents(modelFile, reopen == Reopen.NPU)
+        }
 
         if (npuPair == null) {
             // The reason was already logged by the resolver: no chunks here, or chunks
@@ -79,6 +164,12 @@ class DisaggregatedExecuTorchBridge(
                 "CPU model=${modelFile.name}",
         )
 
+        // Cleared once a prompt has been read; found still set by the next launch, it refuses
+        // this half (NpuInstall.opening).
+        if (stagingRoot == null && !trial) {
+            NpuInstall.opening(modelFile)
+            openingModel = modelFile
+        }
         val loadedHandle = nativeBridge.nativeLoad(
             runnerOptionsJson = runnerOptions,
             promptModelPaths = promptModelPaths,
@@ -89,13 +180,19 @@ class DisaggregatedExecuTorchBridge(
         )
 
         if (loadedHandle == 0L) {
+            openedNpu()
             Log.w(TAG, "nativeLoad failed; falling back to CPU runtime")
+            npuSkipped =
+                "The NPU half of this model could not be opened, so prompts are read on the CPU."
             usingFallback = true
             return fallback.load(modelPath, tokenizerPath, temperature, multimodal)
         }
 
         handle = loadedHandle
+        fedTokens = 0
+        fedMs = 0L
         usingFallback = false
+        this.temperature = temperature
         Log.i(TAG, "Disaggregated NPU+CPU runtime successfully initialized (handle=$handle)")
         return true
     }
@@ -112,19 +209,28 @@ class DisaggregatedExecuTorchBridge(
         val h = handle
         if (h == 0L) throw LlamaException("No disaggregated model loaded")
 
-        val res = nativeBridge.nativeGenerate(h, prompt, maxNewTokens) { token ->
+        val res = nativeBridge.nativeGenerate(h, prompt, maxNewTokens, temperature) { token ->
             onToken(token)
             true
-        } ?: throw LlamaException("Disaggregated generation failed")
+        } ?: throw failure(h, "failed while generating")
 
-        val reason = when (res.getOrElse(RESULT_REASON) { 0L }.toInt()) {
+        val code = res.getOrElse(RESULT_REASON) { 0L }.toInt()
+        // The reply reached the end of the NPU window: the turn loop answers that as a full
+        // context, the same as the CPU runtime's own overflow.
+        if (code == REASON_WINDOW_FULL) throw overflow()
+        val reason = when (code) {
             REASON_CANCELLED -> StopReason.CANCELLED
             REASON_MAX_TOKENS -> StopReason.MAX_TOKENS
             else -> StopReason.END_OF_TURN
         }
-        val promptTokens = res.getOrElse(RESULT_PROMPT_TOKENS) { 0L }.toInt()
+        openedNpu()
+        val totalTokens = res.getOrElse(RESULT_PROMPT_TOKENS) { 0L }.toInt()
+        val totalMs = res.getOrElse(RESULT_PREFILL_MS) { 0L }
+        val promptTokens = (totalTokens - fedTokens).coerceAtLeast(0)
+        val prefillMs = (totalMs - fedMs).coerceAtLeast(0L)
+        fedTokens = totalTokens
+        fedMs = totalMs
         val genTokens = res.getOrElse(RESULT_GENERATED_TOKENS) { 0L }.toInt()
-        val prefillMs = res.getOrElse(RESULT_PREFILL_MS) { 0L }
         val decodeMs = res.getOrElse(RESULT_DECODE_MS) { 0L }
 
         return ExecuTorchOutcome(
@@ -143,8 +249,41 @@ class DisaggregatedExecuTorchBridge(
         }
         val h = handle
         if (h == 0L) throw LlamaException("No disaggregated model loaded")
-        nativeBridge.nativePrefill(h, prompt)
+        // A refused prefill used to pass unnoticed and leave the next generate reading a cache
+        // that did not hold the prompt.
+        val before = System.currentTimeMillis()
+        val total = nativeBridge.nativePrefill(h, prompt)
+        if (total <= 0) throw failure(h, "could not prefill")
+        fedTokens = total
+        fedMs += System.currentTimeMillis() - before
+        openedNpu()
     }
+
+    /**
+     * Feeds the reply the CPU half wrote to the NPU half, whose cache holds only the prompt:
+     * the next turn is prefilled on the NPU and handed to the CPU, so without it the CPU
+     * would decode from a conversation that lost its last answer. One NPU call per 128 tokens.
+     */
+    override fun commitReply(answer: String): Boolean {
+        if (!prefillingOnNpu || answer.isEmpty()) return fallbackCommit(answer)
+        return runCatching { prefill(answer) }.isSuccess
+    }
+
+    private fun fallbackCommit(answer: String): Boolean =
+        if (usingFallback) fallback.commitReply(answer) else true
+
+    /** The runner's own reason for refusing: a prompt past its NPU window, or a runtime failure. */
+    private fun failure(h: Long, what: String): LlamaException =
+        if (nativeBridge.nativeLastError(h) == DisaggregatedBridge.ERROR_OVERFLOW) {
+            overflow()
+        } else {
+            LlamaException("The MediaTek runtime $what.")
+        }
+
+    private fun overflow() = ContextWindowExceededException(
+        "The conversation no longer fits this model's NPU window. Start a new chat, or use a " +
+            "build with a larger window.",
+    )
 
     override fun resetContext() {
         if (usingFallback) {
@@ -153,6 +292,8 @@ class DisaggregatedExecuTorchBridge(
         }
         val h = handle
         if (h != 0L) nativeBridge.nativeResetContext(h)
+        fedTokens = 0
+        fedMs = 0L
     }
 
     override fun stop() {
@@ -170,6 +311,8 @@ class DisaggregatedExecuTorchBridge(
         if (h != 0L) {
             nativeBridge.nativeClose(h)
         }
+        // Closed by the app rather than by a crash: whatever it was doing, it survived.
+        openedNpu()
         if (usingFallback) {
             fallback.close()
             usingFallback = false
@@ -185,33 +328,68 @@ class DisaggregatedExecuTorchBridge(
 
     /**
      * The compiled chunks, the embedding table and the options they were compiled for, or
-     * null when this model has no NPU half here.
-     *
-     * The directory must also hold [ENABLE_MARKER]. The path answers correctly and its
-     * decode now nearly matches the CPU path (27 to 29 tok/s against 30), so it is off on what the split
-     * itself costs: a second copy of the model resident, and an NPU call that takes about
-     * half a second whether it carries 128 tokens or ten, against a median of 50 new tokens
-     * a turn after cache reuse. See docs/research/npu-pd-disaggregation.md. Touching the
-     * marker turns the path on for a measurement run without a rebuild.
+     * null when this model has no usable NPU half here. An NPU half Discover installed beside
+     * the model is used whenever it is complete, fits and is not refused, because downloading
+     * it was the user asking for it.
      */
-    private fun resolveNpuComponents(modelFile: File): NpuComponents? {
-        val parent = modelFile.parentFile ?: return null
-        val soc = Build.SOC_MODEL.lowercase()
-        val candidateDirs = buildList {
-            add(File(parent, "mtk/$soc"))
-            add(File(parent, "mtk"))
-            add(parent)
-            // A staging directory for measurement runs. On this ROM a file pushed into
-            // Android/data by adb is invisible to the app: the app's view of its own
-            // external directory is a bind mount that does not pick up shell's writes, so
-            // a pushed chunk set can only be read from there. Nothing downloaded ever
-            // lands in it, and the marker still has to be present, so it costs a stat on
-            // a path that exists on no phone but this bench.
-            File(STAGING_ROOT).listFiles().orEmpty()
-                .filter { it.isDirectory }
-                .sortedBy { it.name }
-                .forEach { add(File(it, "mtk/$soc")) }
+    private fun resolveNpuComponents(modelFile: File, memoryJustFreed: Boolean): NpuComponents? {
+        val installed = NpuInstall.read(modelFile)
+        val root = stagingRoot
+        return when {
+            installed != null -> installedComponents(modelFile, installed, memoryJustFreed)
+            root != null -> stagedComponents(root)
+            else -> null
         }
+    }
+
+    /**
+     * [installed], unless it is refused, or the last launch died opening it (which refuses
+     * it), or the probe process has not read a prompt with it, or the phone has too little
+     * memory free to hold it beside the model. [memoryJustFreed] skips the memory check for a
+     * reopen of a session that held this half a moment ago.
+     */
+    private fun installedComponents(
+        modelFile: File,
+        installed: NpuInstall.Complete,
+        memoryJustFreed: Boolean,
+    ): NpuComponents? {
+        if (NpuInstall.diedOpening(modelFile)) {
+            NpuInstall.refuse(modelFile, "the app closed while its NPU half was opening")
+        }
+        val refusal = NpuInstall.refusal(modelFile)
+        val short = if (memoryJustFreed) null else NpuMemory.shortfall(modelFile, installed)
+        npuSkipped = when {
+            refusal != null ->
+                "The NPU half of this model is turned off because $refusal. " +
+                    "Prompts are read on the CPU until it is downloaded again."
+            short != null -> memoryNote(short.first + NpuMemory.RESERVE_BYTES, short.second)
+            !trial && !NpuInstall.tried(modelFile) ->
+                "The NPU half of this model has not been " +
+                    "tried yet, so prompts are read on the CPU. Load the model again to try it."
+            else -> null
+        }
+        npuSkipped?.let {
+            Log.w(TAG, "NPU half of ${modelFile.name} not used: $it")
+            return null
+        }
+        return NpuComponents(installed.chunks, installed.embedding, installed.runnerJson)
+    }
+
+    private fun memoryNote(need: Long, free: Long): String {
+        val needed = gigabytes(need)
+        val has = gigabytes(free)
+        return "The NPU half of this model needs about $needed of free memory and the phone has " +
+            "$has, so prompts are read on the CPU. Close apps you are not using and load the " +
+            "model again to use the NPU."
+    }
+
+    /** Chunks staged under [root] for the instrumented test, used only beside [ENABLE_MARKER]. */
+    private fun stagedComponents(root: File): NpuComponents? {
+        val soc = Build.SOC_MODEL.lowercase()
+        val candidateDirs = root.listFiles().orEmpty()
+            .filter { it.isDirectory }
+            .sortedBy { it.name }
+            .map { File(it, "mtk/$soc") }
 
         val dir = candidateDirs.firstOrNull { holdsNpuHalf(it) } ?: return null
         if (!File(dir, ENABLE_MARKER).exists()) {
@@ -287,7 +465,6 @@ class DisaggregatedExecuTorchBridge(
     private companion object {
         const val TAG = "OpenWeightsPD"
         const val ENABLE_MARKER = "enable-pd"
-        const val STAGING_ROOT = "/data/local/tmp/mtk_models"
 
         // The layout of the array nativeGenerate returns. Positional because it crosses
         // JNI, so the two sides are kept in step by name here rather than by counting.
@@ -299,5 +476,10 @@ class DisaggregatedExecuTorchBridge(
 
         const val REASON_MAX_TOKENS = 1
         const val REASON_CANCELLED = 2
+        const val REASON_WINDOW_FULL = 3
+        private const val BYTES_PER_GB = (1L shl 30).toDouble()
+
+        /** In the binary gigabytes the model cards use, so the two figures can be compared. */
+        fun gigabytes(bytes: Long): String = "%.1f GB".format(Locale.ROOT, bytes / BYTES_PER_GB)
     }
 }

@@ -433,6 +433,9 @@ interface InferenceEngine : AutoCloseable {
      */
     fun computeDevices(): List<ComputeDevice>
 
+    /** Why an accelerator installed for the loaded model is not in use, for the user, or null. */
+    fun acceleratorNote(): String? = null
+
     /**
      * Releases the model and any thread the implementation owns.
      *

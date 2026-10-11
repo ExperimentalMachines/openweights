@@ -16,6 +16,7 @@
 
 package io.github.alpharomercoma.openweights.core.engine
 
+import io.github.alpharomercoma.openweights.core.common.model.CompiledBackend
 import org.pytorch.executorch.ExecuTorchRuntime
 import org.pytorch.executorch.Module
 import org.pytorch.executorch.extension.llm.LlmCallback
@@ -34,6 +35,13 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
     private var module: LlmModule? = null
     private var moduleTemperature: Float = 0f
 
+    /**
+     * The window a Qualcomm export was compiled for, handed to every generation as its
+     * sequence length: Qualcomm's static-graph runner has no other way to know it. Null for
+     * every other runtime, where the export owns the window.
+     */
+    private var qnnWindow: Int? = null
+
     // Written from the runtime's callback rather than returned by it, so they are held
     // here for the duration of one blocking generate rather than passed through.
     private var lastStats: String? = null
@@ -46,10 +54,19 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
         multimodal: Boolean,
     ): Boolean {
         close()
+        // A Qualcomm export runs on Qualcomm's own static-graph runner (the JNI layer's model
+        // type 4), which needs the DSP's library path and the model family in its environment
+        // before it opens (QnnSupport.prepare), and the window at every generation.
+        val qnn = !multimodal && CompiledBackend.of(File(modelPath).name) == CompiledBackend.QNN
+        if (qnn) QnnSupport.prepare(File(modelPath).name)
+        qnnWindow = if (qnn) probe(modelPath).contextLength else null
         // The runner is chosen here and cannot be changed after: the multimodal one is a
         // different class in the runtime, the only one with a way in for a picture.
-        val modelType =
-            if (multimodal) LlmModule.MODEL_TYPE_MULTIMODAL else LlmModule.MODEL_TYPE_TEXT
+        val modelType = when {
+            multimodal -> LlmModule.MODEL_TYPE_MULTIMODAL
+            qnn -> MODEL_TYPE_QNN
+            else -> LlmModule.MODEL_TYPE_TEXT
+        }
         // Anything can come back from here: a missing native library throws
         // UnsatisfiedLinkError rather than an exception, and a .pte built for another
         // runtime version fails inside the loader. Both become the same failure the rest
@@ -63,6 +80,8 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
         }.fold(
             onSuccess = { true },
             onFailure = { cause ->
+                // A phone whose HTP will not start stops being offered NPU files.
+                if (qnn) QnnSupport.recordIfIncompatible(cause)
                 throw LlamaException(
                     "ExecuTorch could not open this model: ${cause.message ?: cause::class.java.simpleName}",
                 )
@@ -123,7 +142,10 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
      * ExecuTorch prompt this app ever fed was therefore BOS-less; LFM2.5-1.2B tolerated it,
      * LFM2.5-2.6B answered garbage. The engine writes the family's BOS into the text.
      */
-    override fun tokenizerAddsBos(tokenizerPath: String): Boolean = false
+    // Qualcomm's runner adds BOS itself (ExecuServe), and its tokenizer is saved under the
+    // model's own name, so the name says which runner it belongs to.
+    override fun tokenizerAddsBos(tokenizerPath: String): Boolean =
+        CompiledBackend.of(File(tokenizerPath).name) == CompiledBackend.QNN
 
     override fun prefillImage(pixels: FloatArray, width: Int, height: Int, channels: Int) {
         val running = module ?: throw LlamaException("No model loaded")
@@ -177,7 +199,7 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
         // never maxNewTokens (the AAR's bytecode), so the runtime resolves its allowance
         // from the window and this value changes nothing. The budget that holds is the
         // engine's StopDiscipline, which counts callbacks and stops the loop itself.
-        val config = generationConfig(maxNewTokens, moduleTemperature)
+        val config = generationConfig(maxNewTokens, moduleTemperature, qnnWindow)
 
         val attempt = runCatching {
             running.generate(
@@ -222,6 +244,9 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
     }
 
     private companion object {
+        /** Qualcomm's static-graph runner, by the JNI layer's number for it. */
+        const val MODEL_TYPE_QNN = 4
+
         /**
          * The delegates linked into this build: XnnpackBackend and VulkanBackend from the
          * Vulkan AAR. Asked of the runtime rather than written down, so a different AAR
@@ -355,20 +380,25 @@ private val MULTIMODAL_METHODS =
     setOf("text_decoder", "token_embedding", "vision_encoder", "audio_encoder")
 
 /** The AAR defaults each call to 0.8, which otherwise overrides the loaded sampler. */
-internal fun generationConfig(maxNewTokens: Int, temperature: Float): LlmGenerationConfig =
-    LlmGenerationConfig.create()
-        .temperature(temperature)
-        .maxNewTokens(maxNewTokens)
-        // No seqLen override: the export owns the total window. This AAR ignores
-        // maxNewTokens, so the engine's callback discipline enforces the output budget.
-        // Echo replays the prompt through onResult, and the whole conversation would
-        // arrive looking like something the model had written.
-        .echo(false)
-        // Explicit, because this one is applied per call and would otherwise append an
-        // EOS token to the end of every suffix fed in — turning what should be a
-        // continuation into a sequence of terminated fragments. The module's BOS is
-        // the opposite case: it is added once after construction or resetContext and
-        // then suppressed, so incremental feeding cannot duplicate it, and the
-        // per-call numBos in this config is ignored by the JNI layer entirely.
-        .numEos(0)
-        .build()
+internal fun generationConfig(
+    maxNewTokens: Int,
+    temperature: Float,
+    seqLen: Int? = null,
+): LlmGenerationConfig = LlmGenerationConfig.create()
+    .temperature(temperature)
+    .maxNewTokens(maxNewTokens)
+    // Only for Qualcomm's runner, which cannot read its window off the file.
+    .let { builder -> seqLen?.let(builder::seqLen) ?: builder }
+    // No seqLen override: the export owns the total window. This AAR ignores
+    // maxNewTokens, so the engine's callback discipline enforces the output budget.
+    // Echo replays the prompt through onResult, and the whole conversation would
+    // arrive looking like something the model had written.
+    .echo(false)
+    // Explicit, because this one is applied per call and would otherwise append an
+    // EOS token to the end of every suffix fed in, turning what should be a
+    // continuation into a sequence of terminated fragments. The module's BOS is
+    // the opposite case: it is added once after construction or resetContext and
+    // then suppressed, so incremental feeding cannot duplicate it, and the
+    // per-call numBos in this config is ignored by the JNI layer entirely.
+    .numEos(0)
+    .build()

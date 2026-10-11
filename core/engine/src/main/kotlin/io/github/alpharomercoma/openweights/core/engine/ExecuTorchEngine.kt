@@ -19,6 +19,7 @@ package io.github.alpharomercoma.openweights.core.engine
 import android.util.Log
 import io.github.alpharomercoma.openweights.core.common.model.ChatMessage
 import io.github.alpharomercoma.openweights.core.common.model.ChatRole
+import io.github.alpharomercoma.openweights.core.common.model.CompiledBackend
 import io.github.alpharomercoma.openweights.core.common.model.ExecuTorchFileName
 import io.github.alpharomercoma.openweights.core.common.model.MediaKind
 import io.github.alpharomercoma.openweights.core.common.model.MessagePart
@@ -236,6 +237,10 @@ class ExecuTorchEngine(
         facts.unopenable?.let { refuse("${modelFile.name} cannot be opened: $it.") }
         val exported = facts.contextLength
         callChars = facts.callChars()
+        // Qualcomm's runner prefills in its own 128-token blocks and wants the whole prompt in
+        // one call: fed in pieces, each piece is tokenized apart and its edges add tokens, and
+        // ExecuServe measured the prefill falling from 1,700 to 1,180 tok/s that way.
+        if (CompiledBackend.of(modelFile.name) == CompiledBackend.QNN) callChars = Int.MAX_VALUE
         // Older text exports without metadata retain the preference as an estimate only.
         contextSize = exported ?: params.contextLength
         // Pictures need both halves: an encoder in the file and a template that knows
@@ -381,7 +386,7 @@ class ExecuTorchEngine(
             throw LlamaException("${held.model.name} cannot be opened again: $it.")
         }
         val reopened = gpuChecked {
-            bridge.load(
+            bridge.reload(
                 held.model.absolutePath,
                 held.tokenizer.absolutePath,
                 held.temperature,
@@ -499,7 +504,15 @@ class ExecuTorchEngine(
         // token is ordinary text this code cannot identify by character position. So that
         // case gives up reuse entirely rather than guess: an empty record forces the next
         // turn to start over, which is slow and correct.
-        fedText = if (reply.endedCleanly && pictures.isEmpty()) prompt + reply.answer else ""
+        // The MediaTek runtime writes the reply on the CPU and reads prompts on the NPU, whose
+        // cache never saw it: recorded as held without that, the next turn appended to a
+        // conversation missing the last answer (codex QA). commitReply feeds it to the NPU.
+        fedText =
+            if (reply.endedCleanly && pictures.isEmpty() && bridge.commitReply(reply.answer)) {
+                prompt + reply.answer
+            } else {
+                ""
+            }
         // Losing prefix reuse does not empty the context. Keep its occupancy for folding
         // and headroom decisions until the next turn actually resets the runtime.
         // The multimodal runner reports its full prompt position, including text prefills
@@ -978,8 +991,7 @@ class ExecuTorchEngine(
      * reply the CPU produced is worse than no badge.
      */
     override fun computeDevices(): List<ComputeDevice> {
-        val disaggregated = bridge as? DisaggregatedExecuTorchBridge ?: return emptyList()
-        if (!disaggregated.prefillingOnNpu) return emptyList()
+        if (!bridge.prefillingOnNpu) return emptyList()
         return listOf(
             ComputeDevice(
                 id = "npu",
@@ -989,6 +1001,8 @@ class ExecuTorchEngine(
             ),
         )
     }
+
+    override fun acceleratorNote(): String? = bridge.npuSkipped
 
     override fun close() {
         bridge.close()

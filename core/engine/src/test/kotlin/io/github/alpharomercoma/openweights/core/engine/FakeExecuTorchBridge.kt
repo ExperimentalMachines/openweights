@@ -64,6 +64,18 @@ class FakeExecuTorchBridge : ExecuTorchBridge {
     var contextResets: Int = 0
         private set
 
+    /** What [commitReply] answers, and every reply it was handed. */
+    var commits: Boolean = true
+    val committed: MutableList<String> = mutableListOf()
+
+    override fun commitReply(answer: String): Boolean {
+        committed += answer
+        return commits
+    }
+
+    /** Why an installed NPU half is not in use, as the disaggregated bridge reports it. */
+    override var npuSkipped: String? = null
+
     /** What [generate] hands back, one fragment at a time. */
     var reply: String = ""
 

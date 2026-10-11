@@ -70,6 +70,8 @@ data class ExportFacts(
     val unopenable: String? = null,
 )
 
+// One function per thing a runtime does, as InferenceEngine and LlamaBridge.
+@Suppress("TooManyFunctions")
 interface ExecuTorchBridge {
 
     /**
@@ -79,6 +81,19 @@ interface ExecuTorchBridge {
      * bridge that does arm BOS is not given a second one.
      */
     fun tokenizerAddsBos(tokenizerPath: String): Boolean = true
+
+    /**
+     * Whether the loaded model reads prompts on the NPU. A property of the bridge, so the probe
+     * wrapper passes it through; read by a cast, it never reached the engine (codex QA).
+     */
+    val prefillingOnNpu: Boolean get() = false
+
+    /**
+     * Why the loaded model has an NPU half installed that is not reading its prompts, in words
+     * for the user, or null. Falling back to the CPU without saying so read as a broken
+     * install on the phone (2026-10-11): the card said installed and the top bar said CPU.
+     */
+    val npuSkipped: String? get() = null
 
     /**
      * Reads [ExportFacts] off the file through the plain module API, without opening it
@@ -119,6 +134,19 @@ interface ExecuTorchBridge {
     ): Boolean
 
     /**
+     * Opens the same model again after [close], for a reset the export cannot do in place, on
+     * the processor it was open on. A fresh [load] decides the processor anew, and a reset
+     * that moved a session between the NPU and the CPU left the screen naming the other one
+     * (codex QA).
+     */
+    fun reload(
+        modelPath: String,
+        tokenizerPath: String,
+        temperature: Float,
+        multimodal: Boolean,
+    ): Boolean = load(modelPath, tokenizerPath, temperature, multimodal)
+
+    /**
      * Feeds one picture into the cache at the current position, between text prefills.
      *
      * [pixels] are the encoder's input exactly: channels-first, `channels * height * width`
@@ -153,6 +181,13 @@ interface ExecuTorchBridge {
      * feeds the text in pieces and checks between them.
      */
     fun prefill(prompt: String)
+
+    /**
+     * Called once a reply ended cleanly, with the text the engine now records as held. A
+     * runtime whose decoder is not its prompt reader brings the reader up to that text here;
+     * false means it could not, and the engine then gives up reuse so the next turn starts over.
+     */
+    fun commitReply(answer: String): Boolean = true
 
     /**
      * Drops whatever the runtime is holding from previous generations.

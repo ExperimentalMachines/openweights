@@ -794,6 +794,34 @@ class ExecuTorchEngineTest {
     }
 
     @Test
+    fun `a reply the runtime could not commit is not reused`() = runTest {
+        // The MediaTek runtime writes the reply on the CPU and must feed it to the NPU before
+        // the next turn can extend it; when it cannot, the next turn starts over.
+        bridge.reply = "Hello.<|im_end|>"
+        bridge.commits = false
+        engine.load(installed(MODEL), PARAMS)
+
+        val first = listOf(user("Hi"))
+        engine.chat(first).toList()
+        engine.chat(first + assistant("Hello.") + user("Again")).toList()
+
+        // Every clean reply is offered, the second turn's too.
+        assertThat(bridge.committed).containsExactly("Hello.", "Hello.")
+        assertThat(bridge.contextResets).isEqualTo(2)
+        assertThat(bridge.prompts[1]).contains("<|im_start|>user\nHi<|im_end|>")
+    }
+
+    @Test
+    fun `an NPU half left unused is explained to the user`() = runTest {
+        // Falling back to the CPU without a word read as a broken install on the phone.
+        engine.load(installed(MODEL), PARAMS)
+        assertThat(engine.acceleratorNote()).isNull()
+
+        bridge.npuSkipped = "needs 5.0 GB free"
+        assertThat(engine.acceleratorNote()).isEqualTo("needs 5.0 GB free")
+    }
+
+    @Test
     fun `switching reasoning off costs the cache`() = runTest {
         // Counterintuitive and measured rather than reasoned: it is *disabling* reasoning
         // that breaks the cache, not enabling it. Qwen3 switches thinking off by closing an

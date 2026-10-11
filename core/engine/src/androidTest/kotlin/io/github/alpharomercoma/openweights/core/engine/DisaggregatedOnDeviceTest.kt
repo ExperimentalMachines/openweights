@@ -40,8 +40,8 @@ import java.io.File
  * conv layer has no mask: until the export took a conv_valid and a conv_select input, each
  * right-padded piece handed the next one a conv state made of padding.
  *
- * Needs the NPU half staged the way DisaggregatedExecuTorchBridge finds it, first among the
- * directories under /data/local/tmp/mtk_models that hold chunks:
+ * Needs the NPU half staged where this test points the bridge, first among the directories
+ * under /data/local/tmp/mtk_models that hold chunks:
  * `<dir>/mtk/<soc>/` with the chunks, the embedding table, the exporter's config.json and an
  * `enable-pd` marker. The CPU export and its tokenizer come from `-e pte` and `-e tokenizer`,
  * the long prompt from `-e long` (a file in the model's chat template, as the MediaTek phone
@@ -56,7 +56,8 @@ class DisaggregatedOnDeviceTest {
         assumeTrue("no tokenizer at ${TOKENIZER.path}", TOKENIZER.isFile)
         assumeTrue("no disaggregated libraries in this build", DisaggregatedBridge.isAvailable)
 
-        val npuBridge = DisaggregatedExecuTorchBridge()
+        val npuBridge =
+            DisaggregatedExecuTorchBridge(stagingRoot = File("/data/local/tmp/mtk_models"))
         val npu = ExecuTorchEngine(npuBridge, temperature = 0f)
         npu.load(MODEL, PARAMS)
         assumeTrue("no NPU half staged with enable-pd", npuBridge.prefillingOnNpu)
