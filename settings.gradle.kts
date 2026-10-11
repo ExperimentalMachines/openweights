@@ -19,10 +19,12 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         // ExecuTorch 1.5.1 with QNN and MediaTek's NPU runtime, which no published artifact
-        // carries: assembled by tools/npu/assemble_runtime.sh.
-        maven {
-            url = uri("core/engine/maven")
-            content { includeGroup("org.experimentalmachines.executorch") }
+        // carries: assembled by tools/npu/assemble_runtime.sh. Exclusive, so the group resolves
+        // from this folder and nowhere else: listed after Maven Central with only a content
+        // filter, anyone who published these coordinates there would be built in instead.
+        exclusiveContent {
+            forRepository { maven { url = uri("core/engine/maven") } }
+            filter { includeGroup("org.experimentalmachines.executorch") }
         }
     }
 }
