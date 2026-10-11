@@ -264,12 +264,14 @@ dependencies {
     api(project(":core:common"))
     implementation(libs.kotlinx.coroutines.android)
 
-    // ExecuTorch's Android runtime, the Vulkan build: it registers both XnnpackBackend and
-    // VulkanBackend, so CPU and GPU exports open from one library (VulkanSupport decides
-    // whether this phone is offered GPU files). MediaTek is not among the published
-    // artifacts, so reaching the NPU means building that half from source against the
-    // NeuroPilot SDK. It carries native libraries for arm64-v8a and x86_64.
+    // ExecuTorch's Android runtime, assembled for this app (tools/npu/assemble_runtime.sh): one
+    // libexecutorch.so registering XNNPACK, Vulkan and QNN, so CPU, GPU and Qualcomm NPU exports
+    // open from one library, and MediaTek's NPU runtime beside it (libexecutorch_pd_jni.so),
+    // loaded only on a phone whose NeuroPilot adapter loads. VulkanSupport decides whether a
+    // phone is offered GPU files, and the NPU checks decide NPU files.
     implementation(libs.executorch.android)
+    // The Hexagon HTP drivers the QNN delegate loads at run time.
+    implementation(libs.qnn.runtime)
 
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)

@@ -18,6 +18,12 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // ExecuTorch 1.5.1 with QNN and MediaTek's NPU runtime, which no published artifact
+        // carries: assembled by tools/npu/assemble_runtime.sh.
+        maven {
+            url = uri("core/engine/maven")
+            content { includeGroup("org.experimentalmachines.executorch") }
+        }
     }
 }
 

@@ -177,8 +177,22 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
-        // Play requires 16 KB-aligned uncompressed shared libraries.
-        jniLibs.useLegacyPackaging = false
+        // Extracted to disk at install: the Hexagon DSP loads its skeleton library by file path
+        // (ADSP_LIBRARY_PATH, see QnnSupport), which a library left inside the APK does not
+        // have. Play's 16 KB rule is about the libraries' ELF segments, which hold either way;
+        // ExecuServe ships the same runtime this way.
+        jniLibs.useLegacyPackaging = true
+        // Qualcomm's runtime ships more than precompiled NPU graphs use: the on-device graph
+        // compiler (69 MB), the GPU and DSP backends, and the oldest Hexagon generation's driver.
+        jniLibs.excludes += setOf(
+            "**/libQnnHtpPrepare.so",
+            "**/libQnnGpu.so",
+            "**/libQnnDsp.so",
+            "**/libQnnDspV66Skel.so",
+            "**/libQnnDspV66Stub.so",
+            "**/libQnnHtpV68Skel.so",
+            "**/libQnnHtpV68Stub.so",
+        )
 
         // Two copies of the C++ runtime arrive in the APK: ours, from the CMake builds in
         // core:engine and core:sandbox, and a prebuilt one inside fbjni, which ExecuTorch

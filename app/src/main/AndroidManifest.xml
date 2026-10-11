@@ -100,6 +100,15 @@
              required="false" throughout: every one of these is absent on a non-MediaTek
              phone, where the app installs and runs the CPU path as before.
         -->
+        <!--
+             Qualcomm's FastRPC library, which the QNN HTP driver uses to reach the DSP. It is a
+             public vendor library in /vendor, and since Android 12 an app may load one only by
+             naming it here; without it the QNN runner fails to load with no message
+             (ExecuServe, 2026-10-06). Absent on phones without a Qualcomm DSP.
+        -->
+        <uses-native-library
+            android:name="libcdsprpc.so"
+            android:required="false" />
         <uses-native-library
             android:name="libneuronusdk_adapter.mtk.so"
             android:required="false" />

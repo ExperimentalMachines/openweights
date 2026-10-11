@@ -36,7 +36,13 @@ profileinstaller = "1.4.1"
 splashscreen = "1.0.1"
 
 [libraries]
-executorch-android = { group = "org.pytorch", name = "executorch-android-vulkan", version.ref = "executorch" }
+# ExecuTorch 1.5.1's Android library with QNN (Qualcomm NPU) beside XNNPACK and Vulkan, and
+# MediaTek's NPU runtime built for this app (tools/npu/assemble_runtime.sh); the suffix counts
+# rebuilds of one release.
+executorch-android = { group = "org.experimentalmachines.executorch", name = "executorch-android", version = "1.5.1-openweights.2" }
+# Qualcomm's HTP drivers for the QNN delegate. 2.39 is the first release with the Hexagon v81
+# (Snapdragon 8 Elite Gen 5) skeleton; it loads context binaries compiled with QAIRT 2.37.
+qnn-runtime = { group = "com.qualcomm.qti", name = "qnn-runtime", version = "2.39.0" }
 # Gradle plugin artifacts, used only by build-logic convention plugins
 android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
 kotlin-gradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
