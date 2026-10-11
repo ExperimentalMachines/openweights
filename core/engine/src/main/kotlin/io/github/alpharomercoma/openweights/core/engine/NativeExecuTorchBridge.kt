@@ -164,17 +164,7 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
      * translated: an overflow during a picture read as "could not read the picture".
      */
     private fun Throwable.asOverflow(): ContextWindowExceededException? {
-        val text = message.orEmpty()
-        // The runner's own two diagnostics only (text_llm_runner.cpp: the conversation so far,
-        // and a single prompt, past the window). The wrapper appends recent runtime log lines
-        // to its messages, and those mention max_context_len in passing, so the name alone
-        // turned unrelated failures, a GPU that cannot run a Vulkan export among them, into a
-        // full window (codex QA).
-        if ("Max seq length exceeded" !in text &&
-            "Prompt exceeds KV cache capacity" !in text
-        ) {
-            return null
-        }
+        if (!isWindowFull(message.orEmpty(), qualcomm = qnnWindow != null)) return null
         return ContextWindowExceededException(
             "The conversation no longer fits this model's exported context window. " +
                 "Start a new chat, or use a model exported with a larger window.",
@@ -402,3 +392,26 @@ internal fun generationConfig(
     // per-call numBos in this config is ignored by the JNI layer entirely.
     .numEos(0)
     .build()
+
+/**
+ * Whether a runtime failure's [message] is a full window, which the turn loop answers with
+ * "start a new chat" instead of showing the runtime's words.
+ *
+ * The text runner's own two diagnostics only (text_llm_runner.cpp: the conversation so far,
+ * and a single prompt, past the window). The wrapper appends recent runtime log lines to its
+ * messages, and those mention max_context_len in passing, so the name alone turned unrelated
+ * failures, a GPU that cannot run a Vulkan export among them, into a full window (codex QA).
+ *
+ * Qualcomm's runner logs its overflow line where the wrapper does not carry it, so the
+ * message is the bare code ("[ExecuTorch Error 0x12] Invalid argument: Failed to generate",
+ * Snapdragon 8 Elite, 2026-10-11). In the patched runner (tools/npu/patch_qnn.py) generate
+ * and prefill return InvalidArgument for an overflow and otherwise only for a prefill text
+ * that encodes to no tokens, which the engine never sends; on [qualcomm] the code is the
+ * diagnostic.
+ */
+internal fun isWindowFull(message: String, qualcomm: Boolean): Boolean =
+    "Max seq length exceeded" in message ||
+        "Prompt exceeds KV cache capacity" in message ||
+        (qualcomm && QNN_OVERFLOW_CODE in message)
+
+private const val QNN_OVERFLOW_CODE = "[ExecuTorch Error 0x12]"

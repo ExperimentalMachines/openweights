@@ -217,8 +217,16 @@ within two or three turns. The guards in both `generate` and `prefill` now use t
 processor's bound and return the overflow error, which the app already answers: the warm
 fails quietly and the next turn says the conversation no longer fits, as the CPU runner did
 on the same phone when the 1.7B's 859-token reasoning filled its window. Built into
-`1.5.1-openweights.4`; the reservation ended before the crash could be replayed on the
-Snapdragon with it, so that replay is the first thing owed to the next QDC session.
+`1.5.1-openweights.4` and replayed on a second SM8750 reservation the same morning: the
+1.7B's long-prompt reply (673 tokens) filled the window, the runner refused the next piece
+("1865 held + 64 new, past 1920") and the app stayed up; the follow-up, the reopened
+conversation and a turn in it did the same, and the phone's crash log stayed empty. The app
+then condensed the conversation and answered the next turn, reading its 1,302-token prompt
+at 2,114 tok/s on the NPU. One more fix came of it: the wrapper's message for that refusal
+is only the code ("[ExecuTorch Error 0x12] Invalid argument: Failed to generate"), which the
+chat showed raw; on Qualcomm's runner that code is now read as a full window
+(`isWindowFull`), as the CPU runner's diagnostics already were. A reply cut off by the full
+window still shows nothing in its place, on every runtime; that is the app's, and open.
 
 No QNN export exists for the Snapdragon 8 Elite Gen 5 (SM8850) on the Hub: every published
 folder is `qnn/sm8750`, so Discover rightly offers none there. Qwen3-0.6B and SmolLM2-135M
