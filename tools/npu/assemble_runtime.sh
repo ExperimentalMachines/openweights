@@ -20,7 +20,7 @@ LIBS="${1:?directory with the ExecuTorch arm64-v8a libraries}"
 MTK="${2:?directory with the MediaTek arm64-v8a libraries}"
 RELEASE=1.5.1
 # A rebuilt binary is a new version: Gradle and anyone holding the old file must not mistake one for the other.
-VERSION="$RELEASE-openweights.2"
+VERSION="$RELEASE-openweights.3"
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 DEST="$ROOT/core/engine/maven/org/experimentalmachines/executorch/executorch-android/$VERSION"
 WORK=$(mktemp -d)

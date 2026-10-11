@@ -42,6 +42,9 @@ class DisaggregatedBridge {
     /** Tokens held after feeding [prompt], or 0 when it was refused ([nativeLastError] says why). */
     external fun nativePrefill(handle: Long, prompt: String): Int
 
+    /** The NPU's prefill milliseconds since the last reset, on the clock [nativeGenerate] reports. */
+    external fun nativePrefillMs(handle: Long): Long
+
     /** Why the last call returned nothing: [ERROR_OVERFLOW], [ERROR_RUNTIME], or 0. */
     external fun nativeLastError(handle: Long): Int
 

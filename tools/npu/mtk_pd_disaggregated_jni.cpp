@@ -1135,6 +1135,9 @@ public:
     static constexpr int kErrorRuntime = 2;
     int last_error_ = kErrorNone;
 
+    /** Milliseconds the NPU has spent reading prompts since the last reset, as generate reports it. */
+    int64_t PrefillMs() const { return static_cast<int64_t>(prefill_ms_); }
+
 private:
 };
 
@@ -1186,6 +1189,21 @@ Java_io_github_alpharomercoma_openweights_core_engine_DisaggregatedBridge_native
     std::string text;
     if (!JavaToUtf8(env, prompt, &text)) return 0;
     return session->Prefill(text);
+}
+
+/**
+ * The NPU's prefill milliseconds since the last reset, the same total nativeGenerate returns:
+ * the bridge subtracts it from that total, and wall time measured around the JNI call was a
+ * different clock, which could leave a short tail's prefill at zero (codex QA).
+ */
+JNIEXPORT jlong JNICALL
+Java_io_github_alpharomercoma_openweights_core_engine_DisaggregatedBridge_nativePrefillMs(
+    JNIEnv* /* env */,
+    jobject /* thiz */,
+    jlong handle
+) {
+    auto session = reinterpret_cast<DisaggregatedSession*>(handle);
+    return session ? session->PrefillMs() : 0;
 }
 
 /** Why the last nativeGenerate or nativePrefill on [handle] failed: 0 none, 1 window, 2 runtime. */
