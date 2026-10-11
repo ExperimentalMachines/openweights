@@ -33,11 +33,14 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.alpharomercoma.openweights.R
 import io.github.alpharomercoma.openweights.core.common.model.PromptTemplates
 import io.github.alpharomercoma.openweights.core.engine.InferenceEngine
+import io.github.alpharomercoma.openweights.core.engine.NpuInstall
 import io.github.alpharomercoma.openweights.core.hub.HubFile
+import io.github.alpharomercoma.openweights.core.hub.NpuBundle
 import io.github.alpharomercoma.openweights.core.hub.Publishers
 import io.github.alpharomercoma.openweights.download.ModelDownloadWorker
 import io.github.alpharomercoma.openweights.model.ModelStore
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -395,12 +398,50 @@ class ModelsViewModel @Inject constructor(
      */
     fun downloadCompiled(repoId: String, weights: HubFile, tokenizer: HubFile) {
         val destination = modelStore.compiledDestination(repoId, weights.path)
-        start(repoId, tokenizer, modelStore.tokenizerFor(destination.name))
-        start(repoId, weights, destination)
+        val group = destination.name
+        start(repoId, tokenizer, modelStore.tokenizerFor(destination.name), group = group)
+        start(repoId, weights, destination, group = group)
     }
 
-    private fun start(repoId: String, file: HubFile, destination: File) {
-        val key = destination.name
+    /**
+     * Installs a MediaTek NPU build: the CPU build and its tokenizer as an ordinary compiled
+     * install, and the NPU half (chunks and embedding) in the model's `.npu` folder.
+     *
+     * The list of NPU parts is written first, so the engine knows what a complete half is
+     * and reads with the CPU until every part has arrived at its full size. The parts are
+     * keyed by folder and name: every window's embedding table has the same file name, and
+     * keyed by name alone a second window's would never start.
+     */
+    fun downloadNpu(repoId: String, bundle: NpuBundle, tokenizer: HubFile) {
+        val destination = modelStore.compiledDestination(repoId, bundle.cpu.path)
+        val dir = NpuInstall.write(
+            destination,
+            chunks = bundle.chunks.map { NpuInstall.Part(it.fileName, it.sizeBytes) },
+            embedding = NpuInstall.Part(bundle.embedding.fileName, bundle.embedding.sizeBytes),
+            runnerJson = bundle.runnerJson,
+        )
+        // One install, so one row in the list: every part is grouped under the model's name.
+        val group = destination.name
+        start(repoId, tokenizer, modelStore.tokenizerFor(destination.name), group = group)
+        start(repoId, bundle.cpu, destination, group = group)
+        bundle.npuFiles.forEach { part ->
+            start(
+                repoId,
+                part,
+                File(dir, part.fileName),
+                key = "${dir.name}/${part.fileName}",
+                group = group,
+            )
+        }
+    }
+
+    private fun start(
+        repoId: String,
+        file: HubFile,
+        destination: File,
+        key: String = destination.name,
+        group: String? = null,
+    ) {
         // The one moment the app knows where a file came from. Once it has landed it is a
         // .gguf in a folder and the name says nothing about who published it.
         modelStore.rememberPublisher(key, repoId.substringBefore('/', missingDelimiterValue = ""))
@@ -425,6 +466,7 @@ class ModelsViewModel @Inject constructor(
             .addTag(ModelDownloadWorker.TAG_PATH + file.path)
             .addTag(ModelDownloadWorker.TAG_SIZE + file.sizeBytes)
             .addTag(ModelDownloadWorker.TAG_SHA256 + file.sha256.orEmpty())
+            .apply { group?.let { addTag(ModelDownloadWorker.TAG_GROUP + it) } }
             .build()
 
         // KEEP, so tapping download twice does not start a second writer on the same file.
@@ -436,47 +478,66 @@ class ModelsViewModel @Inject constructor(
 
     fun cancel(key: String) {
         workManager.cancelUniqueWork(key)
+        // A row that stands for an install cancels every part of it: what is left of a
+        // cancelled install is gigabytes nothing can open.
+        workManager.cancelAllWorkByTag(ModelDownloadWorker.TAG_GROUP + key)
         // Also covers dismissing a failure, which has nothing left to cancel.
         dismissed.update { it + key }
     }
 
-    /** Replaces a failed or backoff job with a fresh attempt using its persisted request. */
+    /**
+     * Replaces a failed or backoff job with a fresh attempt using its persisted request; for a
+     * row that stands for an install, every part of it that has not finished.
+     */
     fun retry(key: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val previous = runCatching {
-                workManager.getWorkInfosForUniqueWork(key).get()
-                    .firstOrNull { it.state != WorkInfo.State.CANCELLED }
-            }.getOrNull() ?: return@launch
-
-            val repoId = previous.tagValue(ModelDownloadWorker.TAG_REPO).orEmpty()
-            val path = previous.tagValue(ModelDownloadWorker.TAG_PATH).orEmpty()
-            val name = previous.tagValue(ModelDownloadWorker.TAG_KEY).orEmpty()
-            if (repoId.isBlank() || path.isBlank() || name.isBlank()) return@launch
-
-            val request = OneTimeWorkRequestBuilder<ModelDownloadWorker>()
-                .setInputData(
-                    workDataOf(
-                        ModelDownloadWorker.KEY_REPO_ID to repoId,
-                        ModelDownloadWorker.KEY_PATH to path,
-                        ModelDownloadWorker.KEY_DESTINATION to
-                            File(modelStore.directory, name).absolutePath,
-                        ModelDownloadWorker.KEY_SIZE_BYTES to
-                            (previous.tagValue(ModelDownloadWorker.TAG_SIZE)?.toLongOrNull() ?: 0L),
-                        ModelDownloadWorker.KEY_SHA256 to
-                            previous.tagValue(ModelDownloadWorker.TAG_SHA256)
-                                ?.takeIf { it.isNotBlank() },
-                    ),
-                )
-                .setConstraints(
-                    Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build(),
-                )
-                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_SECONDS, TimeUnit.SECONDS)
-                .apply { previous.tags.forEach { addTag(it) } }
-                .build()
-
+            val parts = runCatching {
+                workManager.getWorkInfosByTag(ModelDownloadWorker.TAG_GROUP + key).get()
+                    .filter { it.state == WorkInfo.State.FAILED || it.runAttemptCount > 0 }
+                    .mapNotNull { it.tagValue(ModelDownloadWorker.TAG_KEY) }
+            }.getOrDefault(emptyList())
             dismissed.update { it - key }
-            workManager.enqueueUniqueWork(key, ExistingWorkPolicy.REPLACE, request)
+            (parts + key).distinct().forEach { retryOne(it) }
         }
+    }
+
+    private fun retryOne(key: String) {
+        val previous = runCatching {
+            workManager.getWorkInfosForUniqueWork(key).get()
+                .firstOrNull {
+                    it.state != WorkInfo.State.CANCELLED &&
+                        it.state != WorkInfo.State.SUCCEEDED
+                }
+        }.getOrNull() ?: return
+
+        val repoId = previous.tagValue(ModelDownloadWorker.TAG_REPO).orEmpty()
+        val path = previous.tagValue(ModelDownloadWorker.TAG_PATH).orEmpty()
+        val name = previous.tagValue(ModelDownloadWorker.TAG_KEY).orEmpty()
+        if (repoId.isBlank() || path.isBlank() || name.isBlank()) return
+
+        val request = OneTimeWorkRequestBuilder<ModelDownloadWorker>()
+            .setInputData(
+                workDataOf(
+                    ModelDownloadWorker.KEY_REPO_ID to repoId,
+                    ModelDownloadWorker.KEY_PATH to path,
+                    ModelDownloadWorker.KEY_DESTINATION to
+                        File(modelStore.directory, name).absolutePath,
+                    ModelDownloadWorker.KEY_SIZE_BYTES to
+                        (previous.tagValue(ModelDownloadWorker.TAG_SIZE)?.toLongOrNull() ?: 0L),
+                    ModelDownloadWorker.KEY_SHA256 to
+                        previous.tagValue(ModelDownloadWorker.TAG_SHA256)
+                            ?.takeIf { it.isNotBlank() },
+                ),
+            )
+            .setConstraints(
+                Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build(),
+            )
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, BACKOFF_SECONDS, TimeUnit.SECONDS)
+            .apply { previous.tags.forEach { addTag(it) } }
+            .build()
+
+        dismissed.update { it - key }
+        workManager.enqueueUniqueWork(key, ExistingWorkPolicy.REPLACE, request)
     }
 
     fun delete(model: LocalModel) {
@@ -500,9 +561,7 @@ class ModelsViewModel @Inject constructor(
             }
             return
         }
-        // Refuse to hide the primary model if its large companion cannot be removed.
-        // This keeps a failed cleanup visible and retryable from the same row.
-        if (model.projector?.let { it.exists() && !it.delete() } == true) {
+        if (!removeCompanions(model)) {
             local.update {
                 it.copy(notice = context.getString(R.string.model_delete_failed, model.name))
             }
@@ -517,6 +576,18 @@ class ModelsViewModel @Inject constructor(
         }
         modelStore.forgetPublisher(model.file.name)
         model.file.sourceSidecar.delete()
+        // WorkManager reports a cancel before the worker's thread has let go, so a part that
+        // was being verified as the cancel came can still land: swept once more, unless the
+        // model has been asked for again since. A new install writes its part list before any
+        // part, and a worker never does, so a list newer than this delete is a new install
+        // whose CPU build has not landed yet; the model file alone was not proof (codex QA).
+        val deletedAt = System.currentTimeMillis()
+        viewModelScope.launch(Dispatchers.IO) {
+            delay(STRAGGLER_MILLIS)
+            if (!model.file.exists() && NpuInstall.startedAt(model.file) <= deletedAt) {
+                NpuInstall.directoryFor(model.file).deleteRecursively()
+            }
+        }
         // A compiled model's tokenizer is useless without it and invisible in the list,
         // so leaving it behind would quietly keep megabytes with no way to reclaim them.
         modelStore.tokenizerFor(model.file.name).delete()
@@ -526,62 +597,139 @@ class ModelsViewModel @Inject constructor(
     }
 
     /**
+     * Everything that goes with [model] before the model itself, so a part that cannot be
+     * removed leaves the row there to try again; false when one could not be.
+     */
+    private fun removeCompanions(model: LocalModel): Boolean {
+        // The rest of its install first: the model row appears once the CPU build and its
+        // tokenizer land, while NPU parts can still be downloading, and a worker left running
+        // would create the folder again and fill it with gigabytes no row can delete (codex QA).
+        if (!stopInstall(model.file.name)) return false
+        // A MediaTek NPU half is gigabytes that nothing else can use (codex QA).
+        val npu = NpuInstall.directoryFor(model.file)
+        if (npu.exists() && !npu.deleteRecursively()) return false
+        // The projector is often the larger of the two.
+        return model.projector?.let { !it.exists() || it.delete() } ?: true
+    }
+
+    /**
+     * Cancels every download of the install named [group] and waits for its workers to stop;
+     * false when one still runs, or WorkManager would not say, so nothing is deleted under it.
+     */
+    private fun stopInstall(group: String): Boolean {
+        val tag = ModelDownloadWorker.TAG_GROUP + group
+        if (runCatching { workManager.cancelAllWorkByTag(tag).result.get() }.isFailure) return false
+        repeat(STOP_POLLS) {
+            val running = runCatching { workManager.getWorkInfosByTag(tag).get() }.getOrNull()
+                ?.any { it.state == WorkInfo.State.RUNNING }
+                ?: return false
+            if (!running) return true
+            Thread.sleep(STOP_POLL_MILLIS)
+        }
+        return false
+    }
+
+    /**
      * Turns WorkManager's view of the queue into rows.
      *
      * Everything the row needs before the worker has run once comes from tags, because
      * input data is not readable from a [WorkInfo] and the row has to say which model it is
      * fetching while the work is still waiting for a network.
      */
-    private fun List<WorkInfo>.toDownloads(hidden: Set<String>): List<ActiveDownload> = this
-        .mapNotNull { info ->
-            val key = info.tagValue(ModelDownloadWorker.TAG_KEY) ?: return@mapNotNull null
-            if (key in hidden) return@mapNotNull null
+    private fun List<WorkInfo>.toDownloads(hidden: Set<String>): List<ActiveDownload> {
+        val parts = mapNotNull { it.toPart() }
+            // Replacing a finished run leaves its record behind for a moment, so the same file
+            // can appear twice. The one still going is the one worth showing.
+            .groupBy { it.row.key }
+            .map { (_, runs) -> runs.minBy { it.state.showOrder() } }
+        val singles = parts.filter { it.group == null }
+            .filter { it.state != WorkInfo.State.SUCCEEDED && it.state != WorkInfo.State.CANCELLED }
+            .map { it.row }
+            .filter { it.key !in hidden }
+        val installs = parts.filter { it.group != null }
+            .groupBy { it.group!! }
+            .filter { (group, _) -> group !in hidden }
+            .mapNotNull { (group, members) -> merged(group, members) }
+        return installs + singles
+    }
 
-            val row = ActiveDownload(
-                repoId = info.tagValue(ModelDownloadWorker.TAG_REPO).orEmpty(),
-                path = info.tagValue(ModelDownloadWorker.TAG_PATH).orEmpty(),
-                key = key,
+    /**
+     * One row for an install of several files. Gone once every part has landed, because the
+     * model is then in the list above, or once any part is cancelled, because the install was.
+     */
+    private fun merged(group: String, members: List<Part>): ActiveDownload? {
+        if (members.any { it.state == WorkInfo.State.CANCELLED }) return null
+        if (members.all { it.state == WorkInfo.State.SUCCEEDED }) return null
+        val lead =
+            members.firstOrNull { it.row.key == group } ?: members.maxBy { it.row.bytesTotal }
+        val pending = members.filter { it.state != WorkInfo.State.SUCCEEDED }.map { it.row }
+        return lead.row.copy(
+            key = group,
+            bytesDone = members.sumOf {
+                if (it.state ==
+                    WorkInfo.State.SUCCEEDED
+                ) {
+                    it.row.bytesTotal
+                } else {
+                    it.row.bytesDone
+                }
+            },
+            bytesTotal = members.sumOf { it.row.bytesTotal },
+            isVerifying = pending.all { it.isVerifying },
+            error = pending.firstNotNullOfOrNull { it.error },
+            attemptsFailed = pending.maxOf { it.attemptsFailed },
+            lastError = pending.firstNotNullOfOrNull { it.lastError },
+            nextAttemptAtMillis = pending.mapNotNull { it.nextAttemptAtMillis }.minOrNull(),
+        )
+    }
+
+    /** One download's row, the install it belongs to, and where its work stands. */
+    private data class Part(val row: ActiveDownload, val group: String?, val state: WorkInfo.State)
+
+    private fun WorkInfo.toPart(): Part? {
+        val key = tagValue(ModelDownloadWorker.TAG_KEY) ?: return null
+        val declared = tagValue(ModelDownloadWorker.TAG_SIZE)?.toLongOrNull() ?: 0L
+        val base = ActiveDownload(
+            repoId = tagValue(ModelDownloadWorker.TAG_REPO).orEmpty(),
+            path = tagValue(ModelDownloadWorker.TAG_PATH).orEmpty(),
+            key = key,
+            bytesTotal = declared,
+        )
+        val row = when (state) {
+            WorkInfo.State.SUCCEEDED, WorkInfo.State.CANCELLED -> base
+
+            WorkInfo.State.FAILED -> base.copy(
+                error = outputData.getString(ModelDownloadWorker.KEY_ERROR)
+                    ?: "The download could not be completed.",
+                attemptsFailed = runAttemptCount,
+                lastError = outputData.getString(ModelDownloadWorker.KEY_ERROR),
             )
 
-            when (info.state) {
-                // Gone from the list either way: a finished file belongs in the model list
-                // above, and a cancelled one was asked to disappear.
-                WorkInfo.State.SUCCEEDED, WorkInfo.State.CANCELLED -> null
-
-                WorkInfo.State.FAILED -> row.copy(
-                    error = info.outputData.getString(ModelDownloadWorker.KEY_ERROR)
-                        ?: "The download could not be completed.",
-                    attemptsFailed = info.runAttemptCount,
-                    lastError = info.outputData.getString(ModelDownloadWorker.KEY_ERROR),
-                )
-
-                else -> row.copy(
-                    attemptsFailed = info.runAttemptCount,
-                    lastError = info.progress.getString(ModelDownloadWorker.KEY_ERROR),
-                    nextAttemptAtMillis = info.nextScheduleTimeMillis.takeIf {
-                        info.state == WorkInfo.State.ENQUEUED &&
-                            info.runAttemptCount > 0 &&
-                            it > 0L &&
-                            it != Long.MAX_VALUE
-                    },
-                    bytesDone = info.progress.getLong(ModelDownloadWorker.KEY_BYTES_DONE, 0L),
-                    // The declared size until the worker reports its own, so a queued
-                    // download still shows what it is about to cost.
-                    bytesTotal = info.progress.getLong(
-                        ModelDownloadWorker.KEY_BYTES_TOTAL,
-                        info.tagValue(ModelDownloadWorker.TAG_SIZE)?.toLongOrNull() ?: 0L,
-                    ),
-                    isVerifying = info.progress.getBoolean(
-                        ModelDownloadWorker.KEY_VERIFYING,
-                        false,
-                    ),
-                )
-            }
+            else -> base.copy(
+                attemptsFailed = runAttemptCount,
+                lastError = progress.getString(ModelDownloadWorker.KEY_ERROR),
+                nextAttemptAtMillis = nextScheduleTimeMillis.takeIf {
+                    state == WorkInfo.State.ENQUEUED &&
+                        runAttemptCount > 0 &&
+                        it > 0L &&
+                        it != Long.MAX_VALUE
+                },
+                bytesDone = progress.getLong(ModelDownloadWorker.KEY_BYTES_DONE, 0L),
+                // The declared size until the worker reports its own, so a queued download
+                // still shows what it is about to cost.
+                bytesTotal = progress.getLong(ModelDownloadWorker.KEY_BYTES_TOTAL, declared),
+                isVerifying = progress.getBoolean(ModelDownloadWorker.KEY_VERIFYING, false),
+            )
         }
-        // Replacing a finished run leaves its record behind for a moment, so the same file
-        // can appear twice. The one still going is the one worth showing.
-        .groupBy { it.key }
-        .map { (_, rows) -> rows.firstOrNull { it.error == null } ?: rows.first() }
+        return Part(row, tagValue(ModelDownloadWorker.TAG_GROUP), state)
+    }
+
+    /** Which of two runs of the same file to show: the live one, then a landed one. */
+    private fun WorkInfo.State.showOrder(): Int = when (this) {
+        WorkInfo.State.RUNNING, WorkInfo.State.ENQUEUED, WorkInfo.State.BLOCKED -> 0
+        WorkInfo.State.SUCCEEDED -> 1
+        else -> if (this == WorkInfo.State.FAILED) 2 else Int.MAX_VALUE
+    }
 
     private fun WorkInfo.tagValue(prefix: String): String? =
         tags.firstOrNull { it.startsWith(prefix) }?.removePrefix(prefix)
@@ -592,6 +740,13 @@ class ModelsViewModel @Inject constructor(
 
         /** A dropped connection is usually back well inside a minute. */
         const val BACKOFF_SECONDS = 30L
+
+        /** A cancelled download stops at its next buffer; five seconds is many of those. */
+        const val STOP_POLLS = 50
+        const val STOP_POLL_MILLIS = 100L
+
+        /** Long enough for a part being verified at the cancel to be renamed and swept. */
+        const val STRAGGLER_MILLIS = 30_000L
     }
 }
 

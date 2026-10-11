@@ -318,6 +318,13 @@ class ModelDownloadWorker @AssistedInject constructor(
         const val TAG_SIZE = "size:"
         const val TAG_SHA256 = "sha256:"
 
+        /**
+         * The install a download is one part of, named by the model file it installs: a
+         * compiled model's tokenizer, or a MediaTek build's chunks. The list shows a group as
+         * one row, because none of its parts is usable alone.
+         */
+        const val TAG_GROUP = "group:"
+
         private const val CHANNEL = "downloads"
 
         /**

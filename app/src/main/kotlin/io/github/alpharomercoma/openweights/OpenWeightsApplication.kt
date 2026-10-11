@@ -31,6 +31,7 @@ import coil3.request.CachePolicy
 import coil3.svg.SvgDecoder
 import dagger.hilt.android.HiltAndroidApp
 import io.github.alpharomercoma.openweights.core.engine.PTE_PROBE_PROCESS
+import io.github.alpharomercoma.openweights.core.engine.QnnSupport
 import io.github.alpharomercoma.openweights.core.engine.VulkanSupport
 import io.github.alpharomercoma.openweights.core.tools.PublicOnlyDns
 import io.github.alpharomercoma.openweights.core.tools.SEARCH_USER_AGENT
@@ -78,6 +79,7 @@ class OpenWeightsApplication :
         // Before any screen asks what this phone can run: a SharedPreferences read and one
         // PackageManager feature check.
         VulkanSupport.init(this)
+        QnnSupport.init(this)
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             runCatching { retireWatches() }
                 .onFailure { android.util.Log.w("OpenWeights", "watch clean-up failed", it) }

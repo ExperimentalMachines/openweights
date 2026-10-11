@@ -50,6 +50,7 @@ import io.github.alpharomercoma.openweights.ui.chat.MediaViewModel
 import io.github.alpharomercoma.openweights.ui.dashboard.DashboardScreen
 import io.github.alpharomercoma.openweights.ui.dashboard.DashboardViewModel
 import io.github.alpharomercoma.openweights.ui.discover.DiscoverScreen
+import io.github.alpharomercoma.openweights.ui.discover.DiscoverUiState
 import io.github.alpharomercoma.openweights.ui.discover.DiscoverViewModel
 import io.github.alpharomercoma.openweights.ui.models.ModelsScreen
 import io.github.alpharomercoma.openweights.ui.models.ModelsViewModel
@@ -353,23 +354,15 @@ fun OpenWeightsApp(
                         ?.let { modelsViewModel.cancel(it.key) }
                 },
                 onDownload = { repoId, path ->
-                    state.files.firstOrNull { it.file.path == path }?.file?.let { file ->
-                        val tokenizer = state.detail?.tokenizerFor(file)
-                        if (ModelFormat.of(file.fileName) == ModelFormat.PTE && tokenizer != null) {
-                            // Compiled weights are an install of two files, renamed on the
-                            // way in. Neither is usable alone.
-                            modelsViewModel.downloadCompiled(repoId, file, tokenizer)
-                        } else {
-                            modelsViewModel.download(repoId, path, file.sizeBytes, file.sha256)
-                            // The projector is not optional for a multimodal model: without
-                            // it the weights load but every attachment is refused, which
-                            // reads as a broken app rather than a missing file.
-                            state.detail?.pairedProjector(file)?.let { projector ->
-                                modelsViewModel.downloadProjector(repoId, projector, file.fileName)
-                            }
-                        }
-                        // To the installed list, which is where the download it has just
-                        // started shows its progress.
+                    // To the installed list, which is where the download it has just started
+                    // shows its progress.
+                    if (startDownload(
+                            state,
+                            repoId,
+                            path,
+                            modelsViewModel,
+                        )
+                    ) {
                         navController.push(Routes.MODELS)
                     }
                 },
@@ -443,4 +436,38 @@ fun OpenWeightsApp(
             )
         }
     }
+}
+
+/**
+ * Starts whatever the card at [path] installs, and says whether anything started. A MediaTek NPU
+ * card is a whole install: the CPU build that decodes, its tokenizer and the NPU half, never one
+ * part. Compiled weights come with their tokenizer, a GGUF with its projector.
+ */
+private fun startDownload(
+    state: DiscoverUiState,
+    repoId: String,
+    path: String,
+    models: ModelsViewModel,
+): Boolean {
+    val inspected = state.files.firstOrNull { it.file.path == path } ?: return false
+    val npu = inspected.npu
+    val file = inspected.file
+    val tokenizer = state.detail?.tokenizerFor(npu?.cpu ?: file)
+    when {
+        npu != null -> tokenizer?.let { models.downloadNpu(repoId, npu, it) } ?: return false
+        // Compiled weights are an install of two files, renamed on the way in. Neither is usable
+        // alone.
+        ModelFormat.of(file.fileName) == ModelFormat.PTE && tokenizer != null ->
+            models.downloadCompiled(repoId, file, tokenizer)
+        else -> {
+            models.download(repoId, path, file.sizeBytes, file.sha256)
+            // The projector is not optional for a multimodal model: without it the weights load
+            // but every attachment is refused, which reads as a broken app rather than a missing
+            // file.
+            state.detail?.pairedProjector(file)?.let {
+                models.downloadProjector(repoId, it, file.fileName)
+            }
+        }
+    }
+    return true
 }

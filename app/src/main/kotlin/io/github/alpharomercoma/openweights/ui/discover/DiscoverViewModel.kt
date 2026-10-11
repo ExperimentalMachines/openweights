@@ -35,6 +35,8 @@ import io.github.alpharomercoma.openweights.core.device.MemoryBandwidth
 import io.github.alpharomercoma.openweights.core.device.ThroughputCalibration
 import io.github.alpharomercoma.openweights.core.engine.EngineArchitectures
 import io.github.alpharomercoma.openweights.core.engine.ExecuTorchSupport
+import io.github.alpharomercoma.openweights.core.engine.NpuInstall
+import io.github.alpharomercoma.openweights.core.engine.NpuMemory
 import io.github.alpharomercoma.openweights.core.hub.GRADED
 import io.github.alpharomercoma.openweights.core.hub.HubFile
 import io.github.alpharomercoma.openweights.core.hub.HubModel
@@ -44,6 +46,7 @@ import io.github.alpharomercoma.openweights.core.hub.HubRuntime
 import io.github.alpharomercoma.openweights.core.hub.HubSearchPage
 import io.github.alpharomercoma.openweights.core.hub.HubSort
 import io.github.alpharomercoma.openweights.core.hub.HuggingFaceClient
+import io.github.alpharomercoma.openweights.core.hub.NpuBundle
 import io.github.alpharomercoma.openweights.core.hub.ParameterRange
 import io.github.alpharomercoma.openweights.core.hub.Publishers
 import io.github.alpharomercoma.openweights.core.hub.RangeByteSource
@@ -68,6 +71,12 @@ import javax.inject.Inject
 /** One downloadable file with everything known about how it would run here. */
 data class InspectedFile(
     val file: HubFile,
+    /**
+     * Set for a MediaTek NPU build: [file] then stands for the whole install (its size is every
+     * part's together, its path sits under `mtk/<soc>/` so the card says NPU), and downloading
+     * it installs the CPU build, its tokenizer and the NPU half together.
+     */
+    val npu: NpuBundle? = null,
     /** True for the file the repository's recommendation was measured on; see [GRADED]. */
     val graded: Boolean = false,
     val metadata: GgufMetadata? = null,
@@ -476,34 +485,11 @@ class DiscoverViewModel @Inject constructor(
                 .onSuccess { detail ->
                     val downloaded = modelStore.availableModels().map { it.name }.toSet()
 
-                    // A repository offers one or the other. Compiled weights are listed
-                    // only when the tokenizer is there too, because a `.pte` without one
-                    // downloads fine and then cannot open, and only in a build that has a
-                    // runtime for them.
-                    // Only weights this build could actually open. A `.pte` compiled for a
-                    // delegate that is not linked fails to load outright — the runtime says
-                    // the backend is not registered and there is no fallback to the CPU —
-                    // so offering one means a gigabyte downloaded and then an error. The
-                    // backend is read from the name because a `.pte` carries no metadata
-                    // and the runtime has no API that reports what a file uses.
-                    val compiled = detail.compiled
-                        .takeIf { ExecuTorchSupport.AVAILABLE && detail.isInstallableCompiled }
-                        .orEmpty()
-                        .filter { runsHere(repoId, it.path) }
-                        // No tokenizer in reach means a download that ends in a model
-                        // that cannot open, so the offer is withheld per file.
-                        .filter { detail.tokenizerFor(it) != null }
-                        // Only families this build can render: a `.pte` the prompt
-                        // side has no template for refuses to load, loudly, after a
-                        // gigabyte — so it is not offered in the first place.
-                        .filter {
-                            PromptTemplates.forModel(
-                                ExecuTorchFileName.modelNameFor(repoId, it.path),
-                            ) != null
-                        }
+                    val compiled = compiledOffersIn(repoId, detail)
+                    val npuOffers = npuOffersIn(repoId, detail)
 
                     val withheld = detail.compiled
-                        .takeIf { it.isNotEmpty() && compiled.isEmpty() }
+                        .takeIf { it.isNotEmpty() && compiled.isEmpty() && npuOffers.isEmpty() }
                         ?.let { withheldReason(repoId, detail) }
 
                     // The measured file leads the GGUF list, whatever its size, so the
@@ -518,23 +504,16 @@ class DiscoverViewModel @Inject constructor(
                             // occasionally two, against a long list of GGUF quantisations,
                             // and the whole reason to open a repository that has one is
                             // usually that it has one.
-                            files = compiled.map { file ->
-                                InspectedFile(
-                                    file = file,
-                                    // Named after the repository (and, in a multi-model
-                                    // repository, the file) once installed, so that is
-                                    // what says whether it is already here.
-                                    isDownloaded = ExecuTorchFileName
-                                        .installedNamesFor(repoId, file.path)
-                                        .any { it in downloaded },
-                                )
-                            } + ggufs.map { file ->
-                                InspectedFile(
-                                    file = file,
-                                    graded = file.path == graded,
-                                    isDownloaded = file.path.substringAfterLast('/') in downloaded,
-                                )
-                            },
+                            files = npuOffers.map { npuCard(repoId, it) } +
+                                compiled.map { compiledCard(repoId, it, downloaded) } +
+                                ggufs.map { file ->
+                                    InspectedFile(
+                                        file = file,
+                                        graded = file.path == graded,
+                                        isDownloaded =
+                                        file.path.substringAfterLast('/') in downloaded,
+                                    )
+                                },
                         )
                     }
                     // Compiled weights are sized without a download. There is no header
@@ -544,6 +523,11 @@ class DiscoverViewModel @Inject constructor(
                     compiled.forEach { file ->
                         updateFile(file.path) {
                             it.copy(fit = estimateCompiled(file), isInspecting = false)
+                        }
+                    }
+                    npuOffers.forEach { bundle ->
+                        updateFile(bundle.asCard().path) {
+                            it.copy(fit = estimateNpu(bundle), isInspecting = false)
                         }
                     }
 
@@ -558,6 +542,78 @@ class DiscoverViewModel @Inject constructor(
                 }
         }
     }
+
+    /**
+     * The compiled weights to offer. A repository offers one or the other. Compiled weights are
+     * listed only when the tokenizer is there too, because a `.pte` without one downloads fine
+     * and then cannot open, and only in a build that has a runtime for them.
+     *
+     * Only weights this build could actually open. A `.pte` compiled for a delegate that is not
+     * linked fails to load outright: the runtime says the backend is not registered and there is
+     * no fallback to the CPU, so offering one means a gigabyte downloaded and then an error. The
+     * backend is read from the name because a `.pte` carries no metadata and the runtime has no
+     * API that reports what a file uses.
+     */
+    private fun compiledOffersIn(repoId: String, detail: HubModelDetail): List<HubFile> =
+        detail.compiled
+            .takeIf { ExecuTorchSupport.AVAILABLE && detail.isInstallableCompiled }
+            .orEmpty()
+            .filter { runsHere(repoId, it.path) }
+            // No tokenizer in reach means a download that ends in a model that cannot open, so the
+            // offer is withheld per file.
+            .filter { detail.tokenizerFor(it) != null }
+            // Only families this build can render: a `.pte` the prompt side has no template for
+            // refuses to load, loudly, after a gigabyte, so it is not offered in the first place.
+            .filter {
+                PromptTemplates.forModel(ExecuTorchFileName.modelNameFor(repoId, it.path)) != null
+            }
+
+    /**
+     * The MediaTek NPU builds to offer, one card per window: only on the chip they were
+     * compiled for, only where the NeuroPilot runtime loads, and only for a family this build
+     * can render with a tokenizer in reach.
+     */
+    private fun npuOffersIn(repoId: String, detail: HubModelDetail): List<NpuBundle> =
+        detail.npuBundles
+            .takeIf { ExecuTorchSupport.AVAILABLE && ExecuTorchSupport.hasNpu() }
+            .orEmpty()
+            .filter { it.soc.equals(profiler.profile().socModel, ignoreCase = true) }
+            .filter { detail.tokenizerFor(it.cpu) != null }
+            .filter {
+                PromptTemplates.forModel(ExecuTorchFileName.modelNameFor(repoId, it.cpu.path)) !=
+                    null
+            }
+
+    /** The card for [bundle]. */
+    private fun npuCard(repoId: String, bundle: NpuBundle) = InspectedFile(
+        file = bundle.asCard(),
+        npu = bundle,
+        isDownloaded = npuInstalled(repoId, bundle),
+    )
+
+    /**
+     * Whether [bundle] is installed: its CPU build, the tokenizer and the whole NPU half. The
+     * half alone opens nothing (codex QA).
+     */
+    private fun npuInstalled(repoId: String, bundle: NpuBundle): Boolean {
+        val model = modelStore.compiledDestination(repoId, bundle.cpu.path)
+        return model.isFile &&
+            modelStore.tokenizerFor(model.name).isFile &&
+            NpuInstall.read(model) != null
+    }
+
+    /**
+     * The card for compiled [file]: named after the repository (and, in a multi-model
+     * repository, the file) once installed, so that is what says whether it is already here.
+     */
+    private fun compiledCard(repoId: String, file: HubFile, downloaded: Set<String>) =
+        InspectedFile(
+            file = file,
+            isDownloaded = ExecuTorchFileName.installedNamesFor(repoId, file.path).any {
+                it in
+                    downloaded
+            },
+        )
 
     /**
      * The first reason that explains an empty offer, in the order a person would ask.
@@ -596,6 +652,11 @@ class DiscoverViewModel @Inject constructor(
         _uiState.update { state ->
             state.copy(
                 files = state.files.map { inspected ->
+                    // An NPU card's path names no file on disk: it is installed when its CPU
+                    // build and whole NPU half are, which only the folder can say (codex QA).
+                    inspected.npu?.let {
+                        return@map inspected.copy(isDownloaded = npuInstalled(repoId, it))
+                    }
                     val names = when (ModelFormat.of(inspected.file.fileName)) {
                         ModelFormat.PTE -> ExecuTorchFileName.installedNamesFor(
                             repoId,
@@ -670,6 +731,25 @@ class DiscoverViewModel @Inject constructor(
                 it.copy(isInspecting = false, inspectionError = failure.readableMessage())
             }
         }
+    }
+
+    /**
+     * An NPU build's fit: memory and verdict from the NPU estimate (the files, the Neuron
+     * backend's window-sized caches and the CPU half's, see NpuMemory), decode speed from the
+     * CPU build, which is what decodes. No prefill figure: the CPU's would be wrong here.
+     */
+    private fun estimateNpu(bundle: NpuBundle): FitReport {
+        // Options that do not describe the cache get the coarse compiled allowance instead,
+        // which errs high.
+        val need = NpuMemory.needBytes(bundle.runnerJson, bundle.totalBytes)
+            ?: return estimateCompiled(bundle.cpu.copy(sizeBytes = bundle.totalBytes))
+        return estimator.estimateKnownNeed(
+            device = profiler.profile(),
+            requiredBytes = need,
+            downloadBytes = bundle.totalBytes,
+            decodeSizeBytes = bundle.cpu.sizeBytes,
+            calibration = compiledCalibration,
+        )
     }
 
     /** The fit for weights that carry no metadata, using only compiled measurements. */
@@ -818,3 +898,14 @@ internal fun matchPrefillCalibration(
 
 /** What publishers put in the name of an export that reads pictures or sound. */
 private val MULTIMODAL_MARKERS = listOf("vl", "vision", "audio", "whisper", "asr")
+
+/**
+ * The card an NPU build is shown as: named after the CPU build that decodes for it, under
+ * `mtk/<soc>/` so the card reads as NPU, sized as the whole install, with the window.
+ */
+internal fun NpuBundle.asCard(): HubFile = HubFile(
+    path = "mtk/$soc/${cpu.fileName.removeSuffix(".pte")}-npu.pte",
+    sizeBytes = totalBytes,
+    sha256 = null,
+    contextWindow = window,
+)

@@ -1136,15 +1136,7 @@ class ChatViewModel @Inject constructor(
             offloadBuffers = info?.offloadBuffers.orEmpty(),
             hasGpu = runtime.hasGpu(),
             hasNpu = runtime.hasNpu(),
-            compiledProcessor = modelFile.name
-                .takeIf { ModelFormat.of(it) == ModelFormat.PTE }
-                ?.let {
-                    when (CompiledBackend.of(it).processor) {
-                        CompiledBackend.Processor.CPU -> ComputeTarget.CPU
-                        CompiledBackend.Processor.GPU -> ComputeTarget.GPU
-                        CompiledBackend.Processor.NPU -> ComputeTarget.NPU
-                    }
-                },
+            compiledProcessor = compiledProcessorOf(modelFile),
             modelName = modelFile.nameWithoutExtension,
             // The filename's own quantization, not llama's verbose description:
             // "Q4_K_M" beside the compute device and context window reads as a
@@ -1164,8 +1156,22 @@ class ChatViewModel @Inject constructor(
                 keepConversation && modelName == modelFile.nameWithoutExtension
             },
             compaction = if (keepConversation) compaction else null,
-            error = if (keepConversation) transcript.unreadableWarning(support) else null,
+            error = runtime.acceleratorNote()
+                ?: if (keepConversation) transcript.unreadableWarning(support) else null,
         ).withCapabilities(info, runtime.ignoresThinkingSwitch(modelFile.name))
+    }
+
+    /** The processor a compiled model reads its prompts on, or null for a GGUF. */
+    private fun compiledProcessorOf(modelFile: File): ComputeTarget? {
+        if (ModelFormat.of(modelFile.name) != ModelFormat.PTE) return null
+        // A MediaTek install is a CPU build by name with an NPU half beside it, and the engine
+        // is what knows which one reads the prompt.
+        if (runtime.hasNpu()) return ComputeTarget.NPU
+        return when (CompiledBackend.of(modelFile.name).processor) {
+            CompiledBackend.Processor.CPU -> ComputeTarget.CPU
+            CompiledBackend.Processor.GPU -> ComputeTarget.GPU
+            CompiledBackend.Processor.NPU -> ComputeTarget.NPU
+        }
     }
 
     /**
@@ -2878,12 +2884,15 @@ class ChatViewModel @Inject constructor(
                 compaction = conversation.compactionSummary?.let {
                     Compaction(it, conversation.compactionThroughIndex, 0)
                 },
-                error = if (mismatch) {
-                    "This chat was written by ${conversation.modelName}. Replies will " +
-                        "now come from $currentModel."
-                } else {
-                    null
-                },
+                // The accelerator note too: a chat restored at start-up replaced the one the
+                // load had just set, before anyone could read it (codex QA).
+                error = listOfNotNull(
+                    (
+                        "This chat was written by ${conversation.modelName}. Replies will " +
+                            "now come from $currentModel."
+                        ).takeIf { mismatch },
+                    runtime.acceleratorNote(),
+                ).joinToString(" ").ifEmpty { null },
             )
             // Not zero. The cache is empty because the model has not read this
             // conversation yet, but the next turn will read all of it, and everything

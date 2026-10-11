@@ -122,6 +122,9 @@ class ModelRuntime @Inject constructor(
         engine.computeDevices().any { it.kind == ComputeDeviceKind.ACCELERATOR }
     }.getOrDefault(false)
 
+    /** Why the loaded model's accelerator is not in use, when it has one and it is not. */
+    fun acceleratorNote(): String? = runCatching { engine.acceleratorNote() }.getOrNull()
+
     fun isThrottling(): Boolean = thermal.isThrottling()
 
     /** How hot the system says the device is, for the line that says so while working. */

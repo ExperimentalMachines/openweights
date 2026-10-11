@@ -23,6 +23,7 @@ import io.github.alpharomercoma.openweights.core.common.model.GgufFileName
 import io.github.alpharomercoma.openweights.core.common.model.ModelFormat
 import io.github.alpharomercoma.openweights.core.engine.ExecuTorchSupport
 import io.github.alpharomercoma.openweights.core.engine.ExportFacts
+import io.github.alpharomercoma.openweights.core.engine.NpuInstall
 import io.github.alpharomercoma.openweights.core.engine.PteProbe
 import io.github.alpharomercoma.openweights.core.hub.DOWNLOAD_PARTIAL_SUFFIX
 import java.io.File
@@ -47,14 +48,17 @@ class ModelStore @Inject constructor(@ApplicationContext private val context: Co
     /**
      * Reclaims space held by a generation bundle from before that feature was removed.
      *
-     * A GGUF model is always a single file here, so a directory in this folder could only
-     * be a leftover multi-file bundle (Sana, Stable Diffusion) — up to 1.6 GB each, and with
+     * A model is a single file here, so a directory in this folder other than an NPU half
+     * can only be a leftover multi-file bundle (Sana, Stable Diffusion) — up to 1.6 GB each, and with
      * the screen that once listed and deleted them gone, otherwise unreachable without
      * clearing app data. Run once per process: real work only the first time a phone that
      * had one installed opens this build, a no-op every time after.
      */
     fun deleteLegacyGenerationBundles() {
-        directory.listFiles { file -> file.isDirectory }?.forEach { it.deleteRecursively() }
+        // A MediaTek NPU half is a folder too, and a current one: sweeping it deleted every NPU
+        // install the first time the model list opened after it landed (phone run, 2026-10-11).
+        directory.listFiles { file -> file.isDirectory && !file.name.endsWith(NpuInstall.SUFFIX) }
+            ?.forEach { it.deleteRecursively() }
     }
 
     /**
