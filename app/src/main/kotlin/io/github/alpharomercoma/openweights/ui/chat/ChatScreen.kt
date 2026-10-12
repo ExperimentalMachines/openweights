@@ -35,6 +35,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -148,6 +150,11 @@ import kotlin.time.Duration.Companion.seconds
 @Suppress("LongParameterList")
 fun ChatScreen(
     state: ChatUiState,
+    /**
+     * The reply being written's speeds, read only by the line under it. A function rather
+     * than a value, so the screen above that line is not recomposed four times a second.
+     */
+    liveReadout: () -> LiveReadout? = { null },
     onSend: (String) -> Boolean,
     /** Persist what is half-written, so leaving the screen does not lose it. */
     onDraftChange: (String) -> Unit = {},
@@ -285,6 +292,7 @@ fun ChatScreen(
             canvasActive = canvasActive,
             onOpenCanvas = onOpenCanvas,
             state = state,
+            liveReadout = liveReadout,
             onDraftChange = onDraftChange,
             listState = listState,
             followTail = followTail,
@@ -343,6 +351,7 @@ private fun ChatContent(
     canvasActive: Boolean,
     onOpenCanvas: () -> Unit,
     state: ChatUiState,
+    liveReadout: () -> LiveReadout?,
     onDraftChange: (String) -> Unit,
     listState: androidx.compose.foundation.lazy.LazyListState,
     followTail: io.github.alpharomercoma.openweights.core.designsystem.component.FollowTailState,
@@ -491,6 +500,7 @@ private fun ChatContent(
                                     clipboard = clipboard,
                                     onActionsForId = onActionsForId,
                                     onToggleReadAloud = onToggleReadAloud,
+                                    liveReadout = liveReadout,
                                 )
                             }
                             // Keep the button inside the reading surface so even its exit
@@ -852,6 +862,7 @@ private fun Transcript(
     clipboard: MessageClipboard,
     onActionsForId: (Long?) -> Unit,
     onToggleReadAloud: (String) -> Unit,
+    liveReadout: () -> LiveReadout? = { null },
 ) {
     val lastId = state.transcript.lastOrNull()?.id
     // A goal that halted right under this reply, rather than one that finished normally: the
@@ -901,6 +912,7 @@ private fun Transcript(
                     },
                     onReadAloud = { onToggleReadAloud(entry.answer.ifEmpty { entry.text }) },
                     collapseByDefault = entry.id == lastId && haltedRightHere,
+                    liveReadout = liveReadout,
                 )
             }
         }
@@ -1133,6 +1145,7 @@ private fun AssistantTurn(
     onCopy: () -> Unit,
     onReadAloud: () -> Unit,
     collapseByDefault: Boolean = false,
+    liveReadout: () -> LiveReadout? = { null },
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         // Selectable, which it was not.
@@ -1182,7 +1195,9 @@ private fun AssistantTurn(
         // Last, under whatever has been written so far, because that is where the eye
         // already is while waiting. The top bar says the same thing, but a status two
         // hundred pixels above the text being read is a status nobody sees.
-        activity?.takeIf { it.isBusy }?.let { ActivityLine(it, thermal, celsius) }
+        activity?.takeIf {
+            it.isBusy
+        }?.let { ActivityLine(it, thermal, celsius, live = liveReadout) }
 
         // Only once the reply has finished: actions on a half-written answer copy half an
         // answer, and a retry mid-stream is a stop the user did not ask for.
@@ -1193,7 +1208,15 @@ private fun AssistantTurn(
                 onReadAloud = onReadAloud,
                 onMore = onMore,
                 modifier = Modifier.padding(top = 2.dp),
-                measurements = entry.tokensPerSecond?.let { { Measurements(entry) } },
+                // Paging is worth saying even on a reply too short to have a writing speed:
+                // a long, swapping read of the prompt and a one-word answer is exactly that.
+                measurements = if (entry.tokensPerSecond != null ||
+                    entry.memory?.pagingDetected == true
+                ) {
+                    { Measurements(entry) }
+                } else {
+                    null
+                },
             )
         }
     }
@@ -1275,11 +1298,14 @@ private const val MILLIS_PER_SECOND = 1000.0
  * the phase does rather than counting the whole turn.
  */
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 private fun ActivityLine(
     state: RuntimeState,
     thermal: ThermalLevel,
     celsius: Float?,
     modifier: Modifier = Modifier,
+    /** Read here and nowhere above, so its four changes a second redraw only this line. */
+    live: () -> LiveReadout? = { null },
 ) {
     var seconds by remember(state) { mutableIntStateOf(0) }
     LaunchedEffect(state) {
@@ -1300,8 +1326,41 @@ private fun ActivityLine(
         label = "pulse",
     )
 
+    val readout = live()
+    // The same arrangement as the row of actions that replaces this line when the reply
+    // finishes, so the speeds sit where the finished ones will and settle there instead of
+    // appearing; and flowing, so at a large font they drop to a line of their own rather
+    // than being clipped.
+    FlowRow(
+        modifier = modifier.fillMaxWidth().padding(vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
+        // Flowing inside as well: a percentage makes the label longer, and at a large font the
+        // seconds and the battery have to be able to drop under it one by one rather than
+        // be pushed off the end as a block.
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            itemVerticalAlignment = Alignment.CenterVertically,
+        ) {
+            ActivityStatus(state, readout, seconds, alpha, thermal, celsius)
+        }
+        readout?.takeIf { it.hasRate }?.let { LiveSpeed(it) }
+    }
+}
+
+/** The pulse, what the runtime is doing, how long it has been at it, and the battery. */
+@Composable
+private fun ActivityStatus(
+    state: RuntimeState,
+    readout: LiveReadout?,
+    seconds: Int,
+    alpha: Float,
+    thermal: ThermalLevel,
+    celsius: Float?,
+) {
+    // The pulse stays with what it pulses for; everything after it may wrap on its own.
     Row(
-        modifier = modifier.padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -1313,44 +1372,78 @@ private fun ActivityLine(
                 .background(MaterialTheme.colorScheme.primary),
         )
         Text(
-            text = state.label.replaceFirstChar { it.uppercase() },
+            // How far through the prompt, where the engine can count it: a re-read after a
+            // tool is the longest silence in a turn, and a percentage is what says it moves.
+            text = state.label.replaceFirstChar { it.uppercase() } +
+                (
+                    readout?.percentRead?.takeIf { state == RuntimeState.READING }?.let { " $it%" }
+                        ?: ""
+                    ),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        if (seconds > 0) {
-            Text(
-                text = "${seconds}s",
-                style = MetricTextStyle,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        // Always, not only once the phone is hot. This is the one reading no hosted
-        // assistant can show, because there the hardware warming up is somebody else's,
-        // and showing it only when warm meant it was never seen: a phone on a desk at room
-        // temperature is cool, so the monitor that was asked for looked like it had never
-        // been built. Red when it is warm, which is the moment a hot phone would otherwise
-        // be indistinguishable from a slow model.
+    }
+    if (seconds > 0) {
         Text(
-            // The reading if the phone will give one, and the four step word beside it once
-            // the phone claims to be warm.
-            //
-            // Both, because they are two different measurements and only one of them is
-            // ours. Android's thermal status is a policy decision made by the vendor, and
-            // this reference device reports LIGHT while sitting at 25°C, so a red "25.0°C"
-            // on its own said the number was the problem. Attached to the word it is the
-            // system's claim, in the system's own terms, with the reading as context.
-            text = listOfNotNull(
-                celsius?.let { stringResource(R.string.battery_temperature, it) },
-                thermal.label.takeIf { thermal.isWarm || celsius == null },
-            ).joinToString(" · ", prefix = "· "),
+            text = "${seconds}s",
             style = MetricTextStyle,
-            color = if (thermal.isWarm) {
-                MaterialTheme.colorScheme.error
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            },
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
+    // Always, not only once the phone is hot. This is the one reading no hosted
+    // assistant can show, because there the hardware warming up is somebody else's,
+    // and showing it only when warm meant it was never seen: a phone on a desk at room
+    // temperature is cool, so the monitor that was asked for looked like it had never
+    // been built. Red when it is warm, which is the moment a hot phone would otherwise
+    // be indistinguishable from a slow model.
+    Text(
+        // The reading if the phone will give one, and the four step word beside it once
+        // the phone claims to be warm.
+        //
+        // Both, because they are two different measurements and only one of them is
+        // ours. Android's thermal status is a policy decision made by the vendor, and
+        // this reference device reports LIGHT while sitting at 25°C, so a red "25.0°C"
+        // on its own said the number was the problem. Attached to the word it is the
+        // system's claim, in the system's own terms, with the reading as context.
+        text = listOfNotNull(
+            celsius?.let { stringResource(R.string.battery_temperature, it) },
+            thermal.label.takeIf { thermal.isWarm || celsius == null },
+        ).joinToString(" · ", prefix = "· "),
+        style = MetricTextStyle,
+        color = if (thermal.isWarm) {
+            MaterialTheme.colorScheme.error
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
+    )
+}
+
+/**
+ * The reply being written's speeds, in the finished row's own form: prompt, then reply.
+ *
+ * A hyphen for a speed this engine cannot measure yet and an ellipsis for one still to come,
+ * so a figure is never invented to fill the slot. Not announced on every change: a screen
+ * reader is told the speeds when it reaches the line, not four times a second.
+ */
+@Composable
+private fun LiveSpeed(readout: LiveReadout) {
+    val locale = LocalConfiguration.current.locales[0]
+    val prefill = readout.prefillTokensPerSecond?.let { String.format(locale, "%.0f", it) }
+    val decode = readout.decodeTokensPerSecond?.let { String.format(locale, "%.0f", it) }
+    val spoken = stringResource(
+        R.string.live_speed_description,
+        prefill?.let { "$it tok/s" } ?: "-",
+        decode?.let { "$it tok/s" } ?: "-",
+    )
+    Text(
+        // Isolated like the finished figure, so a right-to-left layout cannot read the two
+        // speeds around the arrow as the phases happening backwards.
+        text = "\u2068" + (prefill ?: "-") + "→" + (decode ?: "…") + " tok/s\u2069",
+        style = MetricTextStyle,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+        modifier = Modifier.semantics { contentDescription = spoken },
+    )
 }
 
 @Composable
@@ -1366,11 +1459,48 @@ internal fun IntermediateText(text: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 private fun Measurements(entry: TranscriptEntry) {
+    val locale = LocalConfiguration.current.locales[0]
+
+    // Flowing within itself as well as in the row it sits in: the row treats this group as
+    // one item, so a third figure at a large font would otherwise be clipped off its end.
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
+        // A reply too short to have a writing speed can still have a wait and a warning.
+        entry.tokensPerSecond?.let { Speed(it, entry.prefillTokensPerSecond) }
+        // Two numbers, not four. How fast it wrote and how long the wait was are the two
+        // anyone reads at a glance; time to first token and the token count are detail,
+        // and detail belongs in the long press sheet where there is room for it.
+        entry.totalMillis?.let { total ->
+            Metric(
+                text = String.format(locale, "%.1fs", total / MILLIS_PER_SECOND),
+                maxLines = 1,
+            )
+        }
+        // Only when the phone was paging the reply's memory back in hard enough to cost it
+        // time (see TurnMemory), and in words as well as colour: red alone says nothing to a
+        // reader who cannot see it. The long press says more.
+        if (entry.memory?.pagingDetected == true) {
+            val description = stringResource(R.string.memory_paging_description)
+            Text(
+                // Free to wrap: a translation longer than the row must not be cut off.
+                text = stringResource(R.string.memory_paging),
+                style = MetricTextStyle,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.semantics { contentDescription = description },
+            )
+        }
+    }
+}
+
+/** How fast the prompt was read and the reply written, coloured by the second. */
+@Composable
+private fun Speed(speed: Double, prefill: Double?) {
     val dark = LocalIsDarkTheme.current
     val locale = LocalConfiguration.current.locales[0]
-    val speed = entry.tokensPerSecond ?: return
-    val prefill = entry.prefillTokensPerSecond
     // Read here rather than inside the semantics block, which is not a composition.
     val spokenSpeed = if (prefill != null) {
         stringResource(
@@ -1381,40 +1511,25 @@ private fun Measurements(entry: TranscriptEntry) {
     } else {
         stringResource(R.string.generated_at_speed, speed.roundToInt())
     }
-
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            // Prefill, then decode: an arrow reads as "one phase into the next", which is
-            // the actual shape of a turn -- the prompt is read start to finish before the
-            // first generated token exists. Labelled alternatives (PP/TG, in/out) were tried;
-            // this is the one that was asked for after seeing them.
-            // Wrapped in a first-strong isolate (FSI/PDI) so an RTL layout cannot reorder
-            // the two numbers around the arrow: digits are bidirectionally weak and the
-            // arrow is neutral, so unisolated, an Arabic screen rendered decode→prefill —
-            // the same characters, read as the phases happening backwards.
-            text = if (prefill != null) {
-                "\u2068" + String.format(locale, "%.0f→%.0f tok/s", prefill, speed) + "\u2069"
-            } else {
-                String.format(locale, "%.1f tok/s", speed)
-            },
-            style = MetricTextStyle,
-            color = signalColor((speed / FAST_TOKENS_PER_SECOND).toFloat(), dark),
-            maxLines = 1,
-            modifier = Modifier.semantics { contentDescription = spokenSpeed },
-        )
-        // Two numbers, not four. How fast it wrote and how long the wait was are the two
-        // anyone reads at a glance; time to first token and the token count are detail,
-        // and detail belongs in the long press sheet where there is room for it.
-        entry.totalMillis?.let { total ->
-            Metric(
-                text = String.format(locale, "%.1fs", total / MILLIS_PER_SECOND),
-                maxLines = 1,
-            )
-        }
-    }
+    Text(
+        // Prefill, then decode: an arrow reads as "one phase into the next", which is
+        // the actual shape of a turn -- the prompt is read start to finish before the
+        // first generated token exists. Labelled alternatives (PP/TG, in/out) were tried;
+        // this is the one that was asked for after seeing them.
+        // Wrapped in a first-strong isolate (FSI/PDI) so an RTL layout cannot reorder
+        // the two numbers around the arrow: digits are bidirectionally weak and the
+        // arrow is neutral, so unisolated, an Arabic screen rendered decode→prefill: the
+        // same characters, read as the phases happening backwards.
+        text = if (prefill != null) {
+            "\u2068" + String.format(locale, "%.0f→%.0f tok/s", prefill, speed) + "\u2069"
+        } else {
+            String.format(locale, "%.1f tok/s", speed)
+        },
+        style = MetricTextStyle,
+        color = signalColor((speed / FAST_TOKENS_PER_SECOND).toFloat(), dark),
+        maxLines = 1,
+        modifier = Modifier.semantics { contentDescription = spokenSpeed },
+    )
 }
 
 @Composable

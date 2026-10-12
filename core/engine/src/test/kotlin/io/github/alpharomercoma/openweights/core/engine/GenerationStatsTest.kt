@@ -109,9 +109,60 @@ class GenerationStatsTest {
         assertThat(turn.generatedTokens).isEqualTo(121)
         // The rates come out of the summed fields, so they describe the whole turn.
         assertThat(turn.prefillTokensPerSecond).isEqualTo(3300 * 1000.0 / 33_000)
-        assertThat(turn.decodeTokensPerSecond).isEqualTo(120 * 1000.0 / 5_000)
+        // Each pass's first token is outside its decode interval, so both come off.
+        assertThat(turn.decodeTokensPerSecond).isEqualTo(119 * 1000.0 / 5_000)
         // Where the context stands is the closing pass's to say.
         assertThat(turn.contextUsed).isEqualTo(closing.contextUsed)
+    }
+
+    @Test
+    fun `two passes each keep their first token out of the decode rate`() {
+        // Ten tokens in each pass over a second of decode each: nine timed tokens a second,
+        // not the nine and a half that subtracting a single first token from the sum gave.
+        val turn = stats(generatedTokens = 10, decodeMs = 1_000)
+            .through(stats(generatedTokens = 10, decodeMs = 1_000))
+
+        assertThat(turn.firstTokens).isEqualTo(2)
+        assertThat(turn.decodeTokensPerSecond).isEqualTo(9.0)
+    }
+
+    @Test
+    fun `a pass that wrote nothing has no first token to take off`() {
+        val turn = stats(generatedTokens = 0).through(stats(generatedTokens = 11, decodeMs = 1_000))
+
+        assertThat(turn.decodeTokensPerSecond).isEqualTo(10.0)
+    }
+
+    @Test
+    fun `memory folds across passes, and paging in any pass marks the reply`() {
+        val first = stats().copy(
+            memory = TurnMemory(400_000, 30_000, 3_000L, 900L, pagingDetected = true),
+        )
+        val second = stats().copy(
+            memory = TurnMemory(1_000, 5_000, 3_200L, 100L, pagingDetected = false),
+        )
+
+        val memory = first.through(second).memory!!
+
+        assertThat(memory.majorFaults).isEqualTo(401_000)
+        assertThat(memory.activeMs).isEqualTo(35_000)
+        assertThat(memory.peakFootprintBytes).isEqualTo(3_200L)
+        assertThat(memory.swapEndBytes).isEqualTo(100L)
+        assertThat(memory.pagingDetected).isTrue()
+    }
+
+    @Test
+    fun `a later pass with no reading leaves the final swap unknown rather than borrowed`() {
+        val first = stats().copy(
+            memory = TurnMemory(10, 1_000, 3_000L, 900L, pagingDetected = false),
+        )
+
+        val memory = first.through(stats()).memory!!
+
+        assertThat(memory.swapEndBytes).isNull()
+        // A pass that could not count its faults leaves the reply's total unknown, not short.
+        assertThat(memory.majorFaults).isNull()
+        assertThat(memory.peakFootprintBytes).isEqualTo(3_000L)
     }
 
     private fun stats(

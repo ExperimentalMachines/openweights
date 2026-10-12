@@ -18,6 +18,7 @@
 
 #include <atomic>
 #include <functional>
+#include <mutex>
 #include <string>
 #include <deque>
 #include <unordered_map>
@@ -351,6 +352,23 @@ public:
 
     /** Signals the running generation to stop. Safe to call from any thread. */
     void cancel() { cancelled_.store(true, std::memory_order_relaxed); }
+
+    /** How many longs [progress_snapshot] writes. */
+    static constexpr int PROGRESS_FIELDS = 8;
+
+    /**
+     * Where the running generation stands, for the live readout: phase (0 idle, 1 reading
+     * the prompt, 2 writing), prompt tokens to read this turn (-1 until known, and for a turn
+     * with media, whose count the readout cannot get right), read so far, when reading began
+     * and when the last batch finished, tokens generated, and when the first and latest of
+     * them came. Milliseconds on the same clock as [GenerationStats].
+     *
+     * Safe to call from any thread while [generate] runs: it copies one snapshot under its
+     * own lock and touches nothing of llama.cpp's, so it never sees half an update. Only
+     * whole batches are counted, so the rate through the last one does not sag while the
+     * next is in flight.
+     */
+    void progress_snapshot(int64_t * out) const;
 
     /** Drops the KV cache so the next generation starts from an empty context. */
     void reset();
@@ -780,6 +798,31 @@ private:
     std::vector<RollbackPoint> rollback_points_;
 
     std::atomic<bool> cancelled_{false};
+
+    /** See [progress_snapshot]. Written on the inference thread, read from any. */
+    struct Progress {
+        int64_t phase = 0;
+        int64_t prompt_total = -1;
+        int64_t prompt_read = 0;
+        int64_t prefill_started_ms = 0;
+        int64_t prompt_read_at_ms = 0;
+        int64_t generated = 0;
+        int64_t first_token_ms = 0;
+        int64_t last_token_ms = 0;
+    };
+    mutable std::mutex progress_mutex_;
+    Progress progress_;
+    /**
+     * Whether [ingest_prompt] is reading this turn's prompt, the only reading the readout
+     * counts: the same function also feeds a judgement and a picture's trailing text.
+     * Touched only on the inference thread.
+     */
+    bool progress_counting_ = false;
+    template <typename Update>
+    void update_progress(Update update) {
+        std::lock_guard<std::mutex> lock(progress_mutex_);
+        update(progress_);
+    }
 };
 
 /** Initialises the ggml backends and routes llama.cpp logs to logcat. Idempotent. */

@@ -214,8 +214,10 @@ class FitEstimator @Inject constructor() {
      * smaller. Both halves matter. Measured on an MT6991 with LFM2.5 2.6B, every width from
      * 4k to 128k loaded, decode stayed between 15.7 and 16.5 tokens a second across the whole
      * range, and load time moved by two and a half seconds over a thirty-two-fold increase.
-     * A wide window that nobody has filled costs almost nothing, because the cache is
-     * allocated lazily and only the pages a conversation reaches are ever resident.
+     * That hybrid's wide window was cheap because its cache is small, not because a cache is
+     * paid for as it fills: on the same phone a transformer's whole cache is resident from the
+     * load (Qwen3 1.7B at 16k settled at 3,838 MB with an empty conversation, its 1,749 MB of
+     * weights plus all 1,792 MiB of cache; docs/research/swap-and-peak-memory.md, 2026-10-12).
      *
      * What stops it simply being the trained maximum is the phone rather than the model. A
      * hybrid like LFM2.5 keeps a cache for eight of its thirty layers, which is 16 KB a
@@ -315,11 +317,17 @@ class FitEstimator @Inject constructor() {
 
     private companion object {
         /**
-         * Compute buffers, the tokenizer, the app itself, and the JVM heap. Measured at
-         * roughly 300 MB on the dev device; rounded up because underestimating this is how
-         * an app promises a fit and then gets killed.
+         * Compute buffers, the tokenizer, the app itself, and the JVM heap: an allowance, not a
+         * guaranteed upper bound.
+         *
+         * Measured as a turn's peak footprint less the file and the computed cache, at a 16k
+         * window with a 4k-token prompt on the POCO X8 Pro Max (2026-10-12): 375 MB for LFM2.5
+         * 1.2B, 487 MB for Qwen3 1.7B and 499 MB for LFM2.5-VL 3B without its projector. The 450
+         * MB this was before let the last two peak 1 to 2% past their promise, so it is rounded
+         * up past the largest of them, because underestimating this is how an app promises a fit
+         * and then gets killed. See docs/research/swap-and-peak-memory.md.
          */
-        const val RUNTIME_OVERHEAD_BYTES = 450L * 1024 * 1024
+        const val RUNTIME_OVERHEAD_BYTES = 512L * 1024 * 1024
 
         /**
          * Q4_K_M averages a little under five bits a weight, so a billion parameters costs
@@ -339,12 +347,18 @@ class FitEstimator @Inject constructor() {
         /**
          * What a compiled model costs beyond its own weights, as a multiple of them.
          *
-         * From the one measurement there is: a 1.22 GB Qwen3-1.7B export resident at
-         * 2.9 GB on a Dimensity 9400, so roughly 1.4x the weights again once the fixed
-         * runtime allowance is taken off. One point is not a calibration, which is why this
-         * is a constant with its provenance written down rather than a formula pretending
-         * to be one, and why it errs high: the cost of being wrong here is a phone that
-         * runs out of memory after a gigabyte of download.
+         * From a 1.22 GB Qwen3-1.7B export resident at 2.9 GB on a Dimensity 9400: roughly
+         * 1.4x the weights again *before* the fixed runtime allowance is taken off, which
+         * [estimateCompiled] then adds on top, so the two together err high on purpose. The
+         * margin is deliberate rather than an accident to tidy away: the file says nothing
+         * about the cache its exported window needs, and the cost of being wrong here is a
+         * phone that runs out of memory after a gigabyte of download.
+         *
+         * What three exports really needed on the POCO X8 Pro Max (2026-10-12, all at 2k
+         * windows), as a multiple of the weights beyond the weights and the allowance: 0.99
+         * for Qwen3 1.7B, 0.30 for Gemma 3 4B, 0.05 for LFM2.5-VL 450M. So it covers what was
+         * measured with room to spare, and nothing measured says a 32k export fits under it.
+         * See docs/research/swap-and-peak-memory.md.
          */
         const val COMPILED_RUNTIME_FACTOR = 1.4
 
@@ -353,9 +367,10 @@ class FitEstimator @Inject constructor() {
          *
          * A third, so the weights, the cache and everything else each have room and the
          * process stays a size the platform will let sit in the background. Chosen rather
-         * than measured: what was measured is that a wide window costs nothing until it is
-         * filled, which says the ceiling should be about what happens when it *is* filled,
-         * and that is when the app is killed rather than when it is slow.
+         * than measured. It is the bound that matters, because the cache it allows is paid
+         * for at load, filled or not, for a transformer (Qwen3 1.7B's 16k window was resident
+         * in full on an empty conversation, 2026-10-12), and a process that size is the one
+         * the low memory killer takes.
          */
         const val KV_FRACTION = 0.33
 

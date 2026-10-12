@@ -200,6 +200,8 @@ fun OpenWeightsApp(
             val goal by chatViewModel.goal.collectAsStateWithLifecycle()
             val question by chatViewModel.asking.pending.collectAsStateWithLifecycle()
             val chatSearch by chatViewModel.search.state.collectAsStateWithLifecycle()
+            // Held as State and read inside the line that shows it, never here.
+            val liveReadout = chatViewModel.liveReadout.collectAsStateWithLifecycle()
 
             LaunchedEffect(Unit) {
                 // The view model outlives the composition, so returning to this tab
@@ -220,6 +222,7 @@ fun OpenWeightsApp(
                 canvasActive = canvasShowing != null,
                 onOpenCanvas = { navController.push(Routes.CANVAS) },
                 state = state,
+                liveReadout = { liveReadout.value },
                 onSend = chatViewModel::send,
                 onDraftChange = chatViewModel::saveComposerDraft,
                 onStop = {

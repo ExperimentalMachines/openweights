@@ -29,6 +29,7 @@ import io.github.alpharomercoma.openweights.core.common.context.TaskPlan
 import io.github.alpharomercoma.openweights.core.common.context.TaskStep
 import io.github.alpharomercoma.openweights.core.common.model.ChatRole
 import io.github.alpharomercoma.openweights.core.designsystem.theme.OpenWeightsTheme
+import io.github.alpharomercoma.openweights.core.engine.TurnMemory
 import io.github.alpharomercoma.openweights.core.tools.UserQuestion
 import org.junit.Rule
 import org.junit.Test
@@ -331,9 +332,111 @@ class ChatScreenTest {
     }
 
     @Suppress("LongParameterList")
+    @Test
+    fun aReplySlowedByPagingSaysSoInTheRow() {
+        showChat(
+            transcript = listOf(assistantEntry("Done.").copy(memory = paging(detected = true))),
+        )
+
+        compose.onNodeWithText("memory paging").assertIsDisplayed()
+        compose.onNodeWithContentDescription(
+            "Frequent memory paging detected. Low memory may have slowed this reply.",
+        ).assertExists()
+    }
+
+    @Test
+    fun pagingIsSaidEvenOnAReplyTooShortToHaveAWritingSpeed() {
+        // A long, swapping read of the prompt and a one-word answer: no decode rate at all.
+        showChat(
+            transcript = listOf(
+                assistantEntry(
+                    "Yes.",
+                ).copy(tokensPerSecond = null, memory = paging(detected = true)),
+            ),
+        )
+
+        compose.onNodeWithText("memory paging").assertIsDisplayed()
+        compose.onNodeWithText("tok/s", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun anUnslowedReplySaysNothingAboutMemory() {
+        // The peak alone is detail for the long press; the row only speaks when it mattered.
+        showChat(
+            transcript = listOf(assistantEntry("Done.").copy(memory = paging(detected = false))),
+        )
+
+        compose.onNodeWithText("memory paging").assertDoesNotExist()
+    }
+
+    @Test
+    fun theReplyBeingWrittenShowsItsSpeedsWhereTheFinishedOnesWillSit() {
+        showChat(
+            transcript = listOf(
+                assistantEntry("Partial").copy(isStreaming = true, tokensPerSecond = null),
+            ),
+            isGenerating = true,
+            liveReadout = LiveReadout(
+                reading = false,
+                percentRead = null,
+                prefillTokensPerSecond = 54.4,
+                decodeTokensPerSecond = 16.2,
+            ),
+        )
+
+        compose.onNodeWithText("54→16 tok/s", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun readingThePromptShowsHowFarAndAPendingReplySpeed() {
+        showChat(
+            transcript = listOf(
+                assistantEntry("").copy(isStreaming = true, tokensPerSecond = null),
+            ),
+            isGenerating = true,
+            liveReadout = LiveReadout(
+                reading = true,
+                percentRead = 37,
+                prefillTokensPerSecond = 54.0,
+                decodeTokensPerSecond = null,
+            ),
+        )
+
+        compose.onNodeWithText("Reading the prompt 37%").assertIsDisplayed()
+        compose.onNodeWithText("54→… tok/s", substring = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun anEngineThatCannotYetMeasureShowsNoSpeedAtAll() {
+        // ExecuTorch reading a prompt: nothing to show, so nothing is shown.
+        showChat(
+            transcript = listOf(
+                assistantEntry("").copy(isStreaming = true, tokensPerSecond = null),
+            ),
+            isGenerating = true,
+            liveReadout = LiveReadout(
+                reading = true,
+                percentRead = null,
+                prefillTokensPerSecond = null,
+                decodeTokensPerSecond = null,
+            ),
+        )
+
+        compose.onNodeWithText("tok/s", substring = true).assertDoesNotExist()
+    }
+
+    private fun paging(detected: Boolean) = TurnMemory(
+        majorFaults = if (detected) 453_179 else 120,
+        activeMs = 36_900,
+        peakFootprintBytes = 3_200L * 1024 * 1024,
+        swapEndBytes = 0,
+        pagingDetected = detected,
+    )
+
     private fun showChat(
         transcript: List<TranscriptEntry>,
         isGenerating: Boolean = false,
+        liveReadout: LiveReadout? = null,
         onSend: (String) -> Boolean = { true },
         onStop: () -> Unit = {},
         plan: TaskPlan? = null,
@@ -354,6 +457,7 @@ class ChatScreenTest {
                         contextUsed = 128,
                         contextSize = 2048,
                     ),
+                    liveReadout = { liveReadout },
                     onSend = onSend,
                     onStop = onStop,
                     onRegenerate = {},

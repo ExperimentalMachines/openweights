@@ -40,8 +40,10 @@ import androidx.compose.ui.unit.dp
 import io.github.alpharomercoma.openweights.R
 import io.github.alpharomercoma.openweights.core.common.model.ChatRole
 import io.github.alpharomercoma.openweights.core.designsystem.component.Metric
+import io.github.alpharomercoma.openweights.core.designsystem.component.formatBytes
 import io.github.alpharomercoma.openweights.core.designsystem.theme.OpenWeightsTheme
 import io.github.alpharomercoma.openweights.core.designsystem.theme.Radius
+import io.github.alpharomercoma.openweights.core.engine.TurnMemory
 import java.util.Locale
 
 /**
@@ -142,6 +144,60 @@ fun TurnStatsPanel(entry: TranscriptEntry, modifier: Modifier = Modifier) {
             tokensPerSecond = entry.tokensPerSecond,
             locale = locale,
         )
+
+        MemoryRow(entry.memory)
+    }
+}
+
+/**
+ * What the reply cost in memory, under the two rows that say what it cost in time.
+ *
+ * A row of its own rather than a fourth headline. The three across the top account for the
+ * wait and add up with the rows under them; memory is a different quantity, it adds up with
+ * nothing here, and a fourth column squeezed every label in the sheet at a large font.
+ *
+ * The peak is the highest resident plus swapped size sampled while the reply was written,
+ * the app included, so it is said in words what it counts. The paging sentence appears only
+ * when [TurnMemory.pagingDetected] does and claims no more than the heuristic can: that the
+ * phone paged the app's memory back in often enough that it may have cost time, not how many
+ * seconds or which gigabytes, which the fault count cannot say. A reopened reply was not
+ * measured this session and shows a hyphen, like every other figure here that was not.
+ */
+@Composable
+private fun MemoryRow(memory: TurnMemory?) {
+    val peak = memory?.peakFootprintBytes
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.stat_memory),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.width(NAME_COLUMN),
+            )
+            Cell(
+                text =
+                peak?.let { stringResource(R.string.stat_memory_peak, formatBytes(it)) }
+                    ?: NOT_MEASURED,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        if (peak != null) {
+            Text(
+                text = stringResource(R.string.stat_memory_explanation),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (memory?.pagingDetected == true) {
+            Text(
+                text = stringResource(R.string.memory_paging_explanation),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
     }
 }
 
@@ -216,10 +272,14 @@ private fun Cell(text: String, modifier: Modifier = Modifier) {
  *
  * A reply still arriving has none of this, and half a measurement is worse than none: a
  * panel of dashes says the app failed to measure rather than that the reply is not
- * finished yet.
+ * finished yet. A finished reply too short to have a writing speed still has its memory,
+ * and a swapping read of a long prompt before a one-word answer is the case that most
+ * needs the panel.
  */
 val TranscriptEntry.hasStats: Boolean
-    get() = role == ChatRole.ASSISTANT && !isStreaming && tokensPerSecond != null
+    get() = role == ChatRole.ASSISTANT &&
+        !isStreaming &&
+        (tokensPerSecond != null || memory != null)
 
 /**
  * Everything this turn's prompt and reply came to.

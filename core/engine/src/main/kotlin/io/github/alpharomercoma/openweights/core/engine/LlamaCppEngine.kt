@@ -31,6 +31,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
@@ -59,8 +60,17 @@ class LlamaCppEngine internal constructor(
     private val bridge: LlamaBridge,
     private val defaultThreadCount: Int,
     private val defaultBatchThreadCount: Int,
+    /**
+     * Whether a pass sends live progress. Only a device test turns it off, to measure what
+     * the readout costs against the same model without it.
+     */
+    private val liveProgress: Boolean = true,
 ) : InferenceEngine {
     constructor() : this(LlamaBridge(), recommendedThreadCount(), recommendedBatchThreadCount())
+
+    /** The device test's: the same engine with or without its live progress. */
+    internal constructor(liveProgress: Boolean) :
+        this(LlamaBridge(), recommendedThreadCount(), recommendedBatchThreadCount(), liveProgress)
 
     private val engineExecutor: ExecutorService =
         Executors.newSingleThreadExecutor { runnable ->
@@ -87,6 +97,14 @@ class LlamaCppEngine internal constructor(
 
     @Volatile
     private var currentModel: LoadedModelInfo? = null
+
+    /**
+     * Whether the next pass is the first since a load that memory-mapped the weights. That
+     * pass reads them in from the file for the first time, which the fault count cannot tell
+     * from paging, so it is measured and never flagged. Weights read into memory at load,
+     * the default, were already read by then.
+     */
+    private val coldPass = AtomicBoolean(false)
 
     override val loadedModel: LoadedModelInfo? get() = currentModel
 
@@ -126,6 +144,7 @@ class LlamaCppEngine internal constructor(
                     handle.set(newHandle)
                     currentModel = info
                 }
+                coldPass.set(params.useMmap)
             }
         }
     }
@@ -156,47 +175,22 @@ class LlamaCppEngine internal constructor(
             if (cause != null) this@LlamaCppEngine.cancel()
         }
 
-        val stats = bridge.nativeGenerate(
-            handle = activeHandle,
-            roles = messages.map { it.role.wireName }.toTypedArray(),
-            contents = prompt.contents,
-            toolCallIds = messages.map { it.toolCallId }.toTypedArray(),
-            mediaPaths = prompt.mediaPaths,
-            mediaCounts = prompt.mediaCounts,
-            temperature = params.temperature,
-            topK = params.topK,
-            topP = params.topP,
-            minP = params.minP,
-            repeatPenalty = params.repeatPenalty,
-            repeatLastN = params.repeatLastN,
-            seed = params.seed ?: Random.nextInt(),
-            maxTokens = params.maxTokens,
-            reasoningBudget = params.reasoningBudget,
-            toolNames = tools.map { it.name }.toTypedArray(),
-            toolDescriptions = tools.map { it.description }.toTypedArray(),
-            toolSchemas = tools.map { it.parametersJson }.toTypedArray(),
-            enableThinking = params.thinking,
-            reasoningEffort = params.reasoningEffort.wireName,
-            sink = { text, logprob ->
-                // trySend fails once the collector is gone, which stops generation.
-                trySend(GenerationEvent.Token(text, logprob.takeIf { !it.isNaN() })).isSuccess
-            },
-            replySink = { content, reasoning, calls ->
-                // llama.cpp knows several tool formats; where it recognises none, the
-                // Kotlin parser covers the ones it does not, such as LFM2's.
-                val nativeCalls = calls.toToolCalls()
-                val fallback = if (nativeCalls.isEmpty()) {
-                    ToolCallParser.parse(content)
-                } else {
-                    ParsedToolCalls(content, nativeCalls)
-                }
-                parsed = ParsedReply(fallback.text, reasoning, fallback.calls)
-            },
+        val pass = PassMeter(
+            this,
+            cold = coldPass.getAndSet(false),
+            read = { progressOf(activeHandle) },
+            ticks = liveProgress,
         )
+        val stats = try {
+            generate(activeHandle, messages, prompt, params, tools) { parsed = it }
+        } finally {
+            // Before anything that could suspend: see PassMeter.
+            pass.close()
+        }
 
         if (stats != null) {
-            send(completionEvent(stats, parsed))
             currentModel = currentModel?.copy(contextUsed = stats[CONTEXT_USED].toInt())
+            send(completionEvent(stats, parsed, pass.close()))
         }
         close()
     }
@@ -206,6 +200,61 @@ class LlamaCppEngine internal constructor(
         // means the channel is closed, which is the only case that should stop us.
         .buffer(Channel.UNLIMITED)
         .flowOn(engineThread)
+
+    /**
+     * The progress of the pass running on [expected], or null once that handle is no longer
+     * the loaded one. Under [handleLock], which [freeCurrentHandle] also takes, so the read
+     * can never reach a session that has been freed.
+     */
+    private fun progressOf(expected: Long): GenerationEvent.Progress? = synchronized(handleLock) {
+        if (handle.get() != expected) null else progressFrom(bridge.nativeProgress(expected))
+    }
+
+    /** The blocking native call, with the token and reply sinks wired to this producer's channel. */
+    private fun ProducerScope<GenerationEvent>.generate(
+        activeHandle: Long,
+        messages: List<ChatMessage>,
+        prompt: RenderedPrompt,
+        params: SamplerParams,
+        tools: List<ToolDefinition>,
+        onParsed: (ParsedReply) -> Unit,
+    ): LongArray? = bridge.nativeGenerate(
+        handle = activeHandle,
+        roles = messages.map { it.role.wireName }.toTypedArray(),
+        contents = prompt.contents,
+        toolCallIds = messages.map { it.toolCallId }.toTypedArray(),
+        mediaPaths = prompt.mediaPaths,
+        mediaCounts = prompt.mediaCounts,
+        temperature = params.temperature,
+        topK = params.topK,
+        topP = params.topP,
+        minP = params.minP,
+        repeatPenalty = params.repeatPenalty,
+        repeatLastN = params.repeatLastN,
+        seed = params.seed ?: Random.nextInt(),
+        maxTokens = params.maxTokens,
+        reasoningBudget = params.reasoningBudget,
+        toolNames = tools.map { it.name }.toTypedArray(),
+        toolDescriptions = tools.map { it.description }.toTypedArray(),
+        toolSchemas = tools.map { it.parametersJson }.toTypedArray(),
+        enableThinking = params.thinking,
+        reasoningEffort = params.reasoningEffort.wireName,
+        sink = { text, logprob ->
+            // trySend fails once the collector is gone, which stops generation.
+            trySend(GenerationEvent.Token(text, logprob.takeIf { !it.isNaN() })).isSuccess
+        },
+        replySink = { content, reasoning, calls ->
+            // llama.cpp knows several tool formats; where it recognises none, the
+            // Kotlin parser covers the ones it does not, such as LFM2's.
+            val nativeCalls = calls.toToolCalls()
+            val fallback = if (nativeCalls.isEmpty()) {
+                ToolCallParser.parse(content)
+            } else {
+                ParsedToolCalls(content, nativeCalls)
+            }
+            onParsed(ParsedReply(fallback.text, reasoning, fallback.calls))
+        },
+    )
 
     override fun cancel() = synchronized(handleLock) {
         val activeHandle = handle.get()
@@ -391,23 +440,25 @@ class LlamaCppEngine internal constructor(
     }
 
     /** The terminal event, read out of the flat array the native layer returns. */
-    private fun completionEvent(stats: LongArray, parsed: ParsedReply) = GenerationEvent.Completed(
-        reason = STOP_REASONS.getOrElse(stats[0].toInt()) { StopReason.ERROR },
-        content = parsed.content,
-        reasoning = parsed.reasoning,
-        toolCalls = parsed.toolCalls,
-        stats = GenerationStats(
-            promptTokens = stats[1].toInt(),
-            generatedTokens = stats[2].toInt(),
-            prefillMs = stats[3],
-            decodeMs = stats[4],
-            timeToFirstTokenMs = stats[5],
-            contextUsed = stats[CONTEXT_USED].toInt(),
-            contextSize = stats[7].toInt(),
-            thinkingPrefilled = stats.getOrElse(THINKING_PREFILLED) { 0L } == TRUE_FLAG,
-            cachedTokens = stats.getOrElse(CACHED_TOKENS) { 0L }.toInt(),
-        ),
-    )
+    private fun completionEvent(stats: LongArray, parsed: ParsedReply, memory: TurnMemory) =
+        GenerationEvent.Completed(
+            reason = STOP_REASONS.getOrElse(stats[0].toInt()) { StopReason.ERROR },
+            content = parsed.content,
+            reasoning = parsed.reasoning,
+            toolCalls = parsed.toolCalls,
+            stats = GenerationStats(
+                promptTokens = stats[1].toInt(),
+                generatedTokens = stats[2].toInt(),
+                prefillMs = stats[3],
+                decodeMs = stats[4],
+                timeToFirstTokenMs = stats[5],
+                contextUsed = stats[CONTEXT_USED].toInt(),
+                contextSize = stats[7].toInt(),
+                thinkingPrefilled = stats.getOrElse(THINKING_PREFILLED) { 0L } == TRUE_FLAG,
+                cachedTokens = stats.getOrElse(CACHED_TOKENS) { 0L }.toInt(),
+                memory = memory,
+            ),
+        )
 
     /** The conversation as arrays the native layer can take, media markers included. */
     private class RenderedPrompt(

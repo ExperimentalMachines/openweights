@@ -131,6 +131,18 @@ class ExecuTorchEngineTest {
     }
 
     @Test
+    fun `the completion comes last and carries the pass's memory`() = runTest {
+        bridge.reply = "Tokyo."
+        engine.load(installed(MODEL), PARAMS)
+
+        val events = engine.chat(listOf(user("Capital of Japan?"))).toList()
+
+        val done = events.last()
+        assertThat(done).isInstanceOf(GenerationEvent.Completed::class.java)
+        assertThat((done as GenerationEvent.Completed).stats.memory).isNotNull()
+    }
+
+    @Test
     fun `keeps a closer with no opener as text`() = runTest {
         bridge.reply = "The block ends with </think> and nothing more."
         engine.load(installed(MODEL), PARAMS)
@@ -433,6 +445,28 @@ class ExecuTorchEngineTest {
             assertThat(bridge.loads).isEqualTo(2)
             assertThat(bridge.contextResets).isEqualTo(resets + 1)
         }
+
+    @Test
+    fun `a pass that reopened the file is cold, and a plain reset is not`() = runTest {
+        // A reopen reads the weights in again, which the fault count cannot tell from
+        // paging; the first pass after a load does the same. A cheap reset maps nothing.
+        bridge.reply = "Hello.<|im_end|>"
+        val lfm = ExecuTorchEngine(bridge)
+        lfm.load(installed("LFM2.5-1.2B-Instruct-8da4w-32k.pte"), PARAMS)
+
+        val first = lfm.chat(listOf(user("Hi"))).completed()
+        val reopened = lfm.chat(listOf(user("Something else entirely"))).completed()
+
+        assertThat(first.stats.memory!!.cold).isTrue()
+        assertThat(bridge.loads).isEqualTo(2)
+        assertThat(reopened.stats.memory!!.cold).isTrue()
+
+        engine.load(installed(MODEL), PARAMS)
+        engine.chat(listOf(user("Hi"))).completed()
+        val reset = engine.chat(listOf(user("Something else entirely"))).completed()
+
+        assertThat(reset.stats.memory!!.cold).isFalse()
+    }
 
     @Test
     fun `a reopen on reset is checked again, and a pair that fails it is not reopened`() = runTest {

@@ -144,6 +144,14 @@ internal class LlamaBridge {
     external fun nativeCancel(handle: Long)
 
     /**
+     * Where the running generation stands, callable from another thread while
+     * [nativeGenerate] blocks: `[phase, promptTotal, promptRead, prefillStartedMs,
+     * promptReadAtMs, generated, firstTokenMs, lastTokenMs]`, phase 0 idle, 1 reading, 2
+     * writing, promptTotal -1 when not known. Hold the handle lock across the call.
+     */
+    external fun nativeProgress(handle: Long): LongArray
+
+    /**
      * @return `[parameterCount, sizeBytes, contextSize, trainingContextSize, layerCount,
      * contextUsed]`.
      */

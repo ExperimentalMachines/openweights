@@ -87,6 +87,17 @@ data class GenerationStats(
      * whole conversation from scratch.
      */
     val cachedTokens: Int = 0,
+    /**
+     * Generated tokens that fall outside [decodeMs], one per pass that wrote anything.
+     *
+     * The decode interval starts at a pass's first token, so that token is time to first
+     * token's, not decode's. One pass has one; a reply merged from several by [through] has
+     * one per pass, and subtracting a single one from the summed count overstated a two-pass
+     * reply's rate (ten tokens in each over a second each read 9.5 tok/s, not 9).
+     */
+    val firstTokens: Int = if (generatedTokens > 0) 1 else 0,
+    /** What this process's memory did over the turn, where it could be read. See [TurnMemory]. */
+    val memory: TurnMemory? = null,
 ) {
     /** Prompt-processing throughput, or null when nothing needed decoding (full cache hit). */
     val prefillTokensPerSecond: Double?
@@ -98,8 +109,8 @@ data class GenerationStats(
 
     /** Generation throughput. The number users actually feel. */
     val decodeTokensPerSecond: Double?
-        get() = if (decodeMs > 0 && generatedTokens > 1) {
-            (generatedTokens - 1) * MILLIS_PER_SECOND / decodeMs
+        get() = if (decodeMs > 0 && generatedTokens > firstTokens) {
+            (generatedTokens - firstTokens) * MILLIS_PER_SECOND / decodeMs
         } else {
             null
         }
@@ -127,7 +138,8 @@ data class GenerationStats(
      * they come out as the honest whole-turn throughput. What describes a moment rather
      * than a total — where the context stands, whether thinking was prefilled — is taken
      * from [next], the pass that ended the turn. Time to first token stays this side's:
-     * the wait the user felt ended when the first pass started writing.
+     * the wait the user felt ended when the first pass started writing. Memory merges by its
+     * own rules; see [TurnMemory.through].
      */
     fun through(next: GenerationStats): GenerationStats = next.copy(
         promptTokens = promptTokens + next.promptTokens,
@@ -136,6 +148,8 @@ data class GenerationStats(
         decodeMs = decodeMs + next.decodeMs,
         cachedTokens = cachedTokens + next.cachedTokens,
         timeToFirstTokenMs = timeToFirstTokenMs,
+        firstTokens = firstTokens + next.firstTokens,
+        memory = TurnMemory.merge(memory, next.memory),
     )
 }
 
@@ -151,6 +165,37 @@ sealed interface GenerationEvent {
      * null otherwise. The loop reads the first few as the model's confidence in its answer.
      */
     data class Token(val text: String, val logprob: Float? = null) : GenerationEvent
+
+    /**
+     * Where the pass being generated stands, for the live readout: sent at most four times a
+     * second while it runs, and only by an engine that can say.
+     *
+     * Rates are through the last completed unit of work rather than up to now: a prompt is
+     * read in batches that can take seconds each, and dividing the last batch's count by a
+     * clock that keeps running would show a rate that sags and then jumps while throughput
+     * holds steady. The same conventions as [GenerationStats] otherwise, so the live figure
+     * and the final one differ only in where the decode interval ends: here at the latest
+     * token, there after the step that found the end of the reply, so the final rate can come
+     * out a step's worth lower, which on a short reply is a visible step.
+     *
+     * @param reading true until the pass's first token exists.
+     * @param promptRead prompt tokens read so far, or null where the engine cannot count them
+     *   (ExecuTorch reads a prompt in one call it cannot look inside).
+     * @param promptTotal what this pass has to read, or null when unknown; a pass with media
+     *   is unknown, because the readout cannot count a picture's share.
+     * @param prefillMs from the start of reading to the end of the last batch read.
+     * @param generated tokens written so far.
+     * @param decodeMs from the first token to the latest, the interval [GenerationStats]
+     *   times decode over.
+     */
+    data class Progress(
+        val reading: Boolean,
+        val promptRead: Int?,
+        val promptTotal: Int?,
+        val prefillMs: Long?,
+        val generated: Int,
+        val decodeMs: Long?,
+    ) : GenerationEvent
 
     /**
      * Terminal event carrying why generation stopped, how fast it ran, and the reply as

@@ -22,6 +22,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import io.github.alpharomercoma.openweights.core.common.model.ChatRole
 import io.github.alpharomercoma.openweights.core.designsystem.theme.OpenWeightsTheme
+import io.github.alpharomercoma.openweights.core.engine.TurnMemory
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -210,6 +211,45 @@ class MessageActionsSheetTest {
     }
 
     @Suppress("LongParameterList")
+    @Test
+    fun `memory has a row of its own, and a reopened reply shows it was not measured`() {
+        showSheet()
+
+        compose.onNodeWithText("Memory").assertExists()
+        compose.onNodeWithText("peak", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun `the peak says what it counts`() {
+        showSheet(memory = memory(pagingDetected = false))
+
+        compose.onNodeWithText("3.00 GB peak").assertExists()
+        compose.onNodeWithText(
+            "The highest the app was seen to hold while writing the reply, read four times a " +
+                "second, swapped memory included.",
+        ).assertExists()
+        compose.onNodeWithText("paging", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun `paging is explained without claiming seconds or gigabytes it cannot know`() {
+        showSheet(memory = memory(pagingDetected = true))
+
+        compose.onNodeWithText(
+            "Frequent memory paging was detected during this reply, so low memory may have " +
+                "slowed it. Closing other apps can help.",
+        ).assertExists()
+    }
+
+    private fun memory(pagingDetected: Boolean) = TurnMemory(
+        majorFaults = 453_179,
+        activeMs = 36_900,
+        peakFootprintBytes = 3L * 1024 * 1024 * 1024,
+        swapEndBytes = 0,
+        pagingDetected = pagingDetected,
+    )
+
+    @Suppress("LongParameterList") // One fixture for every state the sheet is shown in.
     private fun showSheet(
         canRegenerate: Boolean = true,
         isSpeaking: Boolean = false,
@@ -222,6 +262,7 @@ class MessageActionsSheetTest {
         onBranch: () -> Unit = {},
         prefillTokensPerSecond: Double? = null,
         isStreaming: Boolean = false,
+        memory: TurnMemory? = null,
     ) {
         compose.setContent {
             OpenWeightsTheme(dynamicColor = false) {
@@ -240,6 +281,7 @@ class MessageActionsSheetTest {
                         decodeMs = 6_900,
                         totalMillis = 7_600,
                         isStreaming = isStreaming,
+                        memory = memory,
                     ),
                     canRegenerate = canRegenerate,
                     canEdit = canEdit,

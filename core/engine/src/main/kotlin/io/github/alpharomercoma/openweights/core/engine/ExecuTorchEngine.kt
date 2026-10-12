@@ -99,6 +99,15 @@ class ExecuTorchEngine(
     private var opened: Opened? = null
     private var moduleHasRun = false
 
+    /** The pass running now, under [turns]. See [PassMeter]. */
+    private val pass = PassSlot()
+
+    /**
+     * This pass's memory attached, its ticker ended first, so nothing from the pass follows
+     * the completion that carries these stats.
+     */
+    private fun GenerationStats.metered() = copy(memory = pass.close())
+
     /**
      * The runner was closed for a reopen that did not happen: its check refused the files, was
      * cancelled, or the open failed. The model is still the one chosen, so the next turn opens
@@ -356,6 +365,7 @@ class ExecuTorchEngine(
         }
         opened = held
         moduleHasRun = false
+        pass.opened()
     }
 
     /**
@@ -395,6 +405,7 @@ class ExecuTorchEngine(
         }
         if (!reopened) throw LlamaException("ExecuTorch could not reopen ${held.model.name}")
         closedForReopen = false
+        pass.opened()
     }
 
     override fun chat(
@@ -402,7 +413,11 @@ class ExecuTorchEngine(
         params: SamplerParams,
         tools: List<ToolDefinition>,
     ): Flow<GenerationEvent> = channelFlow {
-        turns.withLock { stream(messages, params, tools) }
+        // The first run of a freshly opened module maps its file in, which the fault count
+        // cannot tell from paging; measured, never flagged. See [MemoryMeter].
+        turns.withLock {
+            pass.run(this) { live -> stream(messages, params, tools, live) }
+        }
     }.buffer(Channel.UNLIMITED).flowOn(Dispatchers.IO)
 
     /** One turn, from render to the completed event, with [turns] held throughout. */
@@ -410,6 +425,7 @@ class ExecuTorchEngine(
         messages: List<ChatMessage>,
         params: SamplerParams,
         tools: List<ToolDefinition>,
+        live: LiveCount,
     ) {
         val rendering = template ?: throw LlamaException("No model loaded")
         cancelRequested = false
@@ -470,9 +486,11 @@ class ExecuTorchEngine(
         tailChars = fresh.length
         val outcome = try {
             moduleHasRun = true
+            pass.ran()
             gpuChecked {
                 bridge.generate(fresh, budget) { fragment ->
                     if (firstTokenAt == 0L) firstTokenAt = System.currentTimeMillis()
+                    live.token()
                     reply.accept(fragment)?.let { trySend(GenerationEvent.Token(it)) }
                     // Asked on every token rather than once from cancel(), because the
                     // runtime clears its stop flag when the token loop starts: a Stop that
@@ -525,7 +543,7 @@ class ExecuTorchEngine(
         send(
             GenerationEvent.Completed(
                 reason = reasonFor(reply, discipline, outcome.reason),
-                stats = statsFor(outcome, started, firstTokenAt, reused, prompt),
+                stats = statsFor(outcome, started, firstTokenAt, reused, prompt).metered(),
                 content = parsed.text.underOpener(prompt).withoutReasoning(),
                 reasoning = raw.underOpener(prompt).reasoning(),
                 toolCalls = parsed.calls,
@@ -640,7 +658,8 @@ class ExecuTorchEngine(
         send(
             GenerationEvent.Completed(
                 reason = StopReason.CANCELLED,
-                stats = statsFor(ExecuTorchOutcome(StopReason.CANCELLED), started, 0L, 0, prompt),
+                stats = statsFor(ExecuTorchOutcome(StopReason.CANCELLED), started, 0L, 0, prompt)
+                    .metered(),
                 content = "",
                 reasoning = "",
                 toolCalls = emptyList(),
@@ -705,6 +724,7 @@ class ExecuTorchEngine(
             val piece = warmPiece(rest, callChars)
             val before = System.currentTimeMillis()
             moduleHasRun = true
+            pass.ran()
             gpuChecked { bridge.prefill(piece) }
             fedAheadMs += System.currentTimeMillis() - before
             fedAheadChars += piece.length
@@ -887,6 +907,7 @@ class ExecuTorchEngine(
             while (fresh.isNotEmpty() && !warmStopped) {
                 val piece = warmPiece(fresh, callChars)
                 moduleHasRun = true
+                pass.ran()
                 gpuChecked { bridge.prefill(piece) }
                 fedText += piece
                 val tokens = (piece.length / WARM_CHARS_PER_TOKEN).coerceAtLeast(1)

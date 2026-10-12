@@ -133,3 +133,80 @@ prefill with a 4k prompt at the start of the session, 55 t/s with a 1k prompt la
 is an active app; a background app that sits idle would be swapped out instead and press less.
 The per-fault cost is zram on this kernel; a phone that swaps to flash would cost more per fault,
 which only makes the same threshold fire sooner.
+
+## What the app does with it
+
+Built the same day, and measured on the same phone after it was built (screen on, awake; the
+readout runs on battery at 9 to 13%, the pressure runs plugged in; reports in `tools/memory/results/2026-10-12-flag` and
+`2026-10-12-readout`).
+
+**The fit estimate.** `RUNTIME_OVERHEAD_BYTES` goes from 450 to 512 MB, past the 499 MB the
+VL model's turn needed, and `FitEstimator`'s comment that a wide window costs nothing until it
+is filled now says it was a hybrid's small cache that made it cheap. `COMPILED_RUNTIME_FACTOR`
+stays at 1.4: it covers all three exports measured, and nothing measured says a 32k export
+fits under less.
+
+**The paging flag.** Each engine pass reads `/proc/self/stat` and `/proc/self/status` at its
+start and end, and four times a second between, for the peak. A pass is flagged when its major
+faults × 20 µs come to at least a second and to more than 10% of the pass's own wall time;
+tools between passes are not counted, so a slow web fetch cannot dilute it. A pass that reads
+freshly opened weights for the first time is not flagged at all, because those faults are a
+file being read in, not paging (the Gemma `.pte` case above, and every GGUF's first turn after
+a load with mmap). Any flagged pass flags the reply, and its footer then says "memory paging". Every reply's
+detail sheet has a Memory row with the sampled peak, flagged or not.
+
+Qwen3 1.7B Q8_0, 8k window, 1.3k-token prompt, 20 s between turns, what the engine's own meter
+concluded:
+
+| Balloon | Turn | Wall s | Prefill t/s | Major faults | Flagged |
+|---|---|---|---|---|---|
+| 0 | 0 to 2 | 25.4 to 26.2 | 64.6 to 67.3 | 0 to 526 | no |
+| 4 GB | 0 | 28.5 | 57.8 | 16,542 | no |
+| 4 GB | 1 | 26.3 | 66.4 | 102 | no |
+| 4 GB | 2 | 28.2 | 58.7 | 391,108 | **yes** |
+| 5 GB | 0 | 40.8 | 38.5 | 897,132 | **yes** |
+| 5 GB | 1 | 58.4 | 25.8 | 913,077 | **yes** |
+| 5 GB | 2 | 33.7 | 47.8 | 491,813 | **yes** |
+
+- **No false alarm at baseline, and every turn that paged hard was flagged.** The engine's
+  fault counts agree with the test's independent reading of the same counter to within 0.05%,
+  and its sampled peaks with the test's 100 ms sampler exactly.
+- **The closest call was right, narrowly.** The flagged 4 GB turn took 10% longer than the
+  baseline average (its prefill 13% longer), against a 10% threshold. Its faults were
+  cheaper than the morning's: 2.5 s for 391k, 6 µs each. Across this run's flagged turns the
+  cost was 6 to 36 µs a fault, so 20 µs is a middle figure, not a constant; the flag is a
+  yes or no on a wide gap, and it says "may have slowed it" for that reason.
+- **The 4 GB first turn was slower without paging** (57.8 t/s, 16k faults), probably the
+  balloon's touch loop competing for memory bandwidth, and the flag does not blame paging for
+  it.
+
+**The live readout.** While a reply is written, the line under it shows the turn's prefill and
+decode rates as they stand (`173 → 34 tok/s`), and the share of the prompt read so far. Both
+engines feed it from the same ticker as the memory peak. llama.cpp's session keeps a small
+mutex-guarded snapshot that the ticker reads (whole batches of the prompt, every token after);
+ExecuTorch counts tokens as they reach Kotlin and has no prompt progress to give, because it
+reads a prompt in one call. An event goes out only when something moved.
+
+What the ticker costs: LFM2.5 1.2B QAD Q4_0 (GGUF), two engines in one process, one with the
+ticker and one without, a 1,489-token prompt and 72 tokens out, six pairs with the order
+swapped every pair:
+
+| | Prefill t/s, median | Decode t/s, median |
+|---|---|---|
+| With the readout | 173.3 | 34.52 |
+| Without | 173.6 | 34.37 |
+
+- **No cost that can be measured**: 0.2% and 0.4%, in opposite directions, well inside the
+  turn-to-turn spread. The one large paired gap (+10% prefill) is a single slow turn without
+  the readout in the first pair.
+- **The live figure ends where the final one does.** Live prefill equals the final prefill
+  rate on every turn; live decode ends 0.6 to 1.7% above the final figure, because the live
+  interval ends at the latest token and the final one after the step that found the reply's
+  end.
+- **The prompt share moves in steps of a batch.** Eleven events a turn, a few while the
+  prompt was read, which moves 512 tokens at a time (about every three seconds at this speed),
+  and the rest while writing. Counting inside a batch would need a callback from inside llama.cpp's decode, which
+  this does not add.
+
+Not checked on the phone: the screen itself (covered by the Compose tests, not by a
+screenshot), and the readout on an ExecuTorch model.

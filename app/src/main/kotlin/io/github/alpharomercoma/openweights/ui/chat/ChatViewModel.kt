@@ -67,6 +67,7 @@ import io.github.alpharomercoma.openweights.core.engine.GenerationStats
 import io.github.alpharomercoma.openweights.core.engine.LoadedModelInfo
 import io.github.alpharomercoma.openweights.core.engine.MediaSupport
 import io.github.alpharomercoma.openweights.core.engine.StopReason
+import io.github.alpharomercoma.openweights.core.engine.TurnMemory
 import io.github.alpharomercoma.openweights.core.tools.AgentMode
 import io.github.alpharomercoma.openweights.core.tools.AgentStep
 import io.github.alpharomercoma.openweights.core.tools.AskBoard
@@ -137,6 +138,12 @@ data class TranscriptEntry(
     val prefillMs: Long? = null,
     /** How long the reply took to write. See [MessageEntity.decodeMs]. */
     val decodeMs: Long? = null,
+    /**
+     * What the app's memory did while the reply was written. Kept for as long as the process
+     * lives and not stored: it is a diagnosis of this session's phone, and a reopened reply
+     * shows it as not measured rather than as a reading from a different day.
+     */
+    val memory: TurnMemory? = null,
     val isStreaming: Boolean = false,
     /** Set on the first entry that survives a compaction, so the fold is visible. */
     val compactionNote: String? = null,
@@ -603,6 +610,17 @@ class ChatViewModel @Inject constructor(
     private var lastTurnSteps: List<AgentStep> = emptyList()
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
+
+    /**
+     * The reply being written's speeds, live, or null between replies.
+     *
+     * A flow of its own rather than a field of [ChatUiState], because it changes four times
+     * a second and the transcript does not: in the screen's state it would have the whole
+     * conversation re-examined at that rate. Read only by the line under the reply that
+     * shows it. See [LiveReadout].
+     */
+    private val _liveReadout = MutableStateFlow<LiveReadout?>(null)
+    val liveReadout: StateFlow<LiveReadout?> = _liveReadout.asStateFlow()
 
     /**
      * What is attached to the message being typed.
@@ -1820,6 +1838,12 @@ class ChatViewModel @Inject constructor(
                     settled = applyCompletion(event, raw, merged) to merged
                 }
 
+                override fun onProgress(progress: GenerationEvent.Progress) {
+                    _liveReadout.value = LiveReadout.of(turnStats, progress)
+                }
+
+                override fun onPassCut() = _liveReadout.update { null }
+
                 override fun onSteps(steps: List<AgentStep>) {
                     lastTurnSteps += steps
                     updateLastEntry { it.copy(blocks = it.blocks + steps.map(TurnBlock::Step)) }
@@ -1994,6 +2018,9 @@ class ChatViewModel @Inject constructor(
      */
     private fun releaseTurn(cause: Throwable?) {
         thermalJob?.cancel()
+        // However the turn ended: a readout left behind would show the next turn's first
+        // frame the last one's speeds.
+        _liveReadout.value = null
         // Here rather than at the end of the body, for the reason this function exists:
         // two of the three ways a turn ends never reach the last line, and a notification
         // left up for work that stopped is worse than none.
@@ -3126,6 +3153,9 @@ class ChatViewModel @Inject constructor(
         // this pass's — the work ledger, and where the context now stands.
         turnStats: GenerationStats = event.stats,
     ): String {
+        // Tools may run next, which is not writing; the next pass's first reading brings the
+        // figure back, folded with this one's.
+        _liveReadout.value = null
         val parsed = parseAssistantReply(raw)
         val streamed = _uiState.value.transcript.lastOrNull()
         // Whichever source has it. llama.cpp separates thinking itself for the formats it
@@ -3178,6 +3208,7 @@ class ChatViewModel @Inject constructor(
                 cachedTokens = turnStats.cachedTokens,
                 prefillMs = turnStats.prefillMs,
                 decodeMs = turnStats.decodeMs,
+                memory = turnStats.memory,
             )
         }
         recordWork(event.stats)

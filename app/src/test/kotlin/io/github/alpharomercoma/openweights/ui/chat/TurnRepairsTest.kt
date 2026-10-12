@@ -167,6 +167,39 @@ class TurnRepairsTest {
     }
 
     @Test
+    fun `a pass cut short says so, so its live readout does not outlive it`() = runBlocking<Unit> {
+        // The cut ends the collection before the engine's own completion arrives, so no
+        // onPass comes for that pass; without a word the screen kept showing its speeds
+        // through the search that followed (Codex review, 2026-10-12).
+        val heard = mutableListOf<String>()
+        val listener = object : TurnListener by Ignoring {
+            override fun onProgress(progress: GenerationEvent.Progress) {
+                heard += "progress"
+            }
+
+            override fun onPassCut() {
+                heard += "cut"
+            }
+
+            override fun onPass(event: GenerationEvent.Completed, raw: String) {
+                heard += "pass"
+            }
+        }
+        engine.hold = true
+        val reply =
+            async { answering("who is killua zoldyck", withTools = true, listener = listener) }
+        awaitUntil { engine.prompts.size == 1 }
+        engine.progress(GenerationEvent.Progress(false, 40, 40, 400, 3, 100))
+        engine.emit("I'm fetching the latest information about Killua from the web now. ")
+        awaitUntil { engine.prompts.size == 2 }
+        engine.emit("Killua Zoldyck is from Hunter x Hunter.")
+        engine.finish("Killua Zoldyck is from Hunter x Hunter.")
+        reply.await()
+
+        assertThat(heard).containsExactly("progress", "cut", "pass").inOrder()
+    }
+
+    @Test
     fun `a narrated search is not cut where the stream has probabilities`() = runBlocking<Unit> {
         // The cut is for the runtime that hands the loop text and nothing else. A stream
         // with token probabilities is llama.cpp's, where the doubt gate reads them and the
@@ -681,6 +714,7 @@ class TurnRepairsTest {
         tool: Tool = search,
         doubts: Boolean = true,
         unresolved: Boolean = false,
+        listener: TurnListener = Ignoring,
     ): String {
         engine.load(modelFile(), ModelLoadParams(contextLength = CONTEXT))
         val plans = PlanBoard()
@@ -702,7 +736,7 @@ class TurnRepairsTest {
             mode = mode,
             withTools = withTools,
             notes = ToolNotes(),
-            listener = Ignoring,
+            listener = listener,
             question = question,
         )
     }

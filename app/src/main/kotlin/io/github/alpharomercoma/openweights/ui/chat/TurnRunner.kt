@@ -81,6 +81,15 @@ interface TurnListener {
     /** A new pass is about to start, so the entry should be cleared for it. */
     fun onNextPass()
 
+    /** Where the pass being written stands, at most four times a second. See [LiveReadout]. */
+    fun onProgress(progress: GenerationEvent.Progress) {}
+
+    /**
+     * The pass was cut short before the engine finished it, so no [onPass] will come for it:
+     * whatever it said about its progress no longer describes anything running.
+     */
+    fun onPassCut() {}
+
     /** Asks before a tool runs, including Auto's provenance and destructive-action gates. */
     suspend fun onApproval(call: ToolCall): Boolean
 
@@ -1601,6 +1610,8 @@ class TurnRunner @Inject constructor(
                         watch.judge(reply)
                     }
 
+                    is GenerationEvent.Progress -> listener.onProgress(event)
+
                     is GenerationEvent.Completed -> {
                         // Counts only. Every "why did it not search" question is answered by
                         // whether tools were offered and how many calls came back, and the
@@ -1617,6 +1628,7 @@ class TurnRunner @Inject constructor(
             false
         } catch (short: CutShort) {
             Log.i("OpenWeights", "narrated search cut ${short.message}")
+            listener.onPassCut()
             completed = GenerationEvent.Completed(
                 reason = StopReason.END_OF_TURN,
                 stats = GenerationStats(0, 0, 0, 0, 0, 0, 0),

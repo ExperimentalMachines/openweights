@@ -282,6 +282,11 @@ class FakeInferenceEngine : InferenceEngine {
         events.trySend(GenerationEvent.Token(text, logprob))
     }
 
+    /** Pushes a live progress reading into a held generation, as the engines' tickers do. */
+    fun progress(progress: GenerationEvent.Progress) {
+        events.trySend(progress)
+    }
+
     /**
      * Ends a held generation the way the model reaching its stop token does.
      *

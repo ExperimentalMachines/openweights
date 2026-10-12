@@ -505,6 +505,21 @@ Java_io_github_alpharomercoma_openweights_core_engine_LlamaBridge_nativeCancel(
 }
 
 JNIEXPORT jlongArray JNICALL
+Java_io_github_alpharomercoma_openweights_core_engine_LlamaBridge_nativeProgress(
+    JNIEnv * env, jobject /*thiz*/, jlong handle) {
+    // Callable while nativeGenerate is running on another thread; it copies one snapshot
+    // under the session's own lock. The caller holds the handle lock, so the session cannot
+    // be freed underneath it.
+    int64_t snapshot[Session::PROGRESS_FIELDS];
+    as_session(handle)->progress_snapshot(snapshot);
+    jlong values[Session::PROGRESS_FIELDS];
+    for (int i = 0; i < Session::PROGRESS_FIELDS; ++i) values[i] = static_cast<jlong>(snapshot[i]);
+    jlongArray result = env->NewLongArray(Session::PROGRESS_FIELDS);
+    if (result != nullptr) env->SetLongArrayRegion(result, 0, Session::PROGRESS_FIELDS, values);
+    return result;
+}
+
+JNIEXPORT jlongArray JNICALL
 Java_io_github_alpharomercoma_openweights_core_engine_LlamaBridge_nativeModelInfo(
     JNIEnv * env, jobject /*thiz*/, jlong handle) try {
     Session * session = as_session(handle);

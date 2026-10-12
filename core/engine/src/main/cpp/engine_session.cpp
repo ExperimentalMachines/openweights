@@ -1852,8 +1852,27 @@ bool Session::ingest_prompt(
             error = "failed to decode prompt (llama_decode returned " + std::to_string(ret) + ")";
             return false;
         }
+        if (progress_counting_) {
+            const int64_t at = now_ms();
+            update_progress([&](Progress & p) {
+                p.prompt_read += chunk;
+                p.prompt_read_at_ms = at;
+            });
+        }
     }
     return true;
+}
+
+void Session::progress_snapshot(int64_t * out) const {
+    std::lock_guard<std::mutex> lock(progress_mutex_);
+    out[0] = progress_.phase;
+    out[1] = progress_.prompt_total;
+    out[2] = progress_.prompt_read;
+    out[3] = progress_.prefill_started_ms;
+    out[4] = progress_.prompt_read_at_ms;
+    out[5] = progress_.generated;
+    out[6] = progress_.first_token_ms;
+    out[7] = progress_.last_token_ms;
 }
 
 size_t Session::common_prefix(
@@ -2733,6 +2752,17 @@ StopReason Session::generate(
     std::string & error) {
     cancelled_.store(false, std::memory_order_relaxed);
 
+    // Idle again however this returns, so a reading taken after it ends, or before the next
+    // generation has reset the counters, says so instead of passing off this turn's figures
+    // as the next one's.
+    struct ProgressDone {
+        Session * session;
+        ~ProgressDone() {
+            session->progress_counting_ = false;
+            session->update_progress([](Progress & p) { p.phase = 0; });
+        }
+    } progress_done{this};
+
     // Two samples around a turn, because every field in them is a running total and it
     // is the difference that says anything. A turn that answers slowly having taken no
     // major faults was throttled or badly placed; one that took hundreds of thousands
@@ -2761,6 +2791,12 @@ StopReason Session::generate(
     }
 
     const int64_t prefill_start = now_ms();
+    update_progress([&](Progress & p) {
+        p = Progress{};
+        p.phase = 1;
+        p.prefill_started_ms = prefill_start;
+        p.prompt_read_at_ms = prefill_start;
+    });
 
     if (!media_paths.empty()) {
         // Media becomes embeddings, which the record describes by the picture's hash rather
@@ -2825,6 +2861,10 @@ StopReason Session::generate(
         }
 
         const size_t reusable = align_cache(prompt_tokens, /*need_logits=*/true);
+        update_progress([&](Progress & p) {
+            p.prompt_total = static_cast<int64_t>(prompt_tokens.size() - reusable);
+        });
+        progress_counting_ = true;
 
         // One token short of the end, so that the same prompt sent again (a regenerated
         // reply) can use the point as well as a longer one (a dropped pass): align_cache
@@ -2842,6 +2882,7 @@ StopReason Session::generate(
         } else {
             ingested = ingest_prompt(prompt_tokens, reusable, error);
         }
+        progress_counting_ = false;
         if (!ingested) {
             // Whatever decoded before the stop is in the cache, and the bookkeeping above says
             // it is not: cached_ and n_past_ still describe the prefix, not the batches that
@@ -3030,6 +3071,16 @@ StopReason Session::generate(
             stats.time_to_first_token_ms = first_token_ms - prefill_start;
         }
         ++stats.generated_tokens;
+        {
+            const int64_t at = stats.generated_tokens == 1 ? first_token_ms : now_ms();
+            const int64_t generated = stats.generated_tokens;
+            update_progress([&](Progress & p) {
+                p.phase = 2;
+                p.generated = generated;
+                if (generated == 1) p.first_token_ms = at;
+                p.last_token_ms = at;
+            });
+        }
 
         const std::string piece(piece_buffer.data(), piece_len);
         raw_reply += piece;

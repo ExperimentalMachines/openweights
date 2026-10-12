@@ -204,12 +204,12 @@ class MemoryPressureBenchmark {
 
         fun line() = (
             "turn %d wall %dms prefill %.1f t/s decode %.2f t/s majflt %d swap %d->%dMB " +
-                "rss %d->%dMB peak %dMB cpu/wall %.2f avail min %dMB"
+                "rss %d->%dMB peak %dMB cpu/wall %.2f avail min %dMB paging %s"
             ).format(
             index, wallMs, prefillRate, decodeRate, majorFaults,
             before.swapKb / KIB, after.swapKb / KIB, before.rssKb / KIB, after.rssKb / KIB,
             peak.peakFootprintKb / KIB, cpuMs.toDouble() / wallMs.coerceAtLeast(1),
-            peak.minAvailableKb / KIB,
+            peak.minAvailableKb / KIB, stats.memory?.pagingDetected,
         )
 
         fun json() = buildString {
@@ -223,6 +223,15 @@ class MemoryPressureBenchmark {
                 "\"major_faults\": $majorFaults, \"minor_faults\": ${after.minorFaults - before.minorFaults}, ",
             )
             append("\"cpu_ms\": $cpuMs, \"before\": ${before.json()}, \"after\": ${after.json()}, ")
+            // What the engine's own meter concluded, beside the test's independent readings.
+            stats.memory?.let {
+                append(
+                    "\"engine_memory\": {\"paging\": ${it.pagingDetected}, \"cold\": ${it.cold}, ",
+                )
+                append(
+                    "\"peak_bytes\": ${it.peakFootprintBytes}, \"major_faults\": ${it.majorFaults}}, ",
+                )
+            }
             append("\"peak\": ${peak.json()}}")
         }
     }

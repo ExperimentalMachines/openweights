@@ -145,6 +145,7 @@ class ConversationCompactor @Inject constructor(
                     when (event) {
                         is GenerationEvent.Token -> append(event.text)
                         is GenerationEvent.Completed -> reason = event.reason
+                        is GenerationEvent.Progress -> Unit
                     }
                 }
             }
