@@ -208,5 +208,18 @@ swapped every pair:
   and the rest while writing. Counting inside a batch would need a callback from inside llama.cpp's decode, which
   this does not add.
 
-Not checked on the phone: the screen itself (covered by the Compose tests, not by a
-screenshot), and the readout on an ExecuTorch model.
+**In the app itself** (debug build, the same session, screen on and plugged in):
+
+- LFM2.5 1.2B (GGUF): "Reading the prompt 0%", then `52→29 tok/s` at the right of the
+  activity line; the finished footer read the same `52→29 tok/s`, 9.5 s, and the sheet's
+  Memory row 1.63 GB peak. The prompt after the warmed prefix was 77 tokens, one batch, so the
+  share went from 0 straight to written.
+- Qwen3 1.7B (`.pte`): "Reading the prompt" with no share, then `-→13 tok/s` while writing,
+  the prompt rate unknown rather than guessed; the finished footer filled it in, `77→11 tok/s`,
+  78.7 s, and the Memory row read 3.01 GB.
+- Qwen3 1.7B Q8_0 (GGUF, 21k window) under the 4 GB balloon, after 30 s idle: footer
+  `16→16 tok/s 27.9s memory paging` in red, prefill 78 tokens in 4.95 s, and the sheet's
+  paging sentence under a 4.53 GB peak. A flagged footer is wider than the room beside the
+  three actions, so it takes a line of its own, which `MessageActions` does on purpose.
+- One thing the balloon also showed: with the app sent to the background under that pressure,
+  the model was released and reloaded on return, though the process survived.
