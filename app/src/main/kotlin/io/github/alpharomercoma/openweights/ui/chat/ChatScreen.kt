@@ -1481,8 +1481,8 @@ private fun Measurements(entry: TranscriptEntry) {
             )
         }
         // Only when the phone was paging the reply's memory back in hard enough to cost it
-        // time (see TurnMemory). Said as what happened and why, "slowed by low memory", not
-        // as the mechanism: "memory paging" asked a reader to know what paging is. In words
+        // time (see TurnMemory). Said as what happened and why, "slowed by low phone memory",
+        // not as the mechanism: "memory paging" asked a reader to know what paging is. In words
         // as well as colour, because red alone says nothing to a reader who cannot see it.
         if (entry.memory?.pagingDetected == true) {
             val description = stringResource(R.string.memory_paging_description)

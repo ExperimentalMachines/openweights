@@ -152,8 +152,8 @@ faults × 20 µs come to at least a second and to more than 10% of the pass's ow
 tools between passes are not counted, so a slow web fetch cannot dilute it. A pass that reads
 freshly opened weights for the first time is not flagged at all, because those faults are a
 file being read in, not paging (the Gemma `.pte` case above, and every GGUF's first turn after
-a load with mmap). Any flagged pass flags the reply, and its footer then says "slowed by low memory". Every
-reply's detail sheet has a Memory row, "up to 1.63 GB", flagged or not. (The first build said
+a load with mmap). Any flagged pass flags the reply, and its footer then says "slowed by low phone memory". Every
+reply's detail sheet has a Memory row, "1.63 GB peak", flagged or not. (The first build said
 "memory paging" with a sentence explaining it; the owner judged both unreadable to anyone who
 does not know what paging is, and the words were changed to say what happened instead.)
 
@@ -220,7 +220,7 @@ swapped every pair:
   the prompt rate unknown rather than guessed; the finished footer filled it in, `77→11 tok/s`,
   78.7 s, and the Memory row read 3.01 GB.
 - Qwen3 1.7B Q8_0 (GGUF, 21k window) under the 4 GB balloon, after 30 s idle: footer
-  `16→16 tok/s 27.9s memory paging` in red (now "slowed by low memory"), prefill 78 tokens in 4.95 s, and the sheet's
+  `16→16 tok/s 27.9s memory paging` in red (now "slowed by low phone memory"), prefill 78 tokens in 4.95 s, and the sheet's
   paging sentence under a 4.53 GB peak. A flagged footer is wider than the room beside the
   three actions, so it takes a line of its own, which `MessageActions` does on purpose.
 - One thing the balloon also showed: with the app sent to the background under that pressure,

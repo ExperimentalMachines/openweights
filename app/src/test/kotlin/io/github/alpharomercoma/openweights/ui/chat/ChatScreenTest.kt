@@ -338,9 +338,9 @@ class ChatScreenTest {
             transcript = listOf(assistantEntry("Done.").copy(memory = paging(detected = true))),
         )
 
-        compose.onNodeWithText("slowed by low memory").assertIsDisplayed()
+        compose.onNodeWithText("slowed by low phone memory").assertIsDisplayed()
         compose.onNodeWithContentDescription(
-            "This reply was slowed because the phone was low on memory.",
+            "This reply was slowed by low phone memory.",
         ).assertExists()
     }
 
@@ -355,7 +355,7 @@ class ChatScreenTest {
             ),
         )
 
-        compose.onNodeWithText("slowed by low memory").assertIsDisplayed()
+        compose.onNodeWithText("slowed by low phone memory").assertIsDisplayed()
         compose.onNodeWithText("tok/s", substring = true).assertDoesNotExist()
     }
 
@@ -366,7 +366,7 @@ class ChatScreenTest {
             transcript = listOf(assistantEntry("Done.").copy(memory = paging(detected = false))),
         )
 
-        compose.onNodeWithText("slowed by low memory").assertDoesNotExist()
+        compose.onNodeWithText("slowed by low phone memory").assertDoesNotExist()
     }
 
     @Test

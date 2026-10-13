@@ -156,13 +156,12 @@ fun TurnStatsPanel(entry: TranscriptEntry, modifier: Modifier = Modifier) {
  * wait and add up with the rows under them; memory is a different quantity, it adds up with
  * nothing here, and a fourth column squeezed every label in the sheet at a large font.
  *
- * Said in words anyone already has, with nothing under it to explain them: "up to 3 GB", and,
- * only when [TurnMemory.pagingDetected], "slowed by low memory" and the one thing a reader can
- * do about it. The terms the measurement is made of (a sampled resident plus swapped peak, the
- * kernel paging memory back in) were on screen first, and a reader had to learn them to be
- * told the phone was short of memory. The peak is the highest seen at four samples a second,
- * the app included; "up to" is true of that without saying how it was read. It names no
- * seconds lost, which the fault count cannot know. A reopened reply was not measured this
+ * Said in words anyone already has, with nothing under it to explain them: "3 GB peak", and,
+ * only when [TurnMemory.pagingDetected], "This reply was slowed by low phone memory." The terms
+ * the measurement is made of (a sampled resident plus swapped peak, the kernel paging memory
+ * back in) were on screen first, and a reader had to learn them to be told the phone was short
+ * of memory. The peak is the highest seen at four samples a second, the app included. It names
+ * no seconds lost, which the fault count cannot know. A reopened reply was not measured this
  * session and shows a hyphen, like every other figure here that was not.
  */
 @Composable

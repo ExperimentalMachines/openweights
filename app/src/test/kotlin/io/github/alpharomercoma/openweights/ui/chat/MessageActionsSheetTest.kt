@@ -223,17 +223,17 @@ class MessageActionsSheetTest {
     fun `the peak is said plainly, with nothing under it to explain it`() {
         showSheet(memory = memory(pagingDetected = false))
 
-        compose.onNodeWithText("up to 3.00 GB").assertExists()
+        compose.onNodeWithText("3.00 GB peak").assertExists()
         compose.onNodeWithText("sampled", substring = true, ignoreCase = true).assertDoesNotExist()
         compose.onNodeWithText("swap", substring = true, ignoreCase = true).assertDoesNotExist()
         compose.onNodeWithText("low memory", substring = true).assertDoesNotExist()
     }
 
     @Test
-    fun `a slowed reply says so in plain words, and what helps`() {
+    fun `a slowed reply says so in plain words`() {
         showSheet(memory = memory(pagingDetected = true))
 
-        compose.onNodeWithText("Slowed by low memory. Closing other apps can help.").assertExists()
+        compose.onNodeWithText("This reply was slowed by low phone memory.").assertExists()
         compose.onNodeWithText("paging", substring = true, ignoreCase = true).assertDoesNotExist()
     }
 
