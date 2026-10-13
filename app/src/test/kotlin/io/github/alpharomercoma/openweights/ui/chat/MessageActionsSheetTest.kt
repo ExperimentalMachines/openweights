@@ -216,29 +216,25 @@ class MessageActionsSheetTest {
         showSheet()
 
         compose.onNodeWithText("Memory").assertExists()
-        compose.onNodeWithText("peak", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("up to", substring = true).assertDoesNotExist()
     }
 
     @Test
-    fun `the peak says what it counts`() {
+    fun `the peak is said plainly, with nothing under it to explain it`() {
         showSheet(memory = memory(pagingDetected = false))
 
-        compose.onNodeWithText("3.00 GB peak").assertExists()
-        compose.onNodeWithText(
-            "The highest the app was seen to hold while writing the reply, read four times a " +
-                "second, swapped memory included.",
-        ).assertExists()
-        compose.onNodeWithText("paging", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("up to 3.00 GB").assertExists()
+        compose.onNodeWithText("sampled", substring = true, ignoreCase = true).assertDoesNotExist()
+        compose.onNodeWithText("swap", substring = true, ignoreCase = true).assertDoesNotExist()
+        compose.onNodeWithText("low memory", substring = true).assertDoesNotExist()
     }
 
     @Test
-    fun `paging is explained without claiming seconds or gigabytes it cannot know`() {
+    fun `a slowed reply says so in plain words, and what helps`() {
         showSheet(memory = memory(pagingDetected = true))
 
-        compose.onNodeWithText(
-            "Frequent memory paging was detected during this reply, so low memory may have " +
-                "slowed it. Closing other apps can help.",
-        ).assertExists()
+        compose.onNodeWithText("Slowed by low memory. Closing other apps can help.").assertExists()
+        compose.onNodeWithText("paging", substring = true, ignoreCase = true).assertDoesNotExist()
     }
 
     private fun memory(pagingDetected: Boolean) = TurnMemory(
