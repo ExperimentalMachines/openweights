@@ -30,6 +30,13 @@ Unit tests need nothing special:
 ./gradlew test
 ```
 
+The Python tests (the graders under `tools/eval/bench` and the agent guard under
+`tools/hooks`) need only the standard library:
+
+```sh
+tools/run_python_tests.sh
+```
+
 The engine's instrumented tests need a device and a GGUF. They skip themselves when no
 model is present, so they will not fail a machine without one. `docs/CONTEXT.md` has the
 exact commands, including the workarounds for devices that block `adb install`.

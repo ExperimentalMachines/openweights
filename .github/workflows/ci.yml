@@ -44,6 +44,11 @@ jobs:
       - name: Unit tests
         run: ./gradlew test jvmTest
 
+      # The graders and the agent guard are Python; nothing in the Gradle steps above
+      # touches them, so they get their own step.
+      - name: Python tests
+        run: tools/run_python_tests.sh
+
       - name: Assemble debug APK
         run: ./gradlew :app:assembleDebug
 
