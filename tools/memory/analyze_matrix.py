@@ -276,9 +276,9 @@ def main() -> int:
               f"{uncovered} of {len(r['turns'])} |")
 
     print('\n## Every turn\n')
-    print('| cell | pair | arm | out at Send MB | brought back MB | rounds | send to first token s | '
+    print('| cell | pair | arm | out at Send MB | brought back MB | walked MB | rounds | send to first token s | '
           'turn faults | window faults | prefill s | battery C | flag |')
-    print('|---|---|---|---|---|---|---|---|---|---|---|---|')
+    print('|---|---|---|---|---|---|---|---|---|---|---|---|---|')
     for r in reports:
         for t in sorted(r['turns'], key=lambda t: (t['pair'], t['arm'])):
             if 'error' in t and 'send_wall_ms' not in t:
@@ -286,7 +286,7 @@ def main() -> int:
                 continue
             s = stft(t)
             print(f"| {cell_name(r)} | {t['pair']} | {t['arm']} | {t.get('out_at_send_mb')} | "
-                  f"{t.get('brought_back_mb')} | {t.get('rounds', '-')} | "
+                  f"{t.get('brought_back_mb')} | {t.get('walked_mb', '-')} | {t.get('rounds', '-')} | "
                   f"{'-' if s is None else f'{s:.1f}'} | {t.get('turn_major_faults', 0):,} | "
                   f"{t.get('window_major_faults', 0):,} | {sum(t.get('prefill_ms', [])) / 1000:.1f} | "
                   f"{t.get('battery_temp_c')} | {t.get('paging_flag', '-')} |"

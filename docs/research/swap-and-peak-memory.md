@@ -418,8 +418,13 @@ gaps that brought weights back; of the six pairs with 256 MB or more out in the 
 prefetch arm was sooner by 3.9, 0.4, 1.2 and 10.8 s and later by 0.3 and 1.2 s, and those pairs
 were chosen by a reading taken after the gap; the 4 GB kills point one way and the 5 GB ones the
 other; and the 2.6B outlier, with the prefetch arm 63 s slower, is unexplained. The default stays
-on provisionally. Settling it needs the 5 GB level completed, the prefetch's cancelled work counted,
-and the arms alternated within a block.
+on provisionally. Settling it needs the 5 GB level completed and more blocks in each multi-turn cell;
+alternating the arms turn by turn instead would switch conversations in one context, which the
+benchmark as written would pay for by re-reading the prompt, since it keeps no saved state per
+conversation. The completed steps of looks cancelled at Send are now counted: the engine adds up
+every step as it returns and the benchmark records the change over each gap as `walked_mb`
+(bytes walked, resident or not and including the step in flight at Send, not bytes that were
+out).
 
 **The paging flag, checked on these turns.** Each matrix turn has a partner doing the same work in
 the other arm, so a flagged turn can be held against it. Of the 418 turns in pairs (main matrix and

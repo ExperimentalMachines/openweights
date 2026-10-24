@@ -232,6 +232,7 @@ class PrefetchMatrixBenchmark {
         val windowOpenWall = System.currentTimeMillis()
         val sampler = Sampler.open()
         val tally = Tally()
+        val walkedBefore = engine.prefetchWalkedBytes()
         val loop: Job? = if (prefetching) {
             launch(Dispatchers.Default) {
                 appPolicy(engine, tally)
@@ -253,6 +254,7 @@ class PrefetchMatrixBenchmark {
         val sendWall = System.currentTimeMillis()
         loop?.cancelAndJoin()
         val joinedAt = System.nanoTime()
+        val walked = engine.prefetchWalkedBytes() - walkedBefore
         val windowCost = sampler.close()
         val closedAt = System.nanoTime()
         val outAtSend = engine.weightsOut()
@@ -267,6 +269,7 @@ class PrefetchMatrixBenchmark {
             .put("window_min_available_mb", windowCost.minAvailableKb / KIB)
             .put("window_start_available_mb", windowCost.startAvailableKb / KIB)
             .put("looks", tally.looks).put("brought_back_mb", tally.broughtBackBytes / (KIB * KIB))
+            .put("walked_mb", walked / (KIB * KIB))
             .put("unknown_looks", tally.unknownLooks).put("prefetch_unsupported", tally.unsupported)
             .put("battery_temp_c", env.batteryTempC).put("charging", env.charging)
             .put("thermal_status", env.thermalStatus)

@@ -104,6 +104,12 @@ class LlamaCppEngine internal constructor(
      */
     private val lifetime = ReentrantReadWriteLock()
 
+    /**
+     * Bytes every prefetch step has walked, counted as each step returns. A look cut short at
+     * Send returns no [WeightPrefetch], so this is the only record of the steps it took.
+     */
+    private val prefetchWalked = AtomicLong(0)
+
     /** 0 when no model is loaded. Guarded by [handleLock] for cross-thread reads. */
     private val handle = AtomicLong(0)
 
@@ -343,6 +349,7 @@ class LlamaCppEngine internal constructor(
             if (step == null || step < 0L) failed = true
             if (step == null || step <= 0L) break
             offset += step
+            prefetchWalked.addAndGet(step)
         }
         val after = whileLoaded(expected, bridge::nativeWeightsNotResident)?.takeIf { it >= 0 }
         WeightPrefetch(before, after, elapsedMs(), skipped = false, failed = failed).also {
@@ -354,6 +361,9 @@ class LlamaCppEngine internal constructor(
             )
         }
     }
+
+    /** [prefetchWalked] so far; the device benchmark reads the change over a window. */
+    internal fun prefetchWalkedBytes(): Long = prefetchWalked.get()
 
     /** Bytes of the weights out of memory now, or null; the device benchmark's reading. */
     internal fun weightsOut(): Long? {
