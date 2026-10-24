@@ -420,3 +420,31 @@ were chosen by a reading taken after the gap; the 4 GB kills point one way and t
 other; and the 2.6B outlier, with the prefetch arm 63 s slower, is unexplained. The default stays
 on provisionally. Settling it needs the 5 GB level completed, the prefetch's cancelled work counted,
 and the arms alternated within a block.
+
+**The paging flag, checked on these turns.** Each matrix turn has a partner doing the same work in
+the other arm, so a flagged turn can be held against it. Of the 418 turns in pairs (main matrix and
+the 5 GB cell), the app's own flag, which judges each pass, fired on 14: 11 were 10% or more slower
+than their partner, 2 slower by less, 1 not slower. None of the 192 unloaded turns was flagged.
+A partner is not a paging-free baseline (one flagged 2.6B turn took 95.0 s against its partner's
+93.0 s, both with about 200,000 faults), and pairs are sequential, a median 105 s apart.
+
+To see whether another per-fault cost would do better, the rule was rerun on whole turns (faults
+over the turn's wall time, which the app does per pass, so 13 fire instead of 14). "Slowed" is
+10% or more slower than the partner; "missed" a slowed turn with 50,000 or more faults more than
+its partner and no flag (39 turns were slowed, 16 of them with that excess):
+
+| µs a fault | Flagged | Slowed | Slower by less than 10% | Not slower | Missed |
+|---|---|---|---|---|---|
+| 10 | 3 | 3 | 0 | 0 | 13 |
+| 15 | 6 | 5 | 0 | 1 | 11 |
+| 20 (the app's) | 13 | 11 | 1 | 1 | 5 |
+| 30 | 16 | 12 | 2 | 2 | 4 |
+| 40 | 21 | 14 | 2 | 5 | 2 |
+
+Going from 20 to 40 would catch 3 more slowed turns and flag 5 more that were not slowed; going to
+15 would miss 6 more. Pairs whose faults differ by 50,000 or more put a fault at a median 36 µs of
+prefill (exclusive quartiles 11 and 60, 24 pairs, two of them negative), so the cost moves with
+conditions; in the 10-23 run above the flag fired on every 4 GB control turn when the difference
+from the prefetch arm was about a second. This is an exploratory, turn-level sensitivity check on
+relative labels, not a calibration: nothing in it argues for moving off 20, and 20 stays as a
+choice between missed warnings and unneeded ones.

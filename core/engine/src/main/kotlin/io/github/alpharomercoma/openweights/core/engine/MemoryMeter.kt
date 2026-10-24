@@ -134,7 +134,10 @@ internal class MemoryMeter(
          * seconds of each slowed turn over the unpressed baseline, divided by its faults, came
          * to 15 to 27 µs (docs/research/swap-and-peak-memory.md). An empirical relation for a
          * heuristic, not a stall timer: a fault also counts a file read, and readahead brings
-         * in more than one page for one fault.
+         * in more than one page for one fault. Checked again on 2026-10-24 against 418 turns
+         * with a partner doing the same work: the flag fired on 14, 11 of them 10% or more
+         * slower than the partner; rerun per turn, 15 missed 6 more slowed turns and 40 flagged
+         * 5 more that were not, so 20 stays as the trade between the two.
          */
         const val FAULT_COST_MICROS = 20L
 
