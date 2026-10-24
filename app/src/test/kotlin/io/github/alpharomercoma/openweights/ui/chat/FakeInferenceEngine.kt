@@ -64,6 +64,8 @@ data class ScriptedPass(
      * as its text on the first token and empty fragments after it. Overrides [logprob].
      */
     val tokenLogprobs: List<Float>? = null,
+    /** Whether the session wrote an empty think block into the prompt before this reply. */
+    val thinkingPrefilled: Boolean = false,
 )
 
 /**
@@ -263,7 +265,7 @@ class FakeInferenceEngine : InferenceEngine {
                 emit(
                     GenerationEvent.Completed(
                         reason = pass.reason,
-                        stats = stats(),
+                        stats = stats().copy(thinkingPrefilled = pass.thinkingPrefilled),
                         content = pass.content,
                         toolCalls = pass.toolCalls,
                     ),

@@ -1,0 +1,344 @@
+{
+ "run": "20261024-0746-b5",
+ "model": "LFM2.5-2.6B-Q4_K_M.gguf",
+ "label": "b5120",
+ "shape": "multi",
+ "tools": false,
+ "pairs": 8,
+ "blocks": 2,
+ "depth": 4,
+ "gap_s": 20,
+ "lead_s": 10,
+ "seed": 20261024,
+ "context": 8192,
+ "answer_tokens": 96,
+ "load_ms": 6438,
+ "error": null,
+ "turns": [
+  {
+   "pair": 0,
+   "position": 0,
+   "arm": "none",
+   "question": "What does the Difference Engine do that the Analytical Engine generalises?",
+   "window_open_wall_ms": 1792854745349,
+   "send_wall_ms": 1792854755374,
+   "join_ms": 0,
+   "sampler_close_ms": 14,
+   "residency_read_ms": 8,
+   "out_at_send_mb": 0,
+   "window_major_faults": 118,
+   "window_cpu_ms": 310,
+   "window_min_available_mb": 815,
+   "window_start_available_mb": 845,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 42.9,
+   "charging": false,
+   "thermal_status": 0,
+   "end_wall_ms": 1792854764652,
+   "turn_ms": 9278,
+   "turn_major_faults": 830,
+   "turn_cpu_ms": 52340,
+   "turn_min_available_mb": 813,
+   "send_to_first_token_ms": 1173,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    46,
+    58,
+    54
+   ],
+   "cached_tokens": [
+    1417,
+    1462,
+    1519
+   ],
+   "context_used": 1604,
+   "prefill_ms": [
+    1086,
+    1111,
+    1136
+   ],
+   "generated_tokens": [
+    25,
+    21,
+    31
+   ],
+   "decode_ms": [
+    1864,
+    1528,
+    2265
+   ],
+   "paging_flag": false,
+   "block": 0,
+   "depth": 1
+  },
+  {
+   "pair": 1,
+   "position": 0,
+   "arm": "none",
+   "question": "What were Lovelace's notes on Menabrea's paper about?",
+   "window_open_wall_ms": 1792854774677,
+   "send_wall_ms": 1792854784685,
+   "join_ms": 0,
+   "sampler_close_ms": 4,
+   "residency_read_ms": 8,
+   "out_at_send_mb": 0,
+   "window_major_faults": 45,
+   "window_cpu_ms": 290,
+   "window_min_available_mb": 800,
+   "window_start_available_mb": 808,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 42.9,
+   "charging": false,
+   "thermal_status": 0,
+   "end_wall_ms": 1792854793502,
+   "turn_ms": 8817,
+   "turn_major_faults": 795,
+   "turn_cpu_ms": 50260,
+   "turn_min_available_mb": 782,
+   "send_to_first_token_ms": 1222,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    57,
+    55,
+    54
+   ],
+   "cached_tokens": [
+    1572,
+    1628,
+    1682
+   ],
+   "context_used": 1756,
+   "prefill_ms": [
+    1147,
+    1168,
+    1272
+   ],
+   "generated_tokens": [
+    22,
+    21,
+    20
+   ],
+   "decode_ms": [
+    1638,
+    1634,
+    1658
+   ],
+   "paging_flag": false,
+   "block": 0,
+   "depth": 2
+  },
+  {
+   "pair": 2,
+   "position": 0,
+   "arm": "none",
+   "question": "What is the mill, in Babbage's design?",
+   "window_open_wall_ms": 1792854803511,
+   "send_wall_ms": 1792854813518,
+   "join_ms": 0,
+   "sampler_close_ms": 3,
+   "residency_read_ms": 7,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 290,
+   "window_min_available_mb": 776,
+   "window_start_available_mb": 783,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 42.9,
+   "charging": false,
+   "thermal_status": 0,
+   "end_wall_ms": 1792854822185,
+   "turn_ms": 8667,
+   "turn_major_faults": 701,
+   "turn_cpu_ms": 49130,
+   "turn_min_available_mb": 776,
+   "send_to_first_token_ms": 1256,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    44,
+    53,
+    51
+   ],
+   "cached_tokens": [
+    1735,
+    1778,
+    1830
+   ],
+   "context_used": 1903,
+   "prefill_ms": [
+    1170,
+    1216,
+    1253
+   ],
+   "generated_tokens": [
+    20,
+    18,
+    22
+   ],
+   "decode_ms": [
+    1550,
+    1469,
+    1672
+   ],
+   "paging_flag": false,
+   "block": 0,
+   "depth": 3
+  },
+  {
+   "pair": 3,
+   "position": 0,
+   "arm": "none",
+   "question": "What did Lovelace say machines could not do?",
+   "window_open_wall_ms": 1792854832194,
+   "send_wall_ms": 1792854842210,
+   "join_ms": 0,
+   "sampler_close_ms": 13,
+   "residency_read_ms": 11,
+   "out_at_send_mb": 72,
+   "window_major_faults": 36,
+   "window_cpu_ms": 260,
+   "window_min_available_mb": 808,
+   "window_start_available_mb": 821,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44,
+   "charging": false,
+   "thermal_status": 0,
+   "end_wall_ms": 1792854851978,
+   "turn_ms": 9767,
+   "turn_major_faults": 24148,
+   "turn_cpu_ms": 55420,
+   "turn_min_available_mb": 821,
+   "send_to_first_token_ms": 1316,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    44,
+    51,
+    52
+   ],
+   "cached_tokens": [
+    1880,
+    1923,
+    1973
+   ],
+   "context_used": 2047,
+   "prefill_ms": [
+    1213,
+    1100,
+    2399
+   ],
+   "generated_tokens": [
+    18,
+    19,
+    22
+   ],
+   "decode_ms": [
+    1383,
+    1561,
+    1785
+   ],
+   "paging_flag": false,
+   "block": 0,
+   "depth": 4
+  },
+  {
+   "pair": 0,
+   "position": 1,
+   "arm": "prefetch",
+   "question": "What does the Difference Engine do that the Analytical Engine generalises?",
+   "window_open_wall_ms": 1792854893708,
+   "send_wall_ms": 1792854903732,
+   "join_ms": 17,
+   "sampler_close_ms": 5,
+   "residency_read_ms": 15,
+   "out_at_send_mb": 263,
+   "window_major_faults": 64720,
+   "window_cpu_ms": 1100,
+   "window_min_available_mb": 632,
+   "window_start_available_mb": 751,
+   "looks": 2,
+   "brought_back_mb": 90,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44,
+   "charging": false,
+   "thermal_status": 0,
+   "end_wall_ms": 1792854918216,
+   "turn_ms": 14483,
+   "turn_major_faults": 123835,
+   "turn_cpu_ms": 73920,
+   "turn_min_available_mb": 689,
+   "send_to_first_token_ms": 1324,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    46,
+    58,
+    54
+   ],
+   "cached_tokens": [
+    1417,
+    1462,
+    1519
+   ],
+   "context_used": 1604,
+   "prefill_ms": [
+    1195,
+    1372,
+    5380
+   ],
+   "generated_tokens": [
+    25,
+    21,
+    31
+   ],
+   "decode_ms": [
+    1975,
+    1761,
+    2452
+   ],
+   "paging_flag": true,
+   "block": 0,
+   "depth": 1
+  }
+ ]
+}

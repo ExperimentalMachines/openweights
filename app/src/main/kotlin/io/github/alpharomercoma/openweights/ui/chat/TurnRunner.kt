@@ -1012,7 +1012,7 @@ class TurnRunner @Inject constructor(
             // unchanged at 9 of 10 and grew what the model writes by 44%, which at 23 tokens
             // a second is about six seconds a task against the nine a round this buys back.
             messages = messages +
-                ChatMessage.text(ChatRole.ASSISTANT, assistantHistoryText(pass.raw)) +
+                ChatMessage.text(ChatRole.ASSISTANT, pass.historyText) +
                 results
             round++
             readTopResult(steps, mode, listener)
@@ -1473,7 +1473,7 @@ class TurnRunner @Inject constructor(
             if (!pass.raw.invitesRepair(active)) return false
             repaired = true
             messages = messages +
-                ChatMessage.text(ChatRole.ASSISTANT, assistantHistoryText(pass.raw)) +
+                ChatMessage.text(ChatRole.ASSISTANT, pass.historyText) +
                 ChatMessage.text(ChatRole.USER, repairRequest(active))
             return true
         }
@@ -1515,7 +1515,7 @@ class TurnRunner @Inject constructor(
                 engine.resetContext()
             } else {
                 messages = messages +
-                    ChatMessage.text(ChatRole.ASSISTANT, assistantHistoryText(pass.raw)) +
+                    ChatMessage.text(ChatRole.ASSISTANT, pass.historyText) +
                     ChatMessage.text(ChatRole.USER, CapabilityDenial.retryRequest(fitting))
             }
             Log.i("OpenWeights", "denial repair fitting=$fitting")
@@ -1542,7 +1542,7 @@ class TurnRunner @Inject constructor(
             val (question, labels) = JudgeQuestions.fitting(candidates)
             val judgement = judged(
                 pinnedPrompt() +
-                    ChatMessage.text(ChatRole.ASSISTANT, assistantHistoryText(pass.raw)),
+                    ChatMessage.text(ChatRole.ASSISTANT, pass.historyText),
                 question,
                 labels,
             ) ?: return null
@@ -1584,7 +1584,7 @@ class TurnRunner @Inject constructor(
             if (readPlan(spoken) != null || spoken.endsWith("?")) return false
             planRepaired = true
             messages = messages +
-                ChatMessage.text(ChatRole.ASSISTANT, assistantHistoryText(pass.raw)) +
+                ChatMessage.text(ChatRole.ASSISTANT, pass.historyText) +
                 ChatMessage.text(ChatRole.USER, PLAN_REPAIR)
             Log.i("OpenWeights", "plan repair: answered instead of planning")
             return true
@@ -1606,7 +1606,7 @@ class TurnRunner @Inject constructor(
             // turn if it asks again. What the cache needs is a prompt that only grows.
             listener.onSteps(calls.map { AgentStep.Skipped(it, spent(maxRounds)) })
             messages = messages +
-                ChatMessage.text(ChatRole.ASSISTANT, assistantHistoryText(pass.raw)) +
+                ChatMessage.text(ChatRole.ASSISTANT, pass.historyText) +
                 calls.map { ChatMessage.toolResult(it.id, spent(maxRounds)) }
                     .spelledOut(readsResults)
             return true
@@ -1641,7 +1641,17 @@ class TurnRunner @Inject constructor(
         val confidence: Float? = null,
         /** Whether the loop stopped the model early because it had already announced a search. */
         val cut: Boolean = false,
-    )
+    ) {
+        /**
+         * The pass as the next round must render it to meet the cache: as it was decoded,
+         * with the think block the session wrote itself when it prefilled one. Without it, a
+         * template that opens `<think>` in its generation prompt (LFM2.5 2.6B with thinking
+         * off) re-renders this turn differently from what the cache holds, and a hybrid
+         * model, which cannot cut its memory back part way, reads the whole conversation
+         * again on every round. ChatViewModel already keeps the transcript this way.
+         */
+        val historyText: String get() = assistantHistoryText(raw, event.stats.thinkingPrefilled)
+    }
 
     /**
      * What to say to a model whose call could not be read.

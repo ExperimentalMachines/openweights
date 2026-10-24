@@ -1,0 +1,1027 @@
+{
+ "run": "20261023-2356",
+ "model": "LFM2.5-2.6B-Q4_K_M.gguf",
+ "label": "b4096",
+ "shape": "single",
+ "tools": true,
+ "pairs": 8,
+ "blocks": null,
+ "depth": null,
+ "gap_s": 20,
+ "lead_s": 10,
+ "seed": 20261024,
+ "context": 8192,
+ "answer_tokens": 96,
+ "load_ms": 6364,
+ "error": null,
+ "turns": [
+  {
+   "pair": 0,
+   "position": 0,
+   "arm": "none",
+   "question": "Who won the most recent Formula 1 race?",
+   "window_open_wall_ms": 1792834710774,
+   "send_wall_ms": 1792834720804,
+   "join_ms": 0,
+   "sampler_close_ms": 4,
+   "residency_read_ms": 4,
+   "out_at_send_mb": 0,
+   "window_major_faults": 54,
+   "window_cpu_ms": 350,
+   "window_min_available_mb": 1302,
+   "window_start_available_mb": 1321,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.7,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792834820046,
+   "turn_ms": 99241,
+   "turn_major_faults": 34,
+   "turn_cpu_ms": 687160,
+   "turn_min_available_mb": 1265,
+   "send_to_first_token_ms": 27114,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1374,
+    1421,
+    1471
+   ],
+   "cached_tokens": [
+    0,
+    0,
+    0
+   ],
+   "context_used": 1490,
+   "prefill_ms": [
+    27057,
+    30513,
+    32300
+   ],
+   "generated_tokens": [
+    16,
+    19,
+    19
+   ],
+   "decode_ms": [
+    2257,
+    3417,
+    3436
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 0,
+   "position": 1,
+   "arm": "prefetch",
+   "question": "Who won the most recent Formula 1 race?",
+   "window_open_wall_ms": 1792834830069,
+   "send_wall_ms": 1792834840074,
+   "join_ms": 2,
+   "sampler_close_ms": 3,
+   "residency_read_ms": 5,
+   "out_at_send_mb": 0,
+   "window_major_faults": 1,
+   "window_cpu_ms": 340,
+   "window_min_available_mb": 1279,
+   "window_start_available_mb": 1280,
+   "looks": 5,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.7,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792834937699,
+   "turn_ms": 97625,
+   "turn_major_faults": 3,
+   "turn_cpu_ms": 679380,
+   "turn_min_available_mb": 1227,
+   "send_to_first_token_ms": 27287,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1374,
+    1421,
+    1471
+   ],
+   "cached_tokens": [
+    0,
+    0,
+    0
+   ],
+   "context_used": 1490,
+   "prefill_ms": [
+    27229,
+    29853,
+    31385
+   ],
+   "generated_tokens": [
+    16,
+    19,
+    19
+   ],
+   "decode_ms": [
+    2173,
+    3352,
+    3380
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 1,
+   "position": 0,
+   "arm": "none",
+   "question": "Which film topped the box office last weekend?",
+   "window_open_wall_ms": 1792834947718,
+   "send_wall_ms": 1792834957725,
+   "join_ms": 0,
+   "sampler_close_ms": 1,
+   "residency_read_ms": 2,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 260,
+   "window_min_available_mb": 1241,
+   "window_start_available_mb": 1276,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.7,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792835057216,
+   "turn_ms": 99491,
+   "turn_major_faults": 34,
+   "turn_cpu_ms": 683220,
+   "turn_min_available_mb": 1128,
+   "send_to_first_token_ms": 29115,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1373,
+    1421,
+    1470
+   ],
+   "cached_tokens": [
+    0,
+    0,
+    0
+   ],
+   "context_used": 1488,
+   "prefill_ms": [
+    29071,
+    29885,
+    31526
+   ],
+   "generated_tokens": [
+    17,
+    18,
+    18
+   ],
+   "decode_ms": [
+    2396,
+    3164,
+    3213
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 1,
+   "position": 1,
+   "arm": "prefetch",
+   "question": "Which film topped the box office last weekend?",
+   "window_open_wall_ms": 1792835067233,
+   "send_wall_ms": 1792835077242,
+   "join_ms": 3,
+   "sampler_close_ms": 4,
+   "residency_read_ms": 7,
+   "out_at_send_mb": 0,
+   "window_major_faults": 10,
+   "window_cpu_ms": 300,
+   "window_min_available_mb": 1162,
+   "window_start_available_mb": 1200,
+   "looks": 5,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.7,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792835177073,
+   "turn_ms": 99830,
+   "turn_major_faults": 3,
+   "turn_cpu_ms": 688490,
+   "turn_min_available_mb": 1116,
+   "send_to_first_token_ms": 28992,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1373,
+    1421,
+    1470
+   ],
+   "cached_tokens": [
+    0,
+    0,
+    0
+   ],
+   "context_used": 1488,
+   "prefill_ms": [
+    28933,
+    30342,
+    31402
+   ],
+   "generated_tokens": [
+    17,
+    18,
+    18
+   ],
+   "decode_ms": [
+    2486,
+    3233,
+    3169
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 2,
+   "position": 0,
+   "arm": "prefetch",
+   "question": "What did the Bank of Japan decide at its meeting this week?",
+   "window_open_wall_ms": 1792835187092,
+   "send_wall_ms": 1792835197100,
+   "join_ms": 2,
+   "sampler_close_ms": 4,
+   "residency_read_ms": 8,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 330,
+   "window_min_available_mb": 1156,
+   "window_start_available_mb": 1190,
+   "looks": 5,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.7,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792835298030,
+   "turn_ms": 100929,
+   "turn_major_faults": 49,
+   "turn_cpu_ms": 695490,
+   "turn_min_available_mb": 1120,
+   "send_to_first_token_ms": 27484,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1377,
+    1427,
+    1480
+   ],
+   "cached_tokens": [
+    0,
+    0,
+    0
+   ],
+   "context_used": 1502,
+   "prefill_ms": [
+    27425,
+    30489,
+    31999
+   ],
+   "generated_tokens": [
+    19,
+    22,
+    22
+   ],
+   "decode_ms": [
+    2777,
+    4009,
+    3980
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 2,
+   "position": 1,
+   "arm": "none",
+   "question": "What did the Bank of Japan decide at its meeting this week?",
+   "window_open_wall_ms": 1792835308048,
+   "send_wall_ms": 1792835318057,
+   "join_ms": 0,
+   "sampler_close_ms": 3,
+   "residency_read_ms": 6,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 260,
+   "window_min_available_mb": 1138,
+   "window_start_available_mb": 1143,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.7,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792835421348,
+   "turn_ms": 103291,
+   "turn_major_faults": 0,
+   "turn_cpu_ms": 703010,
+   "turn_min_available_mb": 1017,
+   "send_to_first_token_ms": 29393,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1377,
+    1427,
+    1480
+   ],
+   "cached_tokens": [
+    0,
+    0,
+    0
+   ],
+   "context_used": 1502,
+   "prefill_ms": [
+    29335,
+    30763,
+    31984
+   ],
+   "generated_tokens": [
+    19,
+    22,
+    22
+   ],
+   "decode_ms": [
+    2815,
+    4092,
+    4047
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 3,
+   "position": 0,
+   "arm": "none",
+   "question": "What new features did the latest Chrome release add?",
+   "window_open_wall_ms": 1792835431364,
+   "send_wall_ms": 1792835441375,
+   "join_ms": 0,
+   "sampler_close_ms": 4,
+   "residency_read_ms": 7,
+   "out_at_send_mb": 0,
+   "window_major_faults": 16,
+   "window_cpu_ms": 270,
+   "window_min_available_mb": 1054,
+   "window_start_available_mb": 1084,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.5,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792835542457,
+   "turn_ms": 101081,
+   "turn_major_faults": 175,
+   "turn_cpu_ms": 692970,
+   "turn_min_available_mb": 1019,
+   "send_to_first_token_ms": 26469,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1374,
+    1420,
+    1468
+   ],
+   "cached_tokens": [
+    0,
+    0,
+    0
+   ],
+   "context_used": 1484,
+   "prefill_ms": [
+    26410,
+    31299,
+    33132
+   ],
+   "generated_tokens": [
+    15,
+    17,
+    16
+   ],
+   "decode_ms": [
+    2315,
+    4879,
+    2796
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 3,
+   "position": 1,
+   "arm": "prefetch",
+   "question": "What new features did the latest Chrome release add?",
+   "window_open_wall_ms": 1792835552494,
+   "send_wall_ms": 1792835562508,
+   "join_ms": 2,
+   "sampler_close_ms": 3,
+   "residency_read_ms": 8,
+   "out_at_send_mb": 0,
+   "window_major_faults": 19,
+   "window_cpu_ms": 320,
+   "window_min_available_mb": 1206,
+   "window_start_available_mb": 1252,
+   "looks": 5,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.5,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792835656956,
+   "turn_ms": 94448,
+   "turn_major_faults": 8,
+   "turn_cpu_ms": 670470,
+   "turn_min_available_mb": 1184,
+   "send_to_first_token_ms": 26187,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1374,
+    1420,
+    1468
+   ],
+   "cached_tokens": [
+    0,
+    0,
+    0
+   ],
+   "context_used": 1484,
+   "prefill_ms": [
+    26128,
+    28882,
+    31412
+   ],
+   "generated_tokens": [
+    15,
+    17,
+    16
+   ],
+   "decode_ms": [
+    2040,
+    2967,
+    2777
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 4,
+   "position": 0,
+   "arm": "prefetch",
+   "question": "What is the newest Pixel phone announced this year?",
+   "window_open_wall_ms": 1792835666973,
+   "send_wall_ms": 1792835676981,
+   "join_ms": 2,
+   "sampler_close_ms": 3,
+   "residency_read_ms": 8,
+   "out_at_send_mb": 0,
+   "window_major_faults": 4,
+   "window_cpu_ms": 310,
+   "window_min_available_mb": 1206,
+   "window_start_available_mb": 1236,
+   "looks": 5,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.5,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792835775768,
+   "turn_ms": 98787,
+   "turn_major_faults": 64,
+   "turn_cpu_ms": 683730,
+   "turn_min_available_mb": 1157,
+   "send_to_first_token_ms": 26963,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1375,
+    1426,
+    1476
+   ],
+   "cached_tokens": [
+    0,
+    0,
+    0
+   ],
+   "context_used": 1495,
+   "prefill_ms": [
+    26905,
+    29217,
+    32844
+   ],
+   "generated_tokens": [
+    20,
+    19,
+    19
+   ],
+   "decode_ms": [
+    2849,
+    3318,
+    3410
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 4,
+   "position": 1,
+   "arm": "none",
+   "question": "What is the newest Pixel phone announced this year?",
+   "window_open_wall_ms": 1792835785788,
+   "send_wall_ms": 1792835795794,
+   "join_ms": 0,
+   "sampler_close_ms": 4,
+   "residency_read_ms": 7,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 270,
+   "window_min_available_mb": 1272,
+   "window_start_available_mb": 1297,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.5,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792835890803,
+   "turn_ms": 95008,
+   "turn_major_faults": 2,
+   "turn_cpu_ms": 671570,
+   "turn_min_available_mb": 1215,
+   "send_to_first_token_ms": 26069,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1375,
+    1426,
+    1476
+   ],
+   "cached_tokens": [
+    0,
+    0,
+    0
+   ],
+   "context_used": 1495,
+   "prefill_ms": [
+    26009,
+    28394,
+    30887
+   ],
+   "generated_tokens": [
+    20,
+    19,
+    19
+   ],
+   "decode_ms": [
+    2851,
+    3210,
+    3408
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 5,
+   "position": 0,
+   "arm": "prefetch",
+   "question": "What is the latest Android release, as of today?",
+   "window_open_wall_ms": 1792835900824,
+   "send_wall_ms": 1792835910830,
+   "join_ms": 2,
+   "sampler_close_ms": 3,
+   "residency_read_ms": 7,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 330,
+   "window_min_available_mb": 1268,
+   "window_start_available_mb": 1303,
+   "looks": 5,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.5,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792836009850,
+   "turn_ms": 99019,
+   "turn_major_faults": 11,
+   "turn_cpu_ms": 682590,
+   "turn_min_available_mb": 1076,
+   "send_to_first_token_ms": 25925,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1375,
+    1424,
+    1470
+   ],
+   "cached_tokens": [
+    0,
+    0,
+    0
+   ],
+   "context_used": 1488,
+   "prefill_ms": [
+    25870,
+    31542,
+    32847
+   ],
+   "generated_tokens": [
+    18,
+    15,
+    18
+   ],
+   "decode_ms": [
+    2699,
+    2596,
+    3217
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 5,
+   "position": 1,
+   "arm": "none",
+   "question": "What is the latest Android release, as of today?",
+   "window_open_wall_ms": 1792836019879,
+   "send_wall_ms": 1792836029895,
+   "join_ms": 0,
+   "sampler_close_ms": 3,
+   "residency_read_ms": 7,
+   "out_at_send_mb": 0,
+   "window_major_faults": 15,
+   "window_cpu_ms": 270,
+   "window_min_available_mb": 1201,
+   "window_start_available_mb": 1225,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.5,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792836123297,
+   "turn_ms": 93401,
+   "turn_major_faults": 13,
+   "turn_cpu_ms": 667420,
+   "turn_min_available_mb": 1136,
+   "send_to_first_token_ms": 25433,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1375,
+    1424,
+    1470
+   ],
+   "cached_tokens": [
+    0,
+    0,
+    0
+   ],
+   "context_used": 1488,
+   "prefill_ms": [
+    25367,
+    29268,
+    30217
+   ],
+   "generated_tokens": [
+    18,
+    15,
+    18
+   ],
+   "decode_ms": [
+    2518,
+    2571,
+    3199
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 6,
+   "position": 0,
+   "arm": "prefetch",
+   "question": "What is today's exchange rate from US dollars to yen?",
+   "window_open_wall_ms": 1792836133318,
+   "send_wall_ms": 1792836143324,
+   "join_ms": 1,
+   "sampler_close_ms": 2,
+   "residency_read_ms": 2,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 300,
+   "window_min_available_mb": 1135,
+   "window_start_available_mb": 1164,
+   "looks": 5,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.5,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792836239977,
+   "turn_ms": 96652,
+   "turn_major_faults": 38,
+   "turn_cpu_ms": 676230,
+   "turn_min_available_mb": 1117,
+   "send_to_first_token_ms": 25766,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1376,
+    1426,
+    1473
+   ],
+   "cached_tokens": [
+    0,
+    0,
+    0
+   ],
+   "context_used": 1492,
+   "prefill_ms": [
+    25715,
+    29387,
+    32371
+   ],
+   "generated_tokens": [
+    19,
+    16,
+    19
+   ],
+   "decode_ms": [
+    2693,
+    2834,
+    3412
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 6,
+   "position": 1,
+   "arm": "none",
+   "question": "What is today's exchange rate from US dollars to yen?",
+   "window_open_wall_ms": 1792836250001,
+   "send_wall_ms": 1792836260010,
+   "join_ms": 0,
+   "sampler_close_ms": 2,
+   "residency_read_ms": 5,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 270,
+   "window_min_available_mb": 1147,
+   "window_start_available_mb": 1173,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.5,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792836355441,
+   "turn_ms": 95430,
+   "turn_major_faults": 572,
+   "turn_cpu_ms": 672280,
+   "turn_min_available_mb": 1103,
+   "send_to_first_token_ms": 25902,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1376,
+    1426,
+    1473
+   ],
+   "cached_tokens": [
+    0,
+    0,
+    0
+   ],
+   "context_used": 1492,
+   "prefill_ms": [
+    25852,
+    29304,
+    31199
+   ],
+   "generated_tokens": [
+    19,
+    16,
+    19
+   ],
+   "decode_ms": [
+    2682,
+    2778,
+    3387
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 7,
+   "position": 0,
+   "arm": "none",
+   "question": "What version of Kotlin came out this month?",
+   "window_open_wall_ms": 1792836365473,
+   "send_wall_ms": 1792836375485,
+   "join_ms": 0,
+   "sampler_close_ms": 2,
+   "residency_read_ms": 2,
+   "out_at_send_mb": 0,
+   "window_major_faults": 17,
+   "window_cpu_ms": 250,
+   "window_min_available_mb": 1184,
+   "window_start_available_mb": 1252,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.5,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792836476769,
+   "turn_ms": 101283,
+   "turn_major_faults": 119278,
+   "turn_cpu_ms": 679980,
+   "turn_min_available_mb": 1132,
+   "send_to_first_token_ms": 25352,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1374,
+    1424,
+    1473
+   ],
+   "cached_tokens": [
+    0,
+    0,
+    0
+   ],
+   "context_used": 1491,
+   "prefill_ms": [
+    25301,
+    34777,
+    31767
+   ],
+   "generated_tokens": [
+    19,
+    18,
+    18
+   ],
+   "decode_ms": [
+    2692,
+    3277,
+    3227
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 7,
+   "position": 1,
+   "arm": "prefetch",
+   "question": "What version of Kotlin came out this month?",
+   "window_open_wall_ms": 1792836486816,
+   "send_wall_ms": 1792836496830,
+   "join_ms": 1,
+   "sampler_close_ms": 1,
+   "residency_read_ms": 2,
+   "out_at_send_mb": 0,
+   "window_major_faults": 24,
+   "window_cpu_ms": 300,
+   "window_min_available_mb": 1168,
+   "window_start_available_mb": 1190,
+   "looks": 5,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.5,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792836593050,
+   "turn_ms": 96219,
+   "turn_major_faults": 8,
+   "turn_cpu_ms": 671040,
+   "turn_min_available_mb": 1144,
+   "send_to_first_token_ms": 26334,
+   "rounds": 3,
+   "unanswered_calls": 1,
+   "stop_reasons": [
+    "END_OF_TURN",
+    "END_OF_TURN",
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1374,
+    1424,
+    1473
+   ],
+   "cached_tokens": [
+    0,
+    0,
+    0
+   ],
+   "context_used": 1491,
+   "prefill_ms": [
+    26291,
+    29231,
+    31527
+   ],
+   "generated_tokens": [
+    19,
+    18,
+    18
+   ],
+   "decode_ms": [
+    2692,
+    3037,
+    3204
+   ],
+   "paging_flag": false
+  }
+ ]
+}

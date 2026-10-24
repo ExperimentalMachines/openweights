@@ -304,3 +304,119 @@ the same way, so under pressure it pages the unused cache back in, up to the win
 size. Clearing only the cells (`llama_memory_clear(…, false)`) would avoid it; whether hybrid
 models' recurrent state needs the zeroing has to be checked first.
 
+## The prefetch across models, shapes and loads (2026-10-24)
+
+Same phone, overnight, nobody using it: 11.5 GB of RAM and 12 GB of swap by `/proc/meminfo`, 6.2 to
+7.1 GB available at the start of each unloaded cell before its model loaded (2.7 to 5.3 GB once it
+had). `PrefetchMatrixBenchmark` driven by `tools/memory/run_prefetch_matrix.sh`, read by
+`tools/memory/analyze_matrix.py`. Results in `tools/memory/results/matrix-20261023-2356`,
+`-20261024-0736-big` and `-20261024-0746-b5`; `matrix-predeclared.md` holds the two levels added
+after the first data, each written before any of its own.
+
+**Design.** Three models (LFM2.5 1.2B QAD Q4_0, Qwen3 1.7B Q8_0, LFM2.5 2.6B Q4_K_M), 8k window, at
+most 96 tokens a round, 20 s between turns with the prefetch on for the last 10. The main matrix ran on the charger (every turn reports
+charging); the 5 GB turns all report not charging. The balloon sizes are what was asked for: no
+turn records the balloon's resident size or the swap state. Four cells per
+model: single turn or a four-turn conversation, with the search tool offered or not; calls are
+answered for at most three rounds, and some turns end with calls unanswered. Single turn: 8
+pairs, the same question in both arms, the order balanced and shuffled, the context reset after
+each turn. Multi turn: 2 blocks, each two whole conversations with the same questions, one per
+arm, the order reversed between blocks. Send to first token is timed as tokens stream. Cells and
+models run in a seeded shuffled order within a level; the levels were not shuffled.
+
+**Main matrix, 4 GB balloon and none: 192 pairs, no turn with an error or without a first token.**
+
+| | 4 GB, single | 4 GB, multi | none, single | none, multi |
+|---|---|---|---|---|
+| Prefetch sooner / later (pairs) | 25 / 23 | 21 / 27 | 27 / 21 | 23 / 25 |
+| Smallest single-turn sign test p | 0.289 | | 0.289 | |
+
+- **No single-turn sign test came near rejecting equal odds; multi turn and pooled are
+  description** (96 sooner and 96 later pooled; 52 to 44 single turn, 44 to 52 multi turn). With
+  8 pairs a cell this is not evidence of no effect: the widest single-turn interval runs from -4.9
+  to +5.8 s (Qwen3, 4 GB, single, tools), the widest of all from -10.4 to +1.8 s (the 2.6B outlier
+  below). Five of twelve multi cells have intervals that exclude
+  zero (Qwen3 unloaded, multi, no tools: block means -0.22 and -0.17 s), but two blocks give a
+  bootstrap three possible medians, so these are not inference either. Dropping each cell's first
+  pair turns 96 to 96 into 87 to 81.
+- **The weights were seldom out at Send in the control arm**: 4 turns of 192 with 256 MB or more
+  (3 of them Qwen3, 4 GB, single, no tools). That is a snapshot taken after the gap, not a record
+  of the gap: 22 of the 40 turns with 10,000 or more faults had nothing out at Send, and the
+  prefetch arm reported bringing weights back in 18 of its 192 gaps, 4,558 MB in all (pages can
+  repeat).
+- **Faults moved into the gap in one cell, not in general.** In that Qwen3 cell the prefetch arm brought back 2,977 MB; its turns took 250,127 faults against
+  1,055,598, and gap plus turn 1,026,905 against 1,058,638. In its pair with 1,209 MB out in the
+  control arm, the prefetch arm answered 3.9 s sooner. Faults are counted for the whole process,
+  so this is consistent with moving weight paging into the gap without proving it. Across all 18
+  gaps that brought weights back, the turn's faults were lower than the control turn's in 5, the
+  same in 3 and higher in 10 (407,594 against 666,584 in all, with 1,065,754 against 2,049 in the
+  gaps).
+- **The whole matrix's faults do not look like that.** Gap plus turn, the prefetch arm took
+  5,268,369 major faults against 2,572,130, most of the difference in the outlier below; the gaps
+  alone, 1,242,721 against 4,431.
+- **CPU over the gap**, as each cell's median paired difference in process CPU: 20 to 75 ms in the
+  cells where little came back, 630 ms (mean 699, max 1,630) in the Qwen3 cell where a lot did.
+  Process CPU includes the sampler and the runtime; a control gap takes 200 to 400 ms on its own.
+  Every Qwen3 cell's first prefetch gap reported 93 MB brought back. The bookkeeping between Send
+  and the first prompt token (joining the prefetch, closing the sampler, reading residency) took a
+  median 10 ms in the prefetch arm and 8 in the control, at most 32 and 36.
+- **Other apps killed, exploratory.** Under 4 GB the low memory killer took other apps 18 times in
+  prefetch gaps against 5 in control gaps, and 25 against 20 during replies, almost all in Qwen3
+  cells. The log was a ring buffer read at the end of each cell and wrapped under the balloon: 73 of
+  the 192 turns at 4 GB start before it does, so these are floors. Unloaded, none in the logs, with
+  3 turns wholly or partly outside them. The runner now streams the log to a file on the phone for
+  the whole cell, which the 5 GB cell below used.
+- **Conditions drifted.** Battery temperature ran from 35.8 to 45.8 °C with thermal status 0
+  throughout; all 4 GB cells ran before all unloaded ones, over 7 h 21 min; 10 of 12 multi cells
+  put the prefetch conversation first in block 0, and in the outlier's first block matched Sends are
+  12 minutes apart on average. Reversing the order between two blocks does not separate the arm from that drift.
+
+**An outlier this does not explain.** LFM2.5 2.6B, 4 GB, multi turn, tools: block means of -20.6 and
++2.9 s. In its worst pair the prefetch arm took 97 s to first token against 34 s, with 175,856
+faults in the gap (against 2), 2.0 million in the turn (against 134,000) and 1,850 ms of CPU in the
+gap (against 260), while reporting nothing brought back; the memory floor in that gap fell 227 MB.
+The prefetch reports only the steps it finishes, so a step cancelled at Send is one possible
+reading, not an established one. Both arms missed the prompt cache on every round of that cell
+(`cached_tokens` 0, 46 rounds), so the miss lengthens both and does not explain the difference.
+
+**The 2.6B cache miss, and its fix measured.** In the main matrix the 2.6B reused nothing on any
+round of its multi-turn cells with tools offered (90 rounds) and little without (20 of 66 rounds).
+Its template opens `<think>` in the generation prompt; with thinking off the session prefills it,
+so the streamed text lacks it, and history rebuilt from that text no longer matches the cached
+prefix, which a hybrid cannot partly roll back. The benchmark rebuilt history with the one-argument
+`assistantHistoryText`, as the app's tool loop in `TurnRunner` did, while the app's user-turn path
+passed `thinkingPrefilled`. Both now pass it (`ToolRoundHistoryTest` covers `TurnRunner`). The main
+matrix installed its test APK at 23:56, before that change (01:23); the 5 GB run installed one
+built at 01:25, after it, and
+there the 2.6B reused 1,417 to 1,973 tokens on all 15 rounds it recorded, reading 44 to 58 new ones,
+where the old build's rounds that missed in the same cell read 1,456 to 2,209 from scratch. That is the multi-turn cell without
+tools only; the cell with tools did not run. The 2.6B also ran more than one round in 48 of its 64
+turns with no tool offered, writing calls the benchmark answered like any other; both arms did the
+same work in every pair (prompt, cached and generated tokens, rounds and stop reasons match), so
+the comparison holds, but those cells are not tool-free.
+
+**A model near the RAM: Qwen3.5 9B Q8_0 (9.5 GB), no balloon.** It never reached a turn, so it says
+nothing about the prefetch. In each of the four cells the low memory killer took the benchmark 66 to
+157 s after the cell started, during the load, with 73 to 89 MB resident and 8.0 to 8.3 GB in swap,
+after 67 to 192 kills of other processes (39 to 63 distinct names, the launcher among them). The
+engine loads without mapping (`useMmap = false`, whose KDoc says KleidiAI repacks into its own
+buffer either way), so the weights are anonymous memory that can only go to swap, which fits what
+the killer reported. Recorded as the result, as declared; not retried with other settings.
+
+**5 GB balloon, stopped early.** The owner needed the phone after the first cell (multi turn, no
+tools): LFM2.5 1.2B and Qwen3 1.7B complete, LFM2.5 2.6B cut after 5 turns (1 prefetch, 4 control).
+1.2B: 3 sooner, 5 later, median -6.5 ms; this does not show equivalence. Qwen3: prefetch sooner in 6
+pairs of 8; in the 2 pairs whose control turn had 256 MB or more out at Send (358 and 1,542 MB) it
+answered 1.2 and 10.8 s sooner, prefill lower by about the same. Qwen3's other apps killed: 11 in
+prefetch gaps and turns against 46 in control ones (9 and 13 in the gaps), but all 46 fell in the
+block where control ran first, and its replies ran 50 s in all against 35. Two pairs and one cell;
+the three other cells and the cell with tools for the cache fix are still to run.
+
+**What this leaves.** These runs did not establish a latency benefit, a latency cost, or the effect
+on other apps. Where weights were out, faults moved into the gap in one cell and not across all 18
+gaps that brought weights back; of the six pairs with 256 MB or more out in the control turn, the
+prefetch arm was sooner by 3.9, 0.4, 1.2 and 10.8 s and later by 0.3 and 1.2 s, and those pairs
+were chosen by a reading taken after the gap; the 4 GB kills point one way and the 5 GB ones the
+other; and the 2.6B outlier, with the prefetch arm 63 s slower, is unexplained. The default stays
+on provisionally. Settling it needs the 5 GB level completed, the prefetch's cancelled work counted,
+and the arms alternated within a block.

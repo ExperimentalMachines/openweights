@@ -1,0 +1,835 @@
+{
+ "run": "20261023-2356",
+ "model": "Qwen3-1.7B-Q8_0.gguf",
+ "label": "b0",
+ "shape": "single",
+ "tools": false,
+ "pairs": 8,
+ "blocks": null,
+ "depth": null,
+ "gap_s": 20,
+ "lead_s": 10,
+ "seed": 20261024,
+ "context": 8192,
+ "answer_tokens": 96,
+ "load_ms": 19101,
+ "error": null,
+ "turns": [
+  {
+   "pair": 0,
+   "position": 0,
+   "arm": "none",
+   "question": "How does the engine's store relate to modern memory?",
+   "window_open_wall_ms": 1792846939584,
+   "send_wall_ms": 1792846949596,
+   "join_ms": 0,
+   "sampler_close_ms": 3,
+   "residency_read_ms": 9,
+   "out_at_send_mb": 93,
+   "window_major_faults": 0,
+   "window_cpu_ms": 260,
+   "window_min_available_mb": 3357,
+   "window_start_available_mb": 3384,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 45.1,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792846976333,
+   "turn_ms": 26736,
+   "turn_major_faults": 0,
+   "turn_cpu_ms": 191830,
+   "turn_min_available_mb": 3314,
+   "send_to_first_token_ms": 23425,
+   "rounds": 1,
+   "unanswered_calls": 0,
+   "stop_reasons": [
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1273
+   ],
+   "cached_tokens": [
+    0
+   ],
+   "context_used": 1323,
+   "prefill_ms": [
+    23338
+   ],
+   "generated_tokens": [
+    50
+   ],
+   "decode_ms": [
+    3255
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 0,
+   "position": 1,
+   "arm": "prefetch",
+   "question": "How does the engine's store relate to modern memory?",
+   "window_open_wall_ms": 1792846986401,
+   "send_wall_ms": 1792846996408,
+   "join_ms": 3,
+   "sampler_close_ms": 3,
+   "residency_read_ms": 8,
+   "out_at_send_mb": 0,
+   "window_major_faults": 2,
+   "window_cpu_ms": 390,
+   "window_min_available_mb": 3307,
+   "window_start_available_mb": 3323,
+   "looks": 1,
+   "brought_back_mb": 93,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 45.1,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792847023410,
+   "turn_ms": 27001,
+   "turn_major_faults": 0,
+   "turn_cpu_ms": 193390,
+   "turn_min_available_mb": 3320,
+   "send_to_first_token_ms": 23713,
+   "rounds": 1,
+   "unanswered_calls": 0,
+   "stop_reasons": [
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1273
+   ],
+   "cached_tokens": [
+    0
+   ],
+   "context_used": 1323,
+   "prefill_ms": [
+    23625
+   ],
+   "generated_tokens": [
+    50
+   ],
+   "decode_ms": [
+    3235
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 1,
+   "position": 0,
+   "arm": "none",
+   "question": "How did the Jacquard loom influence the Analytical Engine?",
+   "window_open_wall_ms": 1792847033462,
+   "send_wall_ms": 1792847043470,
+   "join_ms": 0,
+   "sampler_close_ms": 4,
+   "residency_read_ms": 7,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 240,
+   "window_min_available_mb": 3349,
+   "window_start_available_mb": 3385,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 45.1,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792847068718,
+   "turn_ms": 25248,
+   "turn_major_faults": 2,
+   "turn_cpu_ms": 184030,
+   "turn_min_available_mb": 3311,
+   "send_to_first_token_ms": 23261,
+   "rounds": 1,
+   "unanswered_calls": 0,
+   "stop_reasons": [
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1275
+   ],
+   "cached_tokens": [
+    0
+   ],
+   "context_used": 1305,
+   "prefill_ms": [
+    23170
+   ],
+   "generated_tokens": [
+    30
+   ],
+   "decode_ms": [
+    1940
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 1,
+   "position": 1,
+   "arm": "prefetch",
+   "question": "How did the Jacquard loom influence the Analytical Engine?",
+   "window_open_wall_ms": 1792847078786,
+   "send_wall_ms": 1792847088796,
+   "join_ms": 1,
+   "sampler_close_ms": 2,
+   "residency_read_ms": 8,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 300,
+   "window_min_available_mb": 3299,
+   "window_start_available_mb": 3340,
+   "looks": 5,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792847114628,
+   "turn_ms": 25831,
+   "turn_major_faults": 0,
+   "turn_cpu_ms": 185700,
+   "turn_min_available_mb": 3272,
+   "send_to_first_token_ms": 23859,
+   "rounds": 1,
+   "unanswered_calls": 0,
+   "stop_reasons": [
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1275
+   ],
+   "cached_tokens": [
+    0
+   ],
+   "context_used": 1305,
+   "prefill_ms": [
+    23774
+   ],
+   "generated_tokens": [
+    30
+   ],
+   "decode_ms": [
+    1922
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 2,
+   "position": 0,
+   "arm": "prefetch",
+   "question": "What were Lovelace's notes on Menabrea's paper about?",
+   "window_open_wall_ms": 1792847124674,
+   "send_wall_ms": 1792847134691,
+   "join_ms": 2,
+   "sampler_close_ms": 3,
+   "residency_read_ms": 8,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 310,
+   "window_min_available_mb": 3274,
+   "window_start_available_mb": 3303,
+   "looks": 5,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.2,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792847161036,
+   "turn_ms": 26345,
+   "turn_major_faults": 0,
+   "turn_cpu_ms": 189050,
+   "turn_min_available_mb": 3261,
+   "send_to_first_token_ms": 22852,
+   "rounds": 1,
+   "unanswered_calls": 0,
+   "stop_reasons": [
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1277
+   ],
+   "cached_tokens": [
+    0
+   ],
+   "context_used": 1332,
+   "prefill_ms": [
+    22768
+   ],
+   "generated_tokens": [
+    55
+   ],
+   "decode_ms": [
+    3446
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 2,
+   "position": 1,
+   "arm": "none",
+   "question": "What were Lovelace's notes on Menabrea's paper about?",
+   "window_open_wall_ms": 1792847171075,
+   "send_wall_ms": 1792847181081,
+   "join_ms": 0,
+   "sampler_close_ms": 3,
+   "residency_read_ms": 8,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 260,
+   "window_min_available_mb": 3291,
+   "window_start_available_mb": 3296,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.2,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792847207747,
+   "turn_ms": 26665,
+   "turn_major_faults": 0,
+   "turn_cpu_ms": 190630,
+   "turn_min_available_mb": 3272,
+   "send_to_first_token_ms": 23055,
+   "rounds": 1,
+   "unanswered_calls": 0,
+   "stop_reasons": [
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1277
+   ],
+   "cached_tokens": [
+    0
+   ],
+   "context_used": 1332,
+   "prefill_ms": [
+    22973
+   ],
+   "generated_tokens": [
+    55
+   ],
+   "decode_ms": [
+    3559
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 3,
+   "position": 0,
+   "arm": "none",
+   "question": "Was the Analytical Engine ever built in Babbage's lifetime?",
+   "window_open_wall_ms": 1792847217794,
+   "send_wall_ms": 1792847227800,
+   "join_ms": 0,
+   "sampler_close_ms": 3,
+   "residency_read_ms": 7,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 270,
+   "window_min_available_mb": 3282,
+   "window_start_available_mb": 3301,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.2,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792847254611,
+   "turn_ms": 26811,
+   "turn_major_faults": 0,
+   "turn_cpu_ms": 191770,
+   "turn_min_available_mb": 3281,
+   "send_to_first_token_ms": 23652,
+   "rounds": 1,
+   "unanswered_calls": 0,
+   "stop_reasons": [
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1275
+   ],
+   "cached_tokens": [
+    0
+   ],
+   "context_used": 1323,
+   "prefill_ms": [
+    23571
+   ],
+   "generated_tokens": [
+    48
+   ],
+   "decode_ms": [
+    3108
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 3,
+   "position": 1,
+   "arm": "prefetch",
+   "question": "Was the Analytical Engine ever built in Babbage's lifetime?",
+   "window_open_wall_ms": 1792847264655,
+   "send_wall_ms": 1792847274664,
+   "join_ms": 3,
+   "sampler_close_ms": 3,
+   "residency_read_ms": 8,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 320,
+   "window_min_available_mb": 3314,
+   "window_start_available_mb": 3348,
+   "looks": 5,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.2,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792847301732,
+   "turn_ms": 27068,
+   "turn_major_faults": 1,
+   "turn_cpu_ms": 190640,
+   "turn_min_available_mb": 3281,
+   "send_to_first_token_ms": 23910,
+   "rounds": 1,
+   "unanswered_calls": 0,
+   "stop_reasons": [
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1275
+   ],
+   "cached_tokens": [
+    0
+   ],
+   "context_used": 1323,
+   "prefill_ms": [
+    23825
+   ],
+   "generated_tokens": [
+    48
+   ],
+   "decode_ms": [
+    3109
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 4,
+   "position": 0,
+   "arm": "prefetch",
+   "question": "What could the Analytical Engine compute, in principle?",
+   "window_open_wall_ms": 1792847311789,
+   "send_wall_ms": 1792847321796,
+   "join_ms": 2,
+   "sampler_close_ms": 3,
+   "residency_read_ms": 8,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 310,
+   "window_min_available_mb": 3259,
+   "window_start_available_mb": 3288,
+   "looks": 5,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 44.2,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792847348370,
+   "turn_ms": 26573,
+   "turn_major_faults": 29,
+   "turn_cpu_ms": 190620,
+   "turn_min_available_mb": 3271,
+   "send_to_first_token_ms": 23351,
+   "rounds": 1,
+   "unanswered_calls": 0,
+   "stop_reasons": [
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1273
+   ],
+   "cached_tokens": [
+    0
+   ],
+   "context_used": 1323,
+   "prefill_ms": [
+    23260
+   ],
+   "generated_tokens": [
+    50
+   ],
+   "decode_ms": [
+    3180
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 4,
+   "position": 1,
+   "arm": "none",
+   "question": "What could the Analytical Engine compute, in principle?",
+   "window_open_wall_ms": 1792847358415,
+   "send_wall_ms": 1792847368424,
+   "join_ms": 0,
+   "sampler_close_ms": 4,
+   "residency_read_ms": 9,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 260,
+   "window_min_available_mb": 3298,
+   "window_start_available_mb": 3320,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 43.2,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792847395791,
+   "turn_ms": 27367,
+   "turn_major_faults": 20,
+   "turn_cpu_ms": 193920,
+   "turn_min_available_mb": 3275,
+   "send_to_first_token_ms": 24044,
+   "rounds": 1,
+   "unanswered_calls": 0,
+   "stop_reasons": [
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1273
+   ],
+   "cached_tokens": [
+    0
+   ],
+   "context_used": 1323,
+   "prefill_ms": [
+    23949
+   ],
+   "generated_tokens": [
+    50
+   ],
+   "decode_ms": [
+    3272
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 5,
+   "position": 0,
+   "arm": "prefetch",
+   "question": "Who was Ada Lovelace, and what did she write about the engine?",
+   "window_open_wall_ms": 1792847405837,
+   "send_wall_ms": 1792847415846,
+   "join_ms": 2,
+   "sampler_close_ms": 3,
+   "residency_read_ms": 5,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 230,
+   "window_min_available_mb": 3225,
+   "window_start_available_mb": 3301,
+   "looks": 5,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 43.2,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792847442179,
+   "turn_ms": 26333,
+   "turn_major_faults": 0,
+   "turn_cpu_ms": 185860,
+   "turn_min_available_mb": 3166,
+   "send_to_first_token_ms": 22939,
+   "rounds": 1,
+   "unanswered_calls": 0,
+   "stop_reasons": [
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1278
+   ],
+   "cached_tokens": [
+    0
+   ],
+   "context_used": 1328,
+   "prefill_ms": [
+    22860
+   ],
+   "generated_tokens": [
+    50
+   ],
+   "decode_ms": [
+    3350
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 5,
+   "position": 1,
+   "arm": "none",
+   "question": "Who was Ada Lovelace, and what did she write about the engine?",
+   "window_open_wall_ms": 1792847452218,
+   "send_wall_ms": 1792847462224,
+   "join_ms": 0,
+   "sampler_close_ms": 3,
+   "residency_read_ms": 7,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 250,
+   "window_min_available_mb": 3238,
+   "window_start_available_mb": 3274,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 43.2,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792847487590,
+   "turn_ms": 25366,
+   "turn_major_faults": 3,
+   "turn_cpu_ms": 181690,
+   "turn_min_available_mb": 3201,
+   "send_to_first_token_ms": 22101,
+   "rounds": 1,
+   "unanswered_calls": 0,
+   "stop_reasons": [
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1278
+   ],
+   "cached_tokens": [
+    0
+   ],
+   "context_used": 1328,
+   "prefill_ms": [
+    22014
+   ],
+   "generated_tokens": [
+    50
+   ],
+   "decode_ms": [
+    3218
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 6,
+   "position": 0,
+   "arm": "none",
+   "question": "What is the mill, in Babbage's design?",
+   "window_open_wall_ms": 1792847497634,
+   "send_wall_ms": 1792847507642,
+   "join_ms": 0,
+   "sampler_close_ms": 3,
+   "residency_read_ms": 9,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 230,
+   "window_min_available_mb": 3225,
+   "window_start_available_mb": 3287,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 43.2,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792847536758,
+   "turn_ms": 29116,
+   "turn_major_faults": 45,
+   "turn_cpu_ms": 202780,
+   "turn_min_available_mb": 3212,
+   "send_to_first_token_ms": 24118,
+   "rounds": 1,
+   "unanswered_calls": 0,
+   "stop_reasons": [
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1273
+   ],
+   "cached_tokens": [
+    0
+   ],
+   "context_used": 1350,
+   "prefill_ms": [
+    24034
+   ],
+   "generated_tokens": [
+    77
+   ],
+   "decode_ms": [
+    4948
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 6,
+   "position": 1,
+   "arm": "prefetch",
+   "question": "What is the mill, in Babbage's design?",
+   "window_open_wall_ms": 1792847546810,
+   "send_wall_ms": 1792847556818,
+   "join_ms": 2,
+   "sampler_close_ms": 3,
+   "residency_read_ms": 5,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 300,
+   "window_min_available_mb": 3236,
+   "window_start_available_mb": 3273,
+   "looks": 5,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 43.2,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792847585039,
+   "turn_ms": 28221,
+   "turn_major_faults": 0,
+   "turn_cpu_ms": 199090,
+   "turn_min_available_mb": 3205,
+   "send_to_first_token_ms": 23098,
+   "rounds": 1,
+   "unanswered_calls": 0,
+   "stop_reasons": [
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1273
+   ],
+   "cached_tokens": [
+    0
+   ],
+   "context_used": 1350,
+   "prefill_ms": [
+    23023
+   ],
+   "generated_tokens": [
+    77
+   ],
+   "decode_ms": [
+    5074
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 7,
+   "position": 0,
+   "arm": "prefetch",
+   "question": "What did Charles Babbage design before the Analytical Engine?",
+   "window_open_wall_ms": 1792847595086,
+   "send_wall_ms": 1792847605093,
+   "join_ms": 2,
+   "sampler_close_ms": 3,
+   "residency_read_ms": 8,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 300,
+   "window_min_available_mb": 3238,
+   "window_start_available_mb": 3246,
+   "looks": 5,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 43.2,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792847627987,
+   "turn_ms": 22894,
+   "turn_major_faults": 6,
+   "turn_cpu_ms": 168810,
+   "turn_min_available_mb": 3216,
+   "send_to_first_token_ms": 21998,
+   "rounds": 1,
+   "unanswered_calls": 0,
+   "stop_reasons": [
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1274
+   ],
+   "cached_tokens": [
+    0
+   ],
+   "context_used": 1287,
+   "prefill_ms": [
+    21914
+   ],
+   "generated_tokens": [
+    13
+   ],
+   "decode_ms": [
+    847
+   ],
+   "paging_flag": false
+  },
+  {
+   "pair": 7,
+   "position": 1,
+   "arm": "none",
+   "question": "What did Charles Babbage design before the Analytical Engine?",
+   "window_open_wall_ms": 1792847638033,
+   "send_wall_ms": 1792847648035,
+   "join_ms": 0,
+   "sampler_close_ms": 1,
+   "residency_read_ms": 3,
+   "out_at_send_mb": 0,
+   "window_major_faults": 0,
+   "window_cpu_ms": 250,
+   "window_min_available_mb": 3242,
+   "window_start_available_mb": 3255,
+   "looks": 0,
+   "brought_back_mb": 0,
+   "unknown_looks": 0,
+   "prefetch_unsupported": false,
+   "battery_temp_c": 43.2,
+   "charging": true,
+   "thermal_status": 0,
+   "end_wall_ms": 1792847670758,
+   "turn_ms": 22723,
+   "turn_major_faults": 0,
+   "turn_cpu_ms": 169180,
+   "turn_min_available_mb": 3214,
+   "send_to_first_token_ms": 21812,
+   "rounds": 1,
+   "unanswered_calls": 0,
+   "stop_reasons": [
+    "END_OF_TURN"
+   ],
+   "prompt_tokens": [
+    1274
+   ],
+   "cached_tokens": [
+    0
+   ],
+   "context_used": 1287,
+   "prefill_ms": [
+    21745
+   ],
+   "generated_tokens": [
+    13
+   ],
+   "decode_ms": [
+    865
+   ],
+   "paging_flag": false
+  }
+ ]
+}
