@@ -16,6 +16,7 @@
 
 package io.github.alpharomercoma.openweights.ui.chat
 
+import android.os.SystemClock
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import io.github.alpharomercoma.openweights.core.common.context.TaskPlan
@@ -51,7 +52,12 @@ import io.github.alpharomercoma.openweights.core.tools.ToolPrompting
 import io.github.alpharomercoma.openweights.core.tools.ToolRegistry
 import io.github.alpharomercoma.openweights.core.tools.ToolSwitches
 import io.github.alpharomercoma.openweights.core.tools.plainQuotes
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
@@ -295,6 +301,7 @@ class TurnRunner @Inject constructor(
         // of it is awaited untouched, suspended, exactly as before.
         turnsWaiting.incrementAndGet()
         try {
+            stopPrefetch()
             acquireOverWarms()
         } finally {
             // Held only through the acquisition: once the lock is ours no warm can start
@@ -328,6 +335,9 @@ class TurnRunner @Inject constructor(
      * first cancel; the waiter count keeps another from starting in the gap.
      */
     suspend fun yieldWarms() {
+        // A prefetch too: these hops are a turn's first engine work (a fold reads the
+        // conversation through the model), and it is about to read every weight itself.
+        stopPrefetch()
         if (!warming) return
         turnsWaiting.incrementAndGet()
         try {
@@ -401,6 +411,78 @@ class TurnRunner @Inject constructor(
         )
     }
 
+    /** The weight prefetch in flight, if any; see [prefetchWeights]. Under [prefetchLock]. */
+    private var prefetching: Job? = null
+
+    /**
+     * Makes starting a prefetch and a turn's look for one atomic. Without it a keystroke could
+     * pass the waiting-turn check, a turn arrive and find no prefetch, and the keystroke then
+     * start one under the turn. A turn raises [turnsWaiting] before it looks, so whichever
+     * side takes the lock second sees the other.
+     */
+    private val prefetchLock = Any()
+
+    /** When the next prefetch may start, on [clock]; see [PREFETCH_INTERVAL_MS]. */
+    private var nextPrefetchAt: Long? = null
+
+    /** Milliseconds, monotonic. A test's to replace. */
+    @VisibleForTesting
+    internal var clock: () -> Long = { SystemClock.elapsedRealtime() }
+
+    /**
+     * Brings the model's weights back into memory while someone types the next message, if
+     * the phone pushed them out while the last reply was being read.
+     *
+     * On a phone short of memory that read is when the kernel compresses the weights, and
+     * the next prompt then faults them back in one page at a time. Measured on the test phone
+     * under a 4 GB balloon (docs/research/swap-and-peak-memory.md, 2026-10-23): 1.0 to 1.5 GB
+     * went out in each 20 s gap, a prefetch ten seconds before Send brought it back in under
+     * two, and the turn's faults fell from a median 325k to 57k. Started from the composer,
+     * so that work runs during the typing instead, off the inference thread. Never while a turn or a
+     * warm holds the engine, both of which read every weight anyway, and cancelled by the
+     * next [run]. A draft typed while the weights are in costs a look at the page tables
+     * every two seconds; one typed after they went out brings them back whether or not it
+     * is sent, about two seconds of CPU for a gigabyte on the test phone.
+     *
+     * Main thread only, like everything the composer calls; [run], [yieldWarms] and a warm
+     * are what stop it, from whichever thread they are on.
+     */
+    fun prefetchWeights(scope: CoroutineScope) {
+        synchronized(prefetchLock) { startPrefetch(scope) }
+    }
+
+    private fun startPrefetch(scope: CoroutineScope) {
+        // Not completed rather than active: a cancelled prefetch is inactive at once but may
+        // still be inside a native step, and a second one must not start beside it.
+        if (prefetching?.isCompleted == false ||
+            engineInUse.isLocked ||
+            turnsWaiting.get() > 0
+        ) {
+            return
+        }
+        if (nextPrefetchAt?.let { clock() < it } == true) return
+        prefetching = scope.launch {
+            val worked = try {
+                engine.prefetchWeights()?.broughtBack == true
+            } catch (failure: CancellationException) {
+                throw failure
+            } catch (failure: Exception) {
+                // An optimization that failed is one that did not happen; the turn reads
+                // whatever is still out the way it always did.
+                Log.w("OpenWeights", "prefetch skipped: ${failure.message}")
+                false
+            }
+            // Counted from the end: a look that found the weights in costs nothing to repeat
+            // soon, and the kernel may be pushing them out as the message is typed.
+            nextPrefetchAt = clock() + if (worked) PREFETCH_INTERVAL_MS else PREFETCH_RECHECK_MS
+        }
+    }
+
+    /** Ends the prefetch in flight and waits out its step, so the engine is the caller's. */
+    private suspend fun stopPrefetch() {
+        synchronized(prefetchLock) { prefetching }?.cancelAndJoin()
+    }
+
     /** True while a warm holds the engine, so a turn knows to interrupt it. */
     @Volatile
     private var warming = false
@@ -469,6 +551,8 @@ class TurnRunner @Inject constructor(
         if (!engineInUse.tryLock()) return null
         warming = true
         return try {
+            // The warm reads every weight; a prefetch alongside would compete for the cores.
+            stopPrefetch()
             val active = selectTools(AgentMode.AUTO, offerAsk = null)
             val native = engine.loadedModel?.supportsTools == true
             val renderTools = withTools && native && ToolBudget(headroomTokens()).hasRoom
@@ -2321,6 +2405,19 @@ private const val QUERY_WRAP_LAYERS = 3
  * tokens" and becomes a second copy of whatever was pasted.
  */
 private const val GROUNDING_MAX_CHARS = 400
+
+/**
+ * How long after a prefetch that brought weights back before typing may start another.
+ * Typing calls [TurnRunner.prefetchWeights] on every edit; this lets one long message pick up
+ * pages pushed out again while it was written, without walking the weights at typing speed.
+ */
+private const val PREFETCH_INTERVAL_MS = 10_000L
+
+/**
+ * The same after a look that found too little out to act on, or failed. Shorter, because a
+ * look is one page-table walk and the weights may be on their way out as the message is typed.
+ */
+private const val PREFETCH_RECHECK_MS = 2_000L
 
 /** One beat between interrupt attempts: enough for an abort to land, too short to notice. */
 private const val WARM_INTERRUPT_RETRY_MS = 50L

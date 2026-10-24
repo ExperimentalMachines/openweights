@@ -23,8 +23,16 @@ import io.github.alpharomercoma.openweights.core.common.model.ChatMessage
 import io.github.alpharomercoma.openweights.core.common.model.ChatRole
 import io.github.alpharomercoma.openweights.core.common.model.ModelLoadParams
 import io.github.alpharomercoma.openweights.core.common.model.SamplerParams
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assume.assumeTrue
 import org.junit.Test
@@ -67,6 +75,17 @@ class MemoryPressureBenchmark {
     private val turns = arguments.getString("turns")?.toIntOrNull() ?: DEFAULT_TURNS
     private val gapMs = (arguments.getString("gap")?.toLongOrNull() ?: DEFAULT_GAP_S) * MILLIS
     private val answerTokens = arguments.getString("answer")?.toIntOrNull() ?: ANSWER_TOKENS
+
+    /**
+     * Seconds before a turn to bring the weights back, as typing does in the app, or none.
+     * Given, odd turns prefetch and even ones do not, so both arms meet the same phone in the
+     * same minutes rather than in two runs that drift apart; every turn starts from the same
+     * state, since the turn before it read every weight back in.
+     */
+    private val leadMs = arguments.getString("lead")?.toLongOrNull()?.times(MILLIS)?.also {
+        // Inside the gap, or the prefetching arm would idle longer than the other.
+        require(it in 0..gapMs) { "lead must be between 0 and the gap, got ${it / MILLIS} s" }
+    }
 
     @Test
     fun measuresPeakMemoryAndPressure() = runBlocking {
@@ -115,40 +134,15 @@ class MemoryPressureBenchmark {
             // A turn the model refuses (a prompt past a compiled window) must not take the load
             // measurements with it: those are half of what this is for.
             val rows = mutableListOf<String>()
-            val turnError = runCatching {
-                // One short turn first, so the rows below measure throughput rather than the
-                // first call's setup.
-                engine.turn("Say hello.", WARM_UP_TOKENS)
-                repeat(turns) { index ->
-                    if (index > 0) delay(gapMs)
-                    engine.resetContext()
-                    val before = Snapshot.read()
-                    val turnSampler = Sampler().also { it.start() }
-                    val started = System.nanoTime()
-                    val stats = try {
-                        engine.turn(filler(fill), answerTokens)
-                    } finally {
-                        turnSampler.finish()
-                    }
-                    val wallMs = (System.nanoTime() - started) / NANOS_PER_MILLI
-                    val row =
-                        TurnRow(index, wallMs, stats, before, Snapshot.read(), turnSampler.peak())
-                    Log.i(TAG, "${model.name} label=$label ${row.line()}")
-                    rows += row.json()
-                }
-            }.exceptionOrNull()
-            turnError?.let {
-                Log.e(TAG, "${model.name} label=$label turn failed: ${it.message}", it)
-            }
-
-            write(
+            fun report(turnError: Throwable?) = write(
                 model,
                 buildString {
                     append("{\"model\": \"${model.name}\", \"label\": \"$label\", ")
                     append(
                         "\"file_bytes\": ${model.length()}, \"context\": $context, \"fill\": $fill, ",
                     )
-                    append("\"gap_s\": ${gapMs / MILLIS}, \"load_ms\": $loadMs, ")
+                    append("\"gap_s\": ${gapMs / MILLIS}, \"lead_s\": ${leadMs?.div(MILLIS)}, ")
+                    append("\"load_ms\": $loadMs, ")
                     append("\"idle\": ${idle.json()}, \"load_peak\": ${loadPeak.json()}, ")
                     append(
                         "\"loaded\": ${loaded.json()}, \"turn_error\": ${turnError?.let {
@@ -159,7 +153,182 @@ class MemoryPressureBenchmark {
                     append("\n]}\n")
                 },
             )
+            val turnError = runCatching {
+                // One short turn first, so the rows below measure throughput rather than the
+                // first call's setup.
+                engine.turn("Say hello.", WARM_UP_TOKENS)
+                // Each reset right after a turn, never just before one: it zeroes the whole KV
+                // cache (llama_memory_clear with data), which under pressure drags the unused
+                // cache back in and pushes the weights out. Done before Send, it made every
+                // turn page whatever the gap had done (2026-10-23, 4 GB: nothing out through
+                // the gap, 640 to 1,400 MB out at Send, in both arms).
+                engine.resetContext()
+                // A scope for the prefetch each gap may start, which its Send always ends.
+                coroutineScope {
+                    repeat(turns) { index ->
+                        val odd = index % 2 == 1
+                        val pending = if (index == 0) null else gap(engine, prefetching = odd)
+                        // Send. Everything from here to the first token is what the user waits for,
+                        // the end of a prefetch still running included.
+                        val sentAt = System.nanoTime()
+                        val prefetch = pending?.stop()
+                        val outAtSend = (engine as? LlamaCppEngine)?.weightsOut()
+                        val before = Snapshot.read()
+                        val turnSampler = Sampler().also { it.start() }
+                        val started = System.nanoTime()
+                        val (stats, firstTokenAt) = try {
+                            engine.timedTurn(filler(fill), answerTokens)
+                        } finally {
+                            turnSampler.finish()
+                        }
+                        val wallMs = (System.nanoTime() - started) / NANOS_PER_MILLI
+                        val row = TurnRow(
+                            index,
+                            wallMs,
+                            stats,
+                            before,
+                            Snapshot.read(),
+                            turnSampler.peak(),
+                            prefetch,
+                            outAtSend,
+                            firstTokenAt?.let { (it - sentAt) / NANOS_PER_MILLI },
+                        )
+                        Log.i(TAG, "${model.name} label=$label ${row.line()}")
+                        rows += row.json()
+                        // Each turn as it lands, before the reset that presses on memory: a
+                        // process the low memory killer takes mid-run keeps the turns it finished.
+                        report(null)
+                        engine.resetContext()
+                    }
+                }
+            }.exceptionOrNull()
+            turnError?.let {
+                Log.e(TAG, "${model.name} label=$label turn failed: ${it.message}", it)
+            }
+            report(turnError)
         }
+    }
+
+    /**
+     * The idle time between two turns, while the reply would be read; the same length in both
+     * arms. With [prefetching] and a lead, the weights start coming back that long before the
+     * next turn, and [Pending.stop] at Send cancels and joins whatever is still running, as
+     * sending does in the app.
+     */
+    private suspend fun CoroutineScope.gap(
+        engine: InferenceEngine,
+        prefetching: Boolean,
+    ): Pending? {
+        val lead = leadMs
+        if (!prefetching || lead == null) {
+            delay(gapMs)
+            return null
+        }
+        delay(gapMs - lead)
+        val before = Snapshot.read()
+        val sampler = Sampler().also { it.start() }
+        val startedAt = System.nanoTime()
+        val tally = Tally()
+        // The app's policy while someone types (TurnRunner.prefetchWeights): look again two
+        // seconds after a look that found the weights in, ten after one that brought them
+        // back. One look at the start of the window missed weights pushed out in its last
+        // seconds (2026-10-23, 3 GB balloon, turn 5: nothing out ten seconds before, 452k
+        // faults after Send).
+        val job = launch(Dispatchers.Default) {
+            while (true) {
+                val result = engine.prefetchWeights() ?: break
+                tally.add(result)
+                Log.i(
+                    TAG,
+                    "prefetch at ${(System.nanoTime() - startedAt) / NANOS_PER_MILLI}ms: $result",
+                )
+                delay(if (result.broughtBack) APP_PREFETCH_INTERVAL_MS else APP_PREFETCH_RECHECK_MS)
+            }
+        }
+        try {
+            delay(lead)
+        } catch (cancelled: CancellationException) {
+            job.cancel()
+            sampler.finish()
+            throw cancelled
+        }
+        return Pending(job, tally, before, sampler, startedAt)
+    }
+
+    /** Every look one gap's prefetching took, as they land. */
+    private class Tally {
+        @Volatile var looks = 0
+
+        @Volatile var broughtBackBytes = 0L
+
+        @Volatile var unknownLooks = 0
+
+        @Volatile var last: WeightPrefetch? = null
+
+        @Synchronized
+        fun add(result: WeightPrefetch) {
+            looks++
+            val after = result.outAfter
+            // A pass whose end could not be read is not counted as having brought it all back.
+            if (result.broughtBack && after != null) broughtBackBytes += result.outBefore - after
+            if (result.broughtBack && after == null) unknownLooks++
+            last = result
+        }
+    }
+
+    /** The prefetching started in a gap, until the turn after it is sent. */
+    private class Pending(
+        val job: Job,
+        val tally: Tally,
+        val before: Snapshot,
+        val sampler: Sampler,
+        val startedAt: Long,
+    ) {
+        /** Cancels it and waits out the step in flight; then says what it did. */
+        suspend fun stop(): PrefetchRow {
+            val joinStarted = System.nanoTime()
+            job.cancelAndJoin()
+            val joinMs = (System.nanoTime() - joinStarted) / NANOS_PER_MILLI
+            // Halted, not joined: the sampler sleeps between reads, and waiting it out here
+            // would add up to a sample's interval to this arm's time to first token.
+            val peak = sampler.halt()
+            val after = Snapshot.read()
+            return PrefetchRow(
+                looks = tally.looks,
+                broughtBackBytes = tally.broughtBackBytes,
+                unknownLooks = tally.unknownLooks,
+                last = tally.last,
+                joinMs = joinMs,
+                windowMs = (joinStarted - startedAt) / NANOS_PER_MILLI,
+                majorFaults = after.majorFaults - before.majorFaults,
+                cpuMs = after.cpuMs - before.cpuMs,
+                minAvailableKb = peak.minAvailableKb,
+            )
+        }
+    }
+
+    /**
+     * What one prefetch did, and what the process did over the window it ran in: its faults,
+     * its CPU and the least memory the system had free, which belong to the prefetch's cost
+     * rather than to the turn after it.
+     */
+    private class PrefetchRow(
+        val looks: Int,
+        val broughtBackBytes: Long,
+        val unknownLooks: Int,
+        val last: WeightPrefetch?,
+        val joinMs: Long,
+        val windowMs: Long,
+        val majorFaults: Long,
+        val cpuMs: Long,
+        val minAvailableKb: Long,
+    ) {
+        fun json() =
+            "{\"looks\": $looks, \"brought_back_mb\": ${broughtBackBytes / (KIB * KIB)}, " +
+                "\"unknown_looks\": $unknownLooks, " +
+                "\"last\": ${last?.let { "\"$it\"" }}, \"join_ms\": $joinMs, " +
+                "\"window_ms\": $windowMs, \"major_faults\": $majorFaults, \"cpu_ms\": $cpuMs, " +
+                "\"min_available_kb\": $minAvailableKb}"
     }
 
     private fun write(model: File, json: String) {
@@ -179,7 +348,15 @@ class MemoryPressureBenchmark {
     }
 
     private suspend fun InferenceEngine.turn(prompt: String, maxTokens: Int): GenerationStats =
-        chat(
+        timedTurn(prompt, maxTokens).first
+
+    /** [turn], with when the first token reached this side, on [System.nanoTime]. */
+    private suspend fun InferenceEngine.timedTurn(
+        prompt: String,
+        maxTokens: Int,
+    ): Pair<GenerationStats, Long?> {
+        var firstTokenAt: Long? = null
+        val stats = chat(
             messages = listOf(ChatMessage.text(ChatRole.USER, prompt)),
             params = SamplerParams(
                 temperature = 0f,
@@ -187,7 +364,16 @@ class MemoryPressureBenchmark {
                 seed = 1,
                 thinking = false,
             ),
-        ).toList().filterIsInstance<GenerationEvent.Completed>().single().stats
+        ).onEach {
+            if (it is GenerationEvent.Token &&
+                firstTokenAt == null
+            ) {
+                firstTokenAt = System.nanoTime()
+            }
+        }
+            .toList().filterIsInstance<GenerationEvent.Completed>().single().stats
+        return stats to firstTokenAt
+    }
 
     private class TurnRow(
         val index: Int,
@@ -196,6 +382,9 @@ class MemoryPressureBenchmark {
         val before: Snapshot,
         val after: Snapshot,
         val peak: Peak,
+        val prefetch: PrefetchRow?,
+        val outAtSend: Long?,
+        val sendToFirstTokenMs: Long?,
     ) {
         val majorFaults get() = after.majorFaults - before.majorFaults
         val cpuMs get() = after.cpuMs - before.cpuMs
@@ -204,12 +393,14 @@ class MemoryPressureBenchmark {
 
         fun line() = (
             "turn %d wall %dms prefill %.1f t/s decode %.2f t/s majflt %d swap %d->%dMB " +
-                "rss %d->%dMB peak %dMB cpu/wall %.2f avail min %dMB paging %s"
+                "rss %d->%dMB peak %dMB cpu/wall %.2f avail min %dMB paging %s " +
+                "prefetch %s out at send %sMB send to first token %sms"
             ).format(
             index, wallMs, prefillRate, decodeRate, majorFaults,
             before.swapKb / KIB, after.swapKb / KIB, before.rssKb / KIB, after.rssKb / KIB,
             peak.peakFootprintKb / KIB, cpuMs.toDouble() / wallMs.coerceAtLeast(1),
             peak.minAvailableKb / KIB, stats.memory?.pagingDetected,
+            prefetch?.json() ?: "none", outAtSend?.div(KIB * KIB), sendToFirstTokenMs,
         )
 
         fun json() = buildString {
@@ -232,6 +423,9 @@ class MemoryPressureBenchmark {
                     "\"peak_bytes\": ${it.peakFootprintBytes}, \"major_faults\": ${it.majorFaults}}, ",
                 )
             }
+            append("\"prefetch\": ${prefetch?.json() ?: "null"}, ")
+            append("\"out_at_send_mb\": ${outAtSend?.div(KIB * KIB)}, ")
+            append("\"send_to_first_token_ms\": $sendToFirstTokenMs, ")
             append("\"peak\": ${peak.json()}}")
         }
     }
@@ -332,6 +526,12 @@ class MemoryPressureBenchmark {
             return peak()
         }
 
+        /** Stops it without waiting for its last sleep; the peak so far. */
+        fun halt(): Peak {
+            running = false
+            return peak()
+        }
+
         fun peak() = Peak(peakFootprint, peakRss, minAvailable, samples)
     }
 
@@ -349,6 +549,10 @@ class MemoryPressureBenchmark {
         const val DEFAULT_FILL = 2_048
         const val DEFAULT_TURNS = 3
         const val DEFAULT_GAP_S = 20L
+
+        /** TurnRunner's PREFETCH_INTERVAL_MS and PREFETCH_RECHECK_MS, which :app keeps private. */
+        const val APP_PREFETCH_INTERVAL_MS = 10_000L
+        const val APP_PREFETCH_RECHECK_MS = 2_000L
 
         /** The filler sentence is about twelve tokens, so this is close enough to aim with. */
         const val TOKENS_PER_BLOCK = 12

@@ -225,6 +225,7 @@ fun OpenWeightsApp(
                 liveReadout = { liveReadout.value },
                 onSend = chatViewModel::send,
                 onDraftChange = chatViewModel::saveComposerDraft,
+                onComposerTyping = chatViewModel::onComposerTyping,
                 onStop = {
                     if (goal?.isRunning == true) chatViewModel.stopGoal() else chatViewModel.stop()
                 },

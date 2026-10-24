@@ -504,6 +504,20 @@ Java_io_github_alpharomercoma_openweights_core_engine_LlamaBridge_nativeCancel(
     as_session(handle)->cancel();
 }
 
+JNIEXPORT jlong JNICALL
+Java_io_github_alpharomercoma_openweights_core_engine_LlamaBridge_nativeWeightsNotResident(
+    JNIEnv * env, jobject /*thiz*/, jlong handle) {
+    // Called off the inference thread under the handle lock, like nativeProgress.
+    return static_cast<jlong>(as_session(handle)->weights_not_resident());
+}
+
+JNIEXPORT jlong JNICALL
+Java_io_github_alpharomercoma_openweights_core_engine_LlamaBridge_nativePrefetchWeights(
+    JNIEnv * env, jobject /*thiz*/, jlong handle, jlong offset, jlong max_bytes) {
+    // One small step under the handle lock, so an unload waits at most one step.
+    return static_cast<jlong>(as_session(handle)->prefetch_weights(offset, max_bytes));
+}
+
 JNIEXPORT jlongArray JNICALL
 Java_io_github_alpharomercoma_openweights_core_engine_LlamaBridge_nativeProgress(
     JNIEnv * env, jobject /*thiz*/, jlong handle) {

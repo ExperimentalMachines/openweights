@@ -130,6 +130,8 @@ fun Composer(
      * what clears the stored draft.
      */
     onDraftChange: (String) -> Unit = {},
+    /** The text changed, as it is typed: undebounced, for what must start at once. */
+    onTyping: () -> Unit = {},
     enabled: Boolean,
     isGenerating: Boolean,
     /**
@@ -212,6 +214,13 @@ fun Composer(
             .drop(1)
             .debounce(DRAFT_DEBOUNCE_MS)
             .collect { onDraftChange(it) }
+    }
+    val currentOnTyping by rememberUpdatedState(onTyping)
+    LaunchedEffect(conversationKey) {
+        // The text rather than its length, so a replacement of the same length counts too.
+        snapshotFlow { field.text.toString() }
+            .drop(1)
+            .collect { text -> if (text.isNotEmpty()) currentOnTyping() }
     }
     var isFocused by remember { mutableStateOf(false) }
 

@@ -59,6 +59,17 @@ All figures MB.
 
 ## Under pressure
 
+> **Correction, 2026-10-23.** Every turn below began with `resetContext()` straight before its
+> prompt, and that reset zeroes the whole KV cache (`llama_memory_clear` with data). Under
+> pressure the zeroing drags the unused cache back in and can push weights out, so these turns
+> paged what the reset did as well as what the idle gap did. The timings below are what was
+> observed; what they cannot say is how much of the slowdown came from the idle gap rather
+> than the reset. The runs at the end of this note, with the reset moved after each turn, were
+> on a different day with less memory free and faster prefill, and do not settle that either.
+> The flag's 20 µs a fault comes from these turns too; on the clean 4 GB runs at the end it
+> flags every control turn (faults × 20 µs at 22% to 31% of the turn) while the arm with the
+> weights brought back was faster by about a second. It needs recalibrating on matched runs.
+
 A balloon under the shell (`tools/memory/balloon.c`) holds N MB of random bytes, which zram
 cannot compress, and touches every page every two seconds. Qwen3 1.7B, GGUF Q8_0 at an 8k window
 and the `.pte`, a 1k-token prompt and 96 tokens out. The turns are 20 s apart (30 s at 5 GB),
@@ -225,3 +236,71 @@ swapped every pair:
   three actions, so it takes a line of its own, which `MessageActions` does on purpose.
 - One thing the balloon also showed: with the app sent to the background under that pressure,
   the model was released and reloaded on return, though the process survived.
+
+## Bringing the weights back while someone types (2026-10-23)
+
+Same phone, unplugged (battery 70% to 44%), screen on, the owner's apps open: 4.2 GB free with
+no balloon, against 7 GB on 10-12, so the balloon levels are not comparable across the two days.
+Qwen3 1.7B Q8_0, 8k window, a 1k-token prompt, 96 tokens out, 20 s between turns. Built
+(`InferenceEngine.prefetchWeights`, `TurnRunner.prefetchWeights`): on the first edit in the
+composer after a reply, the engine counts its weight pages out of memory with `mincore` and,
+when 64 MB or more is out, brings them back with `MADV_POPULATE_READ` in 16 MB steps off the
+inference thread; it looks again 2 s after a look that found nothing to do and 10 s after one
+that did, and a turn cancels it and waits out the step in flight.
+
+**What it walks.** Each CPU buffer the model's tensors were placed in, less the token-embedding
+table, which a prompt reads a row per token: 1,743 MB for this model, against a 1,749 MiB file.
+With the table in, the ranges came to 2,059 MB, and 408 MB of them sat out of memory with
+nothing pressing while the turn after took 850 faults. Mixture-of-experts models are not
+prefetched at all. ExecuTorch is not either: its weights live inside XNNPACK, where the app
+cannot see them, and its paging under pressure has not been measured.
+
+**The benchmark.** `MemoryPressureBenchmark` with `-e lead 10`: odd turns run the app's own
+policy for the last 10 s of the gap, even turns do not, so both arms meet the same phone in the
+same minutes with the same gap. Send to first token is timed from the moment the prefetch is
+stopped. The first runs reset the KV cache just before each turn, the artifact in the correction
+above: with it, every look through the gap found the weights in and 640 to 1,400 MB were out at
+Send in both arms. The reset now follows each turn. The runs with the reset before Send, and the
+first ones with a single look at the start of the window, are in `2026-10-23-prefetch`, `-prefetch2`
+and `-prefetch3`; only `-prefetch4` is the design described here.
+
+Under a 4 GB balloon (`tools/memory/results/2026-10-23-prefetch4`), medians of four turns each:
+
+| | With the prefetch | Without |
+|---|---|---|
+| Weights out when the gap ended | 1.0 to 1.5 GB, brought back | 1.0 to 1.4 GB |
+| Prefetch time and process CPU over the window | 1.5 to 2.0 s; 2.0 to 2.4 s of CPU | not sampled |
+| Out at Send | 1 to 87 MB | 975 to 1,413 MB |
+| Major faults in the turn | 56,682 | 325,049 |
+| Prefill | 22.6 s | 23.2 s |
+| Send to first token | 22.7 s | 23.3 s |
+| Waiting at Send for a step in flight | 0 to 3 ms | |
+
+Pair by pair (prefetch turn against the control turn after it), send to first token was lower by
+0.90, 1.65 and 1.35 s and higher by 0.12 s; the turn's faults were 82% to 84% lower in every pair.
+
+- **It does what it is for.** Every gap pushed a gigabyte or more of the weights out, and every
+  prefetch had it back before Send, so the paging moved out of the turn and into the typing.
+  That is a shift, not less paging: the prefetch windows and their turns took 1.55 million faults
+  between them, against 1.41 million in the control turns, whose gaps were not counted.
+- **Whether it saves time is not settled.** Lower in three pairs of four, by about a second; but
+  four pairs, always in the same order, cannot separate that from drift over the run.
+- **Under a 3 GB balloon the gaps rarely evicted anything** (one gap in eight, 562 MB, brought
+  back by the prefetch that followed it); the control turns took 8 to 6,462 faults. There the
+  prefetch turns were slower to first token in three pairs of four (by 0.5, 0.8 and 3.0 s, faster
+  by 1.3 s in the other), with the prefetch doing nothing in three of those gaps, so nothing
+  points at it, but it is not evidence of no cost either.
+- **What was not established**: the effect on other apps (141 low memory kills of other apps over
+  the 4 GB run, one in a prefetch window and none in a control window, counted from the log's
+  timestamps), on battery, and on the responsiveness of the phone while it runs. With nothing
+  pressing, a look costs 2 to 5 ms; the first after a load reads back 93 MB of buffer pages that
+  were never written, 140 to 580 ms, which `mincore` counts as out.
+- **Not every fault in a turn is a weight page.** A 3 GB turn with 17 MB of weights out at Send
+  still took 86k faults. The KV cache and compute buffers paging is the likely explanation, not
+  a measured one: the fault counter does not say which mapping a fault was in.
+
+**Found on the way, not fixed here.** A reset in the app (a new chat) zeroes the whole KV cache
+the same way, so under pressure it pages the unused cache back in, up to the window's whole
+size. Clearing only the cells (`llama_memory_clear(…, false)`) would avoid it; whether hybrid
+models' recurrent state needs the zeroing has to be checked first.
+

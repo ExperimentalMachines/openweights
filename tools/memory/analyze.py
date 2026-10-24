@@ -16,6 +16,7 @@
 # during the turn (major faults, and the fall in VmSwap), and CPU time over wall time, which
 # says whether a slow turn was computing or waiting.
 import json
+import statistics
 import sys
 from pathlib import Path
 
@@ -91,6 +92,46 @@ def main():
                   f"{t['major_faults']} | {t['major_faults'] / max(tokens, 1):.1f} | {swap_in:.0f} | "
                   f"{t['after']['swap_kb'] / 1024:.0f} | {t['cpu_ms'] / max(t['wall_ms'], 1):.2f} | "
                   f"{t['peak']['min_available_kb'] / 1024:.0f} |")
+
+
+    # Only runs given a lead: without one every row has the key but no turn prefetched.
+    prefetched = [r for r in reports if r.get('lead_s') is not None]
+    if not prefetched:
+        return
+    # Odd turns brought the weights back `lead` seconds before they started and even ones did
+    # not (MemoryPressureBenchmark's `lead`), so the two arms are interleaved in one run.
+    print('\n## Prefetch, interleaved\n')
+    # Send to first token counts the wait for a prefetch step still running when the turn began.
+    print('| model | label | turn | arm | looks | brought back MB | prefetch faults | out at send MB | '
+          'prefill s | send to first token s | major faults | wall s |')
+    print('|---|---|---|---|---|---|---|---|---|---|---|---|')
+    for r in prefetched:
+        arms = {'prefetch': [], 'none': []}
+        for t in r['turns']:
+            if t['turn'] == 0:
+                continue
+            p = t.get('prefetch')
+            arm = 'prefetch' if p else 'none'
+            arms[arm].append(t)
+            print(f"| {r['model']} | {r['label']} | {t['turn']} | {arm} | "
+                  f"{(p or {}).get('looks', '')} | {(p or {}).get('brought_back_mb', '')} | "
+                  f"{(p or {}).get('major_faults', '')} | {t.get('out_at_send_mb')} | "
+                  f"{t['prefill_ms'] / 1000:.1f} | {send_to_first(t) / 1000:.1f} | {t['major_faults']} | "
+                  f"{t['wall_ms'] / 1000:.1f} |")
+        for arm, rows in arms.items():
+            if rows:
+                prefill = statistics.median(t['prefill_ms'] for t in rows) / 1000
+                first = statistics.median(send_to_first(t) for t in rows) / 1000
+                faults = round(statistics.median(t['major_faults'] for t in rows))
+                print(f"| {r['model']} | {r['label']} | median of {len(rows)} | {arm} | | | | | "
+                      f"{prefill:.1f} | {first:.1f} | {faults} | |")
+
+
+
+def send_to_first(t: dict) -> int:
+    # Measured from Send to the first token on the test's side: the join, the reset and the
+    # whole native turn up to its first piece.
+    return t['send_to_first_token_ms']
 
 
 if __name__ == '__main__':

@@ -34,6 +34,7 @@ import io.github.alpharomercoma.openweights.core.engine.LoadedModelInfo
 import io.github.alpharomercoma.openweights.core.engine.MediaSupport
 import io.github.alpharomercoma.openweights.core.engine.StopReason
 import io.github.alpharomercoma.openweights.core.engine.WarmResult
+import io.github.alpharomercoma.openweights.core.engine.WeightPrefetch
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -366,6 +367,27 @@ class FakeInferenceEngine : InferenceEngine {
             prefillMs = 1,
             snapshotBytes = 0,
         )
+    }
+
+    /** How many times [prefetchWeights] began, and how many of those were cancelled. */
+    var prefetchCalls = 0
+    var prefetchesCancelled = 0
+
+    /** Whether [prefetchWeights] reports it found too little out to act on. */
+    var prefetchSkips = true
+
+    /** When set, [prefetchWeights] parks on this, as a real one does while zram decompresses. */
+    var prefetchGate: CompletableDeferred<Unit>? = null
+
+    override suspend fun prefetchWeights(): WeightPrefetch? {
+        prefetchCalls++
+        try {
+            prefetchGate?.await()
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            prefetchesCancelled++
+            throw cancelled
+        }
+        return WeightPrefetch(outBefore = 0, outAfter = 0, elapsedMs = 0, skipped = prefetchSkips)
     }
 
     /** One question put to the fake, as [judge] received it. */

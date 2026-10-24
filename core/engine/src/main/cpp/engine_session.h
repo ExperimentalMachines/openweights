@@ -17,11 +17,13 @@
 #pragma once
 
 #include <atomic>
+#include <cstdint>
 #include <functional>
 #include <mutex>
 #include <string>
 #include <deque>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "llama.h"
@@ -370,6 +372,33 @@ public:
      */
     void progress_snapshot(int64_t * out) const;
 
+    /**
+     * Bytes of the model's weights the kernel does not hold in memory right now, counted
+     * with `mincore` over [weight_ranges_]; -1 when the kernel would not say.
+     *
+     * Not resident, which is not the same as compressed: the weights are anonymous memory
+     * (no mmap by default, and KleidiAI repacks into its own buffer either way), so a page
+     * counted here is in zram or was never written at all (93 MB of Qwen3 1.7B's buffers,
+     * which come back with no read). Safe from any thread while the session lives; it reads
+     * page tables only.
+     */
+    int64_t weights_not_resident() const;
+
+    /**
+     * Brings back up to `max_bytes` of the weights, starting `offset` bytes into them as if
+     * [weight_ranges_] were one run, and returns how many bytes it covered: 0 once past the
+     * end, -1 when the kernel refused.
+     *
+     * Measured on the test phone (docs/research/swap-and-peak-memory.md, 2026-10-23): under
+     * a 4 GB balloon, 1.0 to 1.5 GB of weights went into zram in each 20 s gap and the next
+     * turn faulted them back on the inference threads, 320k to 440k faults. Called in small
+     * steps while someone types, the same pages came back in under two seconds, before Send. Only the weights: the KV cache past the prompt is
+     * the first thing the kernel takes, no turn reads it, and bringing it back would push
+     * out the very pages this is for. Reads only, never writes, so it cannot race the
+     * inference threads over the weights' contents.
+     */
+    int64_t prefetch_weights(int64_t offset, int64_t max_bytes) const;
+
     /** Drops the KV cache so the next generation starts from an empty context. */
     void reset();
 
@@ -596,6 +625,14 @@ private:
 
     llama_model   * model_ = nullptr;
     llama_context * ctx_   = nullptr;
+
+    /**
+     * Where the weights live in this process, page-aligned: each host buffer the model's
+     * tensors were placed in, once. Taken at load and fixed for the session's life, since
+     * llama.cpp never moves a weight once it is placed. A device buffer (an offloaded
+     * layer) is not host memory and is left out.
+     */
+    std::vector<std::pair<uintptr_t, size_t>> weight_ranges_;
 
     /**
      * The worker threads, kept alive between graphs instead of made for each one.

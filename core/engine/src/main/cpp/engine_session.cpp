@@ -47,6 +47,7 @@
 
 #include <memory>
 #include <new>
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -63,6 +64,8 @@ constexpr size_t MAX_ATTACHMENT_BYTES = 64u * 1024u * 1024u;
 }  // namespace
 #include "ggml-backend.h"
 #include "ggml-cpu.h"
+// Private: the model's tensor list and its expert count, for the weight prefetch.
+#include "llama-model.h"
 
 /** No legitimate tokenizer piece is remotely this large; malformed vocabularies stop here. */
 constexpr size_t MAX_TOKEN_PIECE_BYTES = 1024u * 1024u;
@@ -89,6 +92,115 @@ static bool ends_with(const std::string & text, const std::string & suffix) {
 
 namespace openweights {
 namespace {
+
+#if defined(__linux__) && !defined(MADV_POPULATE_READ)
+// Linux 5.14. The NDK's headers can be older than the kernel the phone runs.
+#define MADV_POPULATE_READ 22
+#endif
+
+size_t page_bytes() {
+    static const size_t bytes = static_cast<size_t>(sysconf(_SC_PAGESIZE));
+    return bytes;
+}
+
+/**
+ * The host memory the model's tensors were placed in, one page-aligned range per buffer,
+ * overlapping pages merged, less the lookup tables a turn reads only a few rows of.
+ *
+ * A buffer counts when it is host memory or belongs to the CPU device. Both tests, because
+ * each misses one: KleidiAI's repacked buffer, which holds most of the weights the CPU
+ * computes against, says it is not host memory (its layout is not ggml's), and ggml's plain
+ * CPU buffer, which holds everything not repacked, names no device at all.
+ *
+ * Empty for a mixture of experts: a prompt reads a few experts out of many, and bringing every
+ * one back would refill memory with weights the next turn never touches.
+ */
+std::vector<std::pair<uintptr_t, size_t>> weight_ranges_of(const llama_model * model) {
+    std::vector<std::pair<uintptr_t, size_t>> ranges;
+    if (model->hparams.n_expert > 0) return ranges;
+    std::vector<ggml_backend_buffer_t> seen;
+    const uintptr_t page = page_bytes();
+    for (const auto & entry : llama_internal_get_tensor_map(model)) {
+        ggml_backend_buffer_t buffer = entry.second->buffer;
+        if (buffer == nullptr || std::find(seen.begin(), seen.end(), buffer) != seen.end()) continue;
+        seen.push_back(buffer);
+        ggml_backend_dev_t device = ggml_backend_buft_get_device(ggml_backend_buffer_get_type(buffer));
+        const bool cpu = device != nullptr && ggml_backend_dev_type(device) == GGML_BACKEND_DEVICE_TYPE_CPU;
+        if (!cpu && !ggml_backend_buffer_is_host(buffer)) continue;
+        const auto base = reinterpret_cast<uintptr_t>(ggml_backend_buffer_get_base(buffer));
+        const size_t size = ggml_backend_buffer_get_size(buffer);
+        if (base == 0 || size == 0) continue;
+        const uintptr_t start = base & ~(page - 1);
+        const uintptr_t end = (base + size + page - 1) & ~(page - 1);
+        ranges.emplace_back(start, end - start);
+    }
+    // Two buffers can share a boundary page; merged, no page is counted or read twice.
+    std::sort(ranges.begin(), ranges.end());
+    std::vector<std::pair<uintptr_t, size_t>> merged;
+    for (const auto & [start, size] : ranges) {
+        if (!merged.empty() && start <= merged.back().first + merged.back().second) {
+            const uintptr_t end = std::max(merged.back().first + merged.back().second, start + size);
+            merged.back().second = end - merged.back().first;
+        } else {
+            merged.emplace_back(start, size);
+        }
+    }
+
+    // Tables read a row per token rather than whole: a prompt touches the rows of its own
+    // tokens, so most of the table stays cold for good, and Qwen3's 152k-entry vocabulary is
+    // over 300 MB of it. Measured on the Poco with nothing pressing (2026-10-23): 408 MB of
+    // the weights were out at Send and the turn took 850 faults. Not when the table is the
+    // output projection's tensor too, which multiplies by every row: the loader shares one
+    // tensor when both land in the same buffer type, and gives a tied output its own copy
+    // (a different tensor, kept) when they do not.
+    std::vector<std::pair<uintptr_t, uintptr_t>> cold;
+    for (const ggml_tensor * table : {model->tok_embd, model->type_embd, model->pos_embd,
+                                      model->per_layer_tok_embd}) {
+        if (table == nullptr || table == model->output || table->data == nullptr) continue;
+        const auto first = reinterpret_cast<uintptr_t>(table->data);
+        // Whole pages only: a page the table shares with a neighbour stays in.
+        const uintptr_t start = (first + page - 1) & ~(page - 1);
+        const uintptr_t end = (first + ggml_nbytes(table)) & ~(page - 1);
+        if (start < end) cold.emplace_back(start, end);
+    }
+    std::sort(cold.begin(), cold.end());
+    std::vector<std::pair<uintptr_t, size_t>> hot;
+    for (const auto & [start, size] : merged) {
+        uintptr_t at = start;
+        const uintptr_t end = start + size;
+        for (const auto & [cold_start, cold_end] : cold) {
+            if (cold_end <= at || cold_start >= end) continue;
+            if (cold_start > at) hot.emplace_back(at, cold_start - at);
+            at = std::max(at, cold_end);
+        }
+        if (at < end) hot.emplace_back(at, end - at);
+    }
+    return hot;
+}
+
+#if defined(__linux__)
+/**
+ * Whether this kernel knows MADV_POPULATE_READ (Linux 5.14; a phone upgraded to Android 16 can
+ * still run 5.10). Asked once of a page this file owns, because the same EINVAL also means a
+ * range the kernel will not populate, and only the first case makes reading it by hand safe.
+ */
+bool populate_read_supported() {
+    static const bool supported = [] {
+        // Static storage, aligned past any page size Android uses, so the probe cannot fail
+        // to allocate and be mistaken for a kernel that lacks the advice.
+        alignas(65536) static unsigned char probe[65536];
+        static_cast<volatile unsigned char *>(probe)[0] = 1;
+        if (madvise(probe, page_bytes(), MADV_POPULATE_READ) == 0) return true;
+        if (errno == EINVAL) {
+            LOGI("prefetch: MADV_POPULATE_READ unknown to this kernel; reading a byte a page instead");
+            return false;
+        }
+        return true;
+    }();
+    return supported;
+}
+#endif
+
 
 /**
  * The warm-state file format; bumped whenever the layout changes.
@@ -781,6 +893,14 @@ Session * Session::load(
     }
     session->model_ = model;
     session->speculate_ = speculate;
+    session->weight_ranges_ = weight_ranges_of(model);
+    {
+        size_t weight_bytes = 0;
+        for (const auto & range : session->weight_ranges_) weight_bytes += range.second;
+        // What a prefetch would walk; a figure far from the file's size means the ranges are wrong.
+        LOGI("weights: %zu host ranges, %zu MB%s", session->weight_ranges_.size(), weight_bytes >> 20,
+             model->hparams.n_expert > 0 ? " (experts: not prefetched)" : "");
+    }
 
     clear_last_error();
     llama_context * ctx = llama_init_from_model(model, ctx_params);
@@ -1873,6 +1993,68 @@ void Session::progress_snapshot(int64_t * out) const {
     out[5] = progress_.generated;
     out[6] = progress_.first_token_ms;
     out[7] = progress_.last_token_ms;
+}
+
+int64_t Session::weights_not_resident() const {
+#if defined(__linux__)
+    // A window at a time, so a 4 GB model needs a 16 KB vector rather than a megabyte.
+    constexpr size_t WINDOW = 64u * 1024u * 1024u;
+    const size_t page = page_bytes();
+    std::vector<unsigned char> resident(WINDOW / page);
+    int64_t missing = 0;
+    for (const auto & [start, size] : weight_ranges_) {
+        for (size_t done = 0; done < size; done += WINDOW) {
+            const size_t length = std::min(WINDOW, size - done);
+            if (mincore(reinterpret_cast<void *>(start + done), length, resident.data()) != 0) {
+                LOGE("prefetch: mincore refused %zu bytes: %s", length, strerror(errno));
+                return -1;
+            }
+            const size_t pages = (length + page - 1) / page;
+            for (size_t i = 0; i < pages; ++i) {
+                if ((resident[i] & 1u) == 0) missing += static_cast<int64_t>(page);
+            }
+        }
+    }
+    return missing;
+#else
+    return -1;
+#endif
+}
+
+int64_t Session::prefetch_weights(int64_t offset, int64_t max_bytes) const {
+#if defined(__linux__)
+    if (offset < 0 || max_bytes <= 0) return 0;
+    const size_t page = page_bytes();
+    size_t skip = static_cast<size_t>(offset);
+    for (const auto & [start, size] : weight_ranges_) {
+        if (skip >= size) {
+            skip -= size;
+            continue;
+        }
+        // Whole pages: every range starts on one, and the caller steps by what this returns.
+        size_t length = std::min(size - skip, static_cast<size_t>(max_bytes));
+        if (length < size - skip) length = std::max(page, length / page * page);
+        auto * address = reinterpret_cast<void *>(start + skip);
+        if (populate_read_supported()) {
+            if (madvise(address, length, MADV_POPULATE_READ) == 0) return static_cast<int64_t>(length);
+            LOGE("prefetch: madvise refused %zu bytes at offset %lld: %s",
+                 length, static_cast<long long>(offset), strerror(errno));
+            return -1;
+        }
+        // A kernel older than 5.14: read one byte a page, which faults the same pages in on
+        // this thread. Safe only because every range is a CPU buffer ggml allocated and reads.
+        const auto * bytes = static_cast<const volatile unsigned char *>(address);
+        unsigned char sink = 0;
+        for (size_t at = 0; at < length; at += page) sink ^= bytes[at];
+        (void) sink;
+        return static_cast<int64_t>(length);
+    }
+    return 0;
+#else
+    (void) offset;
+    (void) max_bytes;
+    return -1;
+#endif
 }
 
 size_t Session::common_prefix(

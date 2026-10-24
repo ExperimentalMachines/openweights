@@ -103,6 +103,8 @@ class RoutingInferenceEngine(
         store: String?,
     ): WarmResult? = active?.warm(messages, tools, params, snapshot, store)
 
+    override suspend fun prefetchWeights(): WeightPrefetch? = active?.prefetchWeights()
+
     override suspend fun judge(
         messages: List<ChatMessage>,
         instruction: String,

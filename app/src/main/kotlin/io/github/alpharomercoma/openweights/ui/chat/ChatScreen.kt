@@ -158,6 +158,8 @@ fun ChatScreen(
     onSend: (String) -> Boolean,
     /** Persist what is half-written, so leaving the screen does not lose it. */
     onDraftChange: (String) -> Unit = {},
+    /** The composer's text changed, undebounced. */
+    onComposerTyping: () -> Unit = {},
     onStop: () -> Unit,
     onRegenerate: () -> Unit,
     onNewChat: () -> Unit,
@@ -294,6 +296,7 @@ fun ChatScreen(
             state = state,
             liveReadout = liveReadout,
             onDraftChange = onDraftChange,
+            onComposerTyping = onComposerTyping,
             listState = listState,
             followTail = followTail,
             actionsForId = actionsForId,
@@ -353,6 +356,7 @@ private fun ChatContent(
     state: ChatUiState,
     liveReadout: () -> LiveReadout?,
     onDraftChange: (String) -> Unit,
+    onComposerTyping: () -> Unit,
     listState: androidx.compose.foundation.lazy.LazyListState,
     followTail: io.github.alpharomercoma.openweights.core.designsystem.component.FollowTailState,
     actionsForId: Long?,
@@ -560,6 +564,7 @@ private fun ChatContent(
                         conversationKey = state.activeConversationId,
                         initialDraft = state.composerDraft,
                         onDraftChange = onDraftChange,
+                        onTyping = onComposerTyping,
                         // One text field on the screen, whatever is running. While a goal
                         // runs, what is typed here steers its next step rather than starting
                         // a turn of its own, and while the model has asked a question, what

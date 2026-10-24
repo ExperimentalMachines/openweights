@@ -152,6 +152,20 @@ internal class LlamaBridge {
     external fun nativeProgress(handle: Long): LongArray
 
     /**
+     * Bytes of the weights not in memory right now (compressed into zram, on this phone),
+     * or -1 when the kernel would not say. Callable from another thread; hold the handle
+     * lock across the call.
+     */
+    external fun nativeWeightsNotResident(handle: Long): Long
+
+    /**
+     * Brings back up to [maxBytes] of the weights from [offset] into them and returns the
+     * bytes covered: 0 past the end, -1 when the kernel refused. Callable from another
+     * thread; hold the handle lock across the call.
+     */
+    external fun nativePrefetchWeights(handle: Long, offset: Long, maxBytes: Long): Long
+
+    /**
      * @return `[parameterCount, sizeBytes, contextSize, trainingContextSize, layerCount,
      * contextUsed]`.
      */

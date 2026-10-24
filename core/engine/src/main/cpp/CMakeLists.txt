@@ -43,6 +43,9 @@ add_library(openweights_llama SHARED
 target_include_directories(openweights_llama PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/include
+    # Private, for llama-model.h only: the prefetch reads which buffers hold the weights, and a
+    # declaration copied by hand would keep linking after an update changed what it returns.
+    ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/src
     ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/ggml/include
     ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/common
     ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/tools/mtmd

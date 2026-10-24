@@ -31,6 +31,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
 import androidx.core.content.getSystemService
 import androidx.test.core.app.ApplicationProvider
 import io.github.alpharomercoma.openweights.core.common.model.MessagePart
@@ -322,6 +323,48 @@ class ComposerTest {
         compose.waitForIdle()
 
         assert(stops == 1) { "leaving while listening must stop dictation, got $stops stops" }
+    }
+
+    @Test
+    fun `typing reaches the prefetch at once, a same-length replacement included`() {
+        // Undebounced, unlike the draft: the weights take seconds to come back, and the
+        // seconds that count are the ones while the question is still being written.
+        var typed = 0
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            OpenWeightsTheme(dynamicColor = false) {
+                Composer(
+                    conversationKey = null,
+                    onTyping = { typed++ },
+                    enabled = true,
+                    isGenerating = false,
+                    staged = emptyList<MessagePart.File>(),
+                    document = null as StagedDocument?,
+                    onRemoveDocument = {},
+                    isAttaching = false,
+                    canDictate = false,
+                    isListening = false,
+                    heard = "",
+                    onAttach = {},
+                    onRemoveStaged = {},
+                    onDictate = {},
+                    onSend = { true },
+                    onStop = {},
+                    onCommand = {},
+                )
+            }
+        }
+        compose.mainClock.advanceTimeByFrame()
+
+        compose.onNodeWithContentDescription("Message").performTextInput("h")
+        compose.mainClock.advanceTimeByFrame()
+        val afterFirst = typed
+        compose.onNodeWithContentDescription("Message").performTextReplacement("j")
+        compose.mainClock.advanceTimeByFrame()
+
+        assert(afterFirst == 1 && typed == 2) {
+            "expected 1 then 2 calls, saw $afterFirst then $typed"
+        }
     }
 
     @Test

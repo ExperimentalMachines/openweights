@@ -344,6 +344,27 @@ data class Judgement(
     val choice: String get() = options[probabilities.indices.maxBy { probabilities[it] }]
 }
 
+/**
+ * What [InferenceEngine.prefetchWeights] did.
+ *
+ * @param outBefore bytes of the weights that were not in memory when it began.
+ * @param outAfter the same once it stopped; null when it was stopped before it could look.
+ * @param elapsedMs how long it ran, all of it off the inference thread.
+ * @param skipped true when too little was out to be worth bringing back.
+ * @param failed true when the kernel refused partway, or the model was unloaded under it, so
+ *   [outAfter] is not the result of a whole pass.
+ */
+data class WeightPrefetch(
+    val outBefore: Long,
+    val outAfter: Long?,
+    val elapsedMs: Long,
+    val skipped: Boolean,
+    val failed: Boolean = false,
+) {
+    /** Whether weights were actually brought back, start to finish. */
+    val broughtBack: Boolean get() = !skipped && !failed
+}
+
 /** What warming the conversation prefix did. See [InferenceEngine.warm]. */
 data class WarmResult(
     /** Tokens freshly decoded into the cache by this warm. */
@@ -428,6 +449,23 @@ interface InferenceEngine : AutoCloseable {
          */
         store: String? = null,
     ): WarmResult? = null
+
+    /**
+     * Brings the loaded model's weights back into memory if the phone has pushed them out,
+     * so the next turn does not wait for them.
+     *
+     * For the gap between replies: on a phone short of memory the kernel compresses the
+     * weights while a reply is being read, and the next prompt then faults them back page by
+     * page: 320k to 440k faults a turn on the test phone under a 4 GB balloon
+     * (docs/research/swap-and-peak-memory.md). Called when someone starts typing, the same
+     * work happens before Send; the turn's faults fell to a median 57k there. Runs off the
+     * inference thread, never touches the KV cache, and stops at the next step boundary when
+     * the caller's coroutine is cancelled.
+     *
+     * Default is null: the engine cannot see where its weights live (ExecuTorch keeps them
+     * inside XNNPACK), or no model is loaded.
+     */
+    suspend fun prefetchWeights(): WeightPrefetch? = null
 
     /**
      * Asks the model a closed question about [messages] and returns how likely it found

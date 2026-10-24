@@ -2543,6 +2543,16 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    /**
+     * The composer's text changed. The moment a next question is being typed is the moment
+     * to bring back weights the phone pushed out while the last reply was read; see
+     * [TurnRunner.prefetchWeights].
+     */
+    fun onComposerTyping() {
+        if (_uiState.value.isGenerating) return
+        turns.prefetchWeights(viewModelScope)
+    }
+
     private fun loadComposerDraft() {
         val key = conversationId ?: 0L
         viewModelScope.launch {

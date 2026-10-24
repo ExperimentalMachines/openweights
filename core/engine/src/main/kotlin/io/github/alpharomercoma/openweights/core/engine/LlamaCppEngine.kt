@@ -28,11 +28,13 @@ import io.github.alpharomercoma.openweights.core.common.model.ToolCallParser
 import io.github.alpharomercoma.openweights.core.common.model.ToolDefinition
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
@@ -47,6 +49,9 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
 import kotlin.random.Random
 
 /**
@@ -91,6 +96,13 @@ class LlamaCppEngine internal constructor(
      * lock across it costs nothing.
      */
     private val handleLock = Any()
+
+    /**
+     * Held shared by each weight prefetch step and exclusively by [freeCurrentHandle], so the
+     * session a step reads cannot be freed under it. Separate from [handleLock] so a step that
+     * waits on zram does not hold up a Stop or the live readout, which need only a moment.
+     */
+    private val lifetime = ReentrantReadWriteLock()
 
     /** 0 when no model is loaded. Guarded by [handleLock] for cross-thread reads. */
     private val handle = AtomicLong(0)
@@ -206,9 +218,8 @@ class LlamaCppEngine internal constructor(
      * the loaded one. Under [handleLock], which [freeCurrentHandle] also takes, so the read
      * can never reach a session that has been freed.
      */
-    private fun progressOf(expected: Long): GenerationEvent.Progress? = synchronized(handleLock) {
-        if (handle.get() != expected) null else progressFrom(bridge.nativeProgress(expected))
-    }
+    private fun progressOf(expected: Long): GenerationEvent.Progress? =
+        onHandle(expected) { progressFrom(bridge.nativeProgress(it)) }
 
     /** The blocking native call, with the token and reply sinks wired to this producer's channel. */
     private fun ProducerScope<GenerationEvent>.generate(
@@ -308,6 +319,62 @@ class LlamaCppEngine internal constructor(
             prefillMs = stats[2],
             snapshotBytes = stats[3],
         )
+    }
+
+    override suspend fun prefetchWeights(): WeightPrefetch? = withContext(Dispatchers.IO) {
+        val expected = handle.get()
+        if (expected == 0L) return@withContext null
+        val startedAt = System.nanoTime()
+        fun elapsedMs() = (System.nanoTime() - startedAt) / NANOS_PER_MILLI
+        val before = whileLoaded(expected, bridge::nativeWeightsNotResident)
+        if (before == null || before < 0) return@withContext null
+        if (before < PREFETCH_FLOOR_BYTES) {
+            return@withContext WeightPrefetch(before, before, elapsedMs(), skipped = true)
+        }
+        var offset = 0L
+        var failed = false
+        while (true) {
+            // Between steps, so a turn that starts mid-prefetch takes the CPU back within one.
+            ensureActive()
+            val from = offset
+            val step = whileLoaded(expected) {
+                bridge.nativePrefetchWeights(it, from, PREFETCH_STEP_BYTES)
+            }
+            if (step == null || step < 0L) failed = true
+            if (step == null || step <= 0L) break
+            offset += step
+        }
+        val after = whileLoaded(expected, bridge::nativeWeightsNotResident)?.takeIf { it >= 0 }
+        WeightPrefetch(before, after, elapsedMs(), skipped = false, failed = failed).also {
+            Log.i(
+                "OpenWeights",
+                "prefetch: ${it.outBefore / BYTES_PER_MB} MB of weights out, " +
+                    "${it.outAfter?.div(BYTES_PER_MB)} MB after ${it.elapsedMs} ms" +
+                    if (failed) ", stopped early" else "",
+            )
+        }
+    }
+
+    /** Bytes of the weights out of memory now, or null; the device benchmark's reading. */
+    internal fun weightsOut(): Long? {
+        val expected = handle.get()
+        if (expected == 0L) return null
+        return whileLoaded(expected, bridge::nativeWeightsNotResident)?.takeIf { it >= 0 }
+    }
+
+    /**
+     * [block] on the session [expected] names, or null once it is no longer the loaded one.
+     * Under [handleLock], which [freeCurrentHandle] also takes, so the read can never reach a
+     * session that has been freed. For calls that return at once.
+     */
+    private inline fun <T> onHandle(expected: Long, block: (Long) -> T): T? =
+        synchronized(handleLock) {
+            if (handle.get() != expected) null else block(expected)
+        }
+
+    /** [onHandle] for the slow weight reads, under [lifetime] rather than [handleLock]. */
+    private inline fun <T> whileLoaded(expected: Long, block: (Long) -> T): T? = lifetime.read {
+        if (handle.get() != expected) null else block(expected)
     }
 
     override suspend fun judge(
@@ -431,12 +498,14 @@ class LlamaCppEngine internal constructor(
     override fun computeDevices(): List<ComputeDevice> =
         ComputeDevice.parse(bridge.nativeComputeDevices())
 
-    private fun freeCurrentHandle() = synchronized(handleLock) {
-        val previous = handle.getAndSet(0)
-        if (previous != 0L) {
-            bridge.nativeFreeModel(previous)
+    private fun freeCurrentHandle() = lifetime.write {
+        synchronized(handleLock) {
+            val previous = handle.getAndSet(0)
+            if (previous != 0L) {
+                bridge.nativeFreeModel(previous)
+            }
+            currentModel = null
         }
-        currentModel = null
     }
 
     /** The terminal event, read out of the flat array the native layer returns. */
@@ -553,6 +622,26 @@ class LlamaCppEngine internal constructor(
     private companion object {
         /** Tool calls cross JNI flattened as [id, name, argumentsJson]. */
         const val TOOL_CALL_FIELDS = 3
+
+        /**
+         * Less of the weights out than this and the prefetch does nothing: 64 MB is about
+         * 16,000 pages, a third of a second at the 20 µs each the paging flag uses
+         * (MemoryMeter), which nobody waits on. It trips once per load on any model whose
+         * buffers hold pages never written (93 MB of Qwen3 1.7B's, read back with one major
+         * fault in 140 to 580 ms); that is the gate counting them, not paging, and not a
+         * reason to raise it.
+         */
+        const val PREFETCH_FLOOR_BYTES = 64L * 1024 * 1024
+
+        /**
+         * One step of the prefetch. A turn that starts mid-prefetch waits for the step in
+         * flight, and an unload waits for it before freeing the weights, so it is kept to
+         * what zram decompresses in tens of milliseconds; the device benchmark logs each
+         * prefetch's time.
+         */
+        const val PREFETCH_STEP_BYTES = 16L * 1024 * 1024
+        const val BYTES_PER_MB = 1024L * 1024
+        const val NANOS_PER_MILLI = 1_000_000L
 
         /** Index of the context-used field in the stats array the native layer returns. */
         const val CONTEXT_USED = 6
