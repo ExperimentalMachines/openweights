@@ -129,14 +129,15 @@ r6, where all nine of its cells ran; the others with r4.
 - **Qwen3 4B's top two swapped.** NPU-only took 149.6 s and NPU prefill with CPU decode 150.1 s
   (0.3% apart; NPU-only faster on 17 of 33 turns), where r6 had them 149.9 and 149.5 s. Over both
   passes the two are a tie on this model.
-- **Per-processor rates repeat to a few percent.** On Llama 3.2 1B, NPU prefill was 2,888 to 3,025
+- **Most per-processor rates repeat to a few percent.** The exception is GPU prefill on Qwen3 0.6B,
+  8% faster in r5 (639 against 591 tok/s; 12% in its gpu:npu cell). On Llama 3.2 1B, NPU prefill was 2,888 to 3,025
   tok/s by cell in r5 against 3,017 to 3,058 in r4, and CPU decode 46.3 to 52.1 against 46.4 to
   52.5.
 - **Two cells moved for reasons the data suggest.** Qwen3 4B's gpu:cpu was 5.1% faster in r5
   (GPU prefill 112 against 102 tok/s); in r6 that cell started with the GPU capped at power level 8.
   Its cpu:npu was 4.9% slower, with NPU decode 13.4 against 15.4 tok/s on nearly every turn from
-  the third on; it was the last cell in both passes' orders and its gate passed both times, so
-  nothing recorded explains it.
+  the third on. It was the last cell in both orders; its gate passed in r5 and timed out in r6
+  (56.7 °C), so the gate does not explain it either, and nothing recorded does.
 - **The gate timed out on 6 of the 4B's 9 cells** in r5 (none on the other four models), all
   within 3 °C of the limit and with the GPU uncapped.
 
@@ -226,10 +227,10 @@ quantisation, the exported graph and the runtime differ, so this compares the tw
 as tested, not the runtimes in general. The llama.cpp column is r4's npu:npu cell, from the first
 session; the r5 control is below.
 
-**Same-session control.** r5 ran Qwen3 0.6B's matrix in the same reservation, about an hour after
-e1. On the same 27 turns its npu:npu cell decoded at 50.3 tok/s, read the nine first turns at 2,242
+**Same-session control.** r5 ran Qwen3 0.6B's matrix in the same reservation, starting 29 minutes
+after e1 ended. On the same 27 turns its npu:npu cell decoded at 50.3 tok/s, read the nine first turns at 2,242
 tok/s and had a median time to first token of 70 ms (`analysis-e1-vs-r5.md`), against r4's 50.7,
-2,400 and 70. The gap to ExecuTorch is not a difference between sessions.
+2,400 and 70. The gap to ExecuTorch persists within one session.
 
 ### What this means for the app on a Snapdragon 8 Elite Gen 5
 

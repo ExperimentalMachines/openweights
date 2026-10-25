@@ -23,6 +23,7 @@ def turns(path):
     ok = defaultdict(dict)  # model -> {(cell, conv, turn): row}
     attempted = defaultdict(set)  # model -> cells with any turn row
     failed = defaultdict(Counter)  # model -> cell -> failed turns
+    seen = defaultdict(set)  # model -> every (cell, conv, turn) observed, failed or not
     labels = set()
     for n, line in enumerate(open(path), 1):
         line = line.strip()
@@ -35,16 +36,17 @@ def turns(path):
         model = r["model"].split("/")[-1].replace(".gguf", "")
         cell = (r["prefill"], r["decode"])
         attempted[model].add(cell)
+        key = (cell, r["conv"], r["turn"])
+        if key in seen[model]:
+            sys.exit(f"{path}:{n}: duplicate observation of {model} {cell} {r['conv']} turn {r['turn']}")
+        seen[model].add(key)
         if r["kind"] == "turn_error" or r.get("error"):
             failed[model][cell] += 1
             continue
         for k in TIMES:
             v = r.get(k)
-            if not isinstance(v, (int, float)) or not math.isfinite(v) or v <= 0:
+            if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v <= 0:
                 sys.exit(f"{path}:{n}: {model} {cell} turn {r['conv']}/{r['turn']} has no usable {k}")
-        key = (cell, r["conv"], r["turn"])
-        if key in ok[model]:
-            sys.exit(f"{path}:{n}: duplicate observation of {model} {cell} {r['conv']} turn {r['turn']}")
         ok[model][key] = r
     if len(labels) != 1:
         sys.exit(f"{path}: expected one run label, found {sorted(map(str, labels))}")
