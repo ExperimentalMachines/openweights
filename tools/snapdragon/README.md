@@ -33,6 +33,7 @@ BIN=pd_bench COOL=55 COOL_MAX=300 nohup sh run_matrix.sh r4 1 \
   Llama-3.2-1B-Instruct-Q4_0.gguf Qwen3-4B-Q4_0.gguf:HTP0,HTP1 > run-r4.out 2>&1 &
 # on the Mac
 python3 analyze_pd.py results-r4.jsonl --conversations conversations.jsonl
+python3 compare_runs.py results-r4.jsonl results-r5.jsonl   # a second pass against the first
 ```
 
 `pull_conversations.py` rebuilds `conversations.jsonl` from the Hugging Face datasets server.
@@ -46,13 +47,20 @@ python3 analyze_pd.py results-r4.jsonl --conversations conversations.jsonl
   command line contains the pattern. Kill by PID.
 - **Transfers over the tunnel get cut off past about 4 MB** (`adb` exit 255, varying sizes). Copy
   results as `tar czf`, which made them a sixth of the size, and retry.
+- **The `~/.ssh/config` ControlMaster takes the forward port.** Run the tunnel with
+  `-o ControlMaster=no -o ControlPath=none` in a reconnect loop; it dropped three times in a
+  night and the phone's `nohup` run carried on each time.
+- **The `cpu-hw-trip-*` zones read a fixed 105 °C.** A gate that matches `cpu*` never opens.
 - **The reservation ends without warning**: adb reports "Connection reset by peer", then the
   reservation's key is refused. Copy results off often.
 
-## ExecuTorch's QNN runner (prepared, not run)
+## ExecuTorch's QNN runner
 
 `qnn_llama_runner` from ExecuTorch 1.5.1 builds against the app runtime's installed tree once
 `examples/qualcomm/oss_scripts/llama/CMakeLists.txt` renames its `custom_ops` target (it clashes
 with the installed one). It needs QNN 2.39's `libQnnHtp.so`, `libQnnSystem.so` and the V81
 stub and skeleton for SM8850 (QAIRT 2.37 has no V81; the `com.qualcomm.qti:qnn-runtime:2.39.0`
-AAR does). `make_et_prompts.py` writes one tokenized prompt per turn and `run_et.sh` runs them.
+AAR does). `make_et_prompts.py` writes one tokenized prompt per turn and a manifest, `run_et.sh`
+runs them from the manifest behind the same cooling gate, and `analyze_et.py et-e1.txt
+results-r5.jsonl --manifest manifest.json` sets the runner's own timings beside llama.cpp's
+npu:npu cell on the same turns.
