@@ -57,7 +57,7 @@ model families whose prompt formats the app implements.
 model families. The app routes on the file format, and both ship in the same 28.8 MB
 release bundle. On the phones measured, the compiled LFM2.5 1.2B decoded a token in 46 ms
 against 106 for its GGUF on the Tensor G5 and 38 against 59 on the Exynos 2400, and reached
-its first token faster on every chip ([latency](https://experimentalmachines.github.io/openweights/latency.html)).
+its first token faster on every chip ([latency](https://experimentalmachines.org/openweights/latency/)).
 
 **Honest about your device, before the download.** The GGUF header is read over HTTP range
 requests, so the app can say what a file needs at your context length and whether it will
@@ -75,9 +75,9 @@ it was given.
 
 **Numbers you can check.** Speed, quality and backend parity were measured on real phones
 and published with their methods, caveats and raw results. Each report states its own device
-set: [latency on five chips](https://experimentalmachines.github.io/openweights/latency.html),
-[the exported-window study on four](https://experimentalmachines.github.io/openweights/window.html),
-[its reruns](https://experimentalmachines.github.io/openweights/reruns.html).
+set: [latency on five chips](https://experimentalmachines.org/openweights/latency/),
+[the exported-window study on four](https://experimentalmachines.org/openweights/window/),
+[its reruns](https://experimentalmachines.org/openweights/reruns/).
 
 **Private by construction.** No accounts, no analytics, no crash reporter, backups off the
 device disabled, and a Hugging Face token that lives in the hardware-backed Keystore and goes
@@ -253,10 +253,10 @@ the raw tables.
 
 | Report | What it asks |
 |---|---|
-| [Does the exported window matter?](docs/research/executorch-window-matrix.md) · [page](https://experimentalmachines.github.io/openweights/window.html) · [tables](docs/research/window-matrix.md) | The same weights exported at 2k to 32k on four chips: does the window change answers, speed or memory? |
-| [What the reruns changed](https://experimentalmachines.github.io/openweights/reruns.html) | A second pass over that matrix: the 2.6B under two reply caps, same-file repeats, and why a 32k full-attention export dies on 12 GB phones |
+| [Does the exported window matter?](docs/research/executorch-window-matrix.md) · [page](https://experimentalmachines.org/openweights/window/) · [tables](docs/research/window-matrix.md) | The same weights exported at 2k to 32k on four chips: does the window change answers, speed or memory? |
+| [What the reruns changed](https://experimentalmachines.org/openweights/reruns/) | A second pass over that matrix: the 2.6B under two reply caps, same-file repeats, and why a 32k full-attention export dies on 12 GB phones |
 | [Public benchmarks on six phones](docs/research/public-benchmarks.md) · [tables](docs/research/benchmark-matrix.md) | GSM8K, IFEval and BFCL on both runtimes, same prompts, same graders |
-| [Five chips, two runtimes](https://experimentalmachines.github.io/openweights/latency.html) | Time to first token and time per output token, five models, five chips |
+| [Five chips, two runtimes](https://experimentalmachines.org/openweights/latency/) | Time to first token and time per output token, five models, five chips |
 | [Parity on five SoCs](docs/research/parity-five-socs.md) · [tables](docs/research/backend-parity.md) | Do the two runtimes grade the same agentic prompts the same way across silicon? |
 | [The first turn](docs/research/first-turn-latency.md) | Where a 25-second cold first turn went, 18.5 s of it before the first token, and how warming removed most of it |
 

@@ -2,9 +2,9 @@
 
 Every measured report and decision record in this directory, with what it asks and what
 it found. Dates are the last substantive change. Three reports also have published pages:
-[latency](https://experimentalmachines.github.io/openweights/latency.html),
-[the exported-window study](https://experimentalmachines.github.io/openweights/window.html) and
-[its reruns](https://experimentalmachines.github.io/openweights/reruns.html).
+[latency](https://experimentalmachines.org/openweights/latency/),
+[the exported-window study](https://experimentalmachines.org/openweights/window/) and
+[its reruns](https://experimentalmachines.org/openweights/reruns/).
 
 ## Measured reports
 

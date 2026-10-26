@@ -1,19 +1,21 @@
 # The public site
 
-Five pages, live at **<https://experimentalmachines.github.io/openweights/>**:
+Two pages and three redirects, live at **<https://experimentalmachines.github.io/openweights/>**:
 
 | Page | URL | What it is for |
 |---|---|---|
 | Privacy policy | <https://experimentalmachines.github.io/openweights/privacy.html> | The URL the Play listing must link to |
 | Landing | <https://experimentalmachines.github.io/openweights/> | Somewhere for that link to sit, and the repository link |
-| Latency chart | <https://experimentalmachines.github.io/openweights/latency.html> | TTFT and TPOT for five models on five chips, llama.cpp against ExecuTorch |
-| Window study | <https://experimentalmachines.github.io/openweights/window.html> | Does the exported ExecuTorch context window matter: charts and every table |
-| Reruns | <https://experimentalmachines.github.io/openweights/reruns.html> | What the second pass over the window matrix changed: the 2.6B under two caps, window cuts, controls, the 6 GB kill rule |
+| Latency chart | <https://experimentalmachines.github.io/openweights/latency.html> | Redirects to <https://experimentalmachines.org/openweights/latency/> |
+| Window study | <https://experimentalmachines.github.io/openweights/window.html> | Redirects to <https://experimentalmachines.org/openweights/window/> |
+| Reruns | <https://experimentalmachines.github.io/openweights/reruns.html> | Redirects to <https://experimentalmachines.org/openweights/reruns/> |
 
-`latency.html`, `window.html` and `reruns.html` are hand-written and self-contained (data inline); the build
-copies them unchanged. `window.html`'s `DATA` constant is the JSON form of the tables in
-`docs/research/window-matrix.md`; when `window_report.py` is rerun, regenerate it. Its numbers come from `tools/eval/results/*.graded.json` via
-`tools/eval/bench/report.py`; when a benchmark is rerun, update the `DATA` table in the file.
+The three research pages moved to experimentalmachines.org in October 2026, rebuilt with their
+data in that site's repository (`lib/openweights-latency.ts`, `lib/openweights-window.ts` and
+`lib/openweights-reruns.ts`, copied value for value from the pages last published here, gh-pages
+`1f00e53`). When `window_report.py` or a benchmark is rerun, update those files. Their old addresses
+are still linked from code comments and from outside the repository, so `build.py` writes a
+redirect at each (`MOVED`): a meta refresh, and a script that keeps a `#section` the link carries.
 
 ## Why it is built rather than written
 

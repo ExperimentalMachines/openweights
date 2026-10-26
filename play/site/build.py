@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Build the public site: a landing page, the privacy policy Play links to, and the benchmark chart.
+"""Build the public site: a landing page, the privacy policy Play links to, and redirects
+from the research pages' old addresses to experimentalmachines.org.
 
 The policy is generated from `docs/privacy-policy.md` rather than written twice. Play
 requires the linked policy to match what the app actually does, and two copies of a
@@ -11,6 +12,7 @@ the only version there is and the page is a rendering of it.
 The output is plain files with no build step of their own, published from the `gh-pages`
 branch. See play/site/README.md.
 """
+import json
 import re
 import sys
 from pathlib import Path
@@ -20,6 +22,16 @@ import markdown
 ROOT = Path(__file__).resolve().parents[2]
 POLICY = ROOT / "docs" / "privacy-policy.md"
 REPO = "https://github.com/ExperimentalMachines/openweights"
+
+# The research pages moved to experimentalmachines.org in October 2026, rebuilt with their
+# data in that site's repository (lib/openweights-*.ts). Their old addresses here are still
+# linked from code comments and from outside the repository, so each stays as a redirect.
+SITE = "https://experimentalmachines.org/openweights"
+MOVED = {
+    "latency.html": ("Five chips, two runtimes", f"{SITE}/latency/"),
+    "window.html": ("Does the exported window matter?", f"{SITE}/window/"),
+    "reruns.html": ("What the reruns changed", f"{SITE}/reruns/"),
+}
 
 # The app's own palette, from docs/design/visual-language.md. A policy page that looks like
 # the product is a small thing, but the alternative is a Play listing whose one outbound
@@ -77,7 +89,7 @@ MARK = '<span class="mark"><i style="width:60px"></i><i style="width:42px"></i>'
        '<i style="width:25px"></i></span>'
 
 
-def page(title: str, description: str, body: str) -> str:
+def page(title: str, description: str, body: str, head: str = "") -> str:
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -87,7 +99,7 @@ def page(title: str, description: str, body: str) -> str:
 <meta name="description" content="{description}">
 <meta name="color-scheme" content="dark light">
 <style>{STYLE}</style>
-</head>
+{head}</head>
 <body>
 {body}
 </body>
@@ -139,9 +151,9 @@ download it, and chat with it. Every token is produced by your own hardware.</p>
 <h2>Links</h2>
 <ul>
 <li><a href="privacy.html">Privacy policy</a></li>
-<li><a href="latency.html">Benchmarks: five chips, two runtimes</a></li>
-<li><a href="window.html">Research: does the exported context window matter?</a></li>
-<li><a href="reruns.html">Research: what the reruns changed</a></li>
+<li><a href="{MOVED["latency.html"][1]}">Benchmarks: five chips, two runtimes</a></li>
+<li><a href="{MOVED["window.html"][1]}">Research: does the exported context window matter?</a></li>
+<li><a href="{MOVED["reruns.html"][1]}">Research: what the reruns changed</a></li>
 <li><a href="{REPO}">Source code</a></li>
 <li><a href="{REPO}/issues">Report a problem</a></li>
 </ul>
@@ -155,15 +167,28 @@ own.</footer>"""
     )
 
 
+def redirect_page(title: str, url: str) -> str:
+    # The refresh works without JavaScript; the script runs first and keeps the #section
+    # a link may carry, which the refresh drops. The canonical link tells search engines
+    # where the page went.
+    head = (
+        f'<link rel="canonical" href="{url}">\n'
+        f'<meta http-equiv="refresh" content="0; url={url}">\n'
+        f"<script>location.replace({json.dumps(url)} + location.hash)</script>\n"
+    )
+    body = f"""<header>{MARK}<h1>{title}</h1>
+<p class="updated">This page has moved.</p></header>
+<main><p>It is now at <a href="{url}">{url.removeprefix("https://")}</a>.</p></main>"""
+    return page(title, "This page has moved to experimentalmachines.org.", body, head)
+
+
 if __name__ == "__main__":
     out = Path(sys.argv[1] if len(sys.argv) > 1 else ROOT / "build" / "site")
     out.mkdir(parents=True, exist_ok=True)
     (out / "privacy.html").write_text(policy_page())
     (out / "index.html").write_text(landing_page())
-    # The chart and the window study are hand-written, self-contained HTML (data inline); they
-    # are copied, not generated, so that the file in the repository is exactly the file that is served.
-    for name in ("latency.html", "window.html", "reruns.html"):
-        (out / name).write_text((Path(__file__).parent / name).read_text())
+    for name, (title, url) in MOVED.items():
+        (out / name).write_text(redirect_page(title, url))
     # Without this GitHub runs Jekyll over the branch, which is a build nobody asked for.
     (out / ".nojekyll").write_text("")
     for name in ("index.html", "privacy.html", "latency.html", "window.html", "reruns.html"):
