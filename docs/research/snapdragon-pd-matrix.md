@@ -180,7 +180,8 @@ at power level 8 and the CPU clusters' ceilings at 1.90 and 2.23 GHz (from 3.63 
 121 s, and after 302 s at 64.5 °C (CPU) on the first 300 s attempt. It passed only for the first
 cell after an idle stretch (the first cell of r8 and of r9, both runs' Qwen3 first models) and once
 after 50 s (r8's second cell). On the third unit (r10) it passed for both cells that ran, after 5
-and 55 s, so how fast the phone recovers differs between units or racks. The table gives each cell's gate result; "timed out" covers a range
+and 55 s; the second followed an NPU-only cell that never capped the CPU, so whether units recover
+at different speeds was not tested. The table gives each cell's gate result; "timed out" covers a range
 of states (hottest zone 56 to 71 °C when the gate gave up; r9's Qwen3 0.6B CPU-only cell started
 with the GPU uncapped and the ceilings partly back, at 3.40 and 4.34 GHz), and a passed gate says nothing about
 the rest of the cell (r8's first cell was CPU-capped before 11 of its 33 turns).
@@ -200,8 +201,8 @@ the rest of the cell (r8's first cell was CPU-capped before 11 of its 33 turns).
 
 Seconds are summed over the turns every cell of that row completed: 33 turns from nine
 conversations, except Qwen3 4B, 20 turns from five conversations (7,027 decode steps). The
-percentage is against that row's CPU-only cell. LFM2.5 2.6B is summed over the 29 turns both its
-cells completed (eight conversations) and has no CPU-only cell. Over all 33 turns the 4B's
+percentage is against that row's CPU-only cell. LFM2.5 2.6B in r9 is summed over the 29 turns both
+its cells completed (eight conversations) and has no CPU-only cell; in r10 over 33 turns. Over all 33 turns the 4B's
 NPU-only cell took 1,064.7 s and NPU prefill with CPU decode 1,339.9 s.
 
 - **Decode dominates, so NPU prefill leaves little to gain on the prompt.** NPU prefill read the
@@ -244,11 +245,13 @@ NPU-only cell took 1,064.7 s and NPU prefill with CPU decode 1,339.9 s.
   stayed ahead of the NPU's 40.9, with its hottest CPU zone at 106.5 °C and no stall, and NPU
   prefill with CPU decode was faster on every turn. On LFM2.5 2.6B the two were level (CPU decode 21.3 tok/s against the NPU's 20.8, each faster on
   about half the turns).
-- **On the third unit the gate passed, and NPU-only did not move.** r10's two LFM2.5 2.6B cells
-  started after passed gates (5 and 55 s), and its NPU-only cell never saw the CPU or GPU capped.
-  On the 29 turns it shares with r9, where that cell ran throttled on another unit, it took 533.0
-  against 537.8 s, 0.9% apart. CPU-only beat it by 5.3% there (569.4 against 599.8 s; faster on 19
-  of 33 turns), so on LFM2.5 2.6B the CPU decoder was level with or ahead of the NPU in both units.
+- **On the third unit the gate passed, and NPU-only took nearly the same time.** r10's two LFM2.5
+  2.6B cells started after passed gates (5 and 55 s), and its NPU-only cell never saw the CPU or
+  GPU capped. On the 29 turns it shares with r9, where that cell ran after a timed-out gate on
+  another unit, it took 533.0 against 537.8 s, 0.9% less: one comparison, with unit, order and
+  thermal history all different. NPU-only took 5.3% longer than CPU-only there (599.8 against
+  569.4 s; CPU-only faster on 19 of 33 turns, and capped on 30 of them by the turn's end), so on
+  LFM2.5 2.6B the CPU decoder was level with or ahead of the NPU on both units.
 - **The 64-token winner won when its gate passed.** In r8 NPU prefill with CPU decode ran first,
   after a passed gate, and took 75% of CPU-only time, with NPU-only 13.5% longer. The same cell
   run last after a timed-out gate on the other unit took 87%. NPU-only took 292.7 and 292.8 s on
@@ -264,14 +267,14 @@ NPU-only cell took 1,064.7 s and NPU prefill with CPU decode 1,339.9 s.
   NPU-only cell took 452.9 and 441.1 s. Heat, order and inherited state were not varied apart, so
   the cause is not isolated; the comparison least exposed to it is between the two NPU-prefill
   cells.
-- **NPU decode held its 64-token rate; CPU decode did not.** Re-weighting the 64-token turns (r4
+- **NPU decode held its 64-token rate; CPU decode mostly did not.** Re-weighting the 64-token turns (r4
   for Qwen3 0.6B and 1.7B, Llama 3.2 1B and LFM2.5 1.2B; r6 for Qwen3 4B and Llama 3.2 3B; r7 for
   LFM2.5 2.6B) to these lengths at their own measured rates
-  predicted NPU-only within 5% on every model but Llama 3.2 3B (measured 1.00 to 1.05 times the
-  projection; 1.10 on the 3B). Cells decoding on the CPU measured 1.03 to 1.61 times their
-  projection: 1.16 or more in every cell but the two CPU-only cells that started after a passed
-  gate (1.04 on r9's Qwen3 1.7B, 1.03 on r10's LFM2.5 2.6B), and 1.51 and 1.61 for the 3B's two,
-  with their stalls. The projection put NPU prefill with CPU decode at 72% of CPU-only on Qwen3 0.6B; r8
+  predicted NPU-only within about 5% on every model but Llama 3.2 3B (measured 1.00 to 1.05 times
+  the projection; 1.10 on the 3B). Cells decoding on the CPU measured 1.03 to 1.61 times their
+  projection: 1.16 or more in every cell but two, the CPU-only cells of r9's Qwen3 1.7B (1.04)
+  and r10's LFM2.5 2.6B (1.03), both started after passed gates (r8's CPU-only cell, also after a
+  passed gate, measured 1.21), and 1.51 and 1.61 for the 3B's two, with their stalls. The projection put NPU prefill with CPU decode at 72% of CPU-only on Qwen3 0.6B; r8
   measured 75%, r9 87%.
 - **Decode slows along a long reply, more on the CPU.** Over the same 12 long turns (512 or more
   steps), CPU decode on Qwen3 0.6B fell 12% to 17% from the first 63 steps to steps 256 to 511 and
@@ -521,9 +524,10 @@ another seed.
   11:12) cut 29 turns into its NPU-only cell, before its CPU-only cell. Gemma 3 1B and Qwen3 1.7B
   Q8_0 were queued after it and did not run. 623 turns in r9 and 99 in r9r, none failed.
 - **r10.** The same tool in a fifth reservation that evening, unit c581fd31: LFM2.5 2.6B's three
-  cells, a repeat of its first under r10x, then Gemma 3 1B and Qwen3 1.7B Q8_0. The reservation
-  ended after about 25 minutes, with NPU-only and CPU-only complete (66 turns, none failed) and
-  NPU prefill with CPU decode under way; nothing after it ran.
+  cells, a repeat of its first under r10x, then Gemma 3 1B and Qwen3 1.7B Q8_0 were queued. The
+  phone stopped answering between 21:20 and 21:22, about 27 minutes after the tunnel opened, with
+  NPU-only and CPU-only complete (66 turns, none failed) and no turn of NPU prefill with CPU decode
+  copied; whether it had started is not known, and nothing after it ran.
 
 ## What was not measured
 
