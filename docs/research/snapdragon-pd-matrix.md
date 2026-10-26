@@ -1,12 +1,13 @@
 # Prefill and decode on CPU, GPU and NPU: every pairing on a Snapdragon 8 Elite Gen 5
 
 **Measured 2026-10-24 and 25 on a Qualcomm Device Cloud handset, `canoe`: SM8850 (Snapdragon 8
-Elite Gen 5), Android 16, 23 GB, `adb` as root, on AC power in Qualcomm's rack, over four
+Elite Gen 5), Android 16, 23 GB, `adb` as root, on AC power in Qualcomm's rack, over five
 reservations.** The first ran r1 to r4 and ended at about 16:55 phone time; the second (about
 20:30 to 04:20) ran the three models the first could not reach (r6), LFM2.5 2.6B (r7), the
 ExecuTorch NPU comparison (e1) and a second pass of five models in another cell order (r5). The
 third and fourth, on 2026-10-25 on two units (727ba80 and a1716cc4), decoded each turn's reply at
-the dataset's own length instead of 64 tokens (r8, r9, r9r;
+the dataset's own length instead of 64 tokens (r8, r9, r9r), and a fifth that evening, on a
+third unit (c581fd31), added part of what the fourth could not finish (r10;
 [below](#at-the-datasets-own-reply-lengths)).
 
 | Processor | What it is, as read from the phone |
@@ -166,18 +167,20 @@ chosen as candidates once decode dominates, from the 64-token ranking: NPU prefi
 NPU-only, GPU prefill with CPU decode and CPU-only; GPU decode and CPU or GPU prefill into NPU
 decode were not run at these lengths. pd_bench loads only the processors its cells use, so most
 of these runs held a CPU and an NPU instance and no GPU one. Two further reservations on
-2026-10-25 ran it on two units of the same phone (`canoe`, SM8850): r8 on unit 727ba80, r9 and r9r on unit a1716cc4 (`analyze_ref.py`, output
-in `analysis-r8.md`, `analysis-r9.md` and `analysis-r9r.md`). Qwen3 4B used two Hexagon sessions
+2026-10-25 ran it on two units of the same phone (`canoe`, SM8850): r8 on unit 727ba80, r9 and
+r9r on unit a1716cc4, and a fifth that evening r10 on unit c581fd31 (`analyze_ref.py`, output in
+`analysis-r8.md`, `analysis-r9.md`, `analysis-r9r.md` and `analysis-r10.md`). Qwen3 4B used two Hexagon sessions
 (HTP0 and HTP1), as did Llama 3.2 3B, as in r6; the other models one.
 
-**The cooling gate stopped passing.** Before each cell the gate waits for every CPU, GPU and NPU
+**The cooling gate stopped passing (on two of the three units).** Before each cell the gate waits for every CPU, GPU and NPU
 zone to read 55 °C or less, the GPU to be uncapped and no CPU ceiling lowered, and gives up after a
 set time (120 s; 300 s for r9's Qwen3 0.6B), after which the cell runs anyway. It waits; it does
 not cool. After one cell of reply-length turns it timed out almost every time, with the GPU capped
 at power level 8 and the CPU clusters' ceilings at 1.90 and 2.23 GHz (from 3.63 and 4.61): after
 121 s, and after 302 s at 64.5 °C (CPU) on the first 300 s attempt. It passed only for the first
 cell after an idle stretch (the first cell of r8 and of r9, both runs' Qwen3 first models) and once
-after 50 s (r8's second cell). The table gives each cell's gate result; "timed out" covers a range
+after 50 s (r8's second cell). On the third unit (r10) it passed for both cells that ran, after 5
+and 55 s, so how fast the phone recovers differs between units or racks. The table gives each cell's gate result; "timed out" covers a range
 of states (hottest zone 56 to 71 °C when the gate gave up; r9's Qwen3 0.6B CPU-only cell started
 with the GPU uncapped and the ceilings partly back, at 3.40 and 4.34 GHz), and a passed gate says nothing about
 the rest of the cell (r8's first cell was CPU-capped before 11 of its 33 turns).
@@ -193,6 +196,7 @@ the rest of the cell (r8's first cell was CPU-capped before 11 of its 33 turns).
 | LFM2.5 1.2B, r9, a1716cc4 | cpu:cpu, npu:npu, npu:cpu (all timed out) | 321.4 s, 102% | **271.1 s, 86%** | not run | 315.3 s |
 | Llama 3.2 1B, r9, a1716cc4 | npu:npu, cpu:cpu, npu:cpu (all timed out) | **330.7 s, 85%** | 342.0 s, 88% | not run | 390.8 s |
 | LFM2.5 2.6B, r9, a1716cc4 | npu:cpu, npu:npu (both timed out; the reservation ended 29 turns into npu:npu) | 537.8 s | **526.6 s** | not run | not run |
+| LFM2.5 2.6B, r10, c581fd31 | npu:npu, cpu:cpu (both passed; the reservation ended before npu:cpu finished) | 599.8 s, 105% | not finished | not run | **569.4 s** |
 
 Seconds are summed over the turns every cell of that row completed: 33 turns from nine
 conversations, except Qwen3 4B, 20 turns from five conversations (7,027 decode steps). The
@@ -240,6 +244,11 @@ NPU-only cell took 1,064.7 s and NPU prefill with CPU decode 1,339.9 s.
   stayed ahead of the NPU's 40.9, with its hottest CPU zone at 106.5 °C and no stall, and NPU
   prefill with CPU decode was faster on every turn. On LFM2.5 2.6B the two were level (CPU decode 21.3 tok/s against the NPU's 20.8, each faster on
   about half the turns).
+- **On the third unit the gate passed, and NPU-only did not move.** r10's two LFM2.5 2.6B cells
+  started after passed gates (5 and 55 s), and its NPU-only cell never saw the CPU or GPU capped.
+  On the 29 turns it shares with r9, where that cell ran throttled on another unit, it took 533.0
+  against 537.8 s, 0.9% apart. CPU-only beat it by 5.3% there (569.4 against 599.8 s; faster on 19
+  of 33 turns), so on LFM2.5 2.6B the CPU decoder was level with or ahead of the NPU in both units.
 - **The 64-token winner won when its gate passed.** In r8 NPU prefill with CPU decode ran first,
   after a passed gate, and took 75% of CPU-only time, with NPU-only 13.5% longer. The same cell
   run last after a timed-out gate on the other unit took 87%. NPU-only took 292.7 and 292.8 s on
@@ -258,10 +267,11 @@ NPU-only cell took 1,064.7 s and NPU prefill with CPU decode 1,339.9 s.
 - **NPU decode held its 64-token rate; CPU decode did not.** Re-weighting the 64-token turns (r4
   for Qwen3 0.6B and 1.7B, Llama 3.2 1B and LFM2.5 1.2B; r6 for Qwen3 4B and Llama 3.2 3B; r7 for
   LFM2.5 2.6B) to these lengths at their own measured rates
-  predicted NPU-only within 1% to 5% on every model but Llama 3.2 3B (measured 1.01 to 1.05
-  times the projection; 1.10 on the 3B). Cells decoding on the CPU measured 1.04 to 1.61 times
-  their projection (1.16 or more in every cell but one; the 3B's two, with their stalls, 1.51 and
-  1.61). The projection put NPU prefill with CPU decode at 72% of CPU-only on Qwen3 0.6B; r8
+  predicted NPU-only within 5% on every model but Llama 3.2 3B (measured 1.00 to 1.05 times the
+  projection; 1.10 on the 3B). Cells decoding on the CPU measured 1.03 to 1.61 times their
+  projection: 1.16 or more in every cell but the two CPU-only cells that started after a passed
+  gate (1.04 on r9's Qwen3 1.7B, 1.03 on r10's LFM2.5 2.6B), and 1.51 and 1.61 for the 3B's two,
+  with their stalls. The projection put NPU prefill with CPU decode at 72% of CPU-only on Qwen3 0.6B; r8
   measured 75%, r9 87%.
 - **Decode slows along a long reply, more on the CPU.** Over the same 12 long turns (512 or more
   steps), CPU decode on Qwen3 0.6B fell 12% to 17% from the first 63 steps to steps 256 to 511 and
@@ -510,6 +520,10 @@ another seed.
   Llama 3.2 3B, LFM2.5 1.2B, Llama 3.2 1B and LFM2.5 2.6B, which the reservation's end (about
   11:12) cut 29 turns into its NPU-only cell, before its CPU-only cell. Gemma 3 1B and Qwen3 1.7B
   Q8_0 were queued after it and did not run. 623 turns in r9 and 99 in r9r, none failed.
+- **r10.** The same tool in a fifth reservation that evening, unit c581fd31: LFM2.5 2.6B's three
+  cells, a repeat of its first under r10x, then Gemma 3 1B and Qwen3 1.7B Q8_0. The reservation
+  ended after about 25 minutes, with NPU-only and CPU-only complete (66 turns, none failed) and
+  NPU prefill with CPU decode under way; nothing after it ran.
 
 ## What was not measured
 
@@ -522,11 +536,12 @@ another seed.
 - **Answer quality.** Outputs were compared token for token with the CPU, not graded.
 - **A second pass of Gemma 3 1B, Qwen3 1.7B Q8_0, LFM2.5 2.6B and Llama 3.2 3B at 64 tokens.**
   Each of their 64-token cells is one run.
-- **At reply length:** Gemma 3 1B and Qwen3 1.7B Q8_0 at all; LFM2.5 2.6B's CPU-only cell; GPU
+- **At reply length:** Gemma 3 1B and Qwen3 1.7B Q8_0 at all; LFM2.5 2.6B's three cells on one
+  unit (NPU prefill with CPU decode ran on a1716cc4, CPU-only on c581fd31); GPU
   prefill on any model but Qwen3 0.6B and 1.7B; GPU decode and CPU or GPU prefill into NPU decode
-  on any model; a second order on one unit for any model but Qwen3 1.7B; and, apart from three
-  cells (two the first of a run, one after a 50 s wait), any cell started with the CPU
-  unthrottled, since the gate could not wait the phone back to 55 °C.
+  on any model; a second order on one unit for any model but Qwen3 1.7B; and, apart from five
+  cells (the first of r8 and r9, r8's second, and r10's two), any cell started with the CPU
+  unthrottled, since on the first two units the gate could not wait the phone back to 55 °C.
 
 ## How far the labels can be trusted
 
