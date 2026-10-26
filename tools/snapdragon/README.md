@@ -38,6 +38,22 @@ python3 compare_runs.py results-r4.jsonl results-r5.jsonl   # a second pass agai
 
 `pull_conversations.py` rebuilds `conversations.jsonl` from the Hugging Face datasets server.
 
+At the dataset's own reply lengths, `--gen-ref` makes each turn decode as many tokens as its
+reply (capped by `--gen`) and logs every decode step's time; `run_matrix.sh` insists on all nine
+cells, so call the binary directly for a subset:
+
+```sh
+GGML_HEXAGON_NDEV=1 ./pkg/bin/pd_bench -m gguf/Qwen3-0.6B-Q4_0.gguf -c conversations.jsonl \
+  -o results-r9.jsonl --label r9 --cells gpu:cpu,npu:npu,cpu:cpu,npu:cpu --npu-devices HTP0 \
+  --gen 2048 --gen-ref --ctx 8192 --threads 6 --max-turns 6 --cool 55 --cool-max 120
+python3 analyze_ref.py results-r9.jsonl --first results-r4.jsonl=Qwen3-0.6B-Q4_0   # with the 64-token projection
+```
+
+`analyze_ref.py` reports each cell's gate, the common and pairwise cohorts, CPU and GPU caps,
+decode steps over 500 ms (stalls), the rate by step range over the same turns, and the
+constant-rate projection from a 64-token run. `--first` takes a file, optionally limited to some
+models with `=name,name`, and refuses a turn that two baseline files both hold.
+
 ## Traps found on the QDC phone
 
 - **It throttles within a minute.** Thermal status 3 and the GPU capped at power level 8 of 17
@@ -51,6 +67,14 @@ python3 compare_runs.py results-r4.jsonl results-r5.jsonl   # a second pass agai
   `-o ControlMaster=no -o ControlPath=none` in a reconnect loop; it dropped three times in a
   night and the phone's `nohup` run carried on each time.
 - **The `cpu-hw-trip-*` zones read a fixed 105 °C.** A gate that matches `cpu*` never opens.
+- **After one cell of reply-length turns the gate almost never passes.** The phone stayed above 55 °C with
+  the GPU capped and the CPU ceilings at 1.90 and 2.23 GHz after 120 s and after 300 s, so only a
+  run's first cell (and once a cell after a 50 s wait) started unthrottled; one order per model then confounds processor with heat.
+- **On the 3B and 4B, CPU decode stalls near 107 °C**: single steps of up to 15.9 s. Count them
+  (`analyze_ref.py` does) before reading a CPU-decode total.
+- **Changing a queue that is running**: never edit the running `sh` script, which reads itself as
+  it goes. Write a new script that waits for the running benchmark's PID, then `kill -9` the old
+  script's shell only (a plain `kill` is held while it waits on its child) and check with `ps`.
 - **The reservation ends without warning**: adb reports "Connection reset by peer", then the
   reservation's key is refused. Copy results off often.
 

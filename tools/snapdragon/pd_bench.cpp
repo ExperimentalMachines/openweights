@@ -11,10 +11,12 @@
 // all nine pairings read exactly the same tokens and decode the same number, and the only
 // difference between cells is where each half ran. Decode always writes --gen tokens, past an
 // end of turn if the model emits one, so the work is equal; the tokens are kept so the cells
-// can be compared against the CPU-only cell.
+// can be compared against the CPU-only cell. With --gen-ref each turn instead writes as many
+// tokens as the dataset's own reply to that turn has (plus one for the end of turn), capped at
+// --gen, so decode carries the weight it has in the conversation; each step's time is kept.
 //
 //   pd_bench -m model.gguf -c conversations.jsonl -o rows.jsonl --cells cpu:cpu,gpu:cpu,...
-//            [--gen 128] [--ctx 8192] [--threads 6] [--max-turns 8] [--npu-devices HTP0]
+//            [--gen 128] [--gen-ref] [--ctx 8192] [--threads 6] [--max-turns 8] [--npu-devices HTP0]
 #include "llama.h"
 #include "ggml-backend.h"
 
@@ -290,6 +292,7 @@ static llama_token argmax(llama_context * ctx, int n_vocab) {
 int main(int argc, char ** argv) {
     std::string model_path, conv_path, out_path, cells_arg = "cpu:cpu", npu_devs = "HTP0", label;
     double cool_limit = 0; int cool_max_s = 900;
+    bool gen_ref = false;
     int gen = 128, n_ctx = 8192, threads = 6, max_turns = 8, max_convs = 1000;
     for (int i = 1; i < argc; i++) {
         std::string a = argv[i];
@@ -299,7 +302,7 @@ int main(int argc, char ** argv) {
         else if (a == "--gen") gen = std::stoi(next()); else if (a == "--ctx") n_ctx = std::stoi(next());
         else if (a == "--threads") threads = std::stoi(next()); else if (a == "--max-turns") max_turns = std::stoi(next());
         else if (a == "--max-convs") max_convs = std::stoi(next()); else if (a == "--npu-devices") npu_devs = next();
-        else if (a == "--label") label = next();
+        else if (a == "--label") label = next(); else if (a == "--gen-ref") gen_ref = true;
         else if (a == "--cool") cool_limit = std::stod(next());
         else if (a == "--cool-max") cool_max_s = std::stoi(next());
     }
@@ -373,7 +376,14 @@ int main(int argc, char ** argv) {
                 }
                 std::vector<llama_token> toks(all.begin() + evaluated.size(), all.end());
                 const int pos = (int) evaluated.size();
-                if (pos + (int) toks.size() + gen + 8 > n_ctx) break;
+                int ref_tokens = -1, turn_gen = gen;
+                if (gen_ref) {
+                    // The reply as plain text, without template markup; +1 stands for its end of turn.
+                    if (mi + 1 < conv.msgs.size() && conv.msgs[mi + 1].role == "assistant")
+                        ref_tokens = (int) tokenize(vocab, conv.msgs[mi + 1].content, false).size() + 1;
+                    turn_gen = ref_tokens < 0 ? std::min(gen, 64) : std::max(2, std::min(gen, ref_tokens));
+                }
+                if (pos + (int) toks.size() + turn_gen + 8 > n_ctx) break;
                 std::string err;
 
                 // On the same processor a hybrid cannot drop the decoded tokens afterwards, so its
@@ -417,17 +427,20 @@ int main(int argc, char ** argv) {
                 }
 
                 std::vector<llama_token> out_toks;
+                std::vector<double> step_ms;
                 double decode_ms = 0; int steps = 0;
                 if (ok) {
                     out_toks.push_back(first);
                     llama_batch b = llama_batch_init(1, 0, 1);
                     auto td = clk::now();
                     int p2 = pos + (int) toks.size();
-                    for (int g = 1; g < gen; g++) {
+                    for (int g = 1; g < turn_gen; g++) {
+                        auto tstep = clk::now();
                         b.n_tokens = 1; b.token[0] = out_toks.back(); b.pos[0] = p2++;
                         b.n_seq_id[0] = 1; b.seq_id[0][0] = 0; b.logits[0] = 1;
                         if (llama_decode(dctx, b) != 0) { ok = false; err = "decode failed"; break; }
                         out_toks.push_back(argmax(dctx, n_vocab));
+                        if (gen_ref) step_ms.push_back(ms_since(tstep));
                         steps++;
                     }
                     decode_ms = ms_since(td);
@@ -449,6 +462,10 @@ int main(int argc, char ** argv) {
                     if (ok && llama_memory_seq_pos_max(mem, 0) != pos + (int) toks.size() - 1) { ok = false; err = "restore position wrong"; }
                 }
 
+                std::string step_list;
+                for (size_t k = 0; k < step_ms.size(); k++) {
+                    char buf[32]; snprintf(buf, sizeof buf, "%s%.2f", k ? "," : "", step_ms[k]); step_list += buf;
+                }
                 std::string tok_list;
                 for (size_t k = 0; k < out_toks.size(); k++) tok_list += (k ? "," : "") + std::to_string(out_toks[k]);
                 int eog_at = -1;
@@ -461,10 +478,10 @@ int main(int argc, char ** argv) {
                 fprintf(out,
                         "{\"kind\":\"turn\",\"label\":\"%s\",\"model\":\"%s\",\"prefill\":\"%s\",\"decode\":\"%s\",\"conv\":\"%s\",\"source\":\"%s\","
                         "\"turn\":%d,\"pos\":%d,\"new_tokens\":%zu,\"prompt_ms\":%.2f,\"prefill_ms\":%.2f,\"xfer_get_ms\":%.2f,\"xfer_set_ms\":%.2f,\"xfer_bytes\":%zu,"
-                        "\"output_tokens\":%zu,\"decode_steps\":%d,\"decode_ms\":%.2f,\"turn_ms\":%.2f,\"wall_ms\":%ld,\"before_cpu_c\":%.1f,\"before_gpu_c\":%.1f,\"before_npu_c\":%.1f,\"before_gpu_cap\":%ld,\"before_cpu_capped\":%d,\"cpu_capped\":%d,\"before_cpu_max_mhz\":\"%s\",\"cpu_max_mhz\":\"%s\",\"cpu_c\":%.1f,\"gpu_c\":%.1f,\"npu_c\":%.1f,\"gpu_cap\":%ld,\"gpu_mhz\":%ld,\"eog_at\":%d,\"error\":\"%s\",\"tokens\":[%s],\"text\":\"%s\"}\n",
+                        "\"output_tokens\":%zu,\"decode_steps\":%d,\"decode_ms\":%.2f,\"turn_ms\":%.2f,\"wall_ms\":%ld,\"before_cpu_c\":%.1f,\"before_gpu_c\":%.1f,\"before_npu_c\":%.1f,\"before_gpu_cap\":%ld,\"before_cpu_capped\":%d,\"cpu_capped\":%d,\"before_cpu_max_mhz\":\"%s\",\"cpu_max_mhz\":\"%s\",\"cpu_c\":%.1f,\"gpu_c\":%.1f,\"npu_c\":%.1f,\"gpu_cap\":%ld,\"gpu_mhz\":%ld,\"eog_at\":%d,\"error\":\"%s\",\"turn_gen\":%d,\"ref_tokens\":%d,\"step_ms\":[%s],\"tokens\":[%s],\"text\":\"%s\"}\n",
                         esc(label).c_str(), esc(model_path).c_str(), pn.c_str(), dn.c_str(), esc(conv.id).c_str(), esc(conv.source).c_str(),
                         turn, pos, toks.size(), prompt_ms, prefill_ms, get_ms, set_ms, xfer_bytes, out_toks.size(), steps, decode_ms, turn_ms, wall_ms, hb.cpu, hb.gpu, hb.npu, hb.gpu_cap, (int) hb.cpu_capped, (int) ht.cpu_capped, hb.cpu_max_mhz.c_str(), ht.cpu_max_mhz.c_str(), ht.cpu, ht.gpu, ht.npu, ht.gpu_cap, ht.gpu_mhz, eog_at,
-                        esc(err).c_str(), tok_list.c_str(), esc(text).c_str());
+                        esc(err).c_str(), turn_gen, ref_tokens, step_list.c_str(), tok_list.c_str(), esc(text).c_str());
                 fflush(out);
                 fprintf(stderr, "%s:%s %s t%d pos %d new %zu prompt %.0f ms xfer %.1f+%.1f ms decode %d steps in %.0f ms %s\n",
                         pn.c_str(), dn.c_str(), conv.id.c_str(), turn, pos, toks.size(), prompt_ms, get_ms, set_ms, steps, decode_ms, err.c_str());
