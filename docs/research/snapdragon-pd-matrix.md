@@ -153,7 +153,8 @@ r6, where all nine of its cells ran; the others with r4.
 
 Every turn above decodes 64 tokens. The dataset's own replies to those turns are about six times
 longer: 401 tokens median and 378 mean by the Qwen3 tokenizer, up to 1,046 (as plain text; the
-decode budget adds one for the end of turn). Summed over a cell's turns, decode was 39% to 49% of
+decode budget adds one for the end of turn; other tokenizers count differently, up to 1,141 on
+Gemma 3 1B). Summed over a cell's turns, decode was 39% to 49% of
 a CPU-only cell's time at 64 tokens and is 84% to 99% of every cell's time at reply length
 (individual short turns are lower, down to 27.5%). So the 64-token totals weight
 prefill several times more than these conversations do, and the "NPU prefill with CPU decode"
@@ -179,7 +180,7 @@ not cool. After one cell of reply-length turns it timed out almost every time, w
 at power level 8 and the CPU clusters' ceilings at 1.90 and 2.23 GHz (from 3.63 and 4.61): after
 121 s, and after 302 s at 64.5 °C (CPU) on the first 300 s attempt. It passed only for the first
 cell after an idle stretch (the first cell of r8 and of r9, both runs' Qwen3 first models) and once
-after 50 s (r8's second cell). On the third unit it passed for both of r10's cells (5 and 55 s;
+after 50 s (r8's second cell), on the first two units. On the third unit it passed for both of r10's cells (5 and 55 s;
 the second followed an NPU-only cell that never capped the CPU) and for r11's first two, Gemma 3
 1B's (0 and 45 s), then timed out on every later cell as on the other units. The table gives each cell's gate result; "timed out" covers a range
 of states (hottest zone 56 to 72 °C when the gate gave up; r11's Gemma 3 1B NPU-only cell timed
@@ -210,17 +211,18 @@ its cells completed (eight conversations) and has no CPU-only cell; in r10 over 
 NPU-only cell took 1,064.7 s and NPU prefill with CPU decode 1,339.9 s.
 
 - **Decode dominates, so NPU prefill leaves little to gain on the prompt.** NPU prefill read the
-  prompt 10.3 to 15.4 times faster than the CPU and was 1% to 2% of an NPU-prefill cell's time;
-  CPU prefill was still 15% to 16% of a CPU-only cell's. Single short turns are the exception:
-  decode was 27.5% to 99.8% of individual turns.
+  prompt 9.1 to 15.4 times faster than the CPU and was 1% to 2% of an NPU-prefill cell's time;
+  CPU prefill was still 12% to 16% of a CPU-only cell's. Single short turns are the exception:
+  decode was 27.5% to 99.9% of individual turns.
 - **CPU decode stalled on the four models with the largest weights.** In every cell that decoded
   on the CPU for Qwen3 4B, Llama 3.2 3B, Qwen3 1.7B Q8_0 and LFM2.5 2.6B (r11), single decode steps
-  took 0.5 to 15.9 s (8 to 37 such steps a cell, in one to six turns, 54 to 291 s in all), with the
-  hottest CPU zone near 107 °C at turn ends. No NPU-only cell had one, and none of the five smaller
-  models' cells did; NPU-only cells' hottest CPU zone peaked at 98.8 °C. LFM2.5 2.6B's CPU cells
-  had none in r9 or r10, so the stalls are not a fixed property of a model either. The temperatures
-  are read at the turn's start and end, so they coincide with the stalls but do not show their
-  cause. A stalled step is not the decoder's speed, but it is part of what a user of this phone
+  took 0.5 to 15.9 s (8 to 37 such steps a cell, in one to six turns, 54 to 291 s in all). Each of
+  those cells reached about 107 °C at some turn's end; the 21 turns that held a stall ended at 94.6
+  to 106.6 °C. No NPU-only cell had one, and none of the five smaller models' cells did; NPU-only
+  cells' hottest CPU zone peaked at 98.8 °C. LFM2.5 2.6B's CPU cells had none in r9 or r10, so the
+  stalls are not a fixed property of a model either, and the split by weight size describes these
+  runs, not a cause. Temperatures are read only at each turn's start and end, so nothing here shows
+  what made a step stall. A stalled step is not the decoder's speed, but it is part of what a user of this phone
   would wait for, so the totals keep it and the comparison below is given both ways; "without"
   deletes the stalled steps' time, which measures their share, not what the cell would have taken
   without whatever caused them.
@@ -255,20 +257,23 @@ NPU-only cell took 1,064.7 s and NPU prefill with CPU decode 1,339.9 s.
   decode 21.3 tok/s against the NPU's 20.8, each faster on about half the turns), and in r11
   NPU-only led only through the CPU's stalls, with NPU prefill with CPU decode faster on 26 of 33
   turns.
-- **Gemma 3 1B sides with the hybrids.** Its NPU-prefill cells did not start in the same state
-  (NPU prefill with CPU decode after a passed gate and first; NPU-only last, after a gate that
-  timed out on temperature with nothing capped), so the 23% between them is not comparable with
-  the table. The comparison that does not depend on it: its CPU-only cell, which ran second and
-  was CPU-capped by the end of 27 of 33 turns, decoded at 53.3 tok/s against the NPU's 46.6, and
-  took 290.0 s against NPU-only's 288.3. Gemma keeps the largest share of its weights on the CPU
+- **Gemma 3 1B sides with the hybrids, on one schedule.** Its cells did not start in the same
+  state: NPU prefill with CPU decode first and CPU-only second, both after passed gates, and
+  NPU-only last, after a gate that timed out on temperature with nothing capped. So the 23% between
+  its NPU-prefill cells is not comparable with the table, and no comparison between its cells is
+  free of order and heat. The closest: on the 27 turns where both the CPU-only and the NPU-only
+  cell were CPU-capped at both ends, CPU decode ran at 51.5 tok/s against the NPU's 46.5 (pooled
+  over all 33, 53.3 against 46.6; the CPU-only cell was capped by the end of 28 turns), and
+  CPU-only took 290.0 s against NPU-only's 288.3. Gemma keeps the largest share of its weights on the CPU
   in an NPU cell (45%, its tied output layer; see [where the work ran](#where-the-work-ran)).
 - **On the third unit the gate passed, and NPU-only took nearly the same time.** r10's two LFM2.5
   2.6B cells started after passed gates (5 and 55 s), and its NPU-only cell never saw the CPU or
   GPU capped. On the 29 turns it shares with r9, where that cell ran after a timed-out gate on
   another unit, it took 533.0 against 537.8 s, 0.9% less: one comparison, with unit, order and
   thermal history all different. NPU-only took 5.3% longer than CPU-only there (599.8 against
-  569.4 s; CPU-only faster on 19 of 33 turns, and capped on 30 of them by the turn's end), so on
-  LFM2.5 2.6B the CPU decoder was level with or ahead of the NPU on both units.
+  569.4 s; CPU-only faster on 19 of 33 turns, and capped on 30 of them by the turn's end). On
+  LFM2.5 2.6B the CPU decoder was level with the NPU in r9 (21.3 against 20.8 tok/s), ahead in r10
+  (25.8 against 20.9) and behind in r11 (18.5 and 20.5 against 21.0), where its stalls fell.
 - **The 64-token winner won when its gate passed.** In r8 NPU prefill with CPU decode ran first,
   after a passed gate, and took 75% of CPU-only time, with NPU-only 13.5% longer. The same cell
   run last after a timed-out gate on the other unit took 87%. NPU-only took 292.7 and 292.8 s on
@@ -288,8 +293,9 @@ NPU-only cell took 1,064.7 s and NPU prefill with CPU decode 1,339.9 s.
   for Qwen3 0.6B and 1.7B, Llama 3.2 1B, LFM2.5 1.2B and Gemma 3 1B; r6 for Qwen3 4B, Llama 3.2
   3B and Qwen3 1.7B Q8_0; r7 for LFM2.5 2.6B) to these lengths at their own measured rates
   predicted NPU-only within about 5% on every model but two (measured 1.00 to 1.05 times the
-  projection): Llama 3.2 3B took 1.10 times, and Qwen3 1.7B Q8_0 0.87 times, faster than its
-  64-token rate, whose NPU-only decode is the one noted above as slower for no recorded reason.
+  projection): Llama 3.2 3B took 1.10 times its projected time, and Qwen3 1.7B Q8_0 0.87 times,
+  13% less, its 64-token NPU-only decode being the one noted above as slower for no recorded
+  reason.
   Cells decoding on the CPU measured 1.03 to 1.61 times their projection: the six that started
   after a passed gate 1.03 to 1.26, the rest 1.16 to 1.61, the highest the cells with stalls. The
   projection put NPU prefill with CPU decode at 72% of CPU-only on Qwen3 0.6B; r8 measured 75%,
@@ -411,14 +417,17 @@ and the answer depended on the model and on the phone's throttled state. With th
 (both NPU-prefill cells' gates timed out),
 NPU prefill with CPU decode took 10% to 20% longer than NPU-only on Qwen3 1.7B, its Q8_0 and
 Llama 3.2 3B without counting the CPU's stalls, and NPU-only led on Qwen3 4B over its 33 turns only through
-the stalls (on its 20-turn cohort it still led by 18% without them); on the
-two smallest, Qwen3 0.6B and Llama 3.2 1B, they tied. On the hybrid LFM2.5 1.2B the throttled
-CPU stayed ahead of the NPU and NPU-only took 19% longer; on LFM2.5 2.6B the two were level
-apart from the stalls; and on Gemma 3 1B the CPU decoded faster than the NPU even throttled. When
-the CPU started unthrottled (r8's first cell), NPU prefill with CPU decode was fastest on Qwen3
-0.6B, as at 64 tokens. So a fixed choice is wrong somewhere: what these runs suggest, and do not
-test, is a decoder chosen per model family and moved to the NPU when the CPU's frequency
-ceiling drops. This is a measurement of what each arrangement would buy on this chip, not a
+the stalls (on its 20-turn cohort it still led by 18% without them); on the two smallest, Qwen3
+0.6B and Llama 3.2 1B, they tied. On the hybrid LFM2.5 1.2B the throttled CPU stayed ahead of the
+NPU and NPU-only took 19% longer. On LFM2.5 2.6B NPU prefill with CPU decode was 2.1% faster in
+r9; in r11 NPU-only was 12.7% faster with the CPU's stalls and 6.9% slower without them, and
+lost 26 of 33 turns. On Gemma 3 1B the CPU decoded faster than the NPU even capped, on one
+schedule. Where NPU prefill with CPU decode started after a passed gate (Qwen3 0.6B in r8, Gemma
+3 1B in r11) it was fastest, at 75% and 76% of CPU-only time, as at 64 tokens. So a fixed choice is
+wrong somewhere. One hypothesis these runs raise, and do not test: choose the decoder per model
+family and move it to the NPU when the CPU's frequency ceiling drops; against it, the capped CPU
+still led on Gemma 3 1B and LFM2.5 1.2B, and matched gate results are not matched thermal
+histories. This is a measurement of what each arrangement would buy on this chip, not a
 decision. Before an app could ship any of it, these are still unmeasured:
 
 - **An unprivileged app.** Every run here was a root shell. Loading the Hexagon backend and
@@ -564,9 +573,11 @@ another seed.
 - **A second pass of Gemma 3 1B, Qwen3 1.7B Q8_0, LFM2.5 2.6B and Llama 3.2 3B at 64 tokens.**
   Each of their 64-token cells is one run.
 - **At reply length:** GPU prefill on any model but Qwen3 0.6B and 1.7B; GPU decode and CPU or GPU prefill into NPU decode
-  on any model; a second order on one unit for any model but Qwen3 1.7B; and, apart from seven
-  cells (the first of r8 and r9, r8's second, r10's two and r11's first two), any cell started
-  with the CPU unthrottled, since after one long cell the gate could not wait the phone back to
+  on any model; a second order on one unit for any model but Qwen3 1.7B (LFM2.5 2.6B has two
+  partial ones on the third unit, r10 and r11); and, apart from eight cells that started with full
+  CPU ceilings (seven after passed gates: the first of r8 and r9, r8's second, r10's two and r11's
+  first two; and r11's Gemma 3 1B NPU-only cell, which timed out on temperature alone), any cell
+  started with the CPU unthrottled, since after a long cell the gate rarely got the phone back to
   55 °C.
 
 ## How far the labels can be trusted
@@ -598,7 +609,7 @@ as described under r9, and `analyze_ref.py` now reports each gate, pairwise coho
 caps before and after each turn, cut replies, and step ranges over the same turns. The third
 recomputed every number in the reply-length section from the raw rows (all table totals and
 percentages correct) and narrowed its wording: gate results instead of "cool" and "hot", the prefill ratio
-(10.3 to 15.4 times), the same-decoder spread (13% to 15%), the 4B's two cohorts, and the
+(10.3 to 15.4 times at the time), the same-decoder spread (13% to 15% at the time), the 4B's two cohorts, and the
 statements about heat and model size, which it showed the schedules cannot isolate. A fourth, over
 the whole change, found the longest stall was 15.9 s, not the 8.7 s first written; that Llama 3.2
 3B also used two Hexagon sessions; that "kept its rate" was wrong for the hybrid's CPU, which
@@ -607,4 +618,10 @@ the readings near 107 °C; and that the 4B's "only through the stalls" holds on 
 its 20-turn cohort. It also found that `analyze_ref.py` checked equal work only on the common
 cohort, dropped cells whose every turn failed, counted stalls only on the common cohort, and would
 accept a reply-length run as the 64-token baseline; all four are fixed, with the stall counts now
-per pair.
+per pair. A fifth, on r10, and a sixth, on r11, found the numbers right and the wording
+ahead of them: one cross-unit comparison is not a rule about heat; NPU-only took 5.3% longer than
+CPU-only, not CPU-only "5.3% faster"; the r11 stalls' own turns ended at 94.6 to 106.6 °C, below
+the 107 °C first attached to them; Gemma 3 1B's CPU-only cell also started after a passed gate, so
+none of its comparisons is free of order; eight cells, not seven, started with full CPU ceilings;
+and LFM2.5 2.6B's r11 result (NPU prefill with CPU decode 6.9% faster without the stalls, and on
+26 of 33 turns) is not "level".
