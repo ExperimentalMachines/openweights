@@ -151,6 +151,7 @@ download it, and chat with it. Every token is produced by your own hardware.</p>
 <h2>Links</h2>
 <ul>
 <li><a href="privacy.html">Privacy policy</a></li>
+<li><a href="{SITE}/prefill-decode/">Research: prefill and decode on CPU, GPU and NPU</a></li>
 <li><a href="{MOVED["latency.html"][1]}">Benchmarks: five chips, two runtimes</a></li>
 <li><a href="{MOVED["window.html"][1]}">Research: does the exported context window matter?</a></li>
 <li><a href="{MOVED["reruns.html"][1]}">Research: what the reruns changed</a></li>

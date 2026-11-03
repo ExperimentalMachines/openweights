@@ -75,7 +75,8 @@ it was given.
 
 **Numbers you can check.** Speed, quality and backend parity were measured on real phones
 and published with their methods, caveats and raw results. Each report states its own device
-set: [latency on five chips](https://experimentalmachines.org/openweights/latency/),
+set: [prefill and decode on CPU, GPU and NPU](https://experimentalmachines.org/openweights/prefill-decode/),
+[latency on five chips](https://experimentalmachines.org/openweights/latency/),
 [the exported-window study on four](https://experimentalmachines.org/openweights/window/),
 [its reruns](https://experimentalmachines.org/openweights/reruns/).
 
@@ -253,6 +254,7 @@ the raw tables.
 
 | Report | What it asks |
 |---|---|
+| [Prefill and decode on CPU, GPU and NPU](docs/research/snapdragon-pd-matrix.md) · [page](https://experimentalmachines.org/openweights/prefill-decode/) | On a Snapdragon 8 Elite Gen 5, which processor should do prefill and which decode? Nine models through all nine pairings on a warm phone, and what its two thermal throttles do to each processor |
 | [Does the exported window matter?](docs/research/executorch-window-matrix.md) · [page](https://experimentalmachines.org/openweights/window/) · [tables](docs/research/window-matrix.md) | The same weights exported at 2k to 32k on four chips: does the window change answers, speed or memory? |
 | [What the reruns changed](https://experimentalmachines.org/openweights/reruns/) | A second pass over that matrix: the 2.6B under two reply caps, same-file repeats, and why a 32k full-attention export dies on 12 GB phones |
 | [Public benchmarks on six phones](docs/research/public-benchmarks.md) · [tables](docs/research/benchmark-matrix.md) | GSM8K, IFEval and BFCL on both runtimes, same prompts, same graders |
