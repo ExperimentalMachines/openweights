@@ -10,8 +10,8 @@ the dataset's own length instead of 64 tokens (r8, r9, r9r); a fifth and a sixth
 both on a third unit (c581fd31), ran what the fourth could not finish (r10, r11), so all nine
 models have reply-length results ([below](#at-the-datasets-own-reply-lengths)). The seventh to
 ninth, on 2026-11-02 and 03 on units 64a112da, c581fd31 and 783ee7e5, ran all nine pairings of
-every model at reply length, each model on one unit (r12 to r15,
-[below](#all-nine-pairings-at-reply-length-r12-to-r15)).
+every model at reply length, each model on one unit (r12 to r16,
+[below](#all-nine-pairings-at-reply-length-r12-to-r16)).
 
 | Processor | What it is, as read from the phone |
 |---|---|
@@ -80,7 +80,7 @@ per-cell figures are in the analysis files.
   lengths decode is most of every cell's time, and with the phone throttled NPU-only had the lower total
   on the transformers run that way, while the hybrids kept this ranking (LFM2.5 1.2B) or tied
   (2.6B) ([below](#at-the-datasets-own-reply-lengths)); all nine pairings at those lengths are
-  [further below](#all-nine-pairings-at-reply-length-r12-to-r15).
+  [further below](#all-nine-pairings-at-reply-length-r12-to-r16).
 - **The handoff.** On the NPU-to-CPU path the state copy took a median 1.1 to 5.0 ms a turn, and
   the median handoff across every off-diagonal cell 0.6 to 11 ms. The state was a median 6.7 to
   101 MB on the first session's matched turns, up to 471 MB for the 4B at 3,191 tokens of context.
@@ -318,20 +318,20 @@ model's own: Qwen3's greedy outputs here open with `<think>`, and some reached a
 inside the budget (one at token 315 of 557), so a live reply could be longer or shorter. Answers
 were not graded.
 
-### All nine pairings at reply length (r12 to r15)
+### All nine pairings at reply length (r12 to r16)
 
 The runs above measured three or four cells per model at reply length. Three more reservations,
 on 2026-11-02 and 03, ran all nine pairings of every model that way, each model's nine cells in
 one run on one unit, so that a model's cells compare with each other: r12 on unit 64a112da, r13 on
-c581fd31 (the r10 and r11 unit), r14 and r15 on 783ee7e5. The llama.cpp build, `pd_bench.cpp` as
+c581fd31 (the r10 and r11 unit), r14, r15 and r16 on 783ee7e5. The llama.cpp build, `pd_bench.cpp` as
 committed (the binary's sha256 prefix, 204879540c459b5e, is in each chain log), the conversations,
 the model files and the flags are those of r9 to r11: `--gen-ref`, 6 threads, the 55 °C gate with a
 120 s limit, an 8,192-token window, up to six turns a conversation, two Hexagon sessions for Qwen3
 4B and Llama 3.2 3B. Each model's cells ran in one order, the nine cells shuffled by Python's
 `random.Random("r12" + model file name)` and kept for that model in every later run (`chain12.sh`
-to `chain15.sh`). 3,380 turns ran, none failed and no reply was cut (`analysis-r12.md` to
-`analysis-r15.md` from `analyze_ref.py`; decode step by context and the thermal log in
-`analysis-r12-heat.md` to `analysis-r15-heat.md` from `analyze_heat.py`).
+to `chain16.sh`). 3,710 turns ran, none failed and no reply was cut (`analysis-r12.md` to
+`analysis-r16.md` from `analyze_ref.py`; decode step by context and the thermal log in
+`analysis-r12-heat.md` to `analysis-r16-heat.md` from `analyze_heat.py`).
 
 | Model, run, unit | cpu:cpu | cpu:gpu | cpu:npu | gpu:cpu | gpu:gpu | gpu:npu | npu:cpu | npu:gpu | npu:npu |
 |---|---|---|---|---|---|---|---|---|---|
@@ -339,15 +339,15 @@ to `chain15.sh`). 3,380 turns ran, none failed and no reply was cut (`analysis-r
 | Gemma 3 1B, r12, 64a112da | 316.7 s | 190% | 102% | 87% | 188% | 98% | **80%** | 178% | 91% |
 | Llama 3.2 1B, r12, 64a112da | 428.3 s | 123% | 91% | 87% | 116% | 90% | 105% | 111% | **80%** |
 | LFM2.5 1.2B, r15, 783ee7e5 | 303.5 s | 132% | 119% | 93% | 126% | 113% | **86%** | 117% | 106% |
-| Qwen3 1.7B, r13, c581fd31 | 550.1 s † | 142% † | 96% | 108% | 167% | 89% | 88% | 159% | **81%** |
+| Qwen3 1.7B, r16, 783ee7e5 | 563.5 s | 171% | 95% | 111% | 163% | 92% | 93% | 156% | **79%** |
 | Qwen3 1.7B Q8_0, r13, c581fd31 | 845.1 s | 121% | 81% | 86% | 117% | 76% | 88% | 113% | **73%** |
 | LFM2.5 2.6B, r13, c581fd31 | 758.3 s | 99% | 89% | 92% | 92% | 84% | **79%** | 88% | **79%** |
 | Llama 3.2 3B, r14, 783ee7e5 | 995.3 s | 132% | 96% | 94% | 125% | 82% | 87% | 116% | **80%** |
 | Qwen3 4B, r14, 783ee7e5 | 1,371.6 s | 224% | 85% | 73% † | 214% | 90% | 102% | 209% | **82%** |
 
 Each model's CPU-only cell is its summed time over the 33 turns; every other cell is a percentage
-of it. † marks the three cells that ran after a passed gate (all first or second in their run); every
-other cell ran after a timed-out one, with the GPU capped at power level 8 (578 MHz) and the CPU
+of it. † marks the one cell that ran after a passed gate (first in its run); every other cell ran
+after a timed-out one, with the GPU capped at power level 8 (578 MHz) and the CPU
 ceilings at 1.90 and 2.23 GHz. In bold, the fastest cell that ran after a timed-out gate; LFM2.5
 2.6B's two are 0.4% apart (595.3 and 597.5 s).
 
@@ -355,38 +355,40 @@ ceilings at 1.90 and 2.23 GHz. In bold, the fastest cell that ran after a timed-
   that cell was the NPU on the six transformers other than Gemma 3 1B, the CPU on Gemma 3 1B and
   LFM2.5 1.2B, and either on LFM2.5 2.6B. One cell ran faster than the bold one: Qwen3 4B's GPU
   prefill with CPU decode (73%), which ran first after a gate that passed in 5 s with the CPU
-  uncapped on 9 of its 33 turns, so it is not ranked with the rest. Qwen3 1.7B's CPU-only cell also
-  ran after a passed gate, which makes the rest of that row look slower against it: r12 ran that
-  model's cells (seven complete) on another unit with its CPU-only cell after a timed-out gate,
-  where NPU-only took 66% of it rather than 81%.
+  uncapped on 9 of its 33 turns, so it is not ranked with the rest. r16 ran that one cell again,
+  warm, on the same unit: 1,446.3 s, 105% of r14's CPU-only, with 24 decode steps over 500 ms in
+  four hard throttles. It is not put in the table, so that each row stays one run. Qwen3 1.7B's row
+  is r16's: r13's CPU-only and CPU prefill with GPU decode cells had run after passed gates, so r16
+  ran all nine again after a warm-up; NPU-only went from 81% of CPU-only (r13, on another unit) to
+  79%.
 - **GPU decode was never the fastest.** Its three cells took 111% to 224% of CPU-only on eight
   models, and 88% to 99% on LFM2.5 2.6B, whose CPU-only cell held 19 decode steps over 500 ms
   (758.3 s; 704.5 s in r11 on the same unit). The GPU was the slowest decoder on eight models in
   every cell (on Qwen3 0.6B 20.0 tok/s against the NPU's 43.3 to 43.5 and the CPU's 40.0 to 41.7;
-  on Qwen3 4B 4.4 against 11.1 to 14.2 and 9.0 to 13.8) and level with the CPU on LFM2.5 2.6B
-  (18.8 to 19.2 against 18.7 to 21.2), behind its NPU (21.1 to 21.2). Every GPU-decode cell but one
-  read the GPU capped at the end of all 33 turns; the exception, Qwen3 1.7B's CPU prefill with GPU decode,
-  ran first, and on the 14 turns where its GPU read 1,200 MHz and uncapped at both ends, the
-  capped CPU decoded faster in all 39 matched turn pairs.
+  on Qwen3 4B 4.4 against 11.1 to 14.2 and 9.0 to 11.0, its cool cell left out) and within 3.5% of
+  the CPU on LFM2.5 2.6B (18.8 to 19.2 against 18.7 to 21.2), behind its NPU (21.1 to 21.2). Every
+  GPU-decode cell in the table read the GPU capped at the end of all 33 turns. In r13, superseded
+  by r16, Qwen3 1.7B's CPU prefill with GPU decode ran first, and on the 14 turns where its GPU read
+  1,200 MHz and uncapped at both ends, the capped CPU decoded faster in all 39 matched turn pairs.
 - **The GPU's decode step grows with context, on Qwen3 4B steeply.** Its median step was 107 ms
   at 1,024 to 1,535 tokens of context, 166 ms at 1,536 to 2,047, 430 ms at 2,048 to 2,559 and 614
   ms at 3,584 to 4,095, against the NPU's 71, 77, 82 and 97 ms and the CPU's 77, 87, 95 and 143 ms
   over the same buckets. The other Qwen3 models' GPU step also rose most between the 1,536 and
-  2,048 buckets (Qwen3 0.6B 54 to 76 ms, 1.7B 69 to 91, its Q8_0 78 to 101); Llama 3.2 3B's rose
+  2,048 buckets (Qwen3 0.6B 54 to 76 ms, 1.7B 72 to 95, its Q8_0 78 to 101); Llama 3.2 3B's rose
   more evenly (81, 110, 133). The cause is not identified, and since context and heat grow
   together over a cell this says where the step grows, not why. It is why Qwen3 4B's GPU-decode
   cells logged 1,165 to 1,237 steps over 500 ms: on a GPU-decode cell those are the decoder's pace,
   not stalls, and `analyze_ref.py`'s "without stalls" column means nothing there.
 - **With the decoder fixed, the prefill processor moved little.** On the six models whose fastest
   cell decoded on the NPU, reading the prompt on the CPU instead of the NPU added 3 to 17 points of
-  CPU-only time and on the GPU 2 to 10, with the cells at different points of their run's thermal
+  CPU-only time and on the GPU 2 to 13, with the cells at different points of their run's thermal
   history (on Qwen3 4B the CPU-prefill cell ran fourth and the GPU-prefill cell last).
 - **The CPU decoder's rate varied more across a model's cells than the GPU's or, mostly, the
   NPU's.** Each of those cells differs in both its prefill processor and its place in the run, so
   this does not say which of the two moved it. Across a model's three cells with the same decoder, CPU decode spread 1% to 53% (53% on Qwen3
-  4B, whose fastest CPU-decode cell is the passed-gate one), GPU decode 0% to 2% (22% on Qwen3
-  1.7B, whose first cell ran with the GPU uncapped), and NPU decode 0% to 1% on five models and 7%
-  to 28% on four (Llama 3.2 1B and 3B, Qwen3 1.7B Q8_0, Qwen3 4B).
+  4B, whose fastest CPU-decode cell is the passed-gate one), GPU decode 0% to 2%, and NPU decode 0%
+  to 1% on four models and 7% to 28% on five (Llama 3.2 1B and 3B, Qwen3 1.7B Q4_0 and Q8_0, Qwen3
+  4B). Qwen3 1.7B's GPU prefill with NPU decode ran through the 18:12 hard throttle logged below.
 - **LFM2.5 1.2B was run again with a warm-up (r15).** In r12 its fastest cell, NPU prefill with
   CPU decode at 77%, ran first after a gate that passed in 5 s, with the CPU capped by the end of
   only 14 of its 33 turns, and its CPU-only cell started with the GPU uncapped and full CPU
@@ -444,6 +446,114 @@ Different models ran on different units, so rows do not compare in absolute seco
 else said under [what this does not show](#at-the-datasets-own-reply-lengths) for the earlier
 reply-length runs holds here: a rack phone on AC power, teacher-forced turns, a decode budget set
 by the dataset's reply, no graded answers.
+
+### Why the CPU's reply gets stuck (r16)
+
+A stuck token is one CPU decode step over 500 ms, where the CPU's median step is 18 to 85 ms by
+model. Every one fell in a turn where the CPU wrote the reply; no NPU decode step in the compared
+cells exceeded 198.7 ms. On 3 November, during r16, three loggers ran on unit 783ee7e5 beside the
+benchmark: `trig-r16.sh` (every 2 s, the sensor described below and the four cooling devices),
+`affinity-r16.sh` (every 5 s, the shell's CPU affinity mask and `nproc`) and the cooling-device
+logger (`thermlog-r16.sh`); their logs are `trig-r16.txt`, `affinity-r16.txt` and `thermlog-r16.txt`.
+The page published from this report calls the mild throttle the soft throttle and the cool-down the
+hard throttle. The phone's thermal configuration was read by `adb` as root (`phone-evidence-2026-11-03.md`).
+
+**Two throttles.**
+
+| | The mild throttle | The cool-down |
+|---|---|---|
+| What it does | GPU capped at power level 8 (578 MHz), CPU ceilings 1.90 and 2.23 GHz | `thermal-pause-C0` and `thermal-pause-3C` (by their names, cores 2 to 7 paused), `kgsl` and `cdsp` at 5 |
+| When | Every compared turn (r16: 329 of 330 at those ceilings, the other lower still) | About a minute at a time |
+| What switches it | `cpu-cluster0`, `cpu-cluster1` and `gpu` cooling devices with no kernel thermal-zone binding, set by the user-space `thermal-engine-v2` (its config file is empty; its rules are built in) | All four devices share a passive `step_wise` trip on `sys-therm-0` at 78 °C with 8 °C hysteresis; each also has other bindings (`kgsl`: the eleven `gpuss` sensors at 105 °C and the PMIC current limits) |
+
+**The sensor.** `sys-therm-0` is thermal zone 61. The device tree (`soc/thermal-zones/sys-therm-0`)
+reads it from channel 0x44 of the PMK8850 power-management chip's ADC (`pmk8850@0/vadc@9000`), whose
+node is labelled `pmk8850_xo_therm`: a thermistor named for the crystal oscillator (XO) that clocks
+the chip; where it sits on the board is not documented. It is not a CPU, GPU or NPU sensor, and not Android's `skin` reading (which read 57.8 and
+64.1 °C while `sys-therm-0` read 68.7 and 77.3 °C). The board is a Qualcomm reference design (model
+string "Canoe QRD").
+
+**What each throttle does to each processor.** The mild throttle's cost compares the 9 Qwen3 4B GPU
+prefill with CPU decode turns that r14 ran with nothing capped (GPU at 1,200 MHz, full CPU
+ceilings; that cell started after a passed gate) against the same turns in r16 (578 MHz, 1.90 and
+2.23 GHz), on the same unit. The NPU's cool-down cost compares turns run at least half under `cdsp`
+above 0 with the same turn in another NPU-decode cell run with it at 0.
+
+| | Mild throttle | Cool-down |
+|---|---|---|
+| CPU | Ceilings 3.63 to 1.90 GHz (six cores) and 4.61 to 2.23 GHz (two); decode 17.1 to 13.6 tok/s, 21% slower, no step over 500 ms | `thermal-pause-C0` and `thermal-pause-3C` (by the names, masks 0xC0 and 0x3C: cores 6 and 7, and 2 to 5) leave cores 0 and 1; with 6 threads, stretches of 5 to 20 tokens in 44 to 71 s |
+| GPU | Capped at power level 8 of 17, 578 MHz, from 1.2 GHz; prefill 201.6 to 104.7 tok/s, about half | `kgsl` at 5 of 17; effect not measured |
+| NPU | No visible limit: `cdsp` reads 0 outside cool-downs and the clock is not readable; LFM2.5 2.6B's NPU-only cell repeated at 599.8, 601.8 and 597.5 s on one unit with the mild throttle off (r10) and on (r11, r13) | `cdsp` at 5 of 12; median 0.66 (Llama 3.2 3B, 20 pairs) and 0.68 (Qwen3 4B, 32 and 7) of the matched turn's rate; on Qwen3 1.7B the three GPU prefill with NPU decode turns inside the 18:12 cool-down ran at 14.8 to 15.9 tok/s against 28.6 to 32.9 for the same turns in its other NPU-decode cells, about half; no NPU decode step over 198.7 ms |
+
+The mild throttle came on within minutes of heavy work (the GPU cap about 3 minutes into r14's
+first cell, 1 minute into r15's warm-up). After r14 ended, the GPU cap was still on at the logger's
+last r14 sample 1.4 minutes later and off at r15's first 8.2 minutes later; r15warm's gate found
+full CPU ceilings 9.6 minutes after. When in that window each lifted is not known.
+
+**Cool and warm starts.** The gate that defines them is the one described above for the reply-length
+runs (`pd_bench.cpp`, `cool_down`): every 5 s it reads the hottest `cpu-0-*`/`cpu-1-*`, `gpuss-*` and
+`nsphvx-*`/`nsphmx-*` zones, the GPU's `thermal_pwrlevel` and each CPU policy's `scaling_max_freq`
+against `cpuinfo_max_freq`, and passes when all three zones are at or under 55 °C, the GPU uncapped
+and no ceiling lowered; with `--cool-max 120` it gives up once 120 s have passed (recorded as 121 s).
+It waits and does nothing else. "Started cool" is a passed gate, "started warm" a timed-out one. The
+throwaway warm-up passes (r15warm, r16warm) run the model's 33 turns with CPU prefill and CPU decode
+before the first counted cell, so that cell's gate times out like the rest. The gate's sensors are
+not the cool-down's: the gate reads the processors' zones at 55 °C, the cool-down the XO thermistor
+at 78 °C.
+
+**The cool-down switches with hysteresis, and the log shows it.** Over r16's 2,557 readings (to
+19:07:28) the sensor read up to 78.02 °C while the cool-down was off (1,448 of 2,372 off readings
+between 70 and 78 °C) and down to 69.96 °C while it was on (162 of 185). Between the trips it keeps
+its last state. The first reading after each of r16's six switches on was 78.08 to 78.14 °C and
+after each switch off 69.73 to 69.91 °C, the four devices changing in the same 2 s reading:
+
+| On | Off | Length | Writing the reply | CPU decode steps over 500 ms |
+|---|---|---|---|---|
+| 18:00:50 | 18:01:51 | 61 s | CPU, Qwen3 1.7B GPU prefill | 9, from 18:00:50 to 18:01:51 |
+| 18:12:04 | 18:13:29 | 85 s | NPU, Qwen3 1.7B | none (NPU decode) |
+| 18:51:27 | 18:52:26 | 59 s | CPU, Qwen3 4B GPU prefill | 6, from 18:51:27 to 18:52:24 |
+| 18:55:43 | 18:56:48 | 65 s | CPU, Qwen3 4B | 6, from 18:55:48 to 18:56:47 |
+| 19:00:31 | 19:01:33 | 62 s | CPU, Qwen3 4B | 5, from 19:00:32 to 19:01:33 |
+| 19:05:20 | 19:06:27 | 67 s | CPU, Qwen3 4B | 7, from 19:05:23 to 19:06:25 |
+
+Times are local (UTC+8). Every cool-down that came while the CPU wrote produced one stuck stretch in
+the same window, to within a few seconds; the earlier 10 s logs could only place stalls in the same
+turn. During Qwen3 4B's GPU prefill with CPU decode, consecutive cool-downs began 4 min 16 s to
+4 min 49 s apart.
+
+**Heat is shared across the chip.** Llama 3.2 3B in r14, median of each processor's hottest zone at
+turn end: CPU-only 106 / 94 / 94 °C (CPU / GPU / NPU), NPU-only 95 / 89 / 97, GPU-only 84 / 84 / 81,
+after earlier cells had heated the phone. All three instances stay loaded through a model's run; in
+the CPU-only cell the NPU and GPU instances do no work, yet the NPU zones read 94 °C. The NPU and GPU
+cells still run the output layer and the embedding lookup on the CPU. The 18:12 cool-down came during an NPU-decode
+cell and paused the CPU cores anyway: the XO thermistor responds to whichever processor heats the board. So a cell's speed depends on how hot the cells before it left
+the phone, which is why the comparison requires every cell to start after a timed-out gate.
+
+**The usable-core mask does not show the pause.** Through the 18:00 cool-down the shell's affinity
+mask stayed `ff` and `nproc` 8, so `sched_getaffinity` gives an app no sign of paused cores on this
+phone.
+
+**A likely mechanism, not yet proven.** The benchmark runs 6 CPU threads. llama.cpp's CPU backend
+built without OpenMP (as the app and `pd_bench` are) synchronises its workers in `ggml_barrier`
+(`ggml-cpu.c`) by spinning on an atomic counter with the Arm `yield` hint, which does not give the
+core to the scheduler; the compute loop calls it after every executed graph node (Llama 3.2 3B's
+reserved graph has 874 nodes, some skipped or fused). With two cores left, finished workers can hold
+them while workers with work wait to be scheduled, at hundreds of synchronisation points per token.
+Unlike CPython's GIL, whose waiters sleep, these waiters keep their core. The stuck stretches wrote 5
+to 20 tokens in 44 to 71 s (single tokens 0.6 to 18.3 s), far below what fair sharing of two cores
+would give. A test of 6 threads against 2 on the same cell was running when this was written; its
+results will be added here.
+
+**The app.** `ThermalPolicy` sets the decode threads once per reply (`ModelRuntime.planThreads`) from
+Android's thermal status: half the cores (4 here), 3 at light or moderate, 2 at severe, and no reply
+at critical or above. This phone's skin thresholds are 48, 49, 50, 60, 61 and 90 °C (light to
+shutdown). Android read severe (skin 57.8 °C, about 17:38) and, about 20 minutes later, emergency (64.1 °C, about 17:59). A reply
+already running keeps its count, so these readings do not show that the app avoids the stall.
+
+**Candidate changes, none measured:** drop to 2 threads after one slow token (the app already calls
+`llama_set_n_threads`); let a waiting worker sleep or yield after a short spin in `ggml_barrier`;
+write on the NPU during a cool-down. Matching threads to `sched_getaffinity` is ruled out on this
+phone by the mask above; pinning alone does not stop six threads sharing two cores.
 
 ### Throttling and the GPU's rank
 
@@ -560,13 +670,13 @@ family and move it to the NPU when the CPU's frequency ceiling drops; against it
 still led on Gemma 3 1B and LFM2.5 1.2B, and matched gate results are not matched thermal
 histories.
 
-All nine pairings of every model at reply length (r12 to r15), every table cell but three after a
+All nine pairings of every model at reply length (r12 to r16), every table cell but one after a
 timed-out gate, point the same way. Among the cells after a timed-out gate, NPU prefill was in the
 fastest on every model (73% to 86% of CPU-only time), with NPU decode on six transformers, CPU decode on Gemma 3 1B and LFM2.5 1.2B,
 and the two within 0.4% on LFM2.5 2.6B. GPU decode never won: it was the slowest decoder on eight
-models and level with the CPU on LFM2.5 2.6B, and on Qwen3 4B its step grew about fourfold past
-2,048 tokens of context. Under the phone's combined mitigation the CPU decoder stalled and the NPU
-decoder slowed by about a third without stalling, so which decoder is faster at a given moment
+models and within 3.5% of the CPU on LFM2.5 2.6B, and on Qwen3 4B its step grew about fourfold past
+2,048 tokens of context. Under the phone's hard throttle the CPU decoder stalled and the NPU decoder
+slowed to about half or two thirds of its speed without stalling, so which decoder is faster at a given moment
 depends on that state as well as on the model. This is a measurement of what each arrangement
 would buy on this chip, not a decision. Before an app could ship any of it, these are still
 unmeasured:
@@ -722,6 +832,15 @@ another seed.
   the rest did (it did: 121 s, 61.4 °C, GPU at power level 8, CPU ceilings lowered). The order is
   still one order. Then r12's. 297
   turns and the warm-up's 33, none failed, and every file matched the phone's by checksum.
+- **r16 and r16warm.** In the same reservation, on the same unit, after r15: a throwaway CPU-only
+  pass of Qwen3 1.7B (r16warm), then all nine of its cells in r12's order, because r13's first two
+  had run after passed gates; then Qwen3 4B's GPU prefill with CPU decode alone, warm, for the
+  same reason (the queue was changed to that one cell while Qwen3 1.7B ran, by starting
+  `chain16b.sh` to wait on the running benchmark and stopping `chain16.sh`'s shell). Every gate
+  timed out. 330 turns and the warm-up's 33, none failed, and every file matched the phone's by
+  checksum. Three loggers ran beside it (`thermlog-r16`, `trig-r16`, `affinity-r16`, each cut at
+  r16's end; they ran on into the next test), and the phone's thermal configuration was read
+  (`phone-evidence-2026-11-03.md`).
 
 ## What was not measured
 
@@ -802,3 +921,13 @@ and 9.5 minutes), not the seven-minute reading first written, which was taken by
 kept. It also found `analyze_heat.py` crediting samples taken between cells to the next turn
 through the logger's label; it now joins samples to turns by time, which left the stall counts
 unchanged and moved r14's NPU comparison from 36 pairs to 32 (median 0.67 to 0.68).
+
+For r16 and the published page built from this report, Codex checked the throttle findings and the
+page in four more rounds and Gemini (through agy) read the page once for order and clarity. They
+reproduced every figure, and corrected: the soft throttle's recovery, which was bracketed once (the
+GPU cap lifted between 1.4 and 8.2 minutes after a run), not timed at 8 to 10 minutes; the hysteresis
+counts, now limited to r16's 2,557 readings; the state between 70 and 78 °C, which is the last state
+rather than set by the temperature's direction; "within 1%" for the NPU, which holds for LFM2.5 2.6B's
+NPU-only cell, not for NPU cells in general; the XO thermistor's placement, which its name does not
+establish; the two Android readings, 20 minutes apart (17:38 and 17:59), not the hour first written;
+and that a CPU-only cell's NPU and GPU instances are loaded but idle, not absent.
