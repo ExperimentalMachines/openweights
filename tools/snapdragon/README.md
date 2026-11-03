@@ -54,13 +54,21 @@ decode steps over 500 ms (stalls), the rate by step range over the same turns, a
 constant-rate projection from a 64-token run. `--first` takes a file, optionally limited to some
 models with `=name,name`, and refuses a turn that two baseline files both hold.
 
+`analyze_heat.py results-r14.jsonl --therm thermlog-r14.txt` gives the median decode step per
+decoder by context length and, with the log from the phone-side logger (`thermlog-r14.sh` in the
+results folder: every cooling device's state every 10 s, with the hottest NSP zone and the last
+finished turn), the CPU pause stretches, which turns held a paused sample, and NPU decode under
+the cDSP device against the same turn without it.
+
 ## Traps found on the QDC phone
 
 - **It throttles within a minute.** Thermal status 3 and the GPU capped at power level 8 of 17
   (578 MHz against 1.2 GHz) with no gate; even gated to 55 °C, most turns end capped. Read
   `/sys/class/kgsl/kgsl-3d0/thermal_pwrlevel` and the `gpuss-*`, `cpu-*`, `nsphvx-*` zones.
 - **`pkill -f run_matrix.sh` inside `adb shell '...'` kills the adb shell itself**, because the
-  command line contains the pattern. Kill by PID.
+  command line contains the pattern. Kill by PID. The same holds wherever the pattern appears in
+  the command line, a `tar` list included: kill in an `adb shell` call of its own, with the
+  pattern written as `[t]hermlog` so that it does not match itself.
 - **Transfers over the tunnel get cut off past about 4 MB** (`adb` exit 255, varying sizes). Copy
   results as `tar czf`, which made them a sixth of the size, and retry.
 - **The `~/.ssh/config` ControlMaster takes the forward port.** Run the tunnel with
@@ -71,7 +79,16 @@ models with `=name,name`, and refuses a turn that two baseline files both hold.
   the GPU capped and the CPU ceilings at 1.90 and 2.23 GHz after 120 s and after 300 s, so only a
   run's first cell (and once a cell after a 50 s wait) started unthrottled; one order per model then confounds processor with heat.
 - **On the 3B and 4B, CPU decode stalls near 107 °C**: single steps of up to 15.9 s. Count them
-  (`analyze_ref.py` does) before reading a CPU-decode total.
+  (`analyze_ref.py` does) before reading a CPU-decode total. Where the cooling devices were
+  logged, every stall fell in a turn that ran while `thermal-pause-C0` and `-3C` (by their names,
+  cores 2 to 7) were on, together with `kgsl` and `cdsp` at 5.
+- **A run's first cell starts cooler than the rest.** The gate passes only after an idle stretch,
+  and the GPU and CPU limits had lifted within about nine minutes of a run ending. So that the
+  first counted cell starts with the same recorded gate and cap state as the rest, run one
+  throwaway cell before the counted ones (r15warm did); it does not make thermal histories equal.
+- **The thermal logger's turn label is the last finished turn**, and between cells the next turn
+  has not started. Join samples to turns by time instead (each turn's `wall_ms` and `turn_ms`), as
+  `analyze_heat.py` does.
 - **Changing a queue that is running**: never edit the running `sh` script, which reads itself as
   it goes. Write a new script that waits for the running benchmark's PID, then `kill -9` the old
   script's shell only (a plain `kill` is held while it waits on its child) and check with `ps`.
