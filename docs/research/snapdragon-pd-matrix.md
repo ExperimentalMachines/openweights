@@ -357,7 +357,11 @@ ceilings at 1.90 and 2.23 GHz. In bold, the fastest cell that ran after a timed-
   prefill with CPU decode (73%), which ran first after a gate that passed in 5 s with the CPU
   uncapped on 9 of its 33 turns, so it is not ranked with the rest. r16 ran that one cell again,
   warm, on the same unit: 1,446.3 s, 105% of r14's CPU-only, with 24 decode steps over 500 ms in
-  four hard throttles. It is not put in the table, so that each row stays one run. Qwen3 1.7B's row
+  four hard throttles. That cell was then run warm once more on a fourth unit (r18b, 4816891), by the
+  maintainer's choice to complete the matrix with a warm cell even from another phone: 1,406.3 s,
+  103% of r14's CPU-only, with all 33 turns capped and 26 decode steps over 500 ms in five hard
+  throttles. The published page shows r18b in that cell, marked as from phone D; this table keeps
+  r14's cell (†). Qwen3 1.7B's row
   is r16's: r13's CPU-only and CPU prefill with GPU decode cells had run after passed gates, so r16
   ran all nine again after a warm-up; NPU-only went from 81% of CPU-only (r13, on another unit) to
   79%.
@@ -832,6 +836,19 @@ another seed.
   the rest did (it did: 121 s, 61.4 °C, GPU at power level 8, CPU ceilings lowered). The order is
   still one order. Then r12's. 297
   turns and the warm-up's 33, none failed, and every file matched the phone's by checksum.
+- **r18, r18warm and r18b.** A tenth reservation on 2026-11-04 (local time; 3 November on the
+  phone's clock), on a fourth unit, 4816891, rerun Qwen3 4B's GPU prefill with CPU decode warm,
+  because r14's had run after a passed gate. The benchmark package was fetched again from the build
+  box (binary sha256 prefix 204879540c459b5e, as before). A one-conversation CPU-only warm-up
+  (r18warm, 148.2 s) was too short: r18's gate passed after 40 s at 54.4 °C with nothing capped, so
+  r18 was stopped at 22 turns, with the phone hot, and started again at once as r18b, whose gate timed
+  out after 121 s at 69.1 °C with the GPU capped and the CPU ceilings lowered. 33 turns, none failed,
+  and every file matched the phone's by checksum. The 2 s logger (`trig-r18.txt`) caught five hard
+  throttles at the same switch points as on unit 783ee7e5 (first readings after each switch on 78.00
+  to 78.20 °C, after each switch off 69.69 to 69.93 °C), and every CPU decode step over 500 ms fell in
+  a turn with a paused sample (26 of 26, `analysis-r18b-heat.md`). A thread-count test (6 threads
+  against 2, Llama 3.2 3B) that ran after r16 lost its raw files when the session's scratch space was
+  cleared and the reservation ended; it is not reported.
 - **r16 and r16warm.** In the same reservation, on the same unit, after r15: a throwaway CPU-only
   pass of Qwen3 1.7B (r16warm), then all nine of its cells in r12's order, because r13's first two
   had run after passed gates; then Qwen3 4B's GPU prefill with CPU decode alone, warm, for the
