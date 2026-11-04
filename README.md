@@ -125,8 +125,8 @@ model search and downloads, and the three network tools. The
 ### The agent
 
 The registry holds seventeen tools, fifteen of them user-facing. Three use the internet, sit
-under a heading that says so, and have individual switches. A fresh install has one switch
-on, `web_search`; the rest are off until you turn them on.
+under a heading that says so, and have individual switches. A fresh install has all three
+on; every other tool stays off until you turn it on.
 
 | Tool | What it does | Uses the internet |
 |---|---|---|
@@ -183,7 +183,7 @@ field on the screen, steers the next step or answers the question. The reasoning
 
 - Android 12 (API 31) or newer, on a 64-bit Arm phone (`arm64-v8a`).
 - Memory for the model you pick. The app tells you before you download; measured on a
-  Dimensity 9400, a 1.2B model at int4 sits near 1 GB resident and a 2.6B near 2 GB, plus
+  Dimensity 9500s, a 1.2B model at int4 sits near 1 GB resident and a 2.6B near 2 GB, plus
   the context window.
 - On the 12 GB phones tested (MIUI and Samsung), a process near 6 GB was killed, so large
   context windows on full-attention models are not recommended there.
@@ -243,7 +243,7 @@ app repository, under `~/ow-models/benchmarks/` and `~/ow-models/hf-mirror/`. Ap
 tests and their existing evaluation tooling remain here.
 
 Each card states the export recipe, the memory the window costs at load, the measured speed
-on a Dimensity 9400, and the start-token rule the ExecuTorch runtime needs. How they were
+on a Dimensity 9500s, and the start-token rule the ExecuTorch runtime needs. How they were
 made: [exporting LFM2.5 ourselves](docs/research/executorch-own-exports.md).
 
 ## Measurements and reports
