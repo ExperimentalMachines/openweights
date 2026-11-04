@@ -173,6 +173,10 @@ class ToolTurnOnDeviceTest {
 
         override val needsApproval: Boolean = false
 
+        // A tool starts off unless it says otherwise, and an off tool is never offered: without
+        // this every model "did not call the tool" and the test skipped, whatever the model.
+        override val defaultsOn: Boolean = true
+
         override suspend fun run(call: ToolCall): String {
             calls += call
             return "Order 7788 is $SECRET."
