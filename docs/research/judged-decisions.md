@@ -1,5 +1,7 @@
 # Decisions read from the model's distribution instead of its prose (2026-09-17)
 
+**Removed 2026-11-05.** `Session::judge`, `JudgeQuestions` and every judgement described here were deleted. All were off in the app, and the held-out seed `readsTopResult` was waiting for had not run in seven weeks. These findings stand; the code is in git before commit 3d150219 if a seed ever earns it.
+
 **Question.** The agent loop recovers several decisions from what the model writes, with
 English patterns that have each been patched for phrasings a phone found: whether a reply
 announced or claimed a search (`TurnRunner`, about forty phrases), which tool a denial

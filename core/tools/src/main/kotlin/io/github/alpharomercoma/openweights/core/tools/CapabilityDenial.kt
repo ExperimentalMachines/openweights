@@ -123,10 +123,6 @@ object CapabilityDenial {
         }
     }
 
-    /** Every tool [fitting] can name, which is every tool a denial can be repaired towards. */
-    val REPAIRABLE: List<String> =
-        listOf(WebSearchTool.NAME, FetchUrlTool.NAME, RunScriptTool.NAME)
-
     /** The corrective line when the retry needs an available tool. */
     fun retryRequest(fitting: String): String =
         "You do have a working tool for exactly this: $fitting. Call it now, with no " +

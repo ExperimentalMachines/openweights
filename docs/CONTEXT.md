@@ -3937,7 +3937,7 @@ against 23.8, both within noise, and about 245 ms on a warm load, 1,140 ms mappe
 page cache needs root, and it should be close either way because the repack faults in every
 page regardless.
 
-`SamplerParams.useMmap` now defaults to false. Through the app, over the same six turn
+`SamplerParams.useMmap` now defaults to false (the setting itself was deleted on 2026-11-05: nothing ever set it). Through the app, over the same six turn
 conversation:
 
 | | peak PSS | decode, mean of six turns |

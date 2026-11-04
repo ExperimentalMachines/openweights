@@ -36,6 +36,7 @@ import io.github.alpharomercoma.openweights.core.common.model.parseAssistantRepl
 import io.github.alpharomercoma.openweights.core.common.model.withoutToolMarkup
 import io.github.alpharomercoma.openweights.core.data.ModelPreferences
 import io.github.alpharomercoma.openweights.core.engine.ExecuTorchEngine
+import io.github.alpharomercoma.openweights.core.engine.ExecuTorchSupport
 import io.github.alpharomercoma.openweights.core.engine.GenerationEvent
 import io.github.alpharomercoma.openweights.core.engine.InferenceEngine
 import io.github.alpharomercoma.openweights.core.engine.LlamaCppEngine
@@ -85,7 +86,8 @@ import java.security.MessageDigest
  *   from [prefixMessages] rather than the dump, which stopped being them in September; the three
  *   public-web tools that start switched on; the search rules the app runs; thinking on, as the
  *   app sets it whenever tools are on; and the default sampler and 1,024-token cap, seeded so a
- *   run can be repeated. Everything below is an experiment against the dump's older prompt.
+ *   run can be repeated. It stands for a fresh install answering one question online, in Auto:
+ *   no history, no attachments, every tool approved, and the tools' own HTTP clients.
  * - `bare`: no tools at all. What the weights answer alone; the utility baseline.
  * - `driven-search`: the model decides, holding web_search only, as a fresh install does.
  * - `driven-search-think`: the same with thinking on, for a model whose template opens the
@@ -176,7 +178,7 @@ class DecisionSuiteOnDeviceTest {
         Log.i(TAG, "START models=${models.map { it.name }} arms=$arms rows=${rows.size}")
 
         for (model in models) {
-            val engine = engineFor(model)
+            val engine = engineFor(model, shipped = SHIPPED in arms)
             try {
                 engine.load(model, ModelLoadParams(contextLength = context))
                 for (arm in arms) {
@@ -551,10 +553,11 @@ class DecisionSuiteOnDeviceTest {
     private fun resultsDir(): File =
         app.getExternalFilesDir(null)!!.resolve("eval-results").apply { mkdirs() }
 
-    private fun engineFor(model: File): InferenceEngine = if (model.extension == "pte") {
-        ExecuTorchEngine(NativeExecuTorchBridge(), temperature = 0f)
-    } else {
-        LlamaCppEngine()
+    /** The compiled runtime's temperature is fixed at construction, so the shipped arm asks here. */
+    private fun engineFor(model: File, shipped: Boolean = false): InferenceEngine = when {
+        model.extension != "pte" -> LlamaCppEngine()
+        shipped -> ExecuTorchEngine(ExecuTorchSupport.bridge(app))
+        else -> ExecuTorchEngine(NativeExecuTorchBridge(), temperature = 0f)
     }
 
     private fun InferenceEngine.runtimeName(): String =

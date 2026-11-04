@@ -176,10 +176,9 @@ offline harness that replays the app's exact prompt bytes is `eval/routing_matri
 `:core:designsystem` holds the palette, type scale, and the components that make
 measurements visible. The palette's accent is a **signal scale** rather than a fixed
 colour: `signalColor(fraction)` maps a normalised measurement onto a teal-to-grey-to-red
-ramp, and both `SpeedRail` (beside each reply, coloured by that reply's throughput) and
-`ContextMeter` (the hairline above the composer) read from it. Colour carries data here,
-which is why dynamic colour is off by default. A wallpaper-derived accent would compete
-with it.
+ramp, and `ContextMeter` (the hairline above the composer) reads from it. Colour carries
+data here, which is why dynamic colour is off by default. A wallpaper-derived accent would
+compete with it.
 
 Type is three families with three jobs: Schibsted Grotesk for display, Hanken Grotesk for
 the interface, and Geist Mono for every number, model id and quantization tag, so

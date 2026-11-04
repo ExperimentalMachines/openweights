@@ -1,5 +1,7 @@
 # The loop's text heuristics, read by a typed judgement model (2026-09-17)
 
+**Removed 2026-11-05.** The `honoursUnresolved` and `readsTopResult` rules this led to were off in the app and were deleted, with the suite arms that priced them. The findings stand; the code is in git before commit 3d150219.
+
 **Question.** The loop and the eval grader decide several things from English patterns:
 whether a reply announced, claimed or lamented a search (`TurnRunner.searchIntent`),
 whether a reply was right (`grade_decisions.py`, alias containment), and whether a search

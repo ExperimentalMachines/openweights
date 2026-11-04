@@ -572,12 +572,6 @@ class LlamaCppEngine internal constructor(
         /** Index of the cached-tokens field: how much of this turn's prompt was reused. */
         const val CACHED_TOKENS = 9
 
-        /**
-         * A judgement crosses JNI as one probability per option followed by these fields,
-         * at these offsets past the last option: [optionMass, promptTokens, reusedTokens,
-         * prefillMs].
-         */
-
         /** Long enough for a cancelled decode step to return; short enough not to hang. */
         const val SHUTDOWN_TIMEOUT_SECONDS = 10L
 

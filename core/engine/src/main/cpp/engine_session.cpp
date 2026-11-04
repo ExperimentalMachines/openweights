@@ -2704,16 +2704,6 @@ static float sampled_logprob(const llama_vocab * vocab, llama_context * ctx, lla
     return logits[token] - peak - static_cast<float>(std::log(sum));
 }
 
-/** How far two token sequences agree from the start. */
-static size_t agreeing_prefix(const std::vector<llama_token> & a, const std::vector<llama_token> & b) {
-    const size_t limit = std::min(a.size(), b.size());
-    size_t at = 0;
-    while (at < limit && a[at] == b[at]) {
-        ++at;
-    }
-    return at;
-}
-
 StopReason Session::generate(
     const std::vector<ChatMessage> & messages,
     const std::vector<ToolDefinition> & tools,
