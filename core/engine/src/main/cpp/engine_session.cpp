@@ -1342,7 +1342,7 @@ int32_t Session::ingest_media_prompt(
         //
         mtmd_bitmap * bitmap = nullptr;
         try {
-            auto wrapper = mtmd_helper_bitmap_init_from_file(ctx, path.c_str(), false);
+            auto wrapper = mtmd_helper_bitmap_init_from_file(ctx, path.c_str(), false, mtmd_helper_init_opt_default());
             if (wrapper.video_ctx != nullptr) {
                 mtmd_helper_video_free(wrapper.video_ctx);
             }
@@ -1625,7 +1625,7 @@ bool Session::supports_thinking() const {
         inputs.messages.push_back(msg);
 
         try {
-            return common_chat_templates_apply(templates, inputs).prompt;
+            return common_chat_templates_apply(templates, inputs).prompt.str();
         } catch (const std::exception &) {
             return std::string();
         }
@@ -1661,7 +1661,7 @@ bool Session::supports_tools() const {
 
     try {
         const common_chat_params params = common_chat_templates_apply(templates, inputs);
-        return params.prompt.find(kProbeName) != std::string::npos;
+        return params.prompt.str().find(kProbeName) != std::string::npos;
     } catch (const std::exception &) {
         // A template that throws on tools cannot use them either.
         return false;
@@ -1715,7 +1715,7 @@ bool Session::supports_tool_results() const {
     add("tool", kSecond, "openweights_probe_call_two");
 
     try {
-        const std::string prompt = common_chat_templates_apply(templates, inputs).prompt;
+        const std::string prompt = common_chat_templates_apply(templates, inputs).prompt.str();
         // Both, so that a template which keeps only the last result is treated as unable to
         // carry them. Folding into a user turn works for any template, so the strict answer
         // is the safe one to be wrong about.
@@ -1749,7 +1749,7 @@ bool Session::supports_reasoning_effort() const {
         inputs.messages.push_back(msg);
 
         try {
-            return common_chat_templates_apply(templates, inputs).prompt;
+            return common_chat_templates_apply(templates, inputs).prompt.str();
         } catch (const std::exception &) {
             return std::string();
         }
@@ -1860,7 +1860,7 @@ bool Session::render_prompt(
         // that is "<|im_start|>assistant\n<think>", the template pre-filling the thinking
         // block. params.generation_prompt is the same text, kept separately so the parser
         // can account for it; appending it here would duplicate the turn header.
-        out = params.prompt;
+        out = params.prompt.str();
         last_generation_prompt_ = params.generation_prompt;
 
         // Being told not to think, on a template that opens the block anyway.
@@ -2406,8 +2406,8 @@ void Session::probe_thinking_history() {
             // their own newlines, and the sentinels are unique enough that presence
             // means the history kept the thought. Byte-exactness is what the kv log's
             // divergence line checks against real traffic.
-            const size_t thought = params.prompt.find(REASONING);
-            const size_t answer  = params.prompt.find(ANSWER);
+            const size_t thought = params.prompt.str().find(REASONING);
+            const size_t answer  = params.prompt.str().find(ANSWER);
             return thought != std::string::npos && answer != std::string::npos &&
                 thought < answer;
         } catch (const std::exception &) {
@@ -3424,21 +3424,20 @@ StopReason Session::generate(
 
     llama_sampler_free(sampler);
 
-    // Parse with the format the prompt was rendered in. This is where tool calls come
-    // from, and where reasoning is separated for models whose thinking is not <think>.
+    // No PEG parser is loaded into these params, so llama.cpp reads the reply as plain
+    // content and finds no tool calls, at b10549 and at v0.8.0 alike. Tool calls come from
+    // the Kotlin ToolCallParser, which the fallback below hands the raw text to.
     try {
         common_chat_parser_params parser_params;
         parser_params.format = static_cast<common_chat_format>(last_format_);
-        parser_params.generation_prompt = last_generation_prompt_;
-        parser_params.parse_tool_calls = true;
-        parser_params.reasoning_format = COMMON_REASONING_FORMAT_AUTO;
+        parser_params.generation_prompt = common_chat_input(last_generation_prompt_);
 
         // Anything other than a clean end of turn was cut off mid-sentence, and a cut-off
         // tool call read as a complete one produces a call the model never finished asking
         // for. The parser handles that itself when told the input is partial.
         const bool truncated = reason != StopReason::END_OF_TURN;
         const common_chat_msg parsed =
-            common_chat_parse(safe_reply, truncated, parser_params);
+            common_chat_parse(common_chat_input(safe_reply), truncated, parser_params);
         // Tool calls are only handed up from a reply that finished. A truncated one may
         // have been about to add arguments, and TurnRunner already ends such a turn
         // without acting on whatever it parsed; withholding them here as well means no
