@@ -10,116 +10,14 @@ INSTRUMENTATION_STATUS: class=io.github.alpharomercoma.openweights.ui.chat.ToolT
 INSTRUMENTATION_STATUS: current=1
 INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
 INSTRUMENTATION_STATUS: numtests=1
-INSTRUMENTATION_STATUS: stack=value of:
-    iterable.size()
-expected:
-    2
-but was:
-    3
-iterable was:
-    [Completed(reason=END_OF_TURN, stats=GenerationStats(promptTokens=199, generatedTokens=123, prefillMs=882, decodeMs=3942, timeToFirstTokenMs=883, contextUsed=322, contextSize=4096, thinkingPrefilled=false, cachedTokens=0, firstTokens=1, memory=TurnMemory(majorFaults=0, activeMs=4833, peakFootprintBytes=4720332800, swapEndBytes=192512, pagingDetected=false, cold=false)), content=<think>
-    Okay, the user wants to check the status of order 7788 using the check_order tool. Let me see. The tool requires the order number as a parameter. The order number given is 7788. I need to call the check_order function with that order number. Once I get the response, I'll relay the status back to the user. I should make sure to use the correct JSON structure for the tool call. Let me format that properly.
-    </think>, reasoning=, toolCalls=[ToolCall(id=check_order-0, name=check_order, argumentsJson={"order": "7788"})]), Completed(reason=END_OF_TURN, stats=GenerationStats(promptTokens=28, generatedTokens=151, prefillMs=94, decodeMs=4955, timeToFirstTokenMs=94, contextUsed=503, contextSize=4096, thinkingPrefilled=false, cachedTokens=322, firstTokens=1, memory=TurnMemory(majorFaults=0, activeMs=5057, peakFootprintBytes=4720463872, swapEndBytes=192512, pagingDetected=false, cold=false)), content=<think>
-    Okay, the user asked to check the status of order 7788. I called the check_order tool with the order number. The response from the tool was "Order 7788 is quartz-tangerine-41." Wait, that doesn't make sense. The tool's response seems to be a random string instead of a delivery status. Maybe there's an error in the tool's response or the data it's returning. Let me think. The function's description says it looks up the delivery status by order number. But the response here is just a random string. Perhaps the tool is not working correctly</think>, reasoning=, toolCalls=[ToolCall(id=check_order-0, name=check_order, argumentsJson={"order": "7788"})]), Completed(reason=END_OF_TURN, stats=GenerationStats(promptTokens=88, generatedTokens=241, prefillMs=1478, decodeMs=7974, timeToFirstTokenMs=1479, contextUsed=808, contextSize=4096, thinkingPrefilled=false, cachedTokens=479, firstTokens=1, memory=TurnMemory(majorFaults=0, activeMs=9464, peakFootprintBytes=4720578560, swapEndBytes=192512, pagingDetected=false, cold=false)), content=<think>
-    Okay, the user asked to check the status of order 7788. I called the check_order tool once with the order number. The response from the tool was "Order 7788 is quartz-tangerine-41." But that doesn't make sense because "quartz-tangerine-41" isn't a typical delivery status. Maybe there's an error in the tool's response or the data it's returning. However, since the user mentioned that the last response was already provided and there are no more tool calls, I should use the given result directly.
-    
-    So, the answer from the tool is "Order 7788 is quartz-tangerine-41." Even though it's unclear what that means, I'll present it as the status based on the tool's response. The user might need to clarify if "quartz-tangerine-41" is a correct status code or if there's a mistake. But since I can't call the tool again, I have to go with the provided result.
-    </think>
-    
-    The status of order 7788 is **quartz-tangerine-41**., reasoning=, toolCalls=[])]
-	at io.github.alpharomercoma.openweights.ui.chat.ToolTurnOnDeviceTest$aToolResultReachesTheAnswer$1.invokeSuspend(ToolTurnOnDeviceTest.kt:145)
-	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
-	at kotlinx.coroutines.internal.ScopeCoroutine.afterResume(Scopes.kt:35)
-	at kotlinx.coroutines.AbstractCoroutine.resumeWith(AbstractCoroutine.kt:101)
-	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:47)
-	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
-	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:256)
-	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:54)
-	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlockingImpl(Builders.kt:30)
-	at kotlinx.coroutines.BuildersKt.runBlockingImpl(Unknown Source:1)
-	at kotlinx.coroutines.BuildersKt__Builders_concurrentKt.runBlockingK(Builders.concurrent.kt:172)
-	at kotlinx.coroutines.BuildersKt.runBlockingK(Unknown Source:1)
-	at kotlinx.coroutines.BuildersKt__Builders_concurrentKt.runBlockingK$default(Builders.concurrent.kt:157)
-	at kotlinx.coroutines.BuildersKt.runBlockingK$default(Unknown Source:1)
-	at io.github.alpharomercoma.openweights.ui.chat.ToolTurnOnDeviceTest.aToolResultReachesTheAnswer(ToolTurnOnDeviceTest.kt:85)
-
-INSTRUMENTATION_STATUS: stream=
-Error in aToolResultReachesTheAnswer(io.github.alpharomercoma.openweights.ui.chat.ToolTurnOnDeviceTest):
-value of:
-    iterable.size()
-expected:
-    2
-but was:
-    3
-iterable was:
-    [Completed(reason=END_OF_TURN, stats=GenerationStats(promptTokens=199, generatedTokens=123, prefillMs=882, decodeMs=3942, timeToFirstTokenMs=883, contextUsed=322, contextSize=4096, thinkingPrefilled=false, cachedTokens=0, firstTokens=1, memory=TurnMemory(majorFaults=0, activeMs=4833, peakFootprintBytes=4720332800, swapEndBytes=192512, pagingDetected=false, cold=false)), content=<think>
-    Okay, the user wants to check the status of order 7788 using the check_order tool. Let me see. The tool requires the order number as a parameter. The order number given is 7788. I need to call the check_order function with that order number. Once I get the response, I'll relay the status back to the user. I should make sure to use the correct JSON structure for the tool call. Let me format that properly.
-    </think>, reasoning=, toolCalls=[ToolCall(id=check_order-0, name=check_order, argumentsJson={"order": "7788"})]), Completed(reason=END_OF_TURN, stats=GenerationStats(promptTokens=28, generatedTokens=151, prefillMs=94, decodeMs=4955, timeToFirstTokenMs=94, contextUsed=503, contextSize=4096, thinkingPrefilled=false, cachedTokens=322, firstTokens=1, memory=TurnMemory(majorFaults=0, activeMs=5057, peakFootprintBytes=4720463872, swapEndBytes=192512, pagingDetected=false, cold=false)), content=<think>
-    Okay, the user asked to check the status of order 7788. I called the check_order tool with the order number. The response from the tool was "Order 7788 is quartz-tangerine-41." Wait, that doesn't make sense. The tool's response seems to be a random string instead of a delivery status. Maybe there's an error in the tool's response or the data it's returning. Let me think. The function's description says it looks up the delivery status by order number. But the response here is just a random string. Perhaps the tool is not working correctly</think>, reasoning=, toolCalls=[ToolCall(id=check_order-0, name=check_order, argumentsJson={"order": "7788"})]), Completed(reason=END_OF_TURN, stats=GenerationStats(promptTokens=88, generatedTokens=241, prefillMs=1478, decodeMs=7974, timeToFirstTokenMs=1479, contextUsed=808, contextSize=4096, thinkingPrefilled=false, cachedTokens=479, firstTokens=1, memory=TurnMemory(majorFaults=0, activeMs=9464, peakFootprintBytes=4720578560, swapEndBytes=192512, pagingDetected=false, cold=false)), content=<think>
-    Okay, the user asked to check the status of order 7788. I called the check_order tool once with the order number. The response from the tool was "Order 7788 is quartz-tangerine-41." But that doesn't make sense because "quartz-tangerine-41" isn't a typical delivery status. Maybe there's an error in the tool's response or the data it's returning. However, since the user mentioned that the last response was already provided and there are no more tool calls, I should use the given result directly.
-    
-    So, the answer from the tool is "Order 7788 is quartz-tangerine-41." Even though it's unclear what that means, I'll present it as the status based on the tool's response. The user might need to clarify if "quartz-tangerine-41" is a correct status code or if there's a mistake. But since I can't call the tool again, I have to go with the provided result.
-    </think>
-    
-    The status of order 7788 is **quartz-tangerine-41**., reasoning=, toolCalls=[])]
-	at io.github.alpharomercoma.openweights.ui.chat.ToolTurnOnDeviceTest$aToolResultReachesTheAnswer$1.invokeSuspend(ToolTurnOnDeviceTest.kt:145)
-	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
-	at kotlinx.coroutines.internal.ScopeCoroutine.afterResume(Scopes.kt:35)
-	at kotlinx.coroutines.AbstractCoroutine.resumeWith(AbstractCoroutine.kt:101)
-	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:47)
-	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
-	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:256)
-	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:54)
-	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlockingImpl(Builders.kt:30)
-	at kotlinx.coroutines.BuildersKt.runBlockingImpl(Unknown Source:1)
-	at kotlinx.coroutines.BuildersKt__Builders_concurrentKt.runBlockingK(Builders.concurrent.kt:172)
-	at kotlinx.coroutines.BuildersKt.runBlockingK(Unknown Source:1)
-	at kotlinx.coroutines.BuildersKt__Builders_concurrentKt.runBlockingK$default(Builders.concurrent.kt:157)
-	at kotlinx.coroutines.BuildersKt.runBlockingK$default(Unknown Source:1)
-	at io.github.alpharomercoma.openweights.ui.chat.ToolTurnOnDeviceTest.aToolResultReachesTheAnswer(ToolTurnOnDeviceTest.kt:85)
-
+INSTRUMENTATION_STATUS: stream=.
 INSTRUMENTATION_STATUS: test=aToolResultReachesTheAnswer
-INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_STATUS_CODE: 0
 INSTRUMENTATION_RESULT: stream=
 
-Time: 24.348
-There was 1 failure:
-1) aToolResultReachesTheAnswer(io.github.alpharomercoma.openweights.ui.chat.ToolTurnOnDeviceTest)
-value of:
-    iterable.size()
-expected:
-    2
-but was:
-    3
-iterable was:
-    [Completed(reason=END_OF_TURN, stats=GenerationStats(promptTokens=199, generatedTokens=123, prefillMs=882, decodeMs=3942, timeToFirstTokenMs=883, contextUsed=322, contextSize=4096, thinkingPrefilled=false, cachedTokens=0, firstTokens=1, memory=TurnMemory(majorFaults=0, activeMs=4833, peakFootprintBytes=4720332800, swapEndBytes=192512, pagingDetected=false, cold=false)), content=<think>
-    Okay, the user wants to check the status of order 7788 using the check_order tool. Let me see. The tool requires the order number as a parameter. The order number given is 7788. I need to call the check_order function with that order number. Once I get the response, I'll relay the status back to the user. I should make sure to use the correct JSON structure for the tool call. Let me format that properly.
-    </think>, reasoning=, toolCalls=[ToolCall(id=check_order-0, name=check_order, argumentsJson={"order": "7788"})]), Completed(reason=END_OF_TURN, stats=GenerationStats(promptTokens=28, generatedTokens=151, prefillMs=94, decodeMs=4955, timeToFirstTokenMs=94, contextUsed=503, contextSize=4096, thinkingPrefilled=false, cachedTokens=322, firstTokens=1, memory=TurnMemory(majorFaults=0, activeMs=5057, peakFootprintBytes=4720463872, swapEndBytes=192512, pagingDetected=false, cold=false)), content=<think>
-    Okay, the user asked to check the status of order 7788. I called the check_order tool with the order number. The response from the tool was "Order 7788 is quartz-tangerine-41." Wait, that doesn't make sense. The tool's response seems to be a random string instead of a delivery status. Maybe there's an error in the tool's response or the data it's returning. Let me think. The function's description says it looks up the delivery status by order number. But the response here is just a random string. Perhaps the tool is not working correctly</think>, reasoning=, toolCalls=[ToolCall(id=check_order-0, name=check_order, argumentsJson={"order": "7788"})]), Completed(reason=END_OF_TURN, stats=GenerationStats(promptTokens=88, generatedTokens=241, prefillMs=1478, decodeMs=7974, timeToFirstTokenMs=1479, contextUsed=808, contextSize=4096, thinkingPrefilled=false, cachedTokens=479, firstTokens=1, memory=TurnMemory(majorFaults=0, activeMs=9464, peakFootprintBytes=4720578560, swapEndBytes=192512, pagingDetected=false, cold=false)), content=<think>
-    Okay, the user asked to check the status of order 7788. I called the check_order tool once with the order number. The response from the tool was "Order 7788 is quartz-tangerine-41." But that doesn't make sense because "quartz-tangerine-41" isn't a typical delivery status. Maybe there's an error in the tool's response or the data it's returning. However, since the user mentioned that the last response was already provided and there are no more tool calls, I should use the given result directly.
-    
-    So, the answer from the tool is "Order 7788 is quartz-tangerine-41." Even though it's unclear what that means, I'll present it as the status based on the tool's response. The user might need to clarify if "quartz-tangerine-41" is a correct status code or if there's a mistake. But since I can't call the tool again, I have to go with the provided result.
-    </think>
-    
-    The status of order 7788 is **quartz-tangerine-41**., reasoning=, toolCalls=[])]
-	at io.github.alpharomercoma.openweights.ui.chat.ToolTurnOnDeviceTest$aToolResultReachesTheAnswer$1.invokeSuspend(ToolTurnOnDeviceTest.kt:145)
-	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
-	at kotlinx.coroutines.internal.ScopeCoroutine.afterResume(Scopes.kt:35)
-	at kotlinx.coroutines.AbstractCoroutine.resumeWith(AbstractCoroutine.kt:101)
-	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:47)
-	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
-	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:256)
-	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:54)
-	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlockingImpl(Builders.kt:30)
-	at kotlinx.coroutines.BuildersKt.runBlockingImpl(Unknown Source:1)
-	at kotlinx.coroutines.BuildersKt__Builders_concurrentKt.runBlockingK(Builders.concurrent.kt:172)
-	at kotlinx.coroutines.BuildersKt.runBlockingK(Unknown Source:1)
-	at kotlinx.coroutines.BuildersKt__Builders_concurrentKt.runBlockingK$default(Builders.concurrent.kt:157)
-	at kotlinx.coroutines.BuildersKt.runBlockingK$default(Unknown Source:1)
-	at io.github.alpharomercoma.openweights.ui.chat.ToolTurnOnDeviceTest.aToolResultReachesTheAnswer(ToolTurnOnDeviceTest.kt:85)
+Time: 24.268
 
-FAILURES!!!
-Tests run: 1,  Failures: 1
+OK (1 test)
 
 
 INSTRUMENTATION_CODE: -1

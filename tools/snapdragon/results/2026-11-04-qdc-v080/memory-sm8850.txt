@@ -1,6 +1,23 @@
-SM8850, minified release build, after one "hi" turn at 32768 context, 2026-11-04.
-"required" is FitEstimator: file + kvCacheBytes(32768) + 512 MiB, from each GGUF's header.
-dumpsys meminfo, Native Heap PSS, is almost all of the app's memory: nothing is file-mapped.
+SM8850 (QDC, Android 16, 23 GB, /proc/cpuinfo lists sme), debug app on v0.8.0, one "hi" turn at 32768 context, 2026-11-04.
+MiB. before = file + KV (from each GGUF header) + 512. after = before + the quant type's share of the file (FitEstimator).
+peak = VmHWM. native = Native Heap PSS from dumpsys meminfo. The app holds no file mapping, so native is nearly all of it.
 
-LFM3-1.7B-Q4_K_M                 file 1048 MiB  kv 704 MiB  required 2264 MiB  native heap 2597 MiB (2659692 KB)  pss 2658 MB  rss 2805 MB
-LFM2.5-1.2B-Instruct-QAD-Q4_0    file  663 MiB  kv 384 MiB  required 1559 MiB  native heap 1398 MiB (1431940 KB)  pss 1451 MB  rss 1597 MB
+model                             file    kv before  after  peak native peak-before of file  prefill->decode tok/s
+LFM2.5-1.2B-Instruct-QAD-Q4_0      663   384   1559   1956  1758   1448        +199   +0.30  136->63
+LFM2.5-1.2B-Instruct-Q4_K_M        697   384   1593   2255  1949   1632        +356   +0.51  141->55
+Qwen3.5-2B-Q4_K_M                 1221  1536   3269   4428  3258   2949         -11   -0.01  153->29
+LFM3-1.7B-Q4_K_M                  1048   704   2264   3259  3001   2683        +737   +0.70  103->40
+LFM3-1.7B-QAD-Q4_0                1000   704   2216   2816  2729   2417        +513   +0.51  103->43
+LFM3-1.7B-Q6_K                    1361   704   2577   4822  4747   4440       +2170   +1.59  125->31
+LFM3-1.7B-Q8_0                    1760   704   2976   4999  4808   4501       +1832   +1.04  117->30
+LFM2.5-2.6B-Q4_K_M                1596   512   2620   4136  3484   3147        +864   +0.54  82->28
+Qwen3-1.7B-Q8_0                   1749  3584   5845   7856  7685   7314       +1840   +1.05  35->27
+gemma-3-1b-it-Q4_K_M               768   832   2112   2841  2785   2450        +673   +0.88  85->45
+LFM2.5-VL-3B-Q4_0                 1520   512   2544   3456  3010   2712        +466   +0.31  92->27
+LFM2.5-1.2B-Instruct-Q6_K          918   384   1814   3328  3204   2875       +1390   +1.51  181->46
+LFM2.5-1.2B-Instruct-Q5_K_M        804   384   1700   2142  2063   1740        +363   +0.45  123->46
+
+Earlier the same day, the minified release build at the same context: LFM3 Q4_K_M native 2597, LFM2.5 QAD-Q4_0 native 1398.
+Apple M5 with SME2 and a 64-byte vector, model buffers only, from repack-buffers.cpp (MiB, file then total): LFM2.5 QAD 663/1474, LFM2.5 Q4_K_M 697/1160, Qwen3.5 Q4_K_M 1221/2421, LFM3 Q4_K_M 1048/1839, LFM2.5 2.6B Q4_K_M 1596/2571, LFM2.5-VL Q4_0 1520/3321, Qwen3 Q8_0 1749/3614, Qwen3.5 9B Q8_0 9086/16215.
+
+A real search turn in the same app, VmHWM: LFM3 Q4_K_M 3021 MiB (3001 after the short turn), LFM2.5 Q6_K 3201 (3204). So each allowance is 6 to 10 points above the worst share measured.
