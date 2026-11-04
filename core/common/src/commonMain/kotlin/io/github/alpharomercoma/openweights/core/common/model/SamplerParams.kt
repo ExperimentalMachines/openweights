@@ -119,57 +119,6 @@ data class ModelLoadParams(
     /** Layers to offload to the GPU. 0 = CPU only, which is the fastest path on most phones. */
     val gpuLayers: Int = 0,
     /**
-     * Memory-map the weights instead of reading them into the heap.
-     *
-     * Off, which is the opposite of what this said and of what mmap is usually for. The
-     * claim here was that mapping keeps resident memory low. Measured on the test phone
-     * with a 1.48 GiB Q4_0 model, through `llama-bench` so nothing of this app is in the
-     * number:
-     *
-     * | | peak RSS | private clean | private dirty |
-     * | --- | --- | --- | --- |
-     * | mapped | 3.24 GB | 1.47 GB | 1.62 GB |
-     * | read | **1.95 GB** | 6.7 MB | 1.77 GB |
-     *
-     * The weights are resident twice when they are mapped. KleidiAI's kernels want Q4_0 in
-     * a blocked layout, so the CPU backend repacks every accelerated tensor into a buffer
-     * of its own, and the mapped pages it read them from stay resident behind it. Reading
-     * instead of mapping pays for one copy.
-     *
-     * What it costs: about 245 ms on a warm load, measured over five runs each, 1,140 ms
-     * mapped against 1,385 ms read. Throughput is the same to within noise, pp256 106.7
-     * against 104.6 and tg64 24.1 against 23.8. The cold case could not be measured because
-     * dropping the page cache needs root, and it should be close either way since the
-     * repack faults in every page regardless.
-     *
-     * Through the app rather than the bench, over the same six turn conversation: peak PSS
-     * 3.32 GB mapped against **2.06 GB** read, and decode 15.78 t/s against 16.15. Not
-     * slower, 1.27 GB lighter, and 2.06 GB is what `FitEstimator` predicts for this model at
-     * this window, so the estimate was right and mapping was the whole discrepancy.
-     *
-     * A quarter of a second against 1.27 GB is not a close call on a phone. It also
-     * changes the failure mode on a small device from thrashing on evicted pages to
-     * needing less memory in the first place.
-     *
-     * **Two corrections to that table (2026-09-04), neither of which changes the choice.**
-     *
-     * Reading is not one copy in physical memory, it is one copy *charged to this
-     * process*. llama.cpp reads through buffered stdio, so the kernel also holds the whole
-     * GGUF in page cache, and page cache is not counted in RSS or PSS — so part of the
-     * 1.27 GB the read path looked lighter by is accounting rather than memory. Dropping
-     * that copy with `posix_fadvise(POSIX_FADV_DONTNEED)` after the load was tried and
-     * **does not work**: models live on emulated external storage, and on the test phone
-     * the file stayed fully cached across a load (system `Cached` moved 4 MB, not 663).
-     * It is a clean, reclaimable copy, which is the first thing the kernel drops under
-     * pressure, so it is charged here as a caveat on the table rather than a problem.
-     *
-     * The second is why mapping would not help even so: the tensors the CPU actually
-     * computes against are anonymous either way, because KleidiAI repacks into its own
-     * buffer whichever mode the source came from. Mapping adds a clean copy on top; it
-     * does not make the hot weights droppable. See docs/research/first-turn-latency.md.
-     */
-    val useMmap: Boolean = false,
-    /**
      * Whether prompt reading may be handed to a GPU while generation stays where it is.
      *
      * The one mechanism that separates the two halves of a turn. A batch is only offloaded
@@ -183,32 +132,6 @@ data class ModelLoadParams(
      * GPU backend to offload to.
      */
     val opOffload: Boolean = true,
-    /**
-     * The KV cache at eight bits, K and V both, with flash attention.
-     *
-     * Decode is affine in context: on the MT6991 it costs 3.42 microseconds per generated
-     * token per token of context, which is the bytes of cache that attention reads back.
-     * Q8_0 halves those bytes, so at a wide window it is worth on the order of a tenth of
-     * the per-token time; what it costs is a little accuracy, and how much is a property of
-     * the model. Gemma is known to be sensitive to it, and a four-bit K collapses outright
-     * (llama.cpp discussion #23470), which is why this is a single switch to Q8_0 and not
-     * a choice of types. Off until it has been measured on the phone against the models
-     * this app recommends: `ContextLengthBenchmark` with `-e kv q8` is the measurement.
-     */
-    val kvCacheQuantized: Boolean = false,
-    /**
-     * Draft-free speculation on the llama.cpp decode loop.
-     *
-     * The next few tokens are proposed from n-grams already in the context and verified
-     * by the model in one batch, so a span it is copying (a page being rebuilt, a quote,
-     * a file written back with one change) decodes several tokens for the price of about
-     * 1.7 single steps. Where the context has no match there is no draft and no cost.
-     * Transformers only: a hybrid or recurrent cache cannot drop a rejected tail, and the
-     * engine keeps the single path on those whatever this says. Off until measured on
-     * the phone: `SpeculationBenchmark` is the measurement, and the go rule is in
-     * docs/research/qa-sweep-2026-09-02.md.
-     */
-    val speculation: Boolean = false,
     /**
      * How many tokens one picture is turned into, or [AUTOMATIC_IMAGE_TOKENS] for whatever
      * the projector's own metadata asks for.
@@ -243,8 +166,8 @@ data class ModelLoadParams(
      * phone that is already holding two gigabytes of weights.
      *
      * Not a user setting and not intended to become one. It is an engine constant whose
-     * value should be whatever `BatchSizeBenchmark` says, on the same footing as
-     * [kvCacheQuantized]: present, exercised, and moved only by a measurement.
+     * value should be whatever `BatchSizeBenchmark` says: present, exercised, and moved only
+     * by a measurement.
      */
     val batchTokens: Int = DEFAULT_BATCH_TOKENS,
     /**

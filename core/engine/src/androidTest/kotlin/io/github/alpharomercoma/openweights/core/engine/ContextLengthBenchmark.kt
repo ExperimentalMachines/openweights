@@ -18,7 +18,6 @@ package io.github.alpharomercoma.openweights.core.engine
 
 import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
 import io.github.alpharomercoma.openweights.core.common.model.ChatMessage
 import io.github.alpharomercoma.openweights.core.common.model.ChatRole
@@ -187,8 +186,7 @@ class ContextLengthBenchmark {
 
             Log.i(
                 TAG,
-                "kv=%s ctx=%d load=%dms rss=%d MiB (+%d for the window) %.1f pp/s %.1f tg/s".format(
-                    if (kvQuantized) "q8_0" else "f16",
+                "ctx=%d load=%dms rss=%d MiB (+%d for the window) %.1f pp/s %.1f tg/s".format(
                     context,
                     loadMs,
                     loaded,
@@ -201,16 +199,7 @@ class ContextLengthBenchmark {
         }
     }
 
-    /**
-     * The KV cache at eight bits when the run asks for it with `-e kv q8`, so the same
-     * benchmark measures both settings on one phone: the decode-against-context curve is
-     * where a smaller cache should show, and the load line is where its memory does.
-     */
-    private val kvQuantized: Boolean =
-        InstrumentationRegistry.getArguments().getString("kv") == "q8"
-
-    private fun params(context: Int) =
-        ModelLoadParams(contextLength = context, gpuLayers = 0, kvCacheQuantized = kvQuantized)
+    private fun params(context: Int) = ModelLoadParams(contextLength = context, gpuLayers = 0)
 
     private suspend fun InferenceEngine.turn(prompt: String, maxTokens: Int): GenerationStats =
         chat(

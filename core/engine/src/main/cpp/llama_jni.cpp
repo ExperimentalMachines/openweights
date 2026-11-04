@@ -258,10 +258,7 @@ Java_io_github_alpharomercoma_openweights_core_engine_LlamaBridge_nativeLoadMode
     jint thread_count,
     jint batch_thread_count,
     jint gpu_layers,
-    jboolean use_mmap,
     jboolean op_offload,
-    jboolean kv_quantized,
-    jboolean speculate,
     jint image_tokens,
     jint batch_tokens,
     jint micro_batch_tokens) try {
@@ -270,8 +267,7 @@ Java_io_github_alpharomercoma_openweights_core_engine_LlamaBridge_nativeLoadMode
         to_utf8(env, model_path),
         mmproj_path == nullptr ? std::string() : to_utf8(env, mmproj_path),
         context_length, thread_count, batch_thread_count,
-        gpu_layers, use_mmap == JNI_TRUE, op_offload == JNI_TRUE,
-        kv_quantized == JNI_TRUE, speculate == JNI_TRUE, image_tokens,
+        gpu_layers, op_offload == JNI_TRUE, image_tokens,
         batch_tokens, micro_batch_tokens, error);
     if (session == nullptr) {
         throw_engine_exception(env, error);

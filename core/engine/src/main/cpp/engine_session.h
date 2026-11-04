@@ -145,9 +145,6 @@ struct ParsedReply {
 struct GenerationStats {
     int32_t prompt_tokens     = 0;
     int32_t generated_tokens  = 0;
-    /** Tokens proposed by the n-gram drafter, and how many of them the model agreed with. */
-    int32_t draft_tokens      = 0;
-    int32_t accepted_tokens   = 0;
     int64_t prefill_ms        = 0;
     int64_t decode_ms         = 0;
     int64_t time_to_first_token_ms = 0;
@@ -227,10 +224,7 @@ public:
         int32_t n_threads,
         int32_t n_threads_batch,
         int32_t n_gpu_layers,
-        bool use_mmap,
         bool op_offload,
-        bool kv_quantized,
-        bool speculate,
         /**
          * Tokens per image, or 0 to leave the projector's metadata in charge.
          *
@@ -745,20 +739,6 @@ private:
      * so the next turn re-evaluates from the start instead.
      */
     bool cached_covers_context_ = true;
-
-    /**
-     * Draft-free speculation: propose the next few tokens from n-grams already in the
-     * context and let the model verify them in one batch.
-     *
-     * Costs nothing where the context has no match, because then there is no draft and
-     * the step is the single decode it always was. Where the model is copying (a page
-     * being rebuilt, a quote, a file being edited back) a draft of four is verified for
-     * the price of about 1.7 single steps, so it pays above 0.68 accepted and yields up
-     * to 3x at full acceptance, per the batch costs measured on the MT6991. Only on
-     * models whose cache can drop a rejected tail: a hybrid or recurrent model cannot,
-     * and keeps the single path. Off unless the load asks for it.
-     */
-    bool speculate_ = false;
 
     /**
      * The tokens the warm snapshot covers, and the memory state that held exactly them.

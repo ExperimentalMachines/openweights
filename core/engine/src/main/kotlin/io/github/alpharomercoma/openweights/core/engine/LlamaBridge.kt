@@ -64,7 +64,6 @@ internal class LlamaBridge {
         threadCount: Int,
         batchThreadCount: Int,
         gpuLayers: Int,
-        useMmap: Boolean,
         /**
          * Whether a large batch may be handed to a GPU even when the weights are not on it.
          *
@@ -74,10 +73,6 @@ internal class LlamaBridge {
          * CPU. It is the only mechanism either runtime has for that split.
          */
         opOffload: Boolean,
-        /** K and V at eight bits with flash attention, or the f16 default. See [ModelLoadParams]. */
-        kvCacheQuantized: Boolean,
-        /** Draft-free n-gram speculation on the decode loop. See [ModelLoadParams]. */
-        speculation: Boolean,
         /**
          * Tokens one picture is worth, or 0 for the projector's own metadata.
          *

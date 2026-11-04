@@ -43,7 +43,6 @@ import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit.SECONDS
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
@@ -112,14 +111,6 @@ class LlamaCppEngine internal constructor(
     @Volatile
     private var currentModel: LoadedModelInfo? = null
 
-    /**
-     * Whether the next pass is the first since a load that memory-mapped the weights. That
-     * pass reads them in from the file for the first time, which the fault count cannot tell
-     * from paging, so it is measured and never flagged. Weights read into memory at load,
-     * the default, were already read by then.
-     */
-    private val coldPass = AtomicBoolean(false)
-
     override val loadedModel: LoadedModelInfo? get() = currentModel
 
     override suspend fun load(modelFile: File, params: ModelLoadParams, projectorFile: File?) {
@@ -138,9 +129,6 @@ class LlamaCppEngine internal constructor(
                     batchThreadCount = params.batchThreadCount ?: defaultBatchThreadCount,
                     gpuLayers = params.gpuLayers,
                     opOffload = params.opOffload,
-                    useMmap = params.useMmap,
-                    kvCacheQuantized = params.kvCacheQuantized,
-                    speculation = params.speculation,
                     imageTokens = params.imageTokens,
                     batchTokens = params.batchTokens,
                     microBatchTokens = params.microBatchTokens,
@@ -158,7 +146,6 @@ class LlamaCppEngine internal constructor(
                     handle.set(newHandle)
                     currentModel = info
                 }
-                coldPass.set(params.useMmap)
             }
         }
     }
@@ -191,7 +178,7 @@ class LlamaCppEngine internal constructor(
 
         val pass = PassMeter(
             this,
-            cold = coldPass.getAndSet(false),
+            cold = false,
             read = { progressOf(activeHandle) },
             ticks = liveProgress,
         )
