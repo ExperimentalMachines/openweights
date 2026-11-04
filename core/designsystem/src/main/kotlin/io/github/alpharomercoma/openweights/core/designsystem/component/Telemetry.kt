@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -54,48 +53,6 @@ import kotlin.math.roundToInt
  * them being slightly wrong.
  */
 const val FAST_TOKENS_PER_SECOND = 25.0
-
-/**
- * The vertical rail beside a model reply, coloured by how fast that reply was generated.
- *
- * Scrolling back through a conversation, the rail makes performance history visible: which
- * answers came quickly and which ones crawled, without reading a single number.
- *
- * The colour is never the only signal. The measured rate is printed above every finished
- * reply, and the rail carries its own description for screen readers. Grey is the ordinary
- * case, so a rail that is actually green or red stands out.
- *
- * @param tokensPerSecond measured decode throughput, or null while generation is still
- *   warming up, in which case the rail is drawn neutral.
- */
-@Composable
-fun SpeedRail(tokensPerSecond: Double?, modifier: Modifier = Modifier) {
-    val dark = LocalIsDarkTheme.current
-    val target = when (tokensPerSecond) {
-        null -> MaterialTheme.colorScheme.outline
-        else -> signalColor(
-            fraction = (tokensPerSecond / FAST_TOKENS_PER_SECOND).toFloat(),
-            dark = dark,
-        )
-    }
-    // Not animated. This describes a number that has already settled, and a rail drifting
-    // towards its colour afterwards suggests a measurement still being taken.
-    val color = target
-    val description = tokensPerSecond
-        ?.let { "Generated at ${it.roundToInt()} tokens per second" }
-        ?: "Generating"
-
-    Box(
-        modifier = modifier
-            .width(RAIL_WIDTH)
-            .fillMaxHeight()
-            .clip(RoundedCornerShape(RAIL_WIDTH / 2))
-            .background(color)
-            .semantics { contentDescription = description },
-    )
-}
-
-private val RAIL_WIDTH = 2.dp
 
 /**
  * How full the model's context window is, drawn as a hairline that spans the screen just
@@ -261,12 +218,7 @@ private fun TelemetryPreview() {
                 outputTokens = 512,
                 cacheHitRate = 0.92,
             )
-            androidx.compose.foundation.layout.Row(
-                modifier = Modifier.height(40.dp),
-            ) {
-                SpeedRail(tokensPerSecond = 28.0)
-                Metric("28.4 tok/s · 0.41 s to first token")
-            }
+            Metric("28.4 tok/s · 0.41 s to first token")
         }
     }
 }

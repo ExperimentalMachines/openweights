@@ -300,9 +300,5 @@ data class ModelLoadParams(
          * third configuration nobody has a question about.
          */
         const val DEFAULT_BATCH_TOKENS = 512
-
-        /** The range `ImageTokenBenchmark` sweeps. See [imageTokens]. */
-        const val MIN_IMAGE_TOKENS = 16
-        const val MAX_IMAGE_TOKENS = 1024
     }
 }

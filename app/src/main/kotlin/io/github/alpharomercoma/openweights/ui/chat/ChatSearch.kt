@@ -41,10 +41,7 @@ data class ChatSearchState(
      * are the same value and only this tells them apart.
      */
     val hasAnswer: Boolean = false,
-) {
-    /** True while a search is on, which is what decides whether the drawer shows results. */
-    val isSearching: Boolean get() = query.isNotBlank()
-}
+)
 
 /**
  * Searching every conversation, by title and by anything said in one.

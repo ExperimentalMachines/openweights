@@ -43,9 +43,7 @@ import javax.inject.Singleton
 
 /** Progress of one model download. */
 sealed interface DownloadProgress {
-    data class Downloading(val bytesDone: Long, val bytesTotal: Long) : DownloadProgress {
-        val fraction: Float get() = if (bytesTotal > 0) bytesDone.toFloat() / bytesTotal else 0f
-    }
+    data class Downloading(val bytesDone: Long, val bytesTotal: Long) : DownloadProgress
 
     /** Hashing a multi-gigabyte file takes a while, so it gets its own visible phase. */
     data object Verifying : DownloadProgress

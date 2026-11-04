@@ -62,9 +62,6 @@ object VulkanSupport {
     /** True when GPU files should be offered: Vulkan 1.1 hardware and no refusal on record. */
     val usable: Boolean get() = hardware && refusal == null
 
-    /** Why this phone stopped being offered GPU files, or null if it has not. */
-    val refusedBecause: String? get() = refusal
-
     /** Records that a Vulkan model would not open or run here, so GPU files stop being offered. */
     fun markUnusable(reason: String) {
         refusal = reason

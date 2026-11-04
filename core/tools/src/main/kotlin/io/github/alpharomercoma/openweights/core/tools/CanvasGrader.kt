@@ -38,8 +38,6 @@ data class PageReport(
      */
     val blocked: List<String> = emptyList(),
 ) {
-    val clean: Boolean get() = lines.isEmpty()
-
     /**
      * What is worth telling the model, one line each.
      *

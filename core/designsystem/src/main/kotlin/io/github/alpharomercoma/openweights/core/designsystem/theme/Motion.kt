@@ -43,9 +43,6 @@ object Motion {
     /** Tab switches, list changes, the composer growing a line. The common case. */
     const val QUICK_MS = 160
 
-    /** Sheets, the drawer, dialogs. The only things given room to arrive. */
-    const val STANDARD_MS = 220
-
     /**
      * Material's emphasized curve: a fast start that settles.
      *
@@ -57,6 +54,4 @@ object Motion {
     fun <T> instant(): FiniteAnimationSpec<T> = tween(INSTANT_MS, easing = Emphasized)
 
     fun <T> quick(): FiniteAnimationSpec<T> = tween(QUICK_MS, easing = Emphasized)
-
-    fun <T> standard(): FiniteAnimationSpec<T> = tween(STANDARD_MS, easing = Emphasized)
 }

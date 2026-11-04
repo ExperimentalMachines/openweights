@@ -45,7 +45,7 @@ class DisaggregatedBridge {
     /** The NPU's prefill milliseconds since the last reset, on the clock [nativeGenerate] reports. */
     external fun nativePrefillMs(handle: Long): Long
 
-    /** Why the last call returned nothing: [ERROR_OVERFLOW], [ERROR_RUNTIME], or 0. */
+    /** Why the last call returned nothing: [ERROR_OVERFLOW], another failure, or 0. */
     external fun nativeLastError(handle: Long): Int
 
     /**
@@ -71,9 +71,6 @@ class DisaggregatedBridge {
 
         /** The prompt does not fit the NPU's compiled window. */
         const val ERROR_OVERFLOW = 1
-
-        /** The runtime failed: a step that did not run, a buffer that could not be copied. */
-        const val ERROR_RUNTIME = 2
 
         /**
          * Whether this phone can run the NPU half at all, answered by loading the

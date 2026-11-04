@@ -58,15 +58,6 @@ class CanvasViewModel @Inject constructor(
     }
 
     /**
-     * Closes the canvas and the server behind it. A URL that was open in a browser tab
-     * stops answering, which is the point: the folder is served while it is on screen.
-     */
-    fun dismiss() {
-        board.dismiss()
-        server.stop()
-    }
-
-    /**
      * Leaving the screen stops the server, whatever the board still holds.
      *
      * The server's own contract is that a URL learned while the canvas was open answers

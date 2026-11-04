@@ -24,7 +24,6 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
-import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.getSystemService
@@ -289,20 +288,5 @@ class GenerationService : Service() {
 
         /** Whether anything is currently holding the process up. For tests and for logs. */
         fun isHeld(): Boolean = synchronized(holders) { holders.isNotEmpty() }
-
-        /**
-         * Forgets every hold, for a test that needs to start from nothing.
-         *
-         * The count is process-wide, which is right in an app with one process and awkward
-         * in a JVM running a suite: a test asserting that nothing is held any more would
-         * otherwise be asserting about every test that ran before it.
-         */
-        @VisibleForTesting
-        fun forgetHolders() {
-            synchronized(holders) {
-                holders.clear()
-                owner = null
-            }
-        }
     }
 }

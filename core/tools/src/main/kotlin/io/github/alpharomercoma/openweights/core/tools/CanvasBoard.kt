@@ -93,8 +93,4 @@ class CanvasBoard @Inject constructor() {
         val canvas = current.value ?: return
         if (canvas.contains(path)) current.value = canvas.copy(revision = canvas.revision + 1)
     }
-
-    fun dismiss() {
-        current.value = null
-    }
 }
