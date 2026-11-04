@@ -29,7 +29,7 @@ On the POCO X8 Pro Max (Dimensity 9500s, MT6991, 12 GB, the armv9.0_1 CPU varian
 
 Then on a Snapdragon 8 Elite Gen 5 (QDC SM8850, Android 16, 23 GB), with the budget fix below in place:
 
-- Engine on-device tests: 21 passed, 0 failed, 1 skipped (no audio model). That covers what the POCO skipped: the
+- Engine on-device tests: 23 passed, 0 failed, 1 skipped (no audio model). That covers what the POCO skipped: the
   sliding window on Gemma, GPU offload and two-picture vision.
 - `HarnessSmokeTest` and `LongConversationOnDeviceTest` pass. `ToolTurnOnDeviceTest` had been skipping on every model,
   because its `check_order` tool starts switched off and so was never offered (the log read `tools=[]`). With it
@@ -40,7 +40,9 @@ Then on a Snapdragon 8 Elite Gen 5 (QDC SM8850, Android 16, 23 GB), with the bud
   a three-turn LFM2.5 chat with a live search (846 tokens and 92% reuse on the first turn, the same as the POCO) and a
   four-round LFM3 chat. The crash buffer stayed empty.
 
-Raw data: `tools/snapdragon/results/2026-11-04-qdc-v080/`.
+Raw data: `tools/snapdragon/results/2026-11-04-qdc-v080/`; `inst-engine-after-review.txt` is the 24-test run. An
+adversarial Codex review of the first push found the closing-tag confidence leak, tests that would have passed with no
+budget at all, and overstatements in this note, all corrected here.
 
 Not run: the public benchmarks on v0.8.0, the decision suite beyond the nine rows below, and vision through the app's
 interface (`MultimodalTest` covers it in the engine).
@@ -48,10 +50,12 @@ interface (`MultimodalTest` covers it in the engine).
 ## Should KleidiAI stay on
 
 The October trial on a Snapdragon 8 Elite Gen 5 suggested turning it off, because v0.8.0's new Q4_K and Q6_K
-kernels repack weights and raised peak memory there, by up to 41% in the app engine (Qwen3.5 2B Q4_K_M, 1948
-to 2740 MB), with no decode gain on that chip. Raw data: `tools/snapdragon/results/2026-10-31-llama-v080/`.
+kernels repack weights and raised memory there, by up to 41% in the app engine after loading (Qwen3.5 2B Q4_K_M,
+1948 to 2740 MB of RSS), with no decode gain on that chip. Raw data: `tools/snapdragon/results/2026-10-31-llama-v080/`.
 The POCO had not been measured, so it was, with `llama-bench` built from the app's CMake flags, 512 tokens in
-and 64 out, 3 repetitions, 6 threads, in both run orders. The two orders agree to about 1%.
+and 64 out, 3 repetitions, 6 threads, in both run orders. The two orders mostly agree to about 1%. The largest gaps
+are Q8_0 without KleidiAI (decode 15.7 and 16.6 tok/s, peak 3636 and 3361 MB) and b10549's QAD-Q4_0 decode (about 3%).
+`small.gguf` in the raw log is the Q4_K_M file.
 
 | Model | Build | Peak memory | Prefill, tok/s | Decode, tok/s |
 |---|---|---|---|---|
@@ -82,10 +86,15 @@ and at 128 tokens wrote a closing tag there:
 - inside a tool call, where the grammar has no way to accept it, and the turn failed;
 - inside an answer, which came back as `The capital of France\n</think>\nThe capital of France is Paris.`
 
-Both were reproduced on the POCO by `ReasoningBudgetOnDeviceTest` before the fix. The budget now stops at any listed
-tag, and the same tests pass: a budget landing in the call returns the same `web_search` call as no budget, and one
-landing in the answer leaves the answer byte for byte the same. Qwen3.5 2B lists the same three tags. llama-server
-already watches all of them (`reasoning_budget_end_tags`).
+Both were reproduced on the POCO by `ReasoningBudgetOnDeviceTest` before the fix
+(`tools/snapdragon/results/2026-11-04-poco-v080/before-fix-budget.txt`). The budget now stops at any listed tag: a budget
+landing in the call returns the same call and text as no budget, one landing in the answer leaves the answer byte for
+byte the same, and a control confirms that a budget inside the reasoning still closes it. Qwen3.5 2B lists the same
+three tags. llama-server passes all of them to its own budget (`reasoning_budget_end_tags`).
+
+The closing tag no longer counts towards the answer's confidence either. It belongs to the reasoning, but its
+probability reached the reader of the answer's opening tokens (a logprob of -0.68 in the test before this), so one
+unlikely tag could have started a search for an answer the model was sure of. How often that happened was not measured.
 
 So does LFM3 reject tools and say it does not know? On what was tried, no. It used a tool on all five prompts tried
 in the app, though four of those ran before the fix. After it, the Tokyo prompt searched, opened a forecast page and
@@ -106,12 +115,20 @@ refusal. Two limits showed up in them:
 ## What this leaves open
 
 - **A tool call written inside the reasoning.** LFM3 and Qwen3.5 2B list their call tag as an end tag, so they are covered.
-  LFM2.5 2.6B does not, and a host replay shows the same throw if it ever wrote a call before closing its block. No real
-  reply has been seen doing that, so nothing was built for it.
-- **Fit on phones where KleidiAI repacks heavily.** The POCO's memory cost is small, but the 8 Elite Gen 5's is
-  not, and `FitEstimator`'s fixed 512 MB overhead does not absorb it. A model near the limit on such a phone can
-  be called a fit and then run out of memory. Not fixed here: a fix must read a runtime capability, not a SoC
-  name, and needs that phone to measure.
+  LFM2.5 and Qwen3 1.7B do not, and a host replay on LFM2.5 2.6B shows the same throw if a call came before the block
+  closed. No real reply has been seen doing that, so nothing was built for it. None of the 15 models checked has a token
+  that merges a tag with other text, so matching on the end of the reply does not miss one
+  (`tools/snapdragon/results/2026-11-04-qdc-v080/vocab-tags.txt`, from `vocab.cpp` beside it).
+- **Fit on phones where KleidiAI repacks heavily.** The POCO's memory cost is small, but the 8 Elite Gen 5's is not, and
+  `FitEstimator`'s fixed 512 MiB overhead does not always absorb it. At 32k context on that phone LFM3 Q4_K_M holds
+  2597 MiB of native heap against an estimate of 2264, about 15% over, while LFM2.5 QAD-Q4_0 holds 1398 against 1559
+  (`tools/snapdragon/results/2026-11-04-qdc-v080/memory-sm8850.txt`). So a model near the limit on such a phone can be
+  called a fit and then run out of memory. Not fixed here: a fix must read a runtime capability, not a SoC name, and needs
+  more files measured than these two.
+- **A `<think>` written in a visible answer reopens the budget**, on the pass that has one, while the Kotlin parser treats
+  it as answer text. It was like this before the upgrade and has not been seen happening.
+- **Templates that print the date near the head** (Llama 3.2) change prompt bytes at midnight, so one turn re-reads the
+  conversation. Also unchanged by the upgrade.
 - **QAD-Q4_0 is slower in `llama-bench` on the POCO**, by 10% on prefill and 13% on decode, while Q4_K_M, the
   file that carries the shortlist's grades, gains. The cause is not isolated, and the in-app chat above does
   not show it.

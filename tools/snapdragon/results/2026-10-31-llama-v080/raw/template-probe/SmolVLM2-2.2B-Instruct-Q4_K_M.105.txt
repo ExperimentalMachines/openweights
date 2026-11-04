@@ -1,0 +1,39 @@
+### plain_think
+format=2 gen_prompt=[Assistant:] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=0 stops=0
+prompt_hash=c0b99b980122de40 len=114
+<<<<|im_start|>System: You are a helpful assistant.<end_of_utterance>
+User: What is 2+2?<end_of_utterance>
+Assistant:>>>
+### plain_nothink
+format=2 gen_prompt=[Assistant:] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=0 stops=0
+prompt_hash=c0b99b980122de40 len=114
+<<<<|im_start|>System: You are a helpful assistant.<end_of_utterance>
+User: What is 2+2?<end_of_utterance>
+Assistant:>>>
+### warm_head_tools
+format=2 gen_prompt=[Assistant:] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=0 stops=0
+prompt_hash=6b1f5661439ce35c len=67
+<<<<|im_start|>System: You are a helpful assistant.<end_of_utterance>
+>>>
+### multi_turn_tools
+format=2 gen_prompt=[Assistant:] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=0 stops=0
+prompt_hash=852a22aa82fce18b len=218
+<<<<|im_start|>System: You are a helpful assistant.<end_of_utterance>
+User: Who won the 2022 World Cup?<end_of_utterance>
+Assistant: Argentina won it.<end_of_utterance>
+User: And the time now?<end_of_utterance>
+Assistant:>>>
+### tool_result
+format=2 gen_prompt=[Assistant:] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=0 stops=0
+prompt_hash=bd45c50f9185c43b len=277
+<<<<|im_start|>System: You are a helpful assistant.<end_of_utterance>
+User: Search for llama.cpp<end_of_utterance>
+Assistant: <|tool_call_start|>[web_search(query="llama.cpp")]<|tool_call_end|><end_of_utterance>
+Tool: llama.cpp is an inference engine.<end_of_utterance>
+Assistant:>>>
+### effort_low
+format=2 gen_prompt=[Assistant:] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=0 stops=0
+prompt_hash=29013d8957697097 len=49
+<<<<|im_start|>User: Hi<end_of_utterance>
+Assistant:>>>
+### support_enable_thinking=0

@@ -1,0 +1,70 @@
+### plain_think
+format=2 gen_prompt=[<|im_start|>assistant
+<think>] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=4 stops=0
+prompt_hash=9496596b1580873a len=127
+<<<<|im_start|>system
+You are a helpful assistant.<|im_end|>
+<|im_start|>user
+What is 2+2?<|im_end|>
+<|im_start|>assistant
+<think>>>>
+### plain_nothink
+format=2 gen_prompt=[<|im_start|>assistant
+<think>] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=4 stops=0
+prompt_hash=9496596b1580873a len=127
+<<<<|im_start|>system
+You are a helpful assistant.<|im_end|>
+<|im_start|>user
+What is 2+2?<|im_end|>
+<|im_start|>assistant
+<think>>>>
+### warm_head_tools
+format=2 gen_prompt=[<|im_start|>assistant
+<think>] lazy=1 grammar_hash=fe3b582be311e8f5 grammar_len=1629 triggers=1 preserved=4 stops=0
+  trigger 1 [<|tool_call_start|>]
+prompt_hash=4f3524e891d928bd len=583
+<<<<|im_start|>system
+You are a helpful assistant.
+List of tools: [{"type": "function", "function": {"name": "web_search", "description": "Search the web for current information.", "parameters": {"type": "object", "properties": {"query": {"type": "string", "description": "What to search for"}, "count": {"type": "integer", "minimum": 1, "maximum": 10}, "freshness": {"type": "number", "default": 0.5}}, "required": ["query"]}}}, {"type": "function", "function": {"name": "get_time", "description": "Current local time.", "parameters": {"type": "object", "properties": {}}}}]<|im_end|>
+>>>
+### multi_turn_tools
+format=2 gen_prompt=[<|im_start|>assistant
+<think>] lazy=1 grammar_hash=fe3b582be311e8f5 grammar_len=1629 triggers=1 preserved=4 stops=0
+  trigger 1 [<|tool_call_start|>]
+prompt_hash=a6b66ecfc1d307a6 len=806
+<<<<|im_start|>system
+You are a helpful assistant.
+List of tools: [{"type": "function", "function": {"name": "web_search", "description": "Search the web for current information.", "parameters": {"type": "object", "properties": {"query": {"type": "string", "description": "What to search for"}, "count": {"type": "integer", "minimum": 1, "maximum": 10}, "freshness": {"type": "number", "default": 0.5}}, "required": ["query"]}}}, {"type": "function", "function": {"name": "get_time", "description": "Current local time.", "parameters": {"type": "object", "properties": {}}}}]<|im_end|>
+<|im_start|>user
+Who won the 2022 World Cup?<|im_end|>
+<|im_start|>assistant
+<think>The user asks about football.</think>Argentina won it.<|im_end|>
+<|im_start|>user
+And the time now?<|im_end|>
+<|im_start|>assistant
+<think>>>>
+### tool_result
+format=2 gen_prompt=[<|im_start|>assistant
+<think>] lazy=1 grammar_hash=fe3b582be311e8f5 grammar_len=1629 triggers=1 preserved=4 stops=0
+  trigger 1 [<|tool_call_start|>]
+prompt_hash=7a27a57517b563b1 len=821
+<<<<|im_start|>system
+You are a helpful assistant.
+List of tools: [{"type": "function", "function": {"name": "web_search", "description": "Search the web for current information.", "parameters": {"type": "object", "properties": {"query": {"type": "string", "description": "What to search for"}, "count": {"type": "integer", "minimum": 1, "maximum": 10}, "freshness": {"type": "number", "default": 0.5}}, "required": ["query"]}}}, {"type": "function", "function": {"name": "get_time", "description": "Current local time.", "parameters": {"type": "object", "properties": {}}}}]<|im_end|>
+<|im_start|>user
+Search for llama.cpp<|im_end|>
+<|im_start|>assistant
+<|tool_call_start|>[web_search(query="llama.cpp")]<|tool_call_end|><|im_end|>
+<|im_start|>tool
+llama.cpp is an inference engine.<|im_end|>
+<|im_start|>assistant
+<think>>>>
+### effort_low
+format=2 gen_prompt=[<|im_start|>assistant
+<think>] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=4 stops=0
+prompt_hash=dd028440e1c6f855 len=59
+<<<<|im_start|>user
+Hi<|im_end|>
+<|im_start|>assistant
+<think>>>>
+### support_enable_thinking=1

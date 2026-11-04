@@ -1,0 +1,125 @@
+### plain_think
+format=2 gen_prompt=[<|im_start|>assistant
+] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=4 stops=0
+prompt_hash=9fe5b9ad27bac224 len=120
+<<<<|im_start|>system
+You are a helpful assistant.<|im_end|>
+<|im_start|>user
+What is 2+2?<|im_end|>
+<|im_start|>assistant
+>>>
+### plain_nothink
+format=2 gen_prompt=[<|im_start|>assistant
+<think>
+
+</think>
+
+] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=4 stops=0
+prompt_hash=d598ab8432c72389 len=139
+<<<<|im_start|>system
+You are a helpful assistant.<|im_end|>
+<|im_start|>user
+What is 2+2?<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+>>>
+### warm_head_tools
+format=2 gen_prompt=[<|im_start|>assistant
+] lazy=1 grammar_hash=c63a7a018482e77f grammar_len=1760 triggers=1 preserved=4 stops=0
+  trigger 1 [<tool_call>
+]
+prompt_hash=a5fd3585698863ce len=938
+<<<<|im_start|>system
+You are a helpful assistant.
+
+# Tools
+
+You may call one or more functions to assist with the user query.
+
+You are provided with function signatures within <tools></tools> XML tags:
+<tools>
+{"type": "function", "function": {"name": "web_search", "description": "Search the web for current information.", "parameters": {"type": "object", "properties": {"query": {"type": "string", "description": "What to search for"}, "count": {"type": "integer", "minimum": 1, "maximum": 10}, "freshness": {"type": "number", "default": 0.5}}, "required": ["query"]}}}
+{"type": "function", "function": {"name": "get_time", "description": "Current local time.", "parameters": {"type": "object", "properties": {}}}}
+</tools>
+
+For each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:
+<tool_call>
+{"name": <function-name>, "arguments": <args-json-object>}
+</tool_call><|im_end|>
+>>>
+### multi_turn_tools
+format=2 gen_prompt=[<|im_start|>assistant
+] lazy=1 grammar_hash=c63a7a018482e77f grammar_len=1760 triggers=1 preserved=4 stops=0
+  trigger 1 [<tool_call>
+]
+prompt_hash=9fbc88cb81840650 len=1110
+<<<<|im_start|>system
+You are a helpful assistant.
+
+# Tools
+
+You may call one or more functions to assist with the user query.
+
+You are provided with function signatures within <tools></tools> XML tags:
+<tools>
+{"type": "function", "function": {"name": "web_search", "description": "Search the web for current information.", "parameters": {"type": "object", "properties": {"query": {"type": "string", "description": "What to search for"}, "count": {"type": "integer", "minimum": 1, "maximum": 10}, "freshness": {"type": "number", "default": 0.5}}, "required": ["query"]}}}
+{"type": "function", "function": {"name": "get_time", "description": "Current local time.", "parameters": {"type": "object", "properties": {}}}}
+</tools>
+
+For each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:
+<tool_call>
+{"name": <function-name>, "arguments": <args-json-object>}
+</tool_call><|im_end|>
+<|im_start|>user
+Who won the 2022 World Cup?<|im_end|>
+<|im_start|>assistant
+Argentina won it.<|im_end|>
+<|im_start|>user
+And the time now?<|im_end|>
+<|im_start|>assistant
+>>>
+### tool_result
+format=2 gen_prompt=[<|im_start|>assistant
+] lazy=1 grammar_hash=c63a7a018482e77f grammar_len=1760 triggers=1 preserved=4 stops=0
+  trigger 1 [<tool_call>
+]
+prompt_hash=ef4eea4353778f50 len=1202
+<<<<|im_start|>system
+You are a helpful assistant.
+
+# Tools
+
+You may call one or more functions to assist with the user query.
+
+You are provided with function signatures within <tools></tools> XML tags:
+<tools>
+{"type": "function", "function": {"name": "web_search", "description": "Search the web for current information.", "parameters": {"type": "object", "properties": {"query": {"type": "string", "description": "What to search for"}, "count": {"type": "integer", "minimum": 1, "maximum": 10}, "freshness": {"type": "number", "default": 0.5}}, "required": ["query"]}}}
+{"type": "function", "function": {"name": "get_time", "description": "Current local time.", "parameters": {"type": "object", "properties": {}}}}
+</tools>
+
+For each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:
+<tool_call>
+{"name": <function-name>, "arguments": <args-json-object>}
+</tool_call><|im_end|>
+<|im_start|>user
+Search for llama.cpp<|im_end|>
+<|im_start|>assistant
+<|tool_call_start|>[web_search(query="llama.cpp")]<|tool_call_end|><|im_end|>
+<|im_start|>user
+<tool_response>
+llama.cpp is an inference engine.
+</tool_response><|im_end|>
+<|im_start|>assistant
+>>>
+### effort_low
+format=2 gen_prompt=[<|im_start|>assistant
+] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=4 stops=0
+prompt_hash=188ad82d7e6fb609 len=52
+<<<<|im_start|>user
+Hi<|im_end|>
+<|im_start|>assistant
+>>>
+### support_enable_thinking=1

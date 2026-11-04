@@ -1,0 +1,36 @@
+ac-22 ::= [\n] ac-22-01 | [^\n] ac-22
+ac-22-01 ::= [\n] ac-22-01 | [<] ac-22-02 | [^\n<] ac-22
+ac-22-02 ::= [\n] ac-22-01 | [/] ac-22-03 | [^\n/] ac-22
+ac-22-03 ::= [\n] ac-22-01 | [p] ac-22-04 | [^\np] ac-22
+ac-22-04 ::= [\n] ac-22-01 | [a] ac-22-05 | [^\na] ac-22
+ac-22-05 ::= [\n] ac-22-01 | [r] ac-22-06 | [^\nr] ac-22
+ac-22-06 ::= [\n] ac-22-01 | [a] ac-22-07 | [^\na] ac-22
+ac-22-07 ::= [\n] ac-22-01 | [m] ac-22-08 | [^\nm] ac-22
+ac-22-08 ::= [\n] ac-22-01 | [e] ac-22-09 | [^\ne] ac-22
+ac-22-09 ::= [\n] ac-22-01 | [t] ac-22-10 | [^\nt] ac-22
+ac-22-10 ::= [\n] ac-22-01 | [e] ac-22-11 | [^\ne] ac-22
+ac-22-11 ::= [\n] ac-22-01 | [r] ac-22-12 | [^\nr] ac-22
+ac-22-12 ::= [\n] ac-22-01 | [>] ac-22-13 | [^\n>] ac-22
+ac-22-13 ::= [\n] | [^\n] ac-22
+decimal-part ::= [0-9]{1,16}
+integral-part ::= [0] | [1-9] [0-9]{0,15}
+json-array ::= "[" space ("]" | json-value (space "," space json-value)* space "]")
+json-bool ::= "true" | "false"
+json-null ::= "null"
+json-number ::= "-"? ("0" | [1-9] [0-9]*) ("." [0-9]+)? (("e" | "E") [+-]? [0-9]+)?
+json-object ::= "{" space ("}" | json-string space ":" space json-value (space "," space json-string space ":" space json-value)* space "}")
+json-string ::= "\"" ( [^"\\] | "\\" ( ["\\/ bfnrt] | "u" [0-9a-fA-F]{4} ) )* "\""
+json-value ::= json-object | json-array | json-string | json-number | json-bool | json-null
+number ::= ("-"? integral-part) ("." decimal-part)? ([eE] [-+]? integral-part)?
+root ::= tool-call-root
+space ::= | " " | "\n"{1,2} [ \t]{0,20}
+tool-0 ::= ("<function=" "web_search" ">\n") (tool-0-arg-0 (tool-0-arg-1 | tool-0-arg-2)*) "</function>\n"
+tool-0-arg-0 ::= ("<parameter=" "query" ">\n") xml-arg-string
+tool-0-arg-1 ::= ("<parameter=" "count" ">\n") tool-0-arg-1-schema "\n</parameter>\n"
+tool-0-arg-1-schema ::= ([1-9] | "10")
+tool-0-arg-2 ::= ("<parameter=" "freshness" ">\n") number "\n</parameter>\n"
+tool-1 ::= ("<function=" "get_time" ">\n") "</function>\n"
+tool-call ::= "<tool_call>\n" (tool-0 | tool-1) "</tool_call>" space
+tool-call-root ::= tool-call?
+xml-arg-string ::= ac-22
+

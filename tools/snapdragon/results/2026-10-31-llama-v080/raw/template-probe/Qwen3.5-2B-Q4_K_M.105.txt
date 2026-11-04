@@ -1,0 +1,156 @@
+### plain_think
+format=2 gen_prompt=[<|im_start|>assistant
+<think>
+] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=4 stops=0
+prompt_hash=fc0120f58965b690 len=128
+<<<<|im_start|>system
+You are a helpful assistant.<|im_end|>
+<|im_start|>user
+What is 2+2?<|im_end|>
+<|im_start|>assistant
+<think>
+>>>
+### plain_nothink
+format=2 gen_prompt=[<|im_start|>assistant
+<think>
+
+</think>
+
+] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=4 stops=0
+prompt_hash=d598ab8432c72389 len=139
+<<<<|im_start|>system
+You are a helpful assistant.<|im_end|>
+<|im_start|>user
+What is 2+2?<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+>>>
+### warm_head_tools
+THREW 
+------------
+While executing CallExpression at line 79, column 24 in source:
+...lti_step_tool %}↵    {{- raise_exception('No user query found in messages.') }}↵...
+                                           ^
+Error: Jinja Exception: No user query found in messages.
+### multi_turn_tools
+format=2 gen_prompt=[<|im_start|>assistant
+<think>
+] lazy=1 grammar_hash=e686fedfe002e285 grammar_len=2216 triggers=3 preserved=4 stops=0
+  trigger 1 [<tool_call>]
+  trigger 1 [<function=web_search>]
+  trigger 1 [<function=get_time>]
+prompt_hash=2c81c21275324b3a len=1634
+<<<<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"name": "web_search", "description": "Search the web for current information.", "parameters": {"type": "object", "properties": {"query": {"type": "string", "description": "What to search for"}, "count": {"type": "integer", "minimum": 1, "maximum": 10}, "freshness": {"type": "number", "default": 0.5}}, "required": ["query"]}}}
+{"type": "function", "function": {"name": "get_time", "description": "Current local time.", "parameters": {"type": "object", "properties": {}}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT>
+
+You are a helpful assistant.<|im_end|>
+<|im_start|>user
+Who won the 2022 World Cup?<|im_end|>
+<|im_start|>assistant
+Argentina won it.<|im_end|>
+<|im_start|>user
+And the time now?<|im_end|>
+<|im_start|>assistant
+<think>
+>>>
+### tool_result
+format=2 gen_prompt=[<|im_start|>assistant
+<think>
+] lazy=1 grammar_hash=e686fedfe002e285 grammar_len=2216 triggers=3 preserved=4 stops=0
+  trigger 1 [<tool_call>]
+  trigger 1 [<function=web_search>]
+  trigger 1 [<function=get_time>]
+prompt_hash=f5fe96f043bd803 len=1745
+<<<<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"name": "web_search", "description": "Search the web for current information.", "parameters": {"type": "object", "properties": {"query": {"type": "string", "description": "What to search for"}, "count": {"type": "integer", "minimum": 1, "maximum": 10}, "freshness": {"type": "number", "default": 0.5}}, "required": ["query"]}}}
+{"type": "function", "function": {"name": "get_time", "description": "Current local time.", "parameters": {"type": "object", "properties": {}}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT>
+
+You are a helpful assistant.<|im_end|>
+<|im_start|>user
+Search for llama.cpp<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+<|tool_call_start|>[web_search(query="llama.cpp")]<|tool_call_end|><|im_end|>
+<|im_start|>user
+<tool_response>
+llama.cpp is an inference engine.
+</tool_response><|im_end|>
+<|im_start|>assistant
+<think>
+>>>
+### effort_low
+format=2 gen_prompt=[<|im_start|>assistant
+<think>
+] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=4 stops=0
+prompt_hash=523f193fa518096d len=60
+<<<<|im_start|>user
+Hi<|im_end|>
+<|im_start|>assistant
+<think>
+>>>
+### support_enable_thinking=1

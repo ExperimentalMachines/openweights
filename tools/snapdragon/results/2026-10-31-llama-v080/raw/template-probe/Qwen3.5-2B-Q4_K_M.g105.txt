@@ -1,0 +1,36 @@
+ac-20 ::= [\n] ac-20-01 | [^\n] ac-20
+ac-20-01 ::= [\n] ac-20-01 | [<] ac-20-02 | [^\n<] ac-20
+ac-20-02 ::= [\n] ac-20-01 | [/] ac-20-03 | [^\n/] ac-20
+ac-20-03 ::= [\n] ac-20-01 | [p] ac-20-04 | [^\np] ac-20
+ac-20-04 ::= [\n] ac-20-01 | [a] ac-20-05 | [^\na] ac-20
+ac-20-05 ::= [\n] ac-20-01 | [r] ac-20-06 | [^\nr] ac-20
+ac-20-06 ::= [\n] ac-20-01 | [a] ac-20-07 | [^\na] ac-20
+ac-20-07 ::= [\n] ac-20-01 | [m] ac-20-08 | [^\nm] ac-20
+ac-20-08 ::= [\n] ac-20-01 | [e] ac-20-09 | [^\ne] ac-20
+ac-20-09 ::= [\n] ac-20-01 | [t] ac-20-10 | [^\nt] ac-20
+ac-20-10 ::= [\n] ac-20-01 | [e] ac-20-11 | [^\ne] ac-20
+ac-20-11 ::= [\n] ac-20-01 | [r] ac-20-12 | [^\nr] ac-20
+ac-20-12 ::= [\n] ac-20-01 | [>] ac-20-13 | [^\n>] ac-20
+ac-20-13 ::= [\n] | [^\n] ac-20
+decimal-part ::= [0-9]{1,16}
+integral-part ::= [0] | [1-9] [0-9]{0,15}
+json-array ::= "[" space ("]" | json-value (space "," space json-value)* space "]")
+json-bool ::= "true" | "false"
+json-null ::= "null"
+json-number ::= "-"? ("0" | [1-9] [0-9]*) ("." [0-9]+)? (("e" | "E") [+-]? [0-9]+)?
+json-object ::= "{" space ("}" | json-string space ":" space json-value (space "," space json-string space ":" space json-value)* space "}")
+json-string ::= "\"" ( [^"\\] | "\\" ( ["\\/ bfnrt] | "u" [0-9a-fA-F]{4} ) )* "\""
+json-value ::= json-object | json-array | json-string | json-number | json-bool | json-null
+number ::= ("-"? integral-part) ("." decimal-part)? ([eE] [-+]? integral-part)?
+root ::= tool-call-root
+space ::= | " " | "\n"{1,2} [ \t]{0,20}
+tool-call-first ::= "<tool_call>\n"? (tool-web-search | tool-get-time) "</tool_call>" space
+tool-call-root ::= tool-call-first?
+tool-get-time ::= ("<function=" "get_time" ">\n") "</function>\n"
+tool-web-search ::= ("<function=" "web_search" ">\n") (tool-web-search-arg-query (tool-web-search-arg-count | tool-web-search-arg-freshness)*) "</function>\n"
+tool-web-search-arg-count ::= ("<parameter=" "count" ">\n") tool-web-search-arg-count-schema "\n</parameter>\n"
+tool-web-search-arg-count-schema ::= ([1-9] | "10")
+tool-web-search-arg-freshness ::= ("<parameter=" "freshness" ">\n") number "\n</parameter>\n"
+tool-web-search-arg-query ::= ("<parameter=" "query" ">\n") xml-arg-string
+xml-arg-string ::= ac-20
+

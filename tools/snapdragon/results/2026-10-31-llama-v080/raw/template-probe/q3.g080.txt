@@ -1,0 +1,26 @@
+char ::= [^"\\\x7F\x00-\x1F] | [\\] (["\\bfnrt] | "u" [0-9a-fA-F]{4})
+decimal-part ::= [0-9]{1,16}
+integral-part ::= [0] | [1-9] [0-9]{0,15}
+json-array ::= "[" space ("]" | json-value (space "," space json-value)* space "]")
+json-bool ::= "true" | "false"
+json-null ::= "null"
+json-number ::= "-"? ("0" | [1-9] [0-9]*) ("." [0-9]+)? (("e" | "E") [+-]? [0-9]+)?
+json-object ::= "{" space ("}" | json-string space ":" space json-value (space "," space json-string space ":" space json-value)* space "}")
+json-string ::= "\"" ( [^"\\] | "\\" ( ["\\/ bfnrt] | "u" [0-9a-fA-F]{4} ) )* "\""
+json-value ::= json-object | json-array | json-string | json-number | json-bool | json-null
+number ::= ("-"? integral-part) ("." decimal-part)? ([eE] [-+]? integral-part)?
+root ::= tool-call | tool-calls
+space ::= | " " | "\n"{1,2} [ \t]{0,20}
+string ::= "\"" char* "\""
+tool-0 ::= "{" space "\"name\"" space ":" space ("\"" "web_search" "\"") space "," space "\"arguments\"" space ":" space tool-0-schema space "}"
+tool-0-schema ::= "{" space tool-0-schema-query-kv ( "," space ( tool-0-schema-count-kv tool-0-schema-count-rest | tool-0-schema-freshness-kv ) )? space "}"
+tool-0-schema-count ::= ([1-9] | "10")
+tool-0-schema-count-kv ::= "\"count\"" space ":" space tool-0-schema-count
+tool-0-schema-count-rest ::= ( "," space tool-0-schema-freshness-kv )?
+tool-0-schema-freshness-kv ::= "\"freshness\"" space ":" space number
+tool-0-schema-query-kv ::= "\"query\"" space ":" space string
+tool-1 ::= "{" space "\"name\"" space ":" space ("\"" "get_time" "\"") space "," space "\"arguments\"" space ":" space tool-1-schema space "}"
+tool-1-schema ::= "{" space "}"
+tool-call ::= "<tool_call>\n" space (tool-0 | tool-1) space "</tool_call>"
+tool-calls ::= (tool-call? space)+
+

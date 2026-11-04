@@ -1,0 +1,55 @@
+### plain_think
+format=2 gen_prompt=[<start_of_turn>model
+] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=0 stops=0
+prompt_hash=b2f7e550ddf0fd08 len=97
+<<<<start_of_turn>user
+You are a helpful assistant.
+
+What is 2+2?<end_of_turn>
+<start_of_turn>model
+>>>
+### plain_nothink
+format=2 gen_prompt=[<start_of_turn>model
+] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=0 stops=0
+prompt_hash=b2f7e550ddf0fd08 len=97
+<<<<start_of_turn>user
+You are a helpful assistant.
+
+What is 2+2?<end_of_turn>
+<start_of_turn>model
+>>>
+### warm_head_tools
+format=2 gen_prompt=[<start_of_turn>model
+] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=0 stops=0
+prompt_hash=14650fb0739d0383 len=0
+<<<>>>
+### multi_turn_tools
+format=2 gen_prompt=[<start_of_turn>model
+] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=0 stops=0
+prompt_hash=836bd6994ce13932 len=215
+<<<<start_of_turn>user
+You are a helpful assistant.
+
+Who won the 2022 World Cup?<end_of_turn>
+<start_of_turn>model
+Argentina won it.<end_of_turn>
+<start_of_turn>user
+And the time now?<end_of_turn>
+<start_of_turn>model
+>>>
+### tool_result
+THREW Unable to generate parser for this template. Automatic parser generation failed: 
+------------
+While executing CallExpression at line 19, column 27 in source:
+...% 2 == 0) -%}↵        {{ raise_exception("Conversation roles must alternate user...
+                                           ^
+Error: Jinja Exception: Conversation roles must alternate user/assistant/user/assistant/...
+### effort_low
+format=2 gen_prompt=[<start_of_turn>model
+] lazy=0 grammar_hash=14650fb0739d0383 grammar_len=0 triggers=0 preserved=0 stops=0
+prompt_hash=4abab715bc963ef5 len=57
+<<<<start_of_turn>user
+Hi<end_of_turn>
+<start_of_turn>model
+>>>
+### support_enable_thinking=0

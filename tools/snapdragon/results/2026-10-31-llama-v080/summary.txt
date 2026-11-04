@@ -1,0 +1,23 @@
+perplexity (WikiText-2 test, 16 x 512 tokens)
+  app  LFM2.5-1.2B-Instruct-QAD-Q4_0  CPU  b10549 20.1418  v0.8.0 20.157  +0.08%
+  app  Qwen3-1.7B-Q4_0                CPU  b10549 21.267  v0.8.0 21.2692  +0.01%
+  app  Qwen3.5-2B-Q4_K_M              CPU  b10549 15.0291  v0.8.0 15.0326  +0.02%
+  app  gemma-3-1b-it-Q4_K_M           CPU  b10549 34.4335  v0.8.0 34.8528  +1.22%
+  snap LFM2.5-1.2B-Instruct-QAD-Q4_0  CPU  b10549 20.1561  v0.8.0 20.1561  +0.00%
+  snap LFM2.5-1.2B-Instruct-QAD-Q4_0  GPU  b10549 20.156  v0.8.0 20.156  +0.00%
+  snap LFM2.5-1.2B-Instruct-QAD-Q4_0  NPU  b10549 20.1604  v0.8.0 20.143  -0.09%
+  snap Qwen3-1.7B-Q4_0                CPU  b10549 21.2685  v0.8.0 21.2685  +0.00%
+  snap Qwen3-1.7B-Q4_0                GPU  b10549 21.2125  v0.8.0 21.2125  +0.00%
+  snap Qwen3-1.7B-Q4_0                NPU  b10549 21.2735  v0.8.0 21.2045  -0.32%
+
+speed, tok/s: each run's (b10549 -> v0.8.0, which ran first), then the mean change
+  app  LFM2.5-1.2B-Instruct-QAD-Q4_0  CPU  pp 365->326 tg 72.7->79.1 (v0.8.0 first); pp 334->327 tg 74.3->78.7 (b10549 first)  => prefill -6.3%, decode +7.4%  [2 run(s)]
+  app  Qwen3-1.7B-Q4_0                CPU  pp 119->111 tg 44.8->49.7 (v0.8.0 first); pp 119->112 tg 45.5->50.0 (b10549 first)  => prefill -6.4%, decode +10.4%  [2 run(s)]
+  app  Qwen3.5-2B-Q4_K_M              CPU  pp 139->149 tg 31.9->33.9 (v0.8.0 first); pp 138->156 tg 32.7->36.4 (b10549 first)  => prefill +10.6%, decode +8.9%  [2 run(s)]
+  app  gemma-3-1b-it-Q4_K_M           CPU  pp 93->98 tg 45.0->62.0 (v0.8.0 first); pp 93->99 tg 51.3->61.6 (b10549 first)  => prefill +5.2%, decode +28.8%  [2 run(s)]
+  snap LFM2.5-1.2B-Instruct-QAD-Q4_0  CPU  pp 501->515 tg 85.6->84.8 (v0.8.0 first); pp 506->509 tg 84.4->84.8 (b10549 first)  => prefill +1.7%, decode -0.2%  [2 run(s)]
+  snap LFM2.5-1.2B-Instruct-QAD-Q4_0  GPU  pp 1030->1024 tg 68.7->74.7 (b10549 first); pp 1025->1020 tg 67.9->75.2 (v0.8.0 first)  => prefill -0.5%, decode +9.8%  [2 run(s)]
+  snap LFM2.5-1.2B-Instruct-QAD-Q4_0  NPU  pp 4695->4999 tg 56.8->81.2 (v0.8.0 first); pp 4475->4836 tg 50.0->75.4 (b10549 first)  => prefill +7.3%, decode +46.9%  [2 run(s)]
+  snap Qwen3-1.7B-Q4_0                CPU  pp 286->291 tg 52.4->53.0 (v0.8.0 first); pp 287->292 tg 52.4->52.3 (b10549 first)  => prefill +1.8%, decode +0.4%  [2 run(s)]
+  snap Qwen3-1.7B-Q4_0                GPU  pp 660->666 tg 39.4->44.5 (b10549 first); pp 671->664 tg 38.8->43.9 (v0.8.0 first)  => prefill -0.1%, decode +13.0%  [2 run(s)]
+  snap Qwen3-1.7B-Q4_0                NPU  pp 3070->3284 tg 37.8->53.2 (v0.8.0 first); pp 3008->3266 tg 38.2->53.2 (b10549 first)  => prefill +7.8%, decode +40.2%  [2 run(s)]

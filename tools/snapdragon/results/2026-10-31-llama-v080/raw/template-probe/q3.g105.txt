@@ -1,0 +1,26 @@
+char ::= [^"\\\x7F\x00-\x1F] | [\\] (["\\bfnrt] | "u" [0-9a-fA-F]{4})
+decimal-part ::= [0-9]{1,16}
+integral-part ::= [0] | [1-9] [0-9]{0,15}
+json-array ::= "[" space ("]" | json-value (space "," space json-value)* space "]")
+json-bool ::= "true" | "false"
+json-null ::= "null"
+json-number ::= "-"? ("0" | [1-9] [0-9]*) ("." [0-9]+)? (("e" | "E") [+-]? [0-9]+)?
+json-object ::= "{" space ("}" | json-string space ":" space json-value (space "," space json-string space ":" space json-value)* space "}")
+json-string ::= "\"" ( [^"\\] | "\\" ( ["\\/ bfnrt] | "u" [0-9a-fA-F]{4} ) )* "\""
+json-value ::= json-object | json-array | json-string | json-number | json-bool | json-null
+number ::= ("-"? integral-part) ("." decimal-part)? ([eE] [-+]? integral-part)?
+root ::= tool-call | tool-calls
+space ::= | " " | "\n"{1,2} [ \t]{0,20}
+string ::= "\"" char* "\""
+tool-call ::= "<tool_call>\n" space (tool-web-search | tool-get-time) space "</tool_call>"
+tool-calls ::= (tool-call? space)+
+tool-get-time ::= "{" space "\"name\"" space ":" space ("\"" "get_time" "\"") space "," space "\"arguments\"" space ":" space tool-get-time-schema space "}"
+tool-get-time-schema ::= "{" space  space "}"
+tool-web-search ::= "{" space "\"name\"" space ":" space ("\"" "web_search" "\"") space "," space "\"arguments\"" space ":" space tool-web-search-schema space "}"
+tool-web-search-schema ::= "{" space tool-web-search-schema-query-kv ( "," space ( tool-web-search-schema-count-kv tool-web-search-schema-count-rest | tool-web-search-schema-freshness-kv ) )? space "}"
+tool-web-search-schema-count ::= ([1-9] | "10")
+tool-web-search-schema-count-kv ::= "\"count\"" space ":" space tool-web-search-schema-count
+tool-web-search-schema-count-rest ::= ( "," space tool-web-search-schema-freshness-kv )?
+tool-web-search-schema-freshness-kv ::= "\"freshness\"" space ":" space number
+tool-web-search-schema-query-kv ::= "\"query\"" space ":" space string
+

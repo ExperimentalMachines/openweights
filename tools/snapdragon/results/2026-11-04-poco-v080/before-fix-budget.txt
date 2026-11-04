@@ -1,0 +1,25 @@
+ReasoningBudgetOnDeviceTest on the POCO against the engine before the budget fix, 2026-11-04.
+
+== aBudgetThatLandsInsideACallLeavesTheCallAlone
+INSTRUMENTATION_STATUS: test=aBudgetThatLandsInsideACallLeavesTheCallAlone
+INSTRUMENTATION_STATUS: stack=io.github.alpharomercoma.openweights.core.engine.LlamaException: generation failed: Unexpected empty grammar stack after accepting piece: 
+io.github.alpharomercoma.openweights.core.engine.LlamaException: generation failed: Unexpected empty grammar stack after accepting piece: 
+INSTRUMENTATION_STATUS: test=aBudgetThatLandsInsideACallLeavesTheCallAlone
+io.github.alpharomercoma.openweights.core.engine.LlamaException: generation failed: Unexpected empty grammar stack after accepting piece: 
+FAILURES!!!
+Tests run: 1,  Failures: 1
+INSTRUMENTATION_CODE: -1
+11-04 13:34:06.609 25046 25071 I ReasoningBudgetTest: budget=-1 generated=78 calls=[ToolCall(id=web_search, name=web_search, argumentsJson={"query": "Tokyo weather tomorrow rain"})] content=search tool to find this information. The query should be something like "Tokyo weather tomorrow rain" or "Tokyo tomorrow forecast rain". Let's do that.</think>
+
+== aBudgetThatLandsInTheAnswerLeavesTheAnswerAlone
+FAILURES!!!
+Tests run: 1,  Failures: 1
+INSTRUMENTATION_CODE: -1
+11-04 13:35:51.064 25417 25457 I ReasoningBudgetTest: budget=-1 generated=73 calls=[] content= we can say: "The capital of France is Paris." That's one sentence.
+11-04 13:35:51.064 25417 25457 I ReasoningBudgetTest: 
+11-04 13:35:51.064 25417 25457 I ReasoningBudgetTest: Thus final answer: "The capital of France is Paris."</think>The capital of France is Paris.
+11-04 13:35:54.846 25417 25457 I ReasoningBudgetTest: budget=70 generated=77 calls=[] content=ance is Paris." That's one sentence.
+11-04 13:35:54.846 25417 25457 I ReasoningBudgetTest: 
+11-04 13:35:54.846 25417 25457 I ReasoningBudgetTest: Thus final answer: "The capital of France is Paris."</think>The capital of France
+11-04 13:35:54.846 25417 25457 I ReasoningBudgetTest: </think>
+11-04 13:35:54.846 25417 25457 I ReasoningBudgetTest: The capital of France is Paris.

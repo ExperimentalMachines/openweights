@@ -1,0 +1,6 @@
+SM8850, minified release build, after one "hi" turn at 32768 context, 2026-11-04.
+"required" is FitEstimator: file + kvCacheBytes(32768) + 512 MiB, from each GGUF's header.
+dumpsys meminfo, Native Heap PSS, is almost all of the app's memory: nothing is file-mapped.
+
+LFM3-1.7B-Q4_K_M                 file 1048 MiB  kv 704 MiB  required 2264 MiB  native heap 2597 MiB (2659692 KB)  pss 2658 MB  rss 2805 MB
+LFM2.5-1.2B-Instruct-QAD-Q4_0    file  663 MiB  kv 384 MiB  required 1559 MiB  native heap 1398 MiB (1431940 KB)  pss 1451 MB  rss 1597 MB

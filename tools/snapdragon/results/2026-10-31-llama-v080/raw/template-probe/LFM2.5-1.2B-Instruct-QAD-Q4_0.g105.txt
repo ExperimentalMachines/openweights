@@ -1,0 +1,17 @@
+double-quoted-string ::= "\"" ( [^"\\] | "\\" ( ["\\/ bfnrt] | "u" [0-9a-fA-F]{4} ) )* "\""
+json-bool ::= "true" | "false"
+json-null ::= "null"
+json-number ::= "-"? ("0" | [1-9] [0-9]*) ("." [0-9]+)? (("e" | "E") [+-]? [0-9]+)?
+python-bool ::= "True" | "False"
+python-none ::= "None"
+python-or-json-array ::= "[" space ("]" | python-or-json-value ("," space python-or-json-value)* space "]") space
+python-or-json-dict ::= "{" space ("}" | python-string space ":" space python-or-json-value (space "," space python-string space ":" space python-or-json-value)* space "}") space
+python-or-json-value ::= python-or-json-dict | python-or-json-array | python-string | json-number | python-bool | python-none | json-bool | json-null
+python-string ::= double-quoted-string | single-quoted-string
+root ::= tool-call
+single-quoted-string ::= "'" ( [^'\\] | "\\" ( ['\\/ bfnrt] | "u" [0-9a-fA-F]{4} ) )* "'"
+space ::= | " " | "\n"{1,2} [ \t]{0,20}
+tool-call ::= "<|tool_call_start|>" "[" space (tool-web-search | tool-get-time) space "]" "<|tool_call_end|>"
+tool-get-time ::= ("get_time" "(") space space ")"
+tool-web-search ::= ("web_search" "(") space ((("query" "=") ("\"" ( [^"\\] | "\\" ( ["\\/ bfnrt] | "u" [0-9a-fA-F]{4} ) )* "\"" | "'" ( [^'\\] | "\\" ( ['\\/ bfnrt] | "u" [0-9a-fA-F]{4} ) )* "'") | ("count" "=") python-or-json-value | ("freshness" "=") python-or-json-value) ("," space (("query" "=") ("\"" ( [^"\\] | "\\" ( ["\\/ bfnrt] | "u" [0-9a-fA-F]{4} ) )* "\"" | "'" ( [^'\\] | "\\" ( ['\\/ bfnrt] | "u" [0-9a-fA-F]{4} ) )* "'") | ("count" "=") python-or-json-value | ("freshness" "=") python-or-json-value))*) space ")"
+
