@@ -34,6 +34,7 @@ import io.github.alpharomercoma.openweights.core.common.model.ToolCall
 import io.github.alpharomercoma.openweights.core.common.model.ToolDefinition
 import io.github.alpharomercoma.openweights.core.common.model.parseAssistantReply
 import io.github.alpharomercoma.openweights.core.common.model.withoutToolMarkup
+import io.github.alpharomercoma.openweights.core.data.ModelPreferences
 import io.github.alpharomercoma.openweights.core.engine.ExecuTorchEngine
 import io.github.alpharomercoma.openweights.core.engine.GenerationEvent
 import io.github.alpharomercoma.openweights.core.engine.InferenceEngine
@@ -45,6 +46,7 @@ import io.github.alpharomercoma.openweights.core.tools.AndroidReachability
 import io.github.alpharomercoma.openweights.core.tools.AskBoard
 import io.github.alpharomercoma.openweights.core.tools.FetchUrlTool
 import io.github.alpharomercoma.openweights.core.tools.PlanBoard
+import io.github.alpharomercoma.openweights.core.tools.SearchMediaTool
 import io.github.alpharomercoma.openweights.core.tools.SearchSettings
 import io.github.alpharomercoma.openweights.core.tools.SecretSealer
 import io.github.alpharomercoma.openweights.core.tools.SessionArtifacts
@@ -79,6 +81,11 @@ import java.security.MessageDigest
  * shipped instructions from `prompt_dump.json` and the app's own date exchange, greedy,
  * thinking off. What varies is an arm, and an arm is only what the app itself can vary:
  *
+ * - `shipped`: what a fresh install does, and the arm to believe. The app's own instructions
+ *   from [prefixMessages] rather than the dump, which stopped being them in September; the three
+ *   public-web tools that start switched on; the search rules the app runs; thinking on, as the
+ *   app sets it whenever tools are on; and the default sampler and 1,024-token cap, seeded so a
+ *   run can be repeated. Everything below is an experiment against the dump's older prompt.
  * - `bare`: no tools at all. What the weights answer alone; the utility baseline.
  * - `driven-search`: the model decides, holding web_search only, as a fresh install does.
  * - `driven-search-think`: the same with thinking on, for a model whose template opens the
@@ -141,6 +148,8 @@ class DecisionSuiteOnDeviceTest {
         // A lab phone gets forty-five minutes a run, so the rows are cut into chunks:
         // `from` skips the first N of the filtered rows and `rows` caps what follows.
         val from = arguments.getString("from")?.toIntOrNull() ?: 0
+        // The app sizes the window from the phone; 4096 is what the older arms always ran.
+        val context = arguments.getString("context")?.toIntOrNull() ?: CONTEXT
         val models = wanted.map { EVAL_DIR.resolve(it) }.filter { it.isFile }
         val dump = EVAL_DIR.resolve("prompt_dump.json")
         val bench = EVAL_DIR.resolve("decisions.json")
@@ -167,13 +176,18 @@ class DecisionSuiteOnDeviceTest {
             workspace,
             SessionArtifacts(workspace),
         )
+        val media = SearchMediaTool(
+            OkHttpClient(),
+            SearchSettings(app, SecretSealer.Unavailable),
+            AndroidReachability(app),
+        )
         val results = resultsDir()
         Log.i(TAG, "START models=${models.map { it.name }} arms=$arms rows=${rows.size}")
 
         for (model in models) {
             val engine = engineFor(model)
             try {
-                engine.load(model, ModelLoadParams(contextLength = CONTEXT))
+                engine.load(model, ModelLoadParams(contextLength = context))
                 for (arm in arms) {
                     val out = results.resolve("decisions-${model.nameWithoutExtension}-$arm.jsonl")
                     val done = if (out.isFile) {
@@ -183,7 +197,9 @@ class DecisionSuiteOnDeviceTest {
                     } else {
                         emptySet()
                     }
+                    val shipped = arm == SHIPPED
                     val tools = when {
+                        shipped -> listOf(search, media, fetch)
                         arm.endsWith("-full") -> listOf(search) + catalogue
                         arm.startsWith("read-") -> listOf(search, fetch)
                         else -> listOf(search)
@@ -203,14 +219,16 @@ class DecisionSuiteOnDeviceTest {
                             // and pushes only); `intent-*` adds the search the app makes
                             // when the model says it will search, says it did, or says
                             // it does not know, and calls nothing.
-                            honoursIntent = arm.startsWith("intent-") ||
+                            honoursIntent = shipped ||
+                                arm.startsWith("intent-") ||
                                 arm.startsWith("doubt-") ||
                                 arm.startsWith("gate-") ||
                                 arm.startsWith("lament-") ||
                                 arm.startsWith("read-")
                             // `doubt-*` adds the search the app makes when the model's own
                             // token probabilities put an answer among its least confident.
-                            honoursDoubt = arm.startsWith("doubt-") ||
+                            honoursDoubt = shipped ||
+                                arm.startsWith("doubt-") ||
                                 arm.startsWith("gate-") ||
                                 arm.startsWith("lament-") ||
                                 arm.startsWith("read-")
@@ -223,18 +241,28 @@ class DecisionSuiteOnDeviceTest {
                             honoursGate = arm.startsWith("gate-")
                         }
                     val withTools = arm != "bare"
-                    val params = if (arm.endsWith("-think")) {
-                        PARAMS.copy(thinking = true)
+                    val params = when {
+                        shipped -> ModelPreferences().toSamplerParams().copy(
+                            thinking = true,
+                            seed = 1,
+                        )
+                        arm.endsWith("-think") -> PARAMS.copy(thinking = true)
+                        else -> PARAMS
+                    }
+                    val instructions = if (shipped) {
+                        ChatUiState(toolsAvailable = true).prefixMessages().single().text
                     } else {
-                        PARAMS
+                        system
                     }
                     header(
                         out,
                         model,
                         arm,
                         if (withTools) tools else emptyList(),
-                        system,
+                        instructions,
                         rows.size,
+                        params,
+                        context,
                     )
                     for (row in rows) {
                         val id = row.getString("id")
@@ -245,7 +273,9 @@ class DecisionSuiteOnDeviceTest {
                         val started = System.currentTimeMillis()
                         val raw = runCatching {
                             runner.run(
-                                conversation = listOf(ChatMessage.text(ChatRole.SYSTEM, system)) +
+                                conversation = listOf(
+                                    ChatMessage.text(ChatRole.SYSTEM, instructions),
+                                ) +
                                     PromptDay.exchange() +
                                     ChatMessage.text(ChatRole.USER, question),
                                 params = params,
@@ -411,6 +441,8 @@ class DecisionSuiteOnDeviceTest {
         tools: List<Tool>,
         system: String,
         rows: Int,
+        params: SamplerParams,
+        context: Int,
     ) {
         if (out.isFile && out.length() > 0) return
         val power = app.getSystemService<PowerManager>()
@@ -433,16 +465,16 @@ class DecisionSuiteOnDeviceTest {
                 )
                 .put("system", system).put("system_sha1", sha1(system))
                 .put("date_exchange", JSONArray(PromptDay.exchange().map { it.text }))
-                .put("context", CONTEXT)
+                .put("context", context)
                 .put(
                     "sampler",
                     JSONObject().put(
                         "temperature",
-                        PARAMS.temperature,
+                        params.temperature,
                     ).put(
                         "top_k",
-                        PARAMS.topK,
-                    ).put("seed", PARAMS.seed).put("max_tokens", PARAMS.maxTokens),
+                        params.topK,
+                    ).put("seed", params.seed).put("max_tokens", params.maxTokens),
                 )
                 .put(
                     "device",
@@ -594,6 +626,7 @@ class DecisionSuiteOnDeviceTest {
     private companion object {
         const val TAG = "DecisionSuite"
         const val CONTEXT = 4096
+        const val SHIPPED = "shipped"
 
         // Whole search results, so the grader's "answer in results" counts every hit the
         // model saw: at 1,500 the fourth and fifth of five hits were cut from the record
