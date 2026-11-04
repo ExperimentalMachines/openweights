@@ -57,7 +57,7 @@ model families whose prompt formats the app implements.
 model families. The app routes on the file format, and both ship in the same 28.8 MB
 release bundle. On the phones measured, the compiled LFM2.5 1.2B decoded a token in 46 ms
 against 106 for its GGUF on the Tensor G5 and 38 against 59 on the Exynos 2400, and reached
-its first token faster on every chip ([latency](https://experimentalmachines.org/openweights/latency/)).
+its first token faster on every chip ([latency](https://experimentalmachines.org/research/latency/)).
 
 **Honest about your device, before the download.** The GGUF header is read over HTTP range
 requests, so the app can say what a file needs at your context length and whether it will
@@ -75,10 +75,10 @@ it was given.
 
 **Numbers you can check.** Speed, quality and backend parity were measured on real phones
 and published with their methods, caveats and raw results. Each report states its own device
-set: [prefill and decode on CPU, GPU and NPU](https://experimentalmachines.org/openweights/prefill-decode/),
-[latency on five chips](https://experimentalmachines.org/openweights/latency/),
-[the exported-window study on four](https://experimentalmachines.org/openweights/window/),
-[its reruns](https://experimentalmachines.org/openweights/reruns/).
+set: [prefill and decode on CPU, GPU and NPU](https://experimentalmachines.org/research/prefill-decode/),
+[latency on five chips](https://experimentalmachines.org/research/latency/),
+[the exported-window study on four](https://experimentalmachines.org/research/window/),
+[its reruns](https://experimentalmachines.org/research/reruns/).
 
 **Private by construction.** No accounts, no analytics, no crash reporter, backups off the
 device disabled, and a Hugging Face token that lives in the hardware-backed Keystore and goes
@@ -254,11 +254,11 @@ the raw tables.
 
 | Report | What it asks |
 |---|---|
-| [Prefill and decode on CPU, GPU and NPU](docs/research/snapdragon-pd-matrix.md) · [page](https://experimentalmachines.org/openweights/prefill-decode/) | On a Snapdragon 8 Elite Gen 5, which processor should do prefill and which decode? Nine models through all nine pairings on a warm phone, and what its two thermal throttles do to each processor |
-| [Does the exported window matter?](docs/research/executorch-window-matrix.md) · [page](https://experimentalmachines.org/openweights/window/) · [tables](docs/research/window-matrix.md) | The same weights exported at 2k to 32k on four chips: does the window change answers, speed or memory? |
-| [What the reruns changed](https://experimentalmachines.org/openweights/reruns/) | A second pass over that matrix: the 2.6B under two reply caps, same-file repeats, and why a 32k full-attention export dies on 12 GB phones |
+| [Prefill and decode on CPU, GPU and NPU](docs/research/snapdragon-pd-matrix.md) · [page](https://experimentalmachines.org/research/prefill-decode/) | On a Snapdragon 8 Elite Gen 5, which processor should do prefill and which decode? Nine models through all nine pairings on a warm phone, and what its two thermal throttles do to each processor |
+| [Does the exported window matter?](docs/research/executorch-window-matrix.md) · [page](https://experimentalmachines.org/research/window/) · [tables](docs/research/window-matrix.md) | The same weights exported at 2k to 32k on four chips: does the window change answers, speed or memory? |
+| [What the reruns changed](https://experimentalmachines.org/research/reruns/) | A second pass over that matrix: the 2.6B under two reply caps, same-file repeats, and why a 32k full-attention export dies on 12 GB phones |
 | [Public benchmarks on six phones](docs/research/public-benchmarks.md) · [tables](docs/research/benchmark-matrix.md) | GSM8K, IFEval and BFCL on both runtimes, same prompts, same graders |
-| [Five chips, two runtimes](https://experimentalmachines.org/openweights/latency/) | Time to first token and time per output token, five models, five chips |
+| [Five chips, two runtimes](https://experimentalmachines.org/research/latency/) | Time to first token and time per output token, five models, five chips |
 | [Parity on five SoCs](docs/research/parity-five-socs.md) · [tables](docs/research/backend-parity.md) | Do the two runtimes grade the same agentic prompts the same way across silicon? |
 | [The first turn](docs/research/first-turn-latency.md) | Where a 25-second cold first turn went, 18.5 s of it before the first token, and how warming removed most of it |
 

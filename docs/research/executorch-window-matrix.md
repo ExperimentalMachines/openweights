@@ -168,7 +168,7 @@ repeat of the suite.
   graded JSON, `repeat-` prefix for the second runs, `-cap2048` for the capped rerun, `@n`
   for a continued set, `invalid-nobos/` for the quarantined cells, `qwen3-32k-poco-rerun/`
   for the kill evidence), `~/ow-models/etexport/matrix/results-windows.log` (probe).
-- Page: <https://experimentalmachines.org/openweights/window/>, from `app/openweights/window/` and
+- Page: <https://experimentalmachines.org/research/window/>, from `app/research/window/` and
   `lib/openweights-window.ts` in the experimentalmachines.org repository. The old address,
   `experimentalmachines.github.io/openweights/window.html`, redirects there.
 - Harness: `tools/eval/bench/run_cloud_windows.sh`, `run_cloud_rerun.sh` (one set per

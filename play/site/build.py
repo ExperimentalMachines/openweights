@@ -25,8 +25,10 @@ REPO = "https://github.com/ExperimentalMachines/openweights"
 
 # The research pages moved to experimentalmachines.org in October 2026, rebuilt with their
 # data in that site's repository (lib/openweights-*.ts). Their old addresses here are still
-# linked from code comments and from outside the repository, so each stays as a redirect.
-SITE = "https://experimentalmachines.org/openweights"
+# linked from code comments and from outside the repository, so each stays as a redirect. On
+# 2026-11-04 the studies moved again, from /openweights to /research on that site; they point
+# straight at the new addresses so a click does not take two hops.
+SITE = "https://experimentalmachines.org/research"
 MOVED = {
     "latency.html": ("Five chips, two runtimes", f"{SITE}/latency/"),
     "window.html": ("Does the exported window matter?", f"{SITE}/window/"),

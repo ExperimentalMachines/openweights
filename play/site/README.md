@@ -6,16 +6,17 @@ Two pages and three redirects, live at **<https://experimentalmachines.github.io
 |---|---|---|
 | Privacy policy | <https://experimentalmachines.github.io/openweights/privacy.html> | The URL the Play listing must link to |
 | Landing | <https://experimentalmachines.github.io/openweights/> | Somewhere for that link to sit, and the repository link |
-| Latency chart | <https://experimentalmachines.github.io/openweights/latency.html> | Redirects to <https://experimentalmachines.org/openweights/latency/> |
-| Window study | <https://experimentalmachines.github.io/openweights/window.html> | Redirects to <https://experimentalmachines.org/openweights/window/> |
-| Reruns | <https://experimentalmachines.github.io/openweights/reruns.html> | Redirects to <https://experimentalmachines.org/openweights/reruns/> |
+| Latency chart | <https://experimentalmachines.github.io/openweights/latency.html> | Redirects to <https://experimentalmachines.org/research/latency/> |
+| Window study | <https://experimentalmachines.github.io/openweights/window.html> | Redirects to <https://experimentalmachines.org/research/window/> |
+| Reruns | <https://experimentalmachines.github.io/openweights/reruns.html> | Redirects to <https://experimentalmachines.org/research/reruns/> |
 
 The three research pages moved to experimentalmachines.org in October 2026, rebuilt with their
 data in that site's repository (`lib/openweights-latency.ts`, `lib/openweights-window.ts` and
 `lib/openweights-reruns.ts`, copied value for value from the pages last published here, gh-pages
 `1f00e53`). When `window_report.py` or a benchmark is rerun, update those files. Their old addresses
 are still linked from code comments and from outside the repository, so `build.py` writes a
-redirect at each (`MOVED`): a meta refresh, and a script that keeps a `#section` the link carries.
+redirect at each (`MOVED`): a meta refresh, and a script that keeps a `#section` the link carries. On 2026-11-04 the studies moved on that site from `/openweights/<study>/` to
+`/research/<study>/`; the site forwards the old addresses itself, and `MOVED` points at the new ones.
 
 ## Why it is built rather than written
 
