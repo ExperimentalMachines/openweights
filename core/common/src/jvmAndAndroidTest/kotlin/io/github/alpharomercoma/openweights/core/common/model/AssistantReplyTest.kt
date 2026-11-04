@@ -111,4 +111,57 @@ class AssistantReplyTest {
         assertThat(reply.reasoning).isEqualTo("first")
         assertThat(reply.answer).isEqualTo("answer<think>second")
     }
+
+    /**
+     * Qwen3 1.7B writes its own closing tag straight after the budget's: 10 to 14 of 20 replies on
+     * an SM8850 (2026-11-04). Answered from the first tag, the second showed in the answer.
+     */
+    @Test
+    fun `a closing tag repeated straight after the block is not part of the answer`() {
+        val reply = parseAssistantReply("<think>\nthe budget ran out</think>\n</think>\n\nBoston.")
+
+        assertThat(reply.reasoning).isEqualTo("the budget ran out")
+        assertThat(reply.answer.trim()).isEqualTo("Boston.")
+    }
+
+    @Test
+    fun `a repeat of the tag with no opening tag is not part of the answer either`() {
+        val reply = parseAssistantReply("the budget ran out</think>\n</think>\n\nBoston.")
+
+        assertThat(reply.answer.trim()).isEqualTo("Boston.")
+    }
+
+    @Test
+    fun `a closing tag later in the answer is still the answer's`() {
+        val reply = parseAssistantReply("<think>why</think>\nWrite </think> to close a block.")
+
+        assertThat(reply.answer).isEqualTo("Write </think> to close a block.")
+    }
+
+    @Test
+    fun `a repeated tag is dropped however many newlines or repeats there are`() {
+        val blank = parseAssistantReply("<think>why</think>\n\n</think>\nBoston.")
+        val triple = parseAssistantReply("<think>why</think>\n</think>\n</think>\n\nBoston.")
+
+        assertThat(blank.answer).isEqualTo("Boston.")
+        assertThat(triple.answer).isEqualTo("Boston.")
+    }
+
+    @Test
+    fun `an answer that is only part of a tag is kept`() {
+        assertThat(parseAssistantReply("<think>why</think>\n</").answer).isEqualTo("</")
+    }
+
+    @Test
+    fun `an answer that merely begins like a tag is kept`() {
+        assertThat(parseAssistantReply("<think>why</think>\n</div> closes it.").answer)
+            .isEqualTo("</div> closes it.")
+    }
+
+    @Test
+    fun `text before a block keeps its paragraph break`() {
+        val reply = parseAssistantReply("Before\n<think>why</think>\nAfter")
+
+        assertThat(reply.answer).isEqualTo("Before\n\nAfter")
+    }
 }

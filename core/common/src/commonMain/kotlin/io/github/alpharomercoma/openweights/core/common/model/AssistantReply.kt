@@ -61,7 +61,9 @@ fun parseAssistantReply(raw: String): AssistantReply {
     if (firstClose >= 0 && (openIndex < 0 || firstClose < openIndex)) {
         return AssistantReply(
             reasoning = raw.take(firstClose).trim(),
-            answer = raw.substring(firstClose + CLOSE_TAG.length).removePrefix("\n"),
+            answer = raw.substring(firstClose + CLOSE_TAG.length)
+                .withoutRepeatedClose()
+                .removePrefix("\n"),
             isReasoningInProgress = false,
         )
     }
@@ -82,9 +84,34 @@ fun parseAssistantReply(raw: String): AssistantReply {
 
     return AssistantReply(
         reasoning = raw.substring(openIndex + OPEN_TAG.length, closeIndex).trim(),
-        answer = (prelude + raw.substring(closeIndex + CLOSE_TAG.length)).removePrefix("\n"),
+        answer = (prelude + raw.substring(closeIndex + CLOSE_TAG.length).withoutRepeatedClose())
+            .removePrefix("\n"),
         isReasoningInProgress = false,
     )
+}
+
+/**
+ * What follows a block, less any closing tags the model repeated straight after it.
+ *
+ * Qwen3 1.7B writes its own tag right after the one the reasoning budget wrote for it, 10 to 14
+ * of 20 replies on an SM8850 (2026-11-04), and it showed as the start of the answer. Only at the
+ * very start: a tag further on is something the answer is saying. Text with no repeat comes back
+ * untouched, newlines and all, since the callers own those. A part of a tag is left alone: the tag
+ * is one token in every model checked, and a reply could really be `</`.
+ */
+private fun String.withoutRepeatedClose(): String {
+    var rest = this
+    var repeated = false
+    while (true) {
+        val next = rest.trimStart('\n')
+        when {
+            next.startsWith(CLOSE_TAG) -> {
+                rest = next.removePrefix(CLOSE_TAG)
+                repeated = true
+            }
+            else -> return if (repeated) next else rest
+        }
+    }
 }
 
 /**
