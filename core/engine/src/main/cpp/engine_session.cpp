@@ -3177,8 +3177,10 @@ StopReason Session::generate(
             // after a search result: runs to a 600-token cap 1 without this and 0 with it,
             // further searches 20 and 12. llama-server has the same idea as
             // reasoning_budget_message. See docs/research/llama-cpp-v080.md.
-            const std::string close =
-                "\n\nI have thought enough, so I will act on what I have now." + thinking_end_tag_ + "\n";
+            const std::string note = sampler_config.reasoning_close_note.empty()
+                ? "I have thought enough, so I will act on what I have now."
+                : sampler_config.reasoning_close_note;
+            const std::string close = "\n\n" + note + thinking_end_tag_ + "\n";
             std::vector<llama_token> close_tokens = common_tokenize(vocab, close, false, true);
             if (close_tokens.empty() || n_past_ + static_cast<int32_t>(close_tokens.size()) >= n_ctx) {
                 reason = StopReason::CONTEXT_FULL;

@@ -132,6 +132,20 @@ class ReasoningBudgetOnDeviceTest {
         assertThat(budgeted.content.substringBefore(CLOSE)).endsWith(ACT_NOW)
     }
 
+    /** The pass past the round limit: closed before the model writes anything, in the given words. */
+    @Test
+    fun aBudgetOfNothingClosesTheBlockBeforeAToken() = runBlocking {
+        engine.load(MODEL, ModelLoadParams(contextLength = CONTEXT))
+
+        val raw = engine.chat(
+            messages = listOf(ChatMessage.text(ChatRole.USER, ANSWERED_FROM_MEMORY)),
+            params = deciding(0).copy(reasoningNote = NOTE_GIVEN),
+        ).filterIsInstance<GenerationEvent.Token>().toList().joinToString("") { it.text }
+
+        assertThat(raw.substringBefore(CLOSE).trim()).isEqualTo(NOTE_GIVEN)
+        assertThat(raw.substringAfter(CLOSE).trim()).isNotEmpty()
+    }
+
     /**
      * The tag belongs to the reasoning, so it must not reach the reader of the answer's opening
      * tokens: one unlikely tag would look like doubt in the answer and start a search.
@@ -187,6 +201,7 @@ class ReasoningBudgetOnDeviceTest {
 
     private companion object {
         const val TAG = "ReasoningBudgetTest"
+        const val NOTE_GIVEN = "Nothing more to look up, so here is the answer."
         const val CONTEXT = 4096
         const val MAX_TOKENS = 400
         const val LOGGED_CHARS = 160

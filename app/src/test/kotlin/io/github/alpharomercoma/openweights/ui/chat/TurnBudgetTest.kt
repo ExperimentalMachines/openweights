@@ -149,7 +149,116 @@ class TurnBudgetTest {
         assertThat(engine.prompts).hasSize(2)
     }
 
-    private suspend fun run(beside: List<Tool> = emptyList()) {
+    @Test
+    fun `a turn out of rounds answers instead of thinking on`() = runBlocking<Unit> {
+        asksEveryPass()
+
+        run()
+
+        val (mayCall, past) = engine.paramsUsed.partition { it.temperature == 0f }
+        assertThat(mayCall.map { it.reasoningBudget to it.reasoningNote }.toSet())
+            .containsExactly(TOOL_PASS_REASONING_BUDGET to null)
+        // The pass told to stop and the forced last one are where the reasoning ran on, and
+        // where a model stopped at the usual cap went on reasoning in the reply.
+        assertThat(past.map { it.reasoningBudget to it.reasoningNote })
+            .isEqualTo(List(2) { PAST_LIMIT_REASONING_BUDGET to PAST_LIMIT_NOTE })
+        // Each is told it may say it could not find the answer, the refused call too, whose
+        // result is all the model has to go on and was read as a broken tool.
+        val told = engine.prompts.takeLast(2).map { p -> p.last { it.role == ChatRole.TOOL }.text }
+        assertThat(told.filter { "could not find it" in it }).hasSize(2)
+        assertThat(told.last()).startsWith("That call did not run.")
+    }
+
+    @Test
+    fun `a pass that could still earn rounds keeps its thinking`() = runBlocking<Unit> {
+        // Past the short budget, and still choosing an action: the write this turn is for.
+        val writer = ChainingTool("write_file")
+        repeat(2) { round ->
+            engine.scripted += ScriptedPass(
+                "Looking.",
+                toolCalls = listOf(ToolCall("s$round", "web_search", """{"query":"x$round"}""")),
+            )
+        }
+        engine.scripted += ScriptedPass(
+            "Saving.",
+            toolCalls = listOf(ToolCall("w", "write_file", """{"path":"a.md","content":"x"}""")),
+        )
+        engine.scripted += ScriptedPass("Saved it.")
+
+        run(beside = listOf(writer))
+
+        assertThat(writer.calls).hasSize(1)
+        assertThat(engine.paramsUsed[2].reasoningNote).isNull()
+        assertThat(engine.paramsUsed[2].reasoningBudget)
+            .isEqualTo(SamplerParams.NO_REASONING_BUDGET)
+    }
+
+    @Test
+    fun `a refused call does not end a turn that can still earn rounds`() = runBlocking<Unit> {
+        // Refused for being one search too many, then asked for the write the turn is for.
+        val writer = ChainingTool("write_file")
+        repeat(3) { round ->
+            engine.scripted += ScriptedPass(
+                "Looking.",
+                toolCalls = listOf(ToolCall("s$round", "web_search", """{"query":"x$round"}""")),
+            )
+        }
+        engine.scripted += ScriptedPass(
+            "Saving.",
+            toolCalls = listOf(ToolCall("w", "write_file", """{"path":"a.md","content":"x"}""")),
+        )
+        engine.scripted += ScriptedPass("Saved it.")
+
+        run(beside = listOf(writer))
+
+        assertThat(writer.calls).hasSize(1)
+        assertThat(engine.paramsUsed[3].reasoningNote).isNull()
+    }
+
+    @Test
+    fun `a window with no room is not the end of the rounds`() = runBlocking<Unit> {
+        // The first pass of a turn that has called nothing, told nothing about calling.
+        engine.scripted += ScriptedPass("Answering from what I have.")
+        engine.contextUsed = CONTEXT - NEARLY_FULL_HEADROOM
+
+        run()
+
+        assertThat(engine.paramsUsed.single().reasoningNote).isNull()
+        assertThat(engine.paramsUsed.single().reasoningBudget)
+            .isEqualTo(SamplerParams.NO_REASONING_BUDGET)
+    }
+
+    @Test
+    fun `plan mode is not told to reply with only the answer`() = runBlocking<Unit> {
+        // Its reply is a list of steps, and the repair after the limit demands exactly that.
+        asksEveryPass()
+
+        run(mode = AgentMode.PLAN)
+
+        assertThat(engine.paramsUsed.mapNotNull { it.reasoningNote }).isEmpty()
+    }
+
+    @Test
+    fun `a turn with no tools leaves the thinking to the model`() = runBlocking<Unit> {
+        engine.scripted += ScriptedPass("A haiku.")
+
+        run(withTools = false)
+
+        assertThat(engine.paramsUsed.single().reasoningBudget)
+            .isEqualTo(SamplerParams.NO_REASONING_BUDGET)
+    }
+
+    /** A model that never stops asking for a search, so a turn runs into its limit. */
+    private fun asksEveryPass() = repeat(PLENTY) { round ->
+        val call = ToolCall("$round", "web_search", """{"query":"x$round"}""")
+        engine.scripted += ScriptedPass("Looking.", toolCalls = listOf(call))
+    }
+
+    private suspend fun run(
+        beside: List<Tool> = emptyList(),
+        mode: AgentMode = AgentMode.AUTO,
+        withTools: Boolean = true,
+    ) {
         engine.load(modelFile(), ModelLoadParams(contextLength = CONTEXT))
         TurnRunner(
             engine = engine,
@@ -160,8 +269,8 @@ class TurnBudgetTest {
         ).run(
             conversation = listOf(ChatMessage.text(ChatRole.USER, "Who is Ada Lovelace?")),
             params = SamplerParams(),
-            mode = AgentMode.AUTO,
-            withTools = true,
+            mode = mode,
+            withTools = withTools,
             notes = ToolNotes(),
             listener = Collecting,
         )

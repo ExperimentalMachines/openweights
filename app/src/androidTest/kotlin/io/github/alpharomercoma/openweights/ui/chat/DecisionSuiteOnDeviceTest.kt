@@ -33,6 +33,7 @@ import io.github.alpharomercoma.openweights.core.common.model.SamplerParams
 import io.github.alpharomercoma.openweights.core.common.model.ToolCall
 import io.github.alpharomercoma.openweights.core.common.model.ToolDefinition
 import io.github.alpharomercoma.openweights.core.common.model.parseAssistantReply
+import io.github.alpharomercoma.openweights.core.common.model.withoutToolMarkup
 import io.github.alpharomercoma.openweights.core.engine.ExecuTorchEngine
 import io.github.alpharomercoma.openweights.core.engine.GenerationEvent
 import io.github.alpharomercoma.openweights.core.engine.InferenceEngine
@@ -365,7 +366,7 @@ class DecisionSuiteOnDeviceTest {
                                     question = question,
                                 )
                             }.getOrElse { "ERROR ${it.javaClass.simpleName}: ${it.message}" }
-                            val answer = parseAssistantReply(raw).answer.trim()
+                            val answer = parseAssistantReply(raw).answer.withoutToolMarkup().trim()
                             val calls = listener.steps.filterIsInstance<AgentStep.Ran>().map {
                                 it.call.name
                             }
@@ -476,7 +477,7 @@ class DecisionSuiteOnDeviceTest {
         gate: Float?,
         lacking: Float?,
     ): JSONObject {
-        val answer = parseAssistantReply(raw).answer.trim()
+        val answer = parseAssistantReply(raw).answer.withoutToolMarkup().trim()
         val ran = listener.steps.filterIsInstance<AgentStep.Ran>()
         val calls = JSONArray(
             ran.map { step ->

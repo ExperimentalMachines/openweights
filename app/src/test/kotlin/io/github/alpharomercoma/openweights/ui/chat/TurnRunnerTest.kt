@@ -352,14 +352,7 @@ class TurnRunnerTest {
 
     @Test
     fun `the last round tells the model there will be no more tools`() = runBlocking {
-        repeat(PLENTY) { round ->
-            val call = ToolCall(
-                id = "$round",
-                name = "web_search",
-                argumentsJson = """{"query":"x$round"}""",
-            )
-            engine.scripted += ScriptedPass("Looking.", toolCalls = listOf(call))
-        }
+        asksEveryPass()
 
         run(withTools = true)
 
@@ -376,14 +369,7 @@ class TurnRunnerTest {
         // tools writes "let me search" instead of an answer, and the turn ends on that. So
         // the withdrawal still exists, it is just the exception rather than the rule, and it
         // costs a re-prefill only when a model earns it.
-        repeat(PLENTY) { round ->
-            val call = ToolCall(
-                id = "$round",
-                name = "web_search",
-                argumentsJson = """{"query":"x$round"}""",
-            )
-            engine.scripted += ScriptedPass("Looking.", toolCalls = listOf(call))
-        }
+        asksEveryPass()
 
         run(withTools = true)
 
@@ -764,6 +750,16 @@ class TurnRunnerTest {
         assertThat(engine.offered.single()).isEmpty()
     }
 
+    /** A model that never stops asking for a search, so a turn runs into its limit. */
+    private fun asksEveryPass() = repeat(PLENTY) { round ->
+        val call = ToolCall(
+            id = "$round",
+            name = "web_search",
+            argumentsJson = """{"query":"x$round"}""",
+        )
+        engine.scripted += ScriptedPass("Looking.", toolCalls = listOf(call))
+    }
+
     @Test
     fun `a pass that may call a tool runs greedy with no repeat penalty`() = runBlocking<Unit> {
         // Choosing among tools is an argmax, and the penalty divides every recently seen
@@ -772,14 +768,7 @@ class TurnRunnerTest {
         // matrix on 2026-09-02 at both values; every pass whose call could run uses the
         // sampler the routing was measured with. The user's temperature and penalty stay
         // theirs for the pass that can only write prose: the one past the round cap.
-        repeat(PLENTY) { round ->
-            val call = ToolCall(
-                id = "$round",
-                name = "web_search",
-                argumentsJson = """{"query":"x$round"}""",
-            )
-            engine.scripted += ScriptedPass("Looking.", toolCalls = listOf(call))
-        }
+        asksEveryPass()
 
         run(withTools = true)
 
@@ -788,12 +777,11 @@ class TurnRunnerTest {
         assertThat(greedy.last()).isFalse()
         // The greedy passes are a prefix: once the cap is spent no later pass may call.
         assertThat(greedy).isEqualTo(greedy.sortedByDescending { it })
-        // And they think to a budget; the prose pass thinks as long as it likes.
+        // And they think to a budget.
         assertThat(engine.paramsUsed.first().reasoningBudget).isEqualTo(TOOL_PASS_REASONING_BUDGET)
         val prose = engine.paramsUsed.last()
         assertThat(prose.temperature).isEqualTo(SamplerParams.DEFAULT_TEMPERATURE)
         assertThat(prose.repeatPenalty).isEqualTo(SamplerParams.DEFAULT_REPEAT_PENALTY)
-        assertThat(prose.reasoningBudget).isEqualTo(SamplerParams.NO_REASONING_BUDGET)
     }
 
     @Test

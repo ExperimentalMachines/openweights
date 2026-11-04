@@ -230,6 +230,8 @@ internal class LlamaBridge {
         maxTokens: Int,
         /** Thinking tokens before the engine closes the block itself; -1 for no cap. */
         reasoningBudget: Int,
+        /** Said just before the engine closes the block; null for its default. */
+        reasoningNote: String?,
         toolNames: Array<String>,
         toolDescriptions: Array<String>,
         toolSchemas: Array<String>,

@@ -707,6 +707,7 @@ Java_io_github_alpharomercoma_openweights_core_engine_LlamaBridge_nativeGenerate
     jint seed,
     jint max_tokens,
     jint reasoning_budget,
+    jstring reasoning_note,
     jobjectArray tool_names,
     jobjectArray tool_descriptions,
     jobjectArray tool_schemas,
@@ -771,6 +772,7 @@ Java_io_github_alpharomercoma_openweights_core_engine_LlamaBridge_nativeGenerate
     sampler.seed           = static_cast<uint32_t>(seed);
     sampler.max_tokens     = max_tokens;
     sampler.reasoning_budget = reasoning_budget;
+    if (reasoning_note != nullptr) sampler.reasoning_close_note = to_utf8(env, reasoning_note);
 
     jclass sink_class = env->GetObjectClass(token_sink);
     jmethodID on_token = env->GetMethodID(sink_class, "onToken", "(Ljava/lang/String;F)Z");

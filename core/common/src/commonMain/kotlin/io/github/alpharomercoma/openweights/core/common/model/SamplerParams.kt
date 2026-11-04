@@ -44,10 +44,16 @@ data class SamplerParams(
      * the template's own end-of-thinking tag into the reply and the model answers from
      * what it has, which is llama-server's `reasoning_budget_tokens` done on the phone.
      * Measured on the routing matrix with Qwen3-1.7B on 2026-09-02: 128 keeps the
-     * unrestricted 31 of 33 while 64 drops to 29 and 32 to 27, so the tool pass uses 128
-     * and prose keeps the block open. llama.cpp only; the ExecuTorch engine ignores it.
+     * unrestricted 31 of 33 while 64 drops to 29 and 32 to 27, so the tool pass uses 128.
+     * Zero closes the block before the model writes anything, for a turn out of rounds. A
+     * turn with no tools keeps the block open. llama.cpp only; the ExecuTorch engine ignores it.
      */
     val reasoningBudget: Int = NO_REASONING_BUDGET,
+    /**
+     * What the model is made to say just before the engine closes the block at
+     * [reasoningBudget]. Null for the engine's default. llama.cpp only.
+     */
+    val reasoningNote: String? = null,
 ) {
     init {
         require(temperature >= 0f) { "temperature must be >= 0" }

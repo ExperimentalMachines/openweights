@@ -251,6 +251,7 @@ class LlamaCppEngine internal constructor(
         seed = params.seed ?: Random.nextInt(),
         maxTokens = params.maxTokens,
         reasoningBudget = params.reasoningBudget,
+        reasoningNote = params.reasoningNote,
         toolNames = tools.map { it.name }.toTypedArray(),
         toolDescriptions = tools.map { it.description }.toTypedArray(),
         toolSchemas = tools.map { it.parametersJson }.toTypedArray(),

@@ -118,6 +118,11 @@ struct SamplerConfig {
      * never opened a block.
      */
     int32_t reasoning_budget = -1;
+    /**
+     * What the model is made to say inside the block just before that tag; empty for the
+     * default. A pass that can no longer call a tool needs different words from one that can.
+     */
+    std::string reasoning_close_note;
 };
 
 /** How a generation ended. */

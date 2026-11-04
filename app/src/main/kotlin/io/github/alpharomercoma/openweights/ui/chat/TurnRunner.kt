@@ -797,6 +797,23 @@ class TurnRunner @Inject constructor(
          */
         private var proseOnly = false
 
+        /** Whether this turn is one with tools, whether or not its next pass may still call. */
+        private val toolTurn: Boolean get() = withTools && !proseOnly
+
+        /**
+         * Whether this turn has used every round it could ever have, so its pass can only answer.
+         *
+         * Not merely that the pass may not call. A window with no room says that too, on what
+         * can be the first pass of a turn that has searched for nothing. Below the ceiling a
+         * pass can still earn the longer budget by asking for a tool that chains, even straight
+         * after a refused call, which [wantsToChain] allows. And plan mode's reply is a list of
+         * steps, not an answer.
+         */
+        private fun outOfRounds(mode: AgentMode): Boolean = toolTurn &&
+            mode != AgentMode.PLAN &&
+            round >= maxRounds &&
+            maxRounds >= ceiling
+
         /**
          * Whether any pass carried a pinned plan block. The block is transient and changes
          * as steps tick, so a turn that pinned one has a cache the accumulator does not
@@ -824,10 +841,7 @@ class TurnRunner @Inject constructor(
                 // model can see the tools, and sampling follows this one: choosing among
                 // tools is an argmax, and a pass that can only write prose keeps whatever
                 // temperature the user set.
-                val mayCall = withTools &&
-                    !proseOnly &&
-                    round < maxRounds &&
-                    ToolBudget(headroomTokens()).hasRoom
+                val mayCall = toolTurn && round < maxRounds && ToolBudget(headroomTokens()).hasRoom
                 // Pinned for this pass only, never folded into the accumulator: the block
                 // changes as steps are ticked, and anything that changes has to sit at the
                 // very end or it moves tokens the cache has already read. Grounding is the
@@ -838,7 +852,7 @@ class TurnRunner @Inject constructor(
                 val streamed = try {
                     streamOnce(
                         messages.pinning(plan),
-                        params.deciding(mayCall),
+                        params.deciding(mayCall, outOfRounds(mode)),
                         active,
                         renderTools,
                         listener,
@@ -864,7 +878,7 @@ class TurnRunner @Inject constructor(
                 // cannot render tools has never been offered one, so "I could use web_search
                 // for that" is a remark about what it cannot do. Ungated, that remark
                 // reached the network.
-                val calls = pass.asked(active, withTools && !proseOnly)
+                val calls = pass.asked(active, toolTurn)
                 val again = goesRound(pass, calls, mayCall, mode, listener)
                 if (!again) {
                     // The turn is over and [messages] is the conversation the KV cache now
@@ -1604,10 +1618,11 @@ class TurnRunner @Inject constructor(
             // what stripping it costs. The refusal the model needs to hear is the spent()
             // result below; the refusal the loop needs is `withdrawn`, which ends the
             // turn if it asks again. What the cache needs is a prompt that only grows.
-            listener.onSteps(calls.map { AgentStep.Skipped(it, spent(maxRounds)) })
+            val refused = "That call did not run. ${spent(maxRounds)}"
+            listener.onSteps(calls.map { AgentStep.Skipped(it, refused) })
             messages = messages +
                 ChatMessage.text(ChatRole.ASSISTANT, pass.historyText) +
-                calls.map { ChatMessage.toolResult(it.id, spent(maxRounds)) }
+                calls.map { ChatMessage.toolResult(it.id, refused) }
                     .spelledOut(readsResults)
             return true
         }
@@ -1665,17 +1680,6 @@ class TurnRunner @Inject constructor(
         "That did not read as a tool call. The tools available are " +
             active.definitions.joinToString { it.name } +
             ". Call one of those, or answer without a tool."
-
-    /**
-     * What the model is told once its rounds are gone.
-     *
-     * Phrased as a fact about the budget and then an instruction, because a small model does
-     * better with the reason attached: told only to stop it stops mid-sentence, and told only
-     * to answer it looks for another tool first.
-     */
-    private fun spent(maxRounds: Int): String =
-        "That was the last of $maxRounds rounds, so there are no more tool calls. " +
-            "Answer the question now from what you already have."
 
     @Suppress("LongParameterList")
     private suspend fun streamOnce(
@@ -1745,9 +1749,8 @@ class TurnRunner @Inject constructor(
             messages = messages,
             params = params,
             // Offered even in plan mode: a plan that cannot name the tools it would use is
-            // not a plan. Withdrawn on the last pass, so a model that has used its whole
-            // budget is made to answer from what it collected rather than asking again and
-            // leaving the user with tool syntax and no reply.
+            // not a plan. Still rendered on the last pass, because taking them out would
+            // rewrite the front of the prompt; see [withdraw] for what stops a call there.
             tools = if (offerTools) active.definitions else emptyList(),
         ).collect(onEvent)
     }
@@ -1951,16 +1954,43 @@ private fun List<ChatMessage>.describing(tools: ToolRegistry, needed: Boolean): 
  * and the decision does not need all of it. Measured on the same matrix with Qwen3-1.7B
  * on 2026-09-02: no cap 31 of 33, a cap of 128 tokens 31 of 33 with two different
  * misses, 64 tokens 29, 32 tokens 27. So the block is closed at 128 on the pass that may
- * call, and the prose pass thinks as long as it likes.
+ * call.
+ *
+ * A turn that is out of rounds is closed before its pass starts instead, and told to answer.
+ * That matrix did not measure this pass: it had routing to protect, and here nothing is left to
+ * route. Nothing else ends the block there. LFM3 1.7B on an SM8850, 2026-11-04, 160 questions: 23
+ * turns ran five passes or more and 14 were still thinking at the suite's 600 tokens, where the app
+ * has no cap. Closed at 128 the block ends, but the model goes on reasoning in the part the user
+ * reads. The 34 such questions on an SM8650, 2026-11-05, as it was, closed at 128, and as it is now:
+ * finished with no reasoning found in the reply 18, 20 and 30; reasoning in the reply 0, 9 and 2;
+ * still thinking at 600 tokens 11, 1 and 1; ended on a call 5, 4 and 1; said it could not 7, 8 and
+ * 13; median 58, 60 and 52 s. Finished is not right: 7 of those 30 were correct. See
+ * docs/research/llama-cpp-v080.md. Every other pass that may not call thinks as long as it likes, as
+ * it always has: a turn with no tools, plan mode, a retry after a false denial, one short of room,
+ * and one that may yet earn rounds.
  */
-private fun SamplerParams.deciding(offerTools: Boolean): SamplerParams = if (offerTools) {
-    copy(temperature = 0f, repeatPenalty = 1f, reasoningBudget = TOOL_PASS_REASONING_BUDGET)
-} else {
-    this
+private fun SamplerParams.deciding(mayCall: Boolean, outOfRounds: Boolean): SamplerParams = when {
+    mayCall -> copy(
+        temperature = 0f,
+        repeatPenalty = 1f,
+        reasoningBudget = TOOL_PASS_REASONING_BUDGET,
+    )
+    outOfRounds -> copy(
+        reasoningBudget = PAST_LIMIT_REASONING_BUDGET,
+        reasoningNote = PAST_LIMIT_NOTE,
+    )
+    else -> this
 }
 
 /** Thinking tokens on a pass that may call a tool. See [deciding]. */
 internal const val TOOL_PASS_REASONING_BUDGET = 128
+
+/** Thinking tokens on the pass of a turn that is out of rounds. See [deciding]. */
+internal const val PAST_LIMIT_REASONING_BUDGET = 0
+
+/** What the model is made to say on such a pass, where it has nothing left to act on. */
+internal const val PAST_LIMIT_NOTE =
+    "No more tool calls. My reply will be only the answer, or that I could not find it."
 
 /**
  * The same results, with the last one carrying word that the tools are finished.
@@ -2029,10 +2059,21 @@ internal fun List<ChatMessage>.spelledOut(readsResults: Boolean): List<ChatMessa
 
 private fun List<ChatMessage>.closing(maxRounds: Int): List<ChatMessage> {
     val last = lastOrNull() ?: return this
-    val told = "${last.text}\n\nThat was the last of $maxRounds rounds, so there are no " +
-        "more tool calls. Answer the question now from what you already have."
+    val told = "${last.text}\n\n${spent(maxRounds)}"
     return dropLast(1) + ChatMessage.text(ChatRole.TOOL, told).copy(toolCallId = last.toolCallId)
 }
+
+/**
+ * What the model is told once its rounds are gone.
+ *
+ * Phrased as a fact about the budget and then an instruction, because a small model does
+ * better with the reason attached: told only to stop it stops mid-sentence, and told only
+ * to answer it looks for another tool first. It may say it could not find the answer, since
+ * a turn that reached the limit is often one whose results do not hold it.
+ */
+private fun spent(maxRounds: Int): String =
+    "That was the last of $maxRounds rounds, so there are no more tool calls. " +
+        "Give the answer now from what you already have, or say you could not find it."
 
 /**
  * The conversation with the plan's state stuck to the end of the last thing in it.
