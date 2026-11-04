@@ -1183,6 +1183,11 @@ struct ReplySpan {
     size_t length;
     size_t first_token;
     size_t end_token;
+    // Kept, because the token indices above mean nothing in any other reply: looking the owner
+    // up again by indexing every reply with them read past the end of a shorter one's offsets,
+    // and the garbage offset threw "string_view::substr" and failed the turn. Qwen3 1.7B with
+    // thinking on, 5 of 20 questions on an SM8850 (2026-11-04); the code dates from 2026-09-05.
+    const std::vector<llama_token> * tokens;
 };
 }  // namespace
 
@@ -1220,6 +1225,7 @@ std::vector<llama_token> Session::tokenize_prompt(const std::string & text, bool
                 at, length,
                 static_cast<size_t>(first - record.offsets.begin()),
                 static_cast<size_t>(last - record.offsets.begin()),
+                &record.tokens,
             });
             break;
         }
@@ -1239,17 +1245,8 @@ std::vector<llama_token> Session::tokenize_prompt(const std::string & text, bool
             const auto piece = tokenize_plain(vocab, text.data() + at, span.at - at, add_special && at == 0);
             tokens.insert(tokens.end(), piece.begin(), piece.end());
         }
-        // The record that owns this span: found again by position, since the spans were
-        // built in record order and then sorted. Cheap at a few dozen replies.
-        for (const auto & record : replies_) {
-            if (record.text.compare(record.offsets[span.first_token], span.length, text, span.at, span.length) == 0 &&
-                record.offsets.size() > span.end_token &&
-                record.offsets[span.end_token] - record.offsets[span.first_token] == span.length) {
-                tokens.insert(tokens.end(), record.tokens.begin() + span.first_token,
-                              record.tokens.begin() + span.end_token);
-                break;
-            }
-        }
+        tokens.insert(tokens.end(), span.tokens->begin() + span.first_token,
+                      span.tokens->begin() + span.end_token);
         at = span.at + span.length;
         ++spliced;
     }
