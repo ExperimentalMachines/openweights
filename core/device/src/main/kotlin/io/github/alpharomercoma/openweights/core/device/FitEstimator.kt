@@ -16,6 +16,7 @@
 
 package io.github.alpharomercoma.openweights.core.device
 
+import io.github.alpharomercoma.openweights.core.common.model.GgufFileType
 import io.github.alpharomercoma.openweights.core.common.model.GgufMetadata
 import javax.inject.Inject
 
@@ -37,7 +38,7 @@ enum class FitVerdict {
 /**
  * What the app can tell a user about a model before they download it.
  *
- * @param requiredMemoryBytes weights plus KV cache plus runtime overhead.
+ * @param requiredMemoryBytes weights, what SME kernels add to them, KV cache and runtime overhead.
  * @param estimatedDecodeTokensPerSecond null when there is no calibration to base it on;
  *   an invented number is worse than none.
  * @param estimatedPrefillTokensPerSecond the prefill mirror of [estimatedDecodeTokensPerSecond]:
@@ -85,7 +86,12 @@ class FitEstimator @Inject constructor() {
     ): FitReport {
         val kvCache = metadata.kvCacheBytes(contextLength)
         val weights = saturatedSum(fileSizeBytes, projectorSizeBytes)
-        val required = saturatedSum(weights, kvCache, RUNTIME_OVERHEAD_BYTES)
+        val required = saturatedSum(
+            weights,
+            repackBytes(device, metadata, fileSizeBytes),
+            kvCache,
+            RUNTIME_OVERHEAD_BYTES,
+        )
         val usable = device.usableMemoryBytes
 
         val verdict = when {
@@ -109,7 +115,12 @@ class FitEstimator @Inject constructor() {
             usableMemoryBytes = usable,
             kvCacheBytes = kvCache,
             estimatedDecodeTokensPerSecond = calibration?.predictFor(fileSizeBytes),
-            maxContextLength = maxContextLength(device, metadata, weights),
+            maxContextLength = maxContextLength(
+                device,
+                metadata,
+                fileSizeBytes,
+                projectorSizeBytes,
+            ),
             estimatedPrefillTokensPerSecond = prefillCalibration?.predictFor(fileSizeBytes),
         )
     }
@@ -265,7 +276,7 @@ class FitEstimator @Inject constructor() {
         // claim; the other is what is actually left once the weights are in memory, which on
         // a device that barely fits this model is the tighter of the two.
         val share = ((device.usableMemoryBytes * KV_FRACTION).toLong() / bytesPerToken).toInt()
-        val remaining = maxContextLength(device, metadata, fileSizeBytes + projectorSizeBytes)
+        val remaining = maxContextLength(device, metadata, fileSizeBytes, projectorSizeBytes)
 
         // Rounded down to a whole number of blocks, because a window is a buffer and an odd
         // size reads as a sum rather than a size.
@@ -285,11 +296,53 @@ class FitEstimator @Inject constructor() {
     }
 
     /**
+     * What SME's weight kernels add to a GGUF in memory, as the worst share of its file measured
+     * for its quant type on an SM8850 (the real app, one turn at 32k, 2026-11-04). The kernels
+     * pack tensors to the SME vector length, so the file's size no longer describes them.
+     *
+     * Q4_0 went 30 to 51% past the estimate without this, Q4_K_M -1 to 88%, Q5_K_M 45%, Q6_K 151
+     * and 159%, Q8_0 104 and 105%. Each allowance is that worst plus 6 to 10 points, because a
+     * real search turn peaked up to 20 MiB above the short one. A type nothing has measured takes
+     * the largest, because underestimating is how an app promises a fit and then gets killed. A
+     * CPU without SME pays 3.6% at most (POCO, 2026-11-04), which the overhead already covers. A
+     * 64-byte vector packs to 1.6 to 2.2 times the file (Apple M5), so a phone wider than the
+     * SM8850's may need more.
+     * See docs/research/llama-cpp-v080.md.
+     */
+    private fun repackBytes(
+        device: DeviceProfile,
+        metadata: GgufMetadata,
+        fileSizeBytes: Long,
+    ): Long {
+        if (!device.hasSme) return 0
+        val share = when (metadata.fileType) {
+            GgufFileType.Q4_0 -> SME_REPACK_Q4_0
+            GgufFileType.Q4_K_S, GgufFileType.Q4_K_M -> SME_REPACK_Q4_K
+            GgufFileType.Q5_K_S, GgufFileType.Q5_K_M -> SME_REPACK_Q5_K
+            GgufFileType.Q8_0 -> SME_REPACK_Q8_0
+            // No kernel packs these, so they stay the size they are on disk: an F16 file of
+            // 13,153 MiB held 13,141 in memory on an Apple M5 with SME2. Refusing one for an
+            // allowance measured on quantized files would hide a model that fits.
+            GgufFileType.F16, GgufFileType.BF16 -> return 0
+            else -> SME_REPACK_LARGEST
+        }
+        return (fileSizeBytes * share).toLong()
+    }
+
+    /**
      * The longest context this device can hold for this model, capped by what the model
      * was trained for: offering more than that produces gibberish, not a longer memory.
      */
-    fun maxContextLength(device: DeviceProfile, metadata: GgufMetadata, fileSizeBytes: Long): Int {
-        val spare = device.usableMemoryBytes - fileSizeBytes - RUNTIME_OVERHEAD_BYTES
+    fun maxContextLength(
+        device: DeviceProfile,
+        metadata: GgufMetadata,
+        fileSizeBytes: Long,
+        projectorSizeBytes: Long = 0,
+    ): Int {
+        // The projector is counted separately: it is loaded as it is, and charging it the
+        // weights' repack would narrow a vision model's window for memory it never uses.
+        val spare = device.usableMemoryBytes - fileSizeBytes - projectorSizeBytes -
+            repackBytes(device, metadata, fileSizeBytes) - RUNTIME_OVERHEAD_BYTES
         if (spare <= 0) return 0
 
         val bytesPerToken = metadata.kvCacheBytes(contextLength = 1)
@@ -328,6 +381,13 @@ class FitEstimator @Inject constructor() {
          * and then gets killed. See docs/research/swap-and-peak-memory.md.
          */
         const val RUNTIME_OVERHEAD_BYTES = 512L * 1024 * 1024
+
+        /** Shares of the file. See [repackBytes] for the measurement. */
+        const val SME_REPACK_Q4_0 = 0.6
+        const val SME_REPACK_Q4_K = 0.95
+        const val SME_REPACK_Q5_K = 0.55
+        const val SME_REPACK_Q8_0 = 1.15
+        const val SME_REPACK_LARGEST = 1.65
 
         /**
          * Q4_K_M averages a little under five bits a weight, so a billion parameters costs

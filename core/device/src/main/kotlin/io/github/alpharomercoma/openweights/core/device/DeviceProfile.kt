@@ -43,6 +43,11 @@ data class DeviceProfile(
     val performanceCores: Int = cpuCores,
     val socModel: String,
     val isLowRamDevice: Boolean,
+    /**
+     * Whether this CPU has SME, which is what makes llama.cpp's KleidiAI kernels repack weights
+     * larger than the file. See [FitEstimator].
+     */
+    val hasSme: Boolean = false,
 ) {
     /**
      * The most memory a model may occupy before Android starts killing things.
@@ -60,6 +65,15 @@ data class DeviceProfile(
         const val LOW_RAM_HEADROOM = 0.5
     }
 }
+
+/**
+ * Whether a `/proc/cpuinfo` lists SME, which the kernel prints from the same bit llama.cpp checks.
+ *
+ * As a whole word, because the line also carries names like `smei16i64` that say nothing alone.
+ */
+internal fun hasSmeFeature(cpuinfo: String): Boolean = cpuinfo.lineSequence()
+    .filter { it.startsWith("Features") }
+    .any { line -> line.substringAfter(':').trim().split(Regex("\\s+")).contains("sme") }
 
 /** Reads this device's real capabilities, with no per-chip table anywhere. */
 @Singleton
@@ -80,6 +94,9 @@ class DeviceProfiler @Inject constructor(@ApplicationContext private val context
             socModel = Build.SOC_MODEL.takeIf { it.isNotBlank() && it != Build.UNKNOWN }
                 ?: Build.HARDWARE,
             isLowRamDevice = activityManager?.isLowRamDevice ?: false,
+            hasSme = runCatching {
+                hasSmeFeature(File("/proc/cpuinfo").readText())
+            }.getOrDefault(false),
         )
     }
 

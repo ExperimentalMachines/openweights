@@ -311,4 +311,158 @@ class FitEstimatorTest {
         assertThat(estimator.estimateCompiled(phone, 3900 * MIB).requiredMemoryBytes)
             .isGreaterThan(known.requiredMemoryBytes)
     }
+
+    /** A Snapdragon 8 Elite Gen 5 as QDC has it: 23 GB, with SME. */
+    private val smePhone = phone.copy(
+        totalMemoryBytes = 23L * GIB,
+        socModel = "SM8850",
+        hasSme = true,
+    )
+
+    private fun shaped(type: GgufFileType, heads: Int, width: Int) = GgufMetadata(
+        architecture = "test",
+        blockCount = 1,
+        embeddingLength = 2048,
+        headCount = 1,
+        keyValueHeadsPerLayer = listOf(heads),
+        trainingContextLength = 128_000,
+        fileType = type,
+        name = "measured",
+        keyLength = width,
+        valueLength = width,
+    )
+
+    private fun lfm3(type: GgufFileType = GgufFileType.Q4_K_M) =
+        shaped(type, heads = 44, width = 128)
+
+    private fun lfm25(type: GgufFileType) = shaped(type, heads = 48, width = 64)
+
+    private fun qwen35() = GgufMetadata(
+        architecture = "qwen35",
+        blockCount = 24,
+        embeddingLength = 2048,
+        headCount = 8,
+        keyValueHeadsPerLayer = List(6) { 8 },
+        trainingContextLength = 128_000,
+        fileType = GgufFileType.Q4_K_M,
+        name = "Qwen3.5-2B",
+        keyLength = 256,
+        valueLength = 256,
+    )
+
+    @Test
+    fun `an SME phone is promised no less than LFM3 measured on it`() {
+        // 2658 MB of PSS at 32k on the SM8850, 2026-11-04, against 2264 MiB without the repack.
+        val report = estimator.estimate(smePhone, lfm3(), 1048 * MIB, contextLength = 32_768)
+
+        assertThat(report.kvCacheBytes).isEqualTo(704 * MIB)
+        assertThat(report.requiredMemoryBytes).isAtLeast(2658 * MIB)
+    }
+
+    /**
+     * Every quant type's worst file on the SM8850, 2026-11-04: VmHWM in MiB in the real app, after
+     * one turn at 32k. The raw record is memory-sm8850.txt in the results folder.
+     */
+    @Test
+    fun `an SME phone is promised no less than each quant type's worst file measured on it`() {
+        val measured = listOf(
+            Triple(lfm25(GgufFileType.Q4_0), 663L, 1758L),
+            Triple(lfm3(GgufFileType.Q4_0), 1000L, 2729L),
+            Triple(lfm3(GgufFileType.Q4_K_M), 1048L, 3001L),
+            Triple(shaped(GgufFileType.Q4_K_M, heads = 26, width = 256), 768L, 2785L),
+            Triple(lfm25(GgufFileType.Q5_K_M), 804L, 2063L),
+            Triple(lfm3(GgufFileType.Q6_K), 1361L, 4747L),
+            Triple(lfm25(GgufFileType.Q6_K), 918L, 3204L),
+            Triple(lfm3(GgufFileType.Q8_0), 1760L, 4808L),
+            Triple(shaped(GgufFileType.Q8_0, heads = 56, width = 512), 1749L, 7685L),
+        )
+
+        measured.forEach { (metadata, fileMib, peakMib) ->
+            val report = estimator.estimate(smePhone, metadata, fileMib * MIB, 32_768)
+
+            assertThat(report.requiredMemoryBytes).isAtLeast(peakMib * MIB)
+        }
+    }
+
+    @Test
+    fun `a file type nothing has measured takes the largest allowance`() {
+        val unmeasured = estimator.estimate(smePhone, lfm3(GgufFileType.UNKNOWN), 1000 * MIB, 4096)
+        val q6 = estimator.estimate(smePhone, lfm3(GgufFileType.Q6_K), 1000 * MIB, 4096)
+
+        assertThat(unmeasured.requiredMemoryBytes).isEqualTo(q6.requiredMemoryBytes)
+    }
+
+    @Test
+    fun `F16 weights are not charged for a repack that does not grow them`() {
+        // 13,153 MiB on disk and 13,141 in memory on an Apple M5 with SME2, 2026-11-04.
+        val metadata = lfm3(GgufFileType.F16)
+
+        val sme = estimator.estimate(smePhone, metadata, 5000 * MIB, 4096)
+        val plain = estimator.estimate(smePhone.copy(hasSme = false), metadata, 5000 * MIB, 4096)
+
+        assertThat(sme.requiredMemoryBytes).isEqualTo(plain.requiredMemoryBytes)
+    }
+
+    @Test
+    fun `a projector is counted once in the window, with no repack on it`() {
+        val tight = smePhone.copy(totalMemoryBytes = 6L * GIB)
+        val metadata = lfm3(GgufFileType.Q4_K_M)
+        val file = 1000 * MIB
+        val projector = 500 * MIB
+        val perToken = metadata.kvCacheBytes(contextLength = 1)
+
+        val without = estimator.maxContextLength(tight, metadata, file)
+        val with = estimator.maxContextLength(tight, metadata, file, projector)
+
+        val spareGone = (without - with) * perToken
+        assertThat(spareGone).isAtLeast(projector - perToken)
+        assertThat(spareGone).isAtMost(projector + perToken)
+    }
+
+    @Test
+    fun `an SME phone is promised no less than the worst repack measured on it`() {
+        // 2740 MB of RSS after loading at 4k on the SM8850, 2026-10-31, against 1925 without it.
+        val report = estimator.estimate(smePhone, qwen35(), 1221 * MIB, contextLength = 4096)
+
+        assertThat(report.requiredMemoryBytes).isAtLeast(2740 * MIB)
+    }
+
+    @Test
+    fun `a phone without SME is charged what it was`() {
+        // The POCO, which reports no SME: its KleidiAI cost 3.6% at most, inside the overhead.
+        val report = estimator.estimate(phone, lfm3(), 1048 * MIB, contextLength = 32_768)
+
+        assertThat(report.requiredMemoryBytes).isEqualTo(2264 * MIB)
+    }
+
+    @Test
+    fun `an SME phone has less room left for the window`() {
+        val tight = smePhone.copy(totalMemoryBytes = 6L * GIB)
+
+        val with = estimator.estimate(tight, lfm3(), 1048 * MIB, contextLength = 4096)
+        val without = estimator.estimate(tight.copy(hasSme = false), lfm3(), 1048 * MIB, 4096)
+
+        assertThat(with.maxContextLength).isLessThan(without.maxContextLength)
+    }
+}
+
+class CpuFeaturesTest {
+    @Test
+    fun `the POCO's feature line has no SME`() {
+        val cpuinfo = "processor\t: 0\n" +
+            "Features\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomic sve2 svei8mm\n"
+
+        assertThat(hasSmeFeature(cpuinfo)).isFalse()
+    }
+
+    @Test
+    fun `SME is read as a whole word`() {
+        assertThat(hasSmeFeature("Features\t: fp asimd sve2 sme smei16i64 sme2\n")).isTrue()
+        assertThat(hasSmeFeature("Features\t: fp asimd smefoo\n")).isFalse()
+    }
+
+    @Test
+    fun `a file with no feature line says no`() {
+        assertThat(hasSmeFeature("")).isFalse()
+    }
 }
