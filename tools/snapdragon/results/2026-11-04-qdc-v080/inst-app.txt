@@ -1,0 +1,73 @@
+INSTRUMENTATION_STATUS: class=io.github.alpharomercoma.openweights.ui.chat.ToolTurnOnDeviceTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stream=
+io.github.alpharomercoma.openweights.ui.chat.ToolTurnOnDeviceTest:
+INSTRUMENTATION_STATUS: test=aToolResultReachesTheAnswer
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=io.github.alpharomercoma.openweights.ui.chat.ToolTurnOnDeviceTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stack=org.junit.AssumptionViolatedException: model.gguf did not call the tool at all
+	at org.junit.Assume.assumeTrue(Assume.java:68)
+	at io.github.alpharomercoma.openweights.ui.chat.Fixtures.require(Fixtures.kt:70)
+	at io.github.alpharomercoma.openweights.ui.chat.ToolTurnOnDeviceTest$aToolResultReachesTheAnswer$1.invokeSuspend(ToolTurnOnDeviceTest.kt:137)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+	at kotlinx.coroutines.internal.ScopeCoroutine.afterResume(Scopes.kt:35)
+	at kotlinx.coroutines.AbstractCoroutine.resumeWith(AbstractCoroutine.kt:101)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:47)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:256)
+	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:54)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlockingImpl(Builders.kt:30)
+	at kotlinx.coroutines.BuildersKt.runBlockingImpl(Unknown Source:1)
+	at kotlinx.coroutines.BuildersKt__Builders_concurrentKt.runBlockingK(Builders.concurrent.kt:172)
+	at kotlinx.coroutines.BuildersKt.runBlockingK(Unknown Source:1)
+	at kotlinx.coroutines.BuildersKt__Builders_concurrentKt.runBlockingK$default(Builders.concurrent.kt:157)
+	at kotlinx.coroutines.BuildersKt.runBlockingK$default(Unknown Source:1)
+	at io.github.alpharomercoma.openweights.ui.chat.ToolTurnOnDeviceTest.aToolResultReachesTheAnswer(ToolTurnOnDeviceTest.kt:85)
+
+INSTRUMENTATION_STATUS: stream=
+io.github.alpharomercoma.openweights.ui.chat.ToolTurnOnDeviceTest:
+INSTRUMENTATION_STATUS: test=aToolResultReachesTheAnswer
+INSTRUMENTATION_STATUS_CODE: -4
+INSTRUMENTATION_STATUS: class=io.github.alpharomercoma.openweights.ui.chat.HarnessSmokeTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stream=
+io.github.alpharomercoma.openweights.ui.chat.HarnessSmokeTest:
+INSTRUMENTATION_STATUS: test=aQuestionTheModelKnowsIsAnsweredWithoutLeavingSyntaxBehind
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=io.github.alpharomercoma.openweights.ui.chat.HarnessSmokeTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=aQuestionTheModelKnowsIsAnsweredWithoutLeavingSyntaxBehind
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=io.github.alpharomercoma.openweights.ui.chat.LongConversationOnDeviceTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stream=
+io.github.alpharomercoma.openweights.ui.chat.LongConversationOnDeviceTest:
+INSTRUMENTATION_STATUS: test=aLongConversationStaysCheapBetweenFolds
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=io.github.alpharomercoma.openweights.ui.chat.LongConversationOnDeviceTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=3
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=aLongConversationStaysCheapBetweenFolds
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_RESULT: stream=
+
+Time: 36.752
+
+OK (3 tests)
+
+
+INSTRUMENTATION_CODE: -1
