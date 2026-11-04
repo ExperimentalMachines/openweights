@@ -38,7 +38,11 @@ printf 'level\tcell\tmodels\tstatus\tstarted\tended\n' > "$STATUS"
 adbt() { limit=$1; shift; perl -e 'alarm shift; exec @ARGV' "$limit" adb -s "$SERIAL" "$@"; }
 shuffle() { perl -MList::Util=shuffle -e 'srand(shift); print join(" ", shuffle @ARGV)' "$@"; }
 
-cleanup() { adbt 30 shell "kill \$(pidof balloon) 2>/dev/null; am force-stop $PKG" >/dev/null 2>&1 || true; }
+cleanup() {
+  adbt 30 shell "kill \$(pidof balloon) 2>/dev/null; am force-stop $PKG" >/dev/null 2>&1 || true
+  [ -z "${SCREEN_TIMEOUT:-}" ] || adbt 30 shell settings put system screen_off_timeout "$SCREEN_TIMEOUT" >/dev/null 2>&1 ||
+    echo "could not put the screen timeout back to $SCREEN_TIMEOUT; set it on the phone" >&2
+}
 trap cleanup EXIT INT TERM
 
 SDK=$(sed -n 's/^sdk.dir=//p' "$ROOT/local.properties")
@@ -46,6 +50,8 @@ CC=$(ls "$SDK"/ndk/*/toolchains/llvm/prebuilt/*/bin/aarch64-linux-android31-clan
 BUILD=$(mktemp -d)
 "$CC" -O2 -o "$BUILD/balloon" "$HERE/balloon.c"
 
+# Saved first and put back on the way out: "never" outlasted a run and sat on a daily phone.
+SCREEN_TIMEOUT=$(adbt 30 shell settings get system screen_off_timeout 2>/dev/null | tr -d '\r' || true)
 adbt 30 shell "settings put system screen_off_timeout 2147483647; input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard" >/dev/null 2>&1 || true
 adbt 30 shell "cmd deviceidle whitelist +$PKG; am set-standby-bucket $PKG active; cmd appops set $PKG RUN_ANY_IN_BACKGROUND allow" >/dev/null 2>&1 || true
 adbt 60 push "$BUILD/balloon" /data/local/tmp/balloon >/dev/null

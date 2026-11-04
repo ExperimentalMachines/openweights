@@ -45,6 +45,8 @@ METHOD=${ECHO:+instructionEcho}
 METHOD=${METHOD:-decisions}
 
 # A dozing phone throttles instrumentation two to five times; awake and unlocked for the run.
+# Saved first and put back on the way out: "never" outlasted a run and sat on a daily phone.
+SCREEN_TIMEOUT=$($ADB shell settings get system screen_off_timeout 2>/dev/null | tr -d '\r' || true)
 $ADB shell "settings put system screen_off_timeout 2147483647; input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard" >/dev/null 2>&1 || true
 # And kept that way: the ROM relocks after a wake, and an unplugged phone then suspends.
 (
@@ -55,7 +57,13 @@ $ADB shell "settings put system screen_off_timeout 2147483647; input keyevent KE
   done
 ) &
 AWAKE=$!
-trap 'rm -f "$0"; kill $AWAKE 2>/dev/null || true' EXIT   # $0 is the temp copy by now
+# Bounded, because this runs on the way out and a dropped phone would hang it.
+restore_screen() {
+  [ -z "$SCREEN_TIMEOUT" ] ||
+    perl -e 'alarm 30; exec @ARGV' $ADB shell settings put system screen_off_timeout "$SCREEN_TIMEOUT" >/dev/null 2>&1 ||
+    echo "could not put the screen timeout back to $SCREEN_TIMEOUT; set it on the phone" >&2
+}
+trap 'rm -f "$0"; kill $AWAKE 2>/dev/null || true; restore_screen' EXIT   # $0 is the temp copy by now
 # Result filenames carry the model and arm, not the questions. Preserve the phone's
 # previous captures before resetting its resumable output for another question set.
 QUESTIONS=${DECISIONS:-$HERE/decisions.json}

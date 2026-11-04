@@ -26,6 +26,7 @@ import io.github.alpharomercoma.openweights.core.common.model.ModelLoadParams
 import io.github.alpharomercoma.openweights.core.common.model.SamplerParams
 import io.github.alpharomercoma.openweights.core.common.model.ToolCall
 import io.github.alpharomercoma.openweights.core.common.model.ToolDefinition
+import io.github.alpharomercoma.openweights.core.common.model.containsToolMarkup
 import io.github.alpharomercoma.openweights.core.common.model.parseAssistantReply
 import io.github.alpharomercoma.openweights.core.engine.GenerationEvent
 import io.github.alpharomercoma.openweights.core.engine.InferenceEngine
@@ -132,6 +133,15 @@ class ToolTurnOnDeviceTest {
                 "answer=${answer.take(ANSWER_LOGGED)}",
         )
 
+        // None of these is the model's judgement, so none may pass as a skip. A tool never offered
+        // read as "did not call" for as long as this test skipped on every model, and a call the
+        // model wrote but nothing read, or a pass that failed outright, would read the same.
+        assertThat(runner.hasEnabledTools(AgentMode.AUTO)).isTrue()
+        assertThat(raw.containsToolMarkup()).isFalse()
+        assertThat(listener.passes).isNotEmpty()
+        assertThat(listener.passes.last().reason)
+            .isNoneOf(StopReason.ERROR, StopReason.CONTEXT_FULL)
+
         // A model that will not route cannot prove anything here, and failing for that would
         // be failing for a judgement this test is not about. Loud in the log and skipped.
         Fixtures.require("${MODEL.name} did not call the tool at all", ledger.calls.isNotEmpty())
@@ -140,11 +150,10 @@ class ToolTurnOnDeviceTest {
         // is answered from the first run rather than run again.
         assertThat(ledger.calls).hasSize(1)
         assertThat(listener.steps.filterIsInstance<AgentStep.Ran>()).hasSize(1)
-        // Two passes: the one that asked, and the one that answered. A third would mean the
-        // model never got the result, or never recognised it.
-        assertThat(listener.passes).hasSize(2)
-        assertThat(listener.passes.last().reason)
-            .isNoneOf(StopReason.ERROR, StopReason.CONTEXT_FULL)
+        // The one that asked and the one that answered, plus at most one more: Qwen3 1.7B asks
+        // again before answering, on b10549 too, and is served from the first run. A result that
+        // never reached the model would not get past the secret below, however many passes ran.
+        assertThat(listener.passes.size).isIn(2..MAX_PASSES)
 
         // The claim. This word exists only inside the tool.
         assertThat(answer).contains(SECRET)
@@ -209,6 +218,9 @@ class ToolTurnOnDeviceTest {
 
         /** Room to think and then answer, which a reasoning model needs twice over here. */
         const val BUDGET = 600
+
+        /** Asked, asked again, answered. See the assertion. */
+        const val MAX_PASSES = 3
 
         /** Enough of the answer in the log to see what happened when this fails. */
         const val ANSWER_LOGGED = 300

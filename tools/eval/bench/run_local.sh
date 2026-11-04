@@ -27,6 +27,15 @@ PREFIX=${PREFIX:-}
 
 # A dozing phone throttles instrumentation to a fraction of its speed (2x to 5x, with wild
 # variance, measured 2026-09-07); awake and unlocked for the whole run.
+# Saved first and put back on the way out: "never" outlasted a run and sat on a daily phone.
+SCREEN_TIMEOUT=$($ADB shell settings get system screen_off_timeout 2>/dev/null | tr -d '\r' || true)
+# Bounded, because this runs on the way out and a dropped phone would hang it.
+restore_screen() {
+  [ -z "$SCREEN_TIMEOUT" ] ||
+    perl -e 'alarm 30; exec @ARGV' $ADB shell settings put system screen_off_timeout "$SCREEN_TIMEOUT" >/dev/null 2>&1 ||
+    echo "could not put the screen timeout back to $SCREEN_TIMEOUT; set it on the phone" >&2
+}
+trap restore_screen EXIT
 $ADB shell "settings put system screen_off_timeout 2147483647; input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard" >/dev/null 2>&1 || true
 $ADB push "$HERE/benchmarks.json" "$EVAL/benchmarks.json" >/dev/null
 $ADB push "$APK" /data/local/tmp/owtest.apk >/dev/null

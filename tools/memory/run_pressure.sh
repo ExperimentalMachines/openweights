@@ -36,6 +36,15 @@ BUILD=$(mktemp -d)
 
 # Awake, unlocked and exempt from the ROM's freezer for the whole run: a dozing phone is
 # throttled two to five times, and a frozen one simply stops.
+# Saved first and put back on the way out: "never" outlasted a run and sat on a daily phone.
+SCREEN_TIMEOUT=$($ADB shell settings get system screen_off_timeout 2>/dev/null | tr -d '\r' || true)
+# Bounded, because this runs on the way out and a dropped phone would hang it.
+restore_screen() {
+  [ -z "$SCREEN_TIMEOUT" ] ||
+    perl -e 'alarm 30; exec @ARGV' $ADB shell settings put system screen_off_timeout "$SCREEN_TIMEOUT" >/dev/null 2>&1 ||
+    echo "could not put the screen timeout back to $SCREEN_TIMEOUT; set it on the phone" >&2
+}
+trap restore_screen EXIT
 $ADB shell "settings put system screen_off_timeout 2147483647; input keyevent KEYCODE_WAKEUP; wm dismiss-keyguard" >/dev/null 2>&1 || true
 $ADB shell "cmd deviceidle whitelist +$PKG; am set-standby-bucket $PKG active; cmd appops set $PKG RUN_ANY_IN_BACKGROUND allow" >/dev/null 2>&1 || true
 $ADB push "$BUILD/balloon" /data/local/tmp/balloon >/dev/null
