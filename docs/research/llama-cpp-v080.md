@@ -44,7 +44,7 @@ Raw data: `tools/snapdragon/results/2026-11-04-qdc-v080/`; `inst-engine-after-re
 adversarial Codex review of the first push found the closing-tag confidence leak, tests that would have passed with no
 budget at all, and overstatements in this note, all corrected here.
 
-Not run: the public benchmarks on v0.8.0, the whole decision suite (only the must-search runs of 20 to 40 questions below), and vision
+Not run: the public benchmarks on v0.8.0, and vision
 through the app's interface (`MultimodalTest` covers it in the engine).
 
 The final build then passed on the POCO as well: `ReasoningBudgetOnDeviceTest` 5 of 5, `ToolTurnOnDeviceTest` and `HarnessSmokeTest` 2 of 2,
@@ -155,6 +155,90 @@ On the 30 questions both ran on the same phone, LFM3 got 10 right to LFM2.5's 0,
 That is only the half of the benchmark where a search is needed, so it says nothing yet about needless searches on the other half,
 and it is not a verdict on the shortlist.
 
+## The whole decision suite, and the last round
+
+LFM3 1.7B Q4_K_M and LFM2.5 1.2B Q4_K_M, all 160 public questions, one SM8850 unit, on the build with v0.8.0. Rows:
+`tools/eval/results/decisions/qdc-full-decisions-*`.
+
+| 160 questions, SM8850 | LFM2.5 | LFM3 |
+|---|---:|---:|
+| Correct | 48 | 73 |
+| Searched when needed, of 75 | 33 | 59 |
+| Searched when not needed, of 60 | 12 | 23 |
+| Made-up searches | 0 | 0 |
+| Said it could not | 10 | 20 |
+| Median seconds | 4.1 | 18.5 |
+| p90 seconds | 9.0 | 73.4 |
+
+Paired, only LFM2.5 was right on 3 and only LFM3 on 28. **This is not the app as it ships.** Both ran the suite's
+`driven-search` arms, with the app's two search rules for a model that says it will search or is unsure of itself turned
+off. Those rules were measured helping LFM2.5, so the real gap is probably narrower. The closest arm to the app is
+`doubt-search`, which has not been run on these two models.
+
+**The last round was the worst of it.** 23 of LFM3's turns ran five passes or more, 21 of them after four searches and
+the other two after three. They took 30 of the 71 minutes, and 14 of them were still thinking at the suite's 600-token
+cap. The app has no such cap. Nothing closed the block on a pass past the limit, because the reasoning budget only applied
+to passes that could still call a tool. Some read the refusal as a broken tool: "The
+tool returned 'That was the last of 4 rounds...' That seems like an error".
+
+Another phone cannot serve as the before. Ten questions on the old build on an SM8650 matched the SM8850 run byte for
+byte zero times of ten, including replies that never searched. Two builds on the one SM8650 matched on 86 of 160.
+
+The obvious fix, the usual budget of 128 on those passes, did close the block and moved the problem. On all 160
+questions on the SM8650 (`qdc-sm8650-base-*` and `qdc-sm8650-budget-*`), correct went from 78 to 80, with 3 and 5 unique
+to each, which is no measured change. But stopped mid-thought with the usual note, "I will act on what I have now", the
+model reasoned on in the visible reply: "**Stephen Waldorf**? Wait, let me check".
+
+Seven forms were tried on the Mac through the real `engine_session.cpp`, on the 31 questions that had run five passes or
+more so far, with the earlier passes rebuilt from recorded calls (`mac-wordings/` in the results folder below). Against
+the usual note at 128, the chosen form gave finished replies with no reasoning found 19 and 27, reasoning in the reply 9 and 4, ended on a call 3 and 0,
+correct 9 and 9, median tokens 211 and 85. The driver never reached a refused call's pass, so that wording was first
+exercised on the phone.
+
+**The change:** a turn truly out of rounds closes the block before the model writes anything, and says "No
+more tool calls. My reply will be only the answer, or that I could not find it." The last tool result offers the same way
+out, and a refused call says it did not run. Then on the phone, the 34 questions that ran five passes or more in any run:
+
+| 34 questions, SM8650 | As it was | Closed at 128 | Now |
+|---|---:|---:|---:|
+| Finished, with no reasoning found in the reply | 18 | 20 | 30 |
+| Reasoning in the visible reply | 0 | 9 | 2 |
+| Still thinking at 600 tokens | 11 | 1 | 1 |
+| Ended on a call that could not run | 5 | 4 | 1 |
+| Correct | 8 | 10 | 7 |
+| Correct, and finished with no reasoning found | 6 | 6 | 7 |
+| Said it could not | 7 | 8 | 13 |
+| Quoted the app's prompt | 6 | 5 | 1 |
+| Median seconds | 58.4 | 59.6 | 51.7 |
+| p90 seconds | 97.1 | 93.9 | 65.2 |
+| Total minutes | 32.5 | 33.1 | 27.2 |
+
+The first four rows add up to 34. Read the correct rows together: the 8 include 2 found only in thinking
+that was cut off, and the 10 include 4 inside replies that were still reasoning. Against closing at 128 the final build
+was right alone on 2 and wrong alone on 5, which is not a measured difference (sign test p = 0.45) but is not a gain.
+
+**"Finished" does not mean good.** It means the turn ended normally and a text pattern found no reasoning in the reply.
+Of the 30 on the final build, 7 are correct, 12 say they could not find the answer, and 11 are wrong in some other way.
+Across the three builds those three counts are 6, 1 and 11; then 6, 5 and 9; then 7, 12 and 11. So what the change buys is
+mostly replies cut off in thought turning into "I could not find it", with wrong answers about level. Some still read
+badly: "So, Frederick the capital of is **Prussia** (or more precisely, he was the king/capital of Prussia)", a Patch
+Tuesday dated six days ahead of the run, and a reply that says it has no verified source and then guesses. The counts come
+from `tools/eval/bench/compare_limit_turns.py`.
+
+The final build ran these 34 questions, not all 160. The questions were chosen on earlier runs, so this says nothing
+about the others, though those run the same code as before unless they run out of rounds. The suite's thermal reading at
+the end of each row was status 3 on all 34 rows in all three runs. Those are snapshots, not a record of throttling, so
+treat the timings as a rough guide. `ReasoningBudgetOnDeviceTest` passes all six on the final build, including a budget of
+nothing, and a minified release build with the debug key answered a plain question and a search question on the same phone
+with no crash. Those runs came before one last narrowing below, which their turns did not depend on: none had a refused
+call, so under the code they ran, the note firing on 19 of them means those turns were already at the ceiling. The rows do
+not record the ceiling itself. Three questions on the final commit then ran on the same phone and none reached the limit, so
+on that commit the path rests on its tests. Results: `tools/snapdragon/results/2026-11-05-qdc-last-round/`.
+
+Only a turn out of rounds gets this. Review found the first form also caught a pass short of room, which can be a turn's
+first, a pass that could still earn the longer budget by asking for a tool that chains, even straight after a refused
+call, and plan mode, whose reply is steps. Those keep the thinking they had, and each has a test in `TurnBudgetTest`.
+
 ## A crash this found, older than the upgrade
 
 Qwen3 1.7B with thinking on failed 5 of 20 questions on the SM8850 with `generation failed: string_view::substr`, on the pass after a
@@ -198,6 +282,21 @@ their size (`repack-buffers.cpp` beside that record), so a phone with a wider ve
 
 ## What this leaves open
 
+- **Reasoning shows as the reply while a thinking model thinks.** A template that pre-fills the opening tag sends no tag
+  in the stream, so `parseAssistantReply` calls the text an answer until the closing tag arrives. Screen recording of
+  LFM3 on the old build, 2026-11-05: about six seconds of reasoning on screen, quoting the app's instructions, before it
+  collapses into "Thought for 6.2s" (`tools/snapdragon/results/2026-11-05-qdc-last-round/reasoning-on-screen.png`). The
+  rule that listens for a model saying it will search reads the same text, which has not been measured.
+- **A retry after a false denial still thinks without limit.** One of the 34 turns said it could not, was retried clean
+  with the tools taken out, and was still thinking at 600 tokens on all three builds (`agenda1.log` in the results folder).
+- **Short of the ceiling, the pass told to stop still thinks without limit.** With a chaining tool switched on and unused,
+  the pass past the short budget can still earn rounds, so it keeps the old behaviour. Not measured here.
+- **The last pass of a long research answer now has no thinking.** The answer's length is not limited, but this suite does
+  not measure the quality of a long answer.
+- **Replies to other languages come back in English on the last pass.** Twelve questions in Spanish, Filipino, Japanese
+  and German, with English results, on the Mac: all in English under the old note and the new one, so not caused by it.
+- **The whole suite on the app's own arm.** LFM3 against LFM2.5 under `doubt-search` has not been run, and the final build
+  has not run all 160.
 - **A tool call written inside the reasoning.** LFM3 and Qwen3.5 2B list their call tag as an end tag, so they are covered.
   LFM2.5 and Qwen3 1.7B do not, and a host replay on LFM2.5 2.6B shows the same throw if a call came before the block
   closed. No real reply has been seen doing that, so nothing was built for it. None of the 15 models checked has a token
