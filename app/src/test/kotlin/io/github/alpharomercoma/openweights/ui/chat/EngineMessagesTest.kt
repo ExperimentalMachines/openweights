@@ -30,6 +30,16 @@ import org.junit.Test
 
 class EngineMessagesTest {
     @Test
+    fun `the instructions ask for the question's language, with tools and without`() {
+        // LFM3 1.7B on the Mac, with the shipped prompt, followed the question's language on 2 of
+        // 8 answered questions and on 5 of 8 with this line. LFM2.5 1.2B already followed it.
+        listOf(true, false).forEach { tools ->
+            val head = ChatUiState(toolsAvailable = tools).prefixMessages().single().text
+            assertThat(head).endsWith("Reply in the language of the question.")
+        }
+    }
+
+    @Test
     fun `a model whose template cannot render tools is not told it has any`() {
         val state = ChatUiState(
             transcript = transcript(1),

@@ -189,8 +189,7 @@ class TurnBudgetTest {
 
         assertThat(writer.calls).hasSize(1)
         assertThat(engine.paramsUsed[2].reasoningNote).isNull()
-        assertThat(engine.paramsUsed[2].reasoningBudget)
-            .isEqualTo(SamplerParams.NO_REASONING_BUDGET)
+        assertThat(engine.paramsUsed[2].reasoningBudget).isEqualTo(TOOL_PASS_REASONING_BUDGET)
     }
 
     @Test
@@ -224,8 +223,8 @@ class TurnBudgetTest {
         run()
 
         assertThat(engine.paramsUsed.single().reasoningNote).isNull()
-        assertThat(engine.paramsUsed.single().reasoningBudget)
-            .isEqualTo(SamplerParams.NO_REASONING_BUDGET)
+        // Thinking until the window filled would leave no room to answer at all.
+        assertThat(engine.paramsUsed.single().reasoningBudget).isEqualTo(TOOL_PASS_REASONING_BUDGET)
     }
 
     @Test
@@ -236,6 +235,23 @@ class TurnBudgetTest {
         run(mode = AgentMode.PLAN)
 
         assertThat(engine.paramsUsed.mapNotNull { it.reasoningNote }).isEmpty()
+        assertThat(engine.paramsUsed.map { it.reasoningBudget }.toSet())
+            .containsExactly(TOOL_PASS_REASONING_BUDGET)
+    }
+
+    @Test
+    fun `a clean retry after a false denial thinks to a budget too`() = runBlocking<Unit> {
+        // One question of 34 said it could not, was retried with the tools out, and was still
+        // thinking at the suite's cap on every build. Nothing else closes the block there.
+        engine.scripted += ScriptedPass(
+            "I don't have a story to write at the moment. Let me know what you'd like.",
+        )
+        engine.scripted += ScriptedPass("The sailor watched the lighthouse disappear.")
+
+        run(question = "Write a story about a sailor. Start the story now.")
+
+        assertThat(engine.offered.last()).isEmpty()
+        assertThat(engine.paramsUsed.last().reasoningBudget).isEqualTo(TOOL_PASS_REASONING_BUDGET)
     }
 
     @Test
@@ -258,6 +274,7 @@ class TurnBudgetTest {
         beside: List<Tool> = emptyList(),
         mode: AgentMode = AgentMode.AUTO,
         withTools: Boolean = true,
+        question: String = "Who is Ada Lovelace?",
     ) {
         engine.load(modelFile(), ModelLoadParams(contextLength = CONTEXT))
         TurnRunner(
@@ -267,12 +284,13 @@ class TurnBudgetTest {
             plans = PlanBoard(),
             asks = AskBoard(),
         ).run(
-            conversation = listOf(ChatMessage.text(ChatRole.USER, "Who is Ada Lovelace?")),
+            conversation = listOf(ChatMessage.text(ChatRole.USER, question)),
             params = SamplerParams(),
             mode = mode,
             withTools = withTools,
             notes = ToolNotes(),
             listener = Collecting,
+            question = question,
         )
     }
 

@@ -852,7 +852,7 @@ class TurnRunner @Inject constructor(
                 val streamed = try {
                     streamOnce(
                         messages.pinning(plan),
-                        params.deciding(mayCall, outOfRounds(mode)),
+                        params.deciding(mayCall, outOfRounds(mode), withTools),
                         active,
                         renderTools,
                         listener,
@@ -1959,17 +1959,23 @@ private fun List<ChatMessage>.describing(tools: ToolRegistry, needed: Boolean): 
  * A turn that is out of rounds is closed before its pass starts instead, and told to answer.
  * That matrix did not measure this pass: it had routing to protect, and here nothing is left to
  * route. Nothing else ends the block there. LFM3 1.7B on an SM8850, 2026-11-04, 160 questions: 23
- * turns ran five passes or more and 14 were still thinking at the suite's 600 tokens, where the app
- * has no cap. Closed at 128 the block ends, but the model goes on reasoning in the part the user
- * reads. The 34 such questions on an SM8650, 2026-11-05, as it was, closed at 128, and as it is now:
- * finished with no reasoning found in the reply 18, 20 and 30; reasoning in the reply 0, 9 and 2;
- * still thinking at 600 tokens 11, 1 and 1; ended on a call 5, 4 and 1; said it could not 7, 8 and
- * 13; median 58, 60 and 52 s. Finished is not right: 7 of those 30 were correct. See
- * docs/research/llama-cpp-v080.md. Every other pass that may not call thinks as long as it likes, as
- * it always has: a turn with no tools, plan mode, a retry after a false denial, one short of room,
- * and one that may yet earn rounds.
+ * turns ran five passes or more and 14 were still thinking at the suite's 600 tokens; the app's own
+ * cap is 1,024, and a reply stopped there is whatever had been written. Closed at 128 the block ends,
+ * but the model goes on reasoning in the part the user reads. The 34 such questions on an SM8650,
+ * 2026-11-05, as it was, closed at 128, and as it is now: finished with no reasoning found in the
+ * reply 18, 20 and 30; reasoning in the reply 0, 9 and 2; still thinking at 600 tokens 11, 1 and 1;
+ * ended on a call 5, 4 and 1; said it could not 7, 8 and 13; median 58, 60 and 52 s. Finished is not
+ * right: 7 of those 30 were correct. See docs/research/llama-cpp-v080.md.
+ *
+ * Every other pass of a tool turn keeps the usual cap and the user's sampler, because nothing else
+ * ends the block there either: one short of room, one that may yet earn rounds, plan mode, and the
+ * clean retry after a false denial. A turn with no tools thinks as long as it likes.
  */
-private fun SamplerParams.deciding(mayCall: Boolean, outOfRounds: Boolean): SamplerParams = when {
+private fun SamplerParams.deciding(
+    mayCall: Boolean,
+    outOfRounds: Boolean,
+    withTools: Boolean,
+): SamplerParams = when {
     mayCall -> copy(
         temperature = 0f,
         repeatPenalty = 1f,
@@ -1979,10 +1985,11 @@ private fun SamplerParams.deciding(mayCall: Boolean, outOfRounds: Boolean): Samp
         reasoningBudget = PAST_LIMIT_REASONING_BUDGET,
         reasoningNote = PAST_LIMIT_NOTE,
     )
+    withTools -> copy(reasoningBudget = TOOL_PASS_REASONING_BUDGET)
     else -> this
 }
 
-/** Thinking tokens on a pass that may call a tool. See [deciding]. */
+/** Thinking tokens on every pass of a tool turn but the last. See [deciding]. */
 internal const val TOOL_PASS_REASONING_BUDGET = 128
 
 /** Thinking tokens on the pass of a turn that is out of rounds. See [deciding]. */
