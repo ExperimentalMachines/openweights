@@ -261,62 +261,6 @@ class TurnRepairsTest {
     }
 
     @Test
-    fun `a reply left unresolved behind the knowledge cutoff is searched`() = runBlocking<Unit> {
-        // Typed with the model's own apostrophe, which the patterns read through plainQuotes.
-        engine.scripted += ScriptedPass(
-            "As of my knowledge cutoff in September 2024, there hasn\u2019t been any " +
-                "announcement from a team withdrawing from Formula One.",
-        )
-        engine.scripted += ScriptedPass("Audi announced it in March.")
-
-        val reply =
-            answering("which team announced it will leave Formula One", true, unresolved = true)
-
-        assertThat(engine.prompts).hasSize(2)
-        assertThat(engine.prompts[1].last().role).isEqualTo(ChatRole.TOOL)
-        assertThat(reply).contains("Audi")
-    }
-
-    @Test
-    fun `an answer called undocumented is searched`() = runBlocking<Unit> {
-        engine.scripted += ScriptedPass(
-            "The screenwriter for *Hell of the Living Dead* is not widely documented in " +
-                "mainstream sources.",
-        )
-        engine.scripted += ScriptedPass("Claudio Fragasso wrote it.")
-
-        answering("who wrote Hell of the Living Dead", withTools = true, unresolved = true)
-
-        assertThat(engine.prompts).hasSize(2)
-        assertThat(engine.prompts[1].last().role).isEqualTo(ChatRole.TOOL)
-    }
-
-    @Test
-    fun `a knowledge cutoff caveat before an answer is left to stand`() = runBlocking<Unit> {
-        engine.scripted += ScriptedPass(
-            "As of my knowledge cutoff in September 2024, the capital of Australia is Canberra.",
-        )
-
-        answering("what is the capital of Australia", withTools = true, unresolved = true)
-
-        assertThat(engine.prompts).hasSize(1)
-    }
-
-    @Test
-    fun `an unresolved reply stands with the switch off or when it asks the user`() =
-        runBlocking<Unit> {
-            engine.scripted += ScriptedPass("The director of *Glass* (2026) is currently unknown.")
-            answering("who directed Glass", withTools = true)
-            assertThat(engine.prompts).hasSize(1)
-
-            engine.scripted += ScriptedPass(
-                "The director of *Glass* (2026) is currently unknown. Could you tell me more?",
-            )
-            answering("who directed Glass", withTools = true, unresolved = true)
-            assertThat(engine.prompts).hasSize(2)
-        }
-
-    @Test
     fun `an answer the model is sure of stands`() = runBlocking<Unit> {
         engine.scripted += ScriptedPass("Killua Zoldyck is from Hunter x Hunter.", logprob = SURE)
 
@@ -713,7 +657,6 @@ class TurnRepairsTest {
         honours: Boolean = true,
         tool: Tool = search,
         doubts: Boolean = true,
-        unresolved: Boolean = false,
         listener: TurnListener = Ignoring,
     ): String {
         engine.load(modelFile(), ModelLoadParams(contextLength = CONTEXT))
@@ -728,7 +671,6 @@ class TurnRepairsTest {
         ).apply {
             honoursIntent = honours
             honoursDoubt = doubts
-            honoursUnresolved = unresolved
         }
         return runner.run(
             conversation = listOf(ChatMessage.text(ChatRole.USER, question)),

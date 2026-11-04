@@ -28,7 +28,6 @@ import io.github.alpharomercoma.openweights.core.engine.ContextWindowExceededExc
 import io.github.alpharomercoma.openweights.core.engine.GenerationEvent
 import io.github.alpharomercoma.openweights.core.engine.GenerationStats
 import io.github.alpharomercoma.openweights.core.engine.InferenceEngine
-import io.github.alpharomercoma.openweights.core.engine.Judgement
 import io.github.alpharomercoma.openweights.core.engine.LlamaException
 import io.github.alpharomercoma.openweights.core.engine.LoadedModelInfo
 import io.github.alpharomercoma.openweights.core.engine.MediaSupport
@@ -390,46 +389,6 @@ class FakeInferenceEngine : InferenceEngine {
             throw cancelled
         }
         return WeightPrefetch(outBefore = 0, outAfter = 0, elapsedMs = 0, skipped = prefetchSkips)
-    }
-
-    /** One question put to the fake, as [judge] received it. */
-    data class JudgeCall(
-        val messages: List<ChatMessage>,
-        val instruction: String,
-        val options: List<String>,
-        val tools: List<ToolDefinition>,
-    )
-
-    val judgeCalls = mutableListOf<JudgeCall>()
-
-    /**
-     * How the fake answers a question: the probability of each option, given the options, or
-     * null to answer the way an engine without logits does. Null by default, so every test
-     * written before judgements existed still measures the fallback it was written against.
-     */
-    var judgeAnswer: ((JudgeCall) -> List<Float>?)? = null
-
-    /** How much of the model's probability the options held, as the engine reports it. */
-    var judgeMass = 1f
-
-    override suspend fun judge(
-        messages: List<ChatMessage>,
-        instruction: String,
-        options: List<String>,
-        tools: List<ToolDefinition>,
-        params: SamplerParams,
-    ): Judgement? = nativeThread.withLock {
-        val call = JudgeCall(messages, instruction, options, tools)
-        judgeCalls += call
-        val probabilities = judgeAnswer?.invoke(call) ?: return null
-        return Judgement(
-            options = options,
-            probabilities = probabilities,
-            optionMass = judgeMass,
-            promptTokens = instruction.length / CHARS_PER_TOKEN,
-            reusedTokens = 0,
-            prefillMs = 1,
-        )
     }
 
     override suspend fun setThreads(generateThreads: Int, batchThreads: Int) {

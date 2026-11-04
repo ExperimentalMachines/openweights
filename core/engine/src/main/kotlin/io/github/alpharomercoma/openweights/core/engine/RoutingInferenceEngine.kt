@@ -105,14 +105,6 @@ class RoutingInferenceEngine(
 
     override suspend fun prefetchWeights(): WeightPrefetch? = active?.prefetchWeights()
 
-    override suspend fun judge(
-        messages: List<ChatMessage>,
-        instruction: String,
-        options: List<String>,
-        tools: List<ToolDefinition>,
-        params: SamplerParams,
-    ): Judgement? = active?.judge(messages, instruction, options, tools, params)
-
     override fun cancel() {
         active?.cancel()
     }
