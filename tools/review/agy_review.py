@@ -52,7 +52,7 @@ FILES:
 
 AREAS = {
     "engine-native": ["core/engine/src/main/cpp/*.cpp", "core/engine/src/main/cpp/*.h"],
-    "engine-kotlin": ["core/engine/src/main/kotlin/**/*.kt", "core/engine/src/accelerated/kotlin/**/*.kt", "core/engine/src/standard/kotlin/**/*.kt"],
+    "engine-kotlin": ["core/engine/src/main/kotlin/**/*.kt", "core/engine/src/standard/kotlin/**/*.kt"],
     "tools": ["core/tools/src/main/kotlin/**/*.kt"],
     "sandbox-hub-device-common": ["core/sandbox/src/main/**/*.kt", "core/sandbox/src/main/cpp/*.cpp", "core/hub/src/main/kotlin/**/*.kt", "core/device/src/main/kotlin/**/*.kt", "core/common/src/main/kotlin/**/*.kt"],
     "data": ["core/data/src/main/kotlin/**/*.kt"],

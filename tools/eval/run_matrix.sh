@@ -32,7 +32,7 @@ for f in "$MODELS_DIR"/*.pte "$MODELS_DIR"/*.tokenizer.json "$MODELS_DIR"/*.gguf
   if [ "$size" = "$local_size" ]; then echo "   have $name"; else $ADB push "$f" "$EVAL/$name"; fi
 done
 
-echo "== building the accelerated test APK (both engines live in it)"
+echo "== building the test APK (both engines live in it)"
 (cd "$ROOT" && ./gradlew :core:engine:assembleDebugAndroidTest --console=plain -q)
 
 echo "== installing"

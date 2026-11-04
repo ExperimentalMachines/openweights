@@ -56,7 +56,7 @@ class ModelStoreRuntimeTest {
     fun `never offers compiled weights whose tokenizer has not arrived`() {
         write("Qwen3-1.7B-ExecuTorch-XNNPACK.pte")
 
-        // True in either flavour. The two files download separately, and weights alone
+        // The two files download separately, and weights alone
         // open into a failure, so the row must not appear between the two arriving.
         assertThat(store.availableModels()).isEmpty()
     }
@@ -70,7 +70,7 @@ class ModelStoreRuntimeTest {
 
         assertThat(offered.contains("Qwen3-1.7B-ExecuTorch-XNNPACK.pte"))
             .isEqualTo(ExecuTorchSupport.AVAILABLE)
-        // The tokenizer is never a model in its own right, in either flavour.
+        // The tokenizer is never a model in its own right.
         assertThat(offered).doesNotContain("Qwen3-1.7B-ExecuTorch-XNNPACK.tokenizer.json")
     }
 

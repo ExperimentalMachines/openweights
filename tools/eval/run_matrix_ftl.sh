@@ -63,7 +63,7 @@ case "$CLASS" in
 esac
 
 if [ -z "${SKIP_BUILD:-}" ]; then
-  echo "== building the accelerated test APK (both engines live in it)"
+  echo "== building the test APK (both engines live in it)"
   (cd "$ROOT" && ./gradlew :core:engine:assembleDebugAndroidTest --console=plain -q)
 fi
 

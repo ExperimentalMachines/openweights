@@ -112,7 +112,7 @@ object CapabilityDenial {
         // refused; what follows is often a list of what it supposedly can do instead, and
         // that list poisons the match. "I can't write code for functions. My capabilities
         // are focused on searching the web ... and setting up reminders" names writing,
-        // and a classifier reading the whole head sent it to the watch tool.
+        // and a classifier reading the whole head sent it to the wrong tool.
         val refused = denial.head().substringBefore(". ")
         return when {
             question.contains("http", ignoreCase = true) ->

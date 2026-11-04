@@ -50,9 +50,9 @@ object EngineModule {
         RoutingInferenceEngine(
             backends = buildMap<ModelFormat, () -> InferenceEngine> {
                 put(ModelFormat.GGUF) { LlamaCppEngine() }
-                // Registered only where there is something to run: in the standard flavour a
-                // .pte is never offered, downloaded or listed, so a router entry for it could
-                // only ever produce a failure.
+                // Registered only where there is something to run: without the runtime a .pte
+                // is never offered, downloaded or listed, so a router entry for it could only
+                // ever produce a failure.
                 if (ExecuTorchSupport.AVAILABLE) {
                     put(ModelFormat.PTE) { ExecuTorchEngine(ExecuTorchSupport.bridge(context)) }
                 }
