@@ -3267,6 +3267,9 @@ StopReason Session::generate(
 
         const std::string piece(piece_buffer.data(), piece_len);
         raw_reply += piece;
+        // Read before the tag below ends the block: the tag is reasoning too, and handing its
+        // probability on would let one unlikely tag read as doubt in the answer's opening.
+        const bool was_thinking = in_thinking;
         if (budgeted) {
             if (in_thinking) {
                 ++thinking_tokens;
@@ -3298,7 +3301,7 @@ StopReason Session::generate(
             const std::string emit = pending.substr(0, complete);
             pending.erase(0, complete);
             safe_reply += emit;
-            if (!on_token(emit.c_str(), in_thinking ? NAN : token_logprob)) {
+            if (!on_token(emit.c_str(), was_thinking || in_thinking ? NAN : token_logprob)) {
                 reason = StopReason::CANCELLED;
                 break;
             }

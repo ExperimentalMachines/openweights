@@ -65,6 +65,8 @@ class ReasoningBudgetOnDeviceTest {
         """.trimIndent(),
     )
 
+    private val noTools = emptyList<ToolDefinition>()
+
     @Before
     fun setUp() {
         assumeTrue("no test model at ${MODEL.path}", MODEL.isFile)
@@ -82,12 +84,13 @@ class ReasoningBudgetOnDeviceTest {
 
         val free = ask(SamplerParams.NO_REASONING_BUDGET)
         assumeTrue("the model answered without a call", free.toolCalls.isNotEmpty())
+        assumeWritesTheBareTag(free)
 
         for (back in 1..TOKENS_BACK) {
-            val budget = free.stats.generatedTokens - back
-            val budgeted = ask(budget)
-            Log.i(TAG, "budget=$budget reason=${budgeted.reason} calls=${budgeted.toolCalls}")
+            val budgeted = ask(free.stats.generatedTokens - back)
+            assertThat(budgeted.reason).isEqualTo(StopReason.END_OF_TURN)
             assertThat(budgeted.toolCalls).isEqualTo(free.toolCalls)
+            assertThat(budgeted.content).isEqualTo(free.content)
         }
     }
 
@@ -95,13 +98,54 @@ class ReasoningBudgetOnDeviceTest {
     fun aBudgetThatLandsInTheAnswerLeavesTheAnswerAlone() = runBlocking {
         engine.load(MODEL, ModelLoadParams(contextLength = CONTEXT))
 
-        val free = ask(SamplerParams.NO_REASONING_BUDGET, ANSWERED_FROM_MEMORY, tools = emptyList())
-        assumeTrue("the model never closed its reasoning", "</think>" in free.content)
+        val free = ask(SamplerParams.NO_REASONING_BUDGET, ANSWERED_FROM_MEMORY, noTools)
+        assumeWritesTheBareTag(free)
 
-        val budget = free.stats.generatedTokens - TOKENS_BACK
-        val budgeted = ask(budget, ANSWERED_FROM_MEMORY, tools = emptyList())
+        val budgeted = ask(free.stats.generatedTokens - TOKENS_BACK, ANSWERED_FROM_MEMORY, noTools)
 
+        assertThat(budgeted.reason).isEqualTo(StopReason.END_OF_TURN)
         assertThat(budgeted.content).isEqualTo(free.content)
+    }
+
+    /** The control for the two above: they would all pass with no budget at all. */
+    @Test
+    fun aBudgetInsideTheReasoningStillClosesIt() = runBlocking {
+        engine.load(MODEL, ModelLoadParams(contextLength = CONTEXT))
+
+        val free = ask(SamplerParams.NO_REASONING_BUDGET, ANSWERED_FROM_MEMORY, noTools)
+        assumeWritesTheBareTag(free)
+
+        val budgeted = ask(TOKENS_INTO_THE_REASONING, ANSWERED_FROM_MEMORY, noTools)
+
+        assertThat(budgeted.content.split(CLOSE)).hasSize(2)
+        assertThat(budgeted.content.substringBefore(CLOSE).length)
+            .isLessThan(free.content.substringBefore(CLOSE).length)
+    }
+
+    /**
+     * The tag belongs to the reasoning, so it must not reach the reader of the answer's opening
+     * tokens: one unlikely tag would look like doubt in the answer and start a search.
+     */
+    @Test
+    fun theClosingTagCarriesNoConfidenceAndTheAnswerDoes() = runBlocking {
+        engine.load(MODEL, ModelLoadParams(contextLength = CONTEXT))
+
+        val tokens = engine.chat(
+            messages = listOf(ChatMessage.text(ChatRole.USER, ANSWERED_FROM_MEMORY)),
+            params = deciding(BUDGET_NEVER_REACHED),
+        ).filterIsInstance<GenerationEvent.Token>().toList()
+        val closing = tokens.indexOfFirst { CLOSE in it.text }
+        assumeTrue("the model never closed its reasoning", closing >= 0)
+
+        assertThat(tokens[closing].logprob).isNull()
+        // The very next token, because the reader takes the least likely of the opening ones.
+        assertThat(tokens.getOrNull(closing + 1)?.logprob).isNotNull()
+    }
+
+    private fun assumeWritesTheBareTag(free: GenerationEvent.Completed) {
+        // The first tag the template lists always worked, so only the bare one proves anything.
+        assumeTrue("the model never closed its reasoning", CLOSE in free.content)
+        assumeTrue("the model wrote the template's first tag", "\n$CLOSE" !in free.content)
     }
 
     private suspend fun ask(
@@ -111,27 +155,37 @@ class ReasoningBudgetOnDeviceTest {
     ): GenerationEvent.Completed {
         val completed = engine.chat(
             messages = listOf(ChatMessage.text(ChatRole.USER, question)),
-            params = SamplerParams(
-                temperature = 0f,
-                repeatPenalty = 1f,
-                seed = 1,
-                maxTokens = MAX_TOKENS,
-                reasoningBudget = budget,
-            ),
+            params = deciding(budget),
             tools = tools,
         ).filterIsInstance<GenerationEvent.Completed>().toList().single()
         Log.i(
             TAG,
             "budget=$budget generated=${completed.stats.generatedTokens} " +
-                "calls=${completed.toolCalls} content=${completed.content.takeLast(160)}",
+                "reason=${completed.reason} calls=${completed.toolCalls} " +
+                "content=${completed.content.takeLast(LOGGED_CHARS)}",
         )
         return completed
     }
+
+    private fun deciding(budget: Int) = SamplerParams(
+        temperature = 0f,
+        repeatPenalty = 1f,
+        seed = 1,
+        maxTokens = MAX_TOKENS,
+        reasoningBudget = budget,
+    )
 
     private companion object {
         const val TAG = "ReasoningBudgetTest"
         const val CONTEXT = 4096
         const val MAX_TOKENS = 400
+        const val LOGGED_CHARS = 160
+        const val CLOSE = "</think>"
+        const val TOKENS_INTO_THE_REASONING = 16
+
+        // Past the token cap, so the budget is on but cannot fire: the engine writes a tag of its
+        // own at the budget, and that path never carried a logprob, so it would prove nothing.
+        const val BUDGET_NEVER_REACHED = MAX_TOKENS + 1
 
         // The last tokens of a reply that ends in a call are its closing tags, where the
         // grammar accepts no text at all. Further back the budget could land in the reasoning
