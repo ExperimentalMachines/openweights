@@ -14,7 +14,7 @@ set -eu
 MODEL=${1:-LFM2.5-1.2B-Instruct-QAD-Q4_0.gguf}
 shift || true
 DEVICES=${*:-mustang:36}
-BUCKET=${BUCKET:-gs://openweights-eval-models}
+BUCKET=${BUCKET:?a gs:// bucket holding the models; the old one was deleted on 2026-09-30}
 PKG=io.github.alpharomercoma.openweights
 EVAL=/data/local/tmp/openweights/eval
 HERE=$(cd "$(dirname "$0")" && pwd)

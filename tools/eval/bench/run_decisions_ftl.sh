@@ -15,7 +15,7 @@ set -eu
 DEVICE=${1:?model id, e.g. mustang}
 VERSION=${2:?os version id, e.g. 36}
 PREFIX=${3:?results prefix, e.g. tensor-}
-BUCKET=${BUCKET:-gs://openweights-eval-models}
+BUCKET=${BUCKET:?a gs:// bucket holding the models; the old one was deleted on 2026-09-30}
 PKG=io.github.alpharomercoma.openweights.debug
 EVAL=/data/local/tmp/openweights/eval
 HERE=$(cd "$(dirname "$0")" && pwd)
