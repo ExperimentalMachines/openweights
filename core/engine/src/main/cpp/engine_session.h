@@ -682,6 +682,9 @@ private:
     /** The template's thinking tags, kept from the last render for the reasoning budget. */
     std::string thinking_start_tag_;
     std::string thinking_end_tag_;
+    // Every tag the template says can end a block, the one above among them. It is the
+    // spelling to write; these are the spellings a model may write.
+    std::vector<std::string> thinking_end_tags_;
 
     GrammarSpec last_grammar_;
 

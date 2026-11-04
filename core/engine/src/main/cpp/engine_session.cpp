@@ -1885,6 +1885,7 @@ bool Session::render_prompt(
         thinking_start_tag_ = params.thinking_start_tag;
         thinking_end_tag_ = params.thinking_end_tags.empty() ? std::string()
                                                              : params.thinking_end_tags.front();
+        thinking_end_tags_ = params.thinking_end_tags;
 
         if (!reasoning.enabled && !params.thinking_start_tag.empty() &&
             !params.thinking_end_tags.empty()) {
@@ -3269,7 +3270,14 @@ StopReason Session::generate(
         if (budgeted) {
             if (in_thinking) {
                 ++thinking_tokens;
-                if (ends_with(raw_reply, thinking_end_tag_)) {
+                // Any listed tag ends the block. LFM3's first is "\n</think>" and the model
+                // writes "</think>", so watching only the first left the budget counting into
+                // the reply. There it wrote a second close into the answer or, inside a tool
+                // call, into a grammar that threw and failed the turn (2026-11-04, POCO).
+                if (std::any_of(
+                        thinking_end_tags_.begin(),
+                        thinking_end_tags_.end(),
+                        [&raw_reply](const std::string & tag) { return ends_with(raw_reply, tag); })) {
                     in_thinking = false;
                 }
             } else if (!thinking_start_tag_.empty() && ends_with(raw_reply, thinking_start_tag_)) {
