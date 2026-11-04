@@ -80,6 +80,8 @@ import java.security.MessageDigest
  *
  * - `bare`: no tools at all. What the weights answer alone; the utility baseline.
  * - `driven-search`: the model decides, holding web_search only, as a fresh install does.
+ * - `driven-search-think`: the same with thinking on, for a model whose template opens the
+ *   block by default, because that is how the app runs it (LFM3 1.7B, 2026-11-04).
  * - `driven-full`: the model decides, holding the whole catalogue as every measurement
  *   before 2026-09-08 ran (fifteen stubs beside the real search, from the dump's own
  *   definitions, so the prompt bytes are the ones that catalogue produced).
@@ -220,6 +222,11 @@ class DecisionSuiteOnDeviceTest {
                             honoursGate = arm.startsWith("gate-")
                         }
                     val withTools = arm != "bare"
+                    val params = if (arm.endsWith("-think")) {
+                        PARAMS.copy(thinking = true)
+                    } else {
+                        PARAMS
+                    }
                     header(
                         out,
                         model,
@@ -240,7 +247,7 @@ class DecisionSuiteOnDeviceTest {
                                 conversation = listOf(ChatMessage.text(ChatRole.SYSTEM, system)) +
                                     PromptDay.exchange() +
                                     ChatMessage.text(ChatRole.USER, question),
-                                params = PARAMS,
+                                params = params,
                                 mode = AgentMode.AUTO,
                                 withTools = withTools,
                                 notes = ToolNotes(),

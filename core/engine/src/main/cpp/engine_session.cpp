@@ -3172,7 +3172,13 @@ StopReason Session::generate(
                 chosen.clear();
             }
             has_pending_token = false;
-            const std::string close = thinking_end_tag_ + "\n";
+            // Said before the tag, because a model stopped mid-thought with no explanation can
+            // go on reasoning in the visible reply. Measured with LFM3 1.7B on 40 public questions
+            // after a search result: runs to a 600-token cap 1 without this and 0 with it,
+            // further searches 20 and 12. llama-server has the same idea as
+            // reasoning_budget_message. See docs/research/llama-cpp-v080.md.
+            const std::string close =
+                "\n\nI have thought enough, so I will act on what I have now." + thinking_end_tag_ + "\n";
             std::vector<llama_token> close_tokens = common_tokenize(vocab, close, false, true);
             if (close_tokens.empty() || n_past_ + static_cast<int32_t>(close_tokens.size()) >= n_ctx) {
                 reason = StopReason::CONTEXT_FULL;

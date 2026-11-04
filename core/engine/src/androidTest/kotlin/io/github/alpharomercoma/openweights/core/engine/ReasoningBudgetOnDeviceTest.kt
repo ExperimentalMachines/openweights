@@ -122,6 +122,16 @@ class ReasoningBudgetOnDeviceTest {
             .isLessThan(free.content.substringBefore(CLOSE).length)
     }
 
+    /** Cut off mid-thought and told nothing, LFM3 can go on reasoning in the visible reply. */
+    @Test
+    fun aBudgetThatFiresTellsTheModelToAct() = runBlocking {
+        engine.load(MODEL, ModelLoadParams(contextLength = CONTEXT))
+
+        val budgeted = ask(TOKENS_INTO_THE_REASONING, ANSWERED_FROM_MEMORY, noTools)
+
+        assertThat(budgeted.content.substringBefore(CLOSE)).endsWith(ACT_NOW)
+    }
+
     /**
      * The tag belongs to the reasoning, so it must not reach the reader of the answer's opening
      * tokens: one unlikely tag would look like doubt in the answer and start a search.
@@ -181,6 +191,7 @@ class ReasoningBudgetOnDeviceTest {
         const val MAX_TOKENS = 400
         const val LOGGED_CHARS = 160
         const val CLOSE = "</think>"
+        const val ACT_NOW = "I have thought enough, so I will act on what I have now.\n"
         const val TOKENS_INTO_THE_REASONING = 16
 
         // Past the token cap, so the budget is on but cannot fire: the engine writes a tag of its
