@@ -273,5 +273,12 @@ class CapabilityDenialTest {
         // Said about the thing asked for, with no claim about the model.
         assertThat(CapabilityDenial.lamentsUnknown("Real-time data is what a trading desk uses."))
             .isFalse()
+        // A stranger's account is as private as the user's own, and must not reach a search.
+        assertThat(CapabilityDenial.lamentsUnknown("I don't have real-time account data."))
+            .isFalse()
+        // The verb, in an answer about the saying.
+        assertThat(
+            CapabilityDenial.lamentsUnknown("You can't live on data alone, as the saying goes."),
+        ).isFalse()
     }
 }

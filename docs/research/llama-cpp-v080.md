@@ -329,7 +329,9 @@ emulator.
 on 8 of 10 replies across both runtimes, with web_search in hand, and the same on rates and prices. It is not from this work: on the Mac the old
 and new prompts refuse alike. The rule that turns a lament into a search knew "information about" and its kin and not this, and the public
 questions almost never ask about the weather, which is the first thing a person asks. It now reads "real-time", "up-to-date" and "live" with a
-data noun. Replayed over 171 recorded replies with no call it reads 4, all this shrug, and a reply about the user's own things stays out. The signed
+data noun, not "account" or "personal" data and not the verb in "you can't live on data alone". Replayed over 171 recorded replies with no call it reads
+4, all this shrug. Review offered a list of subjects instead, and real replies said "sports results" and "financial data", so a list would rebuild the gap;
+the cost of a wrong fire on an odd reply is one search. The signed
 release on a 16 KB emulator then searched on both weather questions and the Bitcoin price and answered from the results, searched on the exchange
 rate and still said it could not read one, and answered the capital of France without a search, with an empty crash buffer. The reservation ended
 before this ran on the phone, and it was not run through the public questions again, since it reads only those 4.

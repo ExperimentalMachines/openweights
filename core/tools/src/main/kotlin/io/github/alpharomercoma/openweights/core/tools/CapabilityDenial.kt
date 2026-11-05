@@ -214,7 +214,10 @@ object CapabilityDenial {
             // "I don't have real-time weather data": LFM2.5 1.2B on the weather, a rate and a
             // price, on both runtimes, with web_search in hand. Replayed over 171 recorded
             // replies with no call, this reads 4 and they were all this shrug.
-            "|(real.?time|up.?to.?date|live) ([\\w-]+ ){0,3}?(data|information|info|updates?|" +
+            // Not "account data", which is someone's private business and no search's, and not
+            // the verb in "you can't live on data alone".
+            "|(real.?time|up.?to.?date|live(?! (on|in|with|by|at|off)\\b)) " +
+            "((?!account|personal|private|bank)[\\w-]+ ){0,3}?(data|information|info|updates?|" +
             "results?|prices?|rates?|figures|feeds?|access|reports?)\\b",
     )
 
