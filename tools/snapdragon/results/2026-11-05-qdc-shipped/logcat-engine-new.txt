@@ -1,0 +1,380 @@
+--------- beginning of main
+11-04 17:33:06.752 18189 18208 I TestRunner: run started: 26 tests
+11-04 17:33:06.755 18189 18208 I TestRunner: started: aBudgetInsideTheReasoningStillClosesIt(io.github.alpharomercoma.openweights.core.engine.ReasoningBudgetOnDeviceTest)
+11-04 17:33:06.862 18189 18210 I OpenWeights: using CPU backend libggml-cpu-android_armv8.6_1.so (score 23)
+11-04 17:33:06.888 18189 18210 I OpenWeights: OpenCL backend registered
+11-04 17:33:11.720 18189 18210 I OpenWeights: weights: 4 host ranges, 1120 MB
+11-04 17:33:11.803 18189 18210 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-04 17:33:12.044 18189 18210 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:33:12.081 18189 18210 I OpenWeights: mem: after load rss 1632 MB, pss 1542 MB, swap 0 MB, majflt 0, minflt 213465, cpu 5630 ms
+11-04 17:33:12.095 18189 18210 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-04 17:33:12.137 18189 18210 I OpenWeights: mem: before turn rss 1446 MB, pss 1401 MB, swap 0 MB, majflt 0, minflt 213566, cpu 5700 ms
+11-04 17:33:15.125 18189 18210 I OpenWeights: mem: after turn rss 1614 MB, pss 1523 MB, swap 0 MB, majflt 0, minflt 215676, cpu 20200 ms
+11-04 17:33:15.149 18189 18208 I ReasoningBudgetTest: budget=-1 generated=73 reason=END_OF_TURN calls=[] content= we can say: "The capital of France is Paris." That's one sentence.
+11-04 17:33:15.149 18189 18208 I ReasoningBudgetTest: 
+11-04 17:33:15.149 18189 18208 I ReasoningBudgetTest: Thus final answer: "The capital of France is Paris."</think>The capital of France is Paris.
+11-04 17:33:15.172 18189 18210 I OpenWeights: mem: before turn rss 1614 MB, pss 1523 MB, swap 0 MB, majflt 0, minflt 215709, cpu 20260 ms
+11-04 17:33:15.173 18189 18210 I OpenWeights: kv: diverged at 21 of 95 cached, prompt 22, re-reading 1
+11-04 17:33:15.174 18189 18210 I OpenWeights: kv: rollback refused; restored the point at 21, reading 1 instead of 22
+11-04 17:33:15.978 18189 18210 I OpenWeights: reasoning: closed the block at the budget of 16
+11-04 17:33:16.256 18189 18210 I OpenWeights: mem: after turn rss 1616 MB, pss 1525 MB, swap 0 MB, majflt 0, minflt 215754, cpu 25560 ms
+11-04 17:33:16.263 18189 18208 I ReasoningBudgetTest: budget=16 generated=23 reason=END_OF_TURN calls=[] content= asks: "What is the capital of France? Answer in one sentence
+11-04 17:33:16.263 18189 18208 I ReasoningBudgetTest: 
+11-04 17:33:16.263 18189 18208 I ReasoningBudgetTest: I have thought enough, so I will act on what I have now.
+11-04 17:33:16.263 18189 18208 I ReasoningBudgetTest: </think>
+11-04 17:33:16.263 18189 18208 I ReasoningBudgetTest: The capital of France is Paris.
+11-04 17:33:16.428 18189 18208 I TestRunner: finished: aBudgetInsideTheReasoningStillClosesIt(io.github.alpharomercoma.openweights.core.engine.ReasoningBudgetOnDeviceTest)
+11-04 17:33:16.434 18189 18208 I TestRunner: started: aBudgetThatLandsInsideACallLeavesTheCallAlone(io.github.alpharomercoma.openweights.core.engine.ReasoningBudgetOnDeviceTest)
+11-04 17:33:21.228 18189 18243 I OpenWeights: weights: 4 host ranges, 1120 MB
+11-04 17:33:21.234 18189 18243 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-04 17:33:21.473 18189 18243 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:33:21.495 18189 18243 I OpenWeights: mem: after load rss 248 MB, pss 161 MB, swap 0 MB, majflt 0, minflt 410666, cpu 30810 ms
+11-04 17:33:21.507 18189 18243 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-04 17:33:21.553 18189 18243 I OpenWeights: mem: before turn rss 234 MB, pss 164 MB, swap 0 MB, majflt 0, minflt 411099, cpu 30940 ms
+11-04 17:33:26.017 18189 18243 I OpenWeights: mem: after turn rss 1650 MB, pss 1558 MB, swap 0 MB, majflt 0, minflt 423708, cpu 51200 ms
+11-04 17:33:26.034 18189 18208 I ReasoningBudgetTest: budget=-1 generated=79 reason=END_OF_TURN calls=[ToolCall(id=web_search, name=web_search, argumentsJson={"query": "Tokyo weather tomorrow rain"})] content=ool to find this information. The query should be something like "Tokyo weather tomorrow rain" or "Tokyo tomorrow weather forecast rain". Let's do that.</think>
+11-04 17:33:26.066 18189 18243 I OpenWeights: mem: before turn rss 1651 MB, pss 1559 MB, swap 0 MB, majflt 0, minflt 423758, cpu 51250 ms
+11-04 17:33:26.069 18189 18243 I OpenWeights: kv: diverged at 79 of 159 cached, prompt 80, re-reading 1
+11-04 17:33:26.070 18189 18243 I OpenWeights: kv: rollback refused; restored the point at 79, reading 1 instead of 80
+11-04 17:33:29.715 18189 18243 I OpenWeights: mem: after turn rss 1651 MB, pss 1559 MB, swap 0 MB, majflt 0, minflt 426416, cpu 66770 ms
+11-04 17:33:29.724 18189 18208 I ReasoningBudgetTest: budget=78 generated=79 reason=END_OF_TURN calls=[ToolCall(id=web_search, name=web_search, argumentsJson={"query": "Tokyo weather tomorrow rain"})] content=ool to find this information. The query should be something like "Tokyo weather tomorrow rain" or "Tokyo tomorrow weather forecast rain". Let's do that.</think>
+11-04 17:33:29.751 18189 18243 I OpenWeights: mem: before turn rss 1651 MB, pss 1559 MB, swap 0 MB, majflt 0, minflt 426439, cpu 66810 ms
+11-04 17:33:29.755 18189 18243 I OpenWeights: kv: diverged at 79 of 159 cached, prompt 80, re-reading 1
+11-04 17:33:29.756 18189 18243 I OpenWeights: kv: rollback refused; restored the point at 79, reading 1 instead of 80
+11-04 17:33:33.412 18189 18243 I OpenWeights: mem: after turn rss 1651 MB, pss 1559 MB, swap 0 MB, majflt 0, minflt 429075, cpu 82450 ms
+11-04 17:33:33.421 18189 18208 I ReasoningBudgetTest: budget=77 generated=79 reason=END_OF_TURN calls=[ToolCall(id=web_search, name=web_search, argumentsJson={"query": "Tokyo weather tomorrow rain"})] content=ool to find this information. The query should be something like "Tokyo weather tomorrow rain" or "Tokyo tomorrow weather forecast rain". Let's do that.</think>
+11-04 17:33:33.448 18189 18243 I OpenWeights: mem: before turn rss 1652 MB, pss 1560 MB, swap 0 MB, majflt 0, minflt 429096, cpu 82500 ms
+11-04 17:33:33.452 18189 18243 I OpenWeights: kv: diverged at 79 of 159 cached, prompt 80, re-reading 1
+11-04 17:33:33.452 18189 18243 I OpenWeights: kv: rollback refused; restored the point at 79, reading 1 instead of 80
+11-04 17:33:37.158 18189 18243 I OpenWeights: mem: after turn rss 1652 MB, pss 1560 MB, swap 0 MB, majflt 0, minflt 431893, cpu 98530 ms
+11-04 17:33:37.167 18189 18208 I ReasoningBudgetTest: budget=76 generated=79 reason=END_OF_TURN calls=[ToolCall(id=web_search, name=web_search, argumentsJson={"query": "Tokyo weather tomorrow rain"})] content=ool to find this information. The query should be something like "Tokyo weather tomorrow rain" or "Tokyo tomorrow weather forecast rain". Let's do that.</think>
+11-04 17:33:37.345 18189 18208 I TestRunner: finished: aBudgetThatLandsInsideACallLeavesTheCallAlone(io.github.alpharomercoma.openweights.core.engine.ReasoningBudgetOnDeviceTest)
+11-04 17:33:37.349 18189 18208 I TestRunner: started: aBudgetOfNothingClosesTheBlockBeforeAToken(io.github.alpharomercoma.openweights.core.engine.ReasoningBudgetOnDeviceTest)
+11-04 17:33:42.225 18189 18288 I OpenWeights: weights: 4 host ranges, 1120 MB
+11-04 17:33:42.231 18189 18288 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-04 17:33:42.472 18189 18288 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:33:42.507 18189 18288 I OpenWeights: mem: after load rss 1646 MB, pss 1554 MB, swap 0 MB, majflt 0, minflt 625274, cpu 103940 ms
+11-04 17:33:42.519 18189 18288 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-04 17:33:42.532 18189 18288 I OpenWeights: mem: before turn rss 194 MB, pss 126 MB, swap 0 MB, majflt 0, minflt 625298, cpu 103970 ms
+11-04 17:33:42.951 18189 18288 I OpenWeights: reasoning: closed the block at the budget of 0
+11-04 17:33:43.239 18189 18288 I OpenWeights: mem: after turn rss 1634 MB, pss 1542 MB, swap 0 MB, majflt 0, minflt 627221, cpu 107670 ms
+11-04 17:33:43.425 18189 18208 I TestRunner: finished: aBudgetOfNothingClosesTheBlockBeforeAToken(io.github.alpharomercoma.openweights.core.engine.ReasoningBudgetOnDeviceTest)
+11-04 17:33:43.429 18189 18208 I TestRunner: started: aBudgetThatLandsInTheAnswerLeavesTheAnswerAlone(io.github.alpharomercoma.openweights.core.engine.ReasoningBudgetOnDeviceTest)
+11-04 17:33:48.263 18189 18302 I OpenWeights: weights: 4 host ranges, 1120 MB
+11-04 17:33:48.269 18189 18302 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-04 17:33:48.508 18189 18302 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:33:48.545 18189 18302 I OpenWeights: mem: after load rss 1546 MB, pss 1455 MB, swap 0 MB, majflt 0, minflt 821995, cpu 113020 ms
+11-04 17:33:48.557 18189 18302 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-04 17:33:48.569 18189 18302 I OpenWeights: mem: before turn rss 223 MB, pss 152 MB, swap 0 MB, majflt 0, minflt 822023, cpu 113070 ms
+11-04 17:33:51.798 18189 18302 I OpenWeights: mem: after turn rss 1626 MB, pss 1534 MB, swap 0 MB, majflt 0, minflt 824337, cpu 128990 ms
+11-04 17:33:51.807 18189 18208 I ReasoningBudgetTest: budget=-1 generated=73 reason=END_OF_TURN calls=[] content= we can say: "The capital of France is Paris." That's one sentence.
+11-04 17:33:51.807 18189 18208 I ReasoningBudgetTest: 
+11-04 17:33:51.807 18189 18208 I ReasoningBudgetTest: Thus final answer: "The capital of France is Paris."</think>The capital of France is Paris.
+11-04 17:33:51.830 18189 18302 I OpenWeights: mem: before turn rss 1626 MB, pss 1534 MB, swap 0 MB, majflt 0, minflt 824364, cpu 129040 ms
+11-04 17:33:51.832 18189 18302 I OpenWeights: kv: diverged at 21 of 95 cached, prompt 22, re-reading 1
+11-04 17:33:51.832 18189 18302 I OpenWeights: kv: rollback refused; restored the point at 21, reading 1 instead of 22
+11-04 17:33:54.857 18189 18302 I OpenWeights: mem: after turn rss 1627 MB, pss 1534 MB, swap 0 MB, majflt 0, minflt 824717, cpu 143780 ms
+11-04 17:33:54.866 18189 18208 I ReasoningBudgetTest: budget=70 generated=73 reason=END_OF_TURN calls=[] content= we can say: "The capital of France is Paris." That's one sentence.
+11-04 17:33:54.866 18189 18208 I ReasoningBudgetTest: 
+11-04 17:33:54.866 18189 18208 I ReasoningBudgetTest: Thus final answer: "The capital of France is Paris."</think>The capital of France is Paris.
+11-04 17:33:55.049 18189 18208 I TestRunner: finished: aBudgetThatLandsInTheAnswerLeavesTheAnswerAlone(io.github.alpharomercoma.openweights.core.engine.ReasoningBudgetOnDeviceTest)
+11-04 17:33:55.053 18189 18208 I TestRunner: started: theClosingTagCarriesNoConfidenceAndTheAnswerDoes(io.github.alpharomercoma.openweights.core.engine.ReasoningBudgetOnDeviceTest)
+11-04 17:33:59.874 18189 18328 I OpenWeights: weights: 4 host ranges, 1120 MB
+11-04 17:33:59.880 18189 18328 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-04 17:34:00.116 18189 18328 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:34:00.153 18189 18328 I OpenWeights: mem: after load rss 1649 MB, pss 1556 MB, swap 0 MB, majflt 0, minflt 1017960, cpu 149140 ms
+11-04 17:34:00.166 18189 18328 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-04 17:34:00.182 18189 18328 I OpenWeights: mem: before turn rss 483 MB, pss 398 MB, swap 0 MB, majflt 0, minflt 1017988, cpu 149170 ms
+11-04 17:34:03.131 18189 18328 I OpenWeights: mem: after turn rss 1628 MB, pss 1536 MB, swap 0 MB, majflt 0, minflt 1020110, cpu 163630 ms
+11-04 17:34:03.339 18189 18208 I TestRunner: finished: theClosingTagCarriesNoConfidenceAndTheAnswerDoes(io.github.alpharomercoma.openweights.core.engine.ReasoningBudgetOnDeviceTest)
+11-04 17:34:03.344 18189 18208 I TestRunner: started: aBudgetThatFiresTellsTheModelToAct(io.github.alpharomercoma.openweights.core.engine.ReasoningBudgetOnDeviceTest)
+11-04 17:34:08.182 18189 18374 I OpenWeights: weights: 4 host ranges, 1120 MB
+11-04 17:34:08.188 18189 18374 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-04 17:34:08.426 18189 18374 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:34:08.463 18189 18374 I OpenWeights: mem: after load rss 1651 MB, pss 1559 MB, swap 0 MB, majflt 0, minflt 1214195, cpu 169030 ms
+11-04 17:34:08.475 18189 18374 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-04 17:34:08.498 18189 18374 I OpenWeights: mem: before turn rss 1535 MB, pss 1450 MB, swap 0 MB, majflt 0, minflt 1214216, cpu 169080 ms
+11-04 17:34:09.534 18189 18374 I OpenWeights: reasoning: closed the block at the budget of 16
+11-04 17:34:09.817 18189 18374 I OpenWeights: mem: after turn rss 1630 MB, pss 1538 MB, swap 0 MB, majflt 0, minflt 1216278, cpu 175760 ms
+11-04 17:34:09.823 18189 18208 I ReasoningBudgetTest: budget=16 generated=23 reason=END_OF_TURN calls=[] content= asks: "What is the capital of France? Answer in one sentence
+11-04 17:34:09.823 18189 18208 I ReasoningBudgetTest: 
+11-04 17:34:09.823 18189 18208 I ReasoningBudgetTest: I have thought enough, so I will act on what I have now.
+11-04 17:34:09.823 18189 18208 I ReasoningBudgetTest: </think>
+11-04 17:34:09.823 18189 18208 I ReasoningBudgetTest: The capital of France is Paris.
+11-04 17:34:10.025 18189 18208 I TestRunner: finished: aBudgetThatFiresTellsTheModelToAct(io.github.alpharomercoma.openweights.core.engine.ReasoningBudgetOnDeviceTest)
+11-04 17:34:10.032 18189 18208 I TestRunner: started: reusesCachedPrefixOnFollowUpTurns(io.github.alpharomercoma.openweights.core.engine.LlamaCppEngineTest)
+11-04 17:34:10.263 18189 18400 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+11-04 17:34:28.343 18189 18400 I OpenWeights: weights: 2 host ranges, 1743 MB
+11-04 17:34:28.595 18189 18400 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:34:28.608 18189 18400 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+11-04 17:34:28.620 18189 18400 I OpenWeights: mem: after load rss 2437 MB, pss 2344 MB, swap 0 MB, majflt 0, minflt 1604139, cpu 190170 ms
+11-04 17:34:28.626 18189 18400 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+11-04 17:34:28.637 18189 18400 I OpenWeights: mem: before turn rss 2396 MB, pss 2322 MB, swap 0 MB, majflt 0, minflt 1604158, cpu 190190 ms
+11-04 17:34:28.987 18189 18400 I OpenWeights: mem: after turn rss 2442 MB, pss 2349 MB, swap 0 MB, majflt 0, minflt 1605870, cpu 191790 ms
+11-04 17:34:29.012 18189 18400 I OpenWeights: mem: before turn rss 2442 MB, pss 2349 MB, swap 0 MB, majflt 0, minflt 1605894, cpu 191820 ms
+11-04 17:34:29.014 18189 18400 I OpenWeights: kv: diverged at 17 of 25 cached, prompt 33, re-reading 16
+11-04 17:34:29.355 18189 18400 I OpenWeights: mem: after turn rss 2431 MB, pss 2338 MB, swap 0 MB, majflt 0, minflt 1605904, cpu 193380 ms
+11-04 17:34:29.467 18189 18208 I TestRunner: finished: reusesCachedPrefixOnFollowUpTurns(io.github.alpharomercoma.openweights.core.engine.LlamaCppEngineTest)
+11-04 17:34:29.471 18189 18208 I TestRunner: started: generatesAReplyAndMeasuresThroughput(io.github.alpharomercoma.openweights.core.engine.LlamaCppEngineTest)
+11-04 17:34:30.658 18189 18439 I OpenWeights: weights: 3 host ranges, 685 MB
+11-04 17:34:30.730 18189 18439 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:34:30.740 18189 18439 I OpenWeights: mem: after load rss 1028 MB, pss 936 MB, swap 0 MB, majflt 0, minflt 1629645, cpu 194610 ms
+11-04 17:34:30.743 18189 18439 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=2048
+11-04 17:34:30.748 18189 18439 I OpenWeights: mem: before turn rss 998 MB, pss 916 MB, swap 0 MB, majflt 0, minflt 1629661, cpu 194640 ms
+11-04 17:34:31.109 18189 18439 I OpenWeights: mem: after turn rss 1033 MB, pss 940 MB, swap 0 MB, majflt 0, minflt 1631008, cpu 196530 ms
+11-04 17:34:31.148 18189 18208 I TestRunner: finished: generatesAReplyAndMeasuresThroughput(io.github.alpharomercoma.openweights.core.engine.LlamaCppEngineTest)
+11-04 17:34:31.152 18189 18208 I TestRunner: started: reportsBackendsAndCpuFeatures(io.github.alpharomercoma.openweights.core.engine.LlamaCppEngineTest)
+11-04 17:34:31.188 18189 18208 I TestRunner: finished: reportsBackendsAndCpuFeatures(io.github.alpharomercoma.openweights.core.engine.LlamaCppEngineTest)
+11-04 17:34:31.190 18189 18208 I TestRunner: started: reusesCachedPrefixWhenThePromptRepeats(io.github.alpharomercoma.openweights.core.engine.LlamaCppEngineTest)
+11-04 17:34:31.351 18189 18454 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+11-04 17:34:38.343 18189 18454 I OpenWeights: weights: 2 host ranges, 1743 MB
+11-04 17:34:38.611 18189 18454 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:34:38.625 18189 18454 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+11-04 17:34:38.637 18189 18454 I OpenWeights: mem: after load rss 2446 MB, pss 2354 MB, swap 0 MB, majflt 0, minflt 2020540, cpu 203810 ms
+11-04 17:34:38.642 18189 18454 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+11-04 17:34:38.651 18189 18454 I OpenWeights: mem: before turn rss 1845 MB, pss 1771 MB, swap 0 MB, majflt 0, minflt 2020576, cpu 203830 ms
+11-04 17:34:39.009 18189 18454 I OpenWeights: mem: after turn rss 2443 MB, pss 2350 MB, swap 0 MB, majflt 0, minflt 2022169, cpu 205500 ms
+11-04 17:34:39.031 18189 18454 I OpenWeights: mem: before turn rss 2443 MB, pss 2350 MB, swap 0 MB, majflt 0, minflt 2022190, cpu 205520 ms
+11-04 17:34:39.032 18189 18454 I OpenWeights: kv: diverged at 16 of 25 cached, prompt 17, re-reading 1
+11-04 17:34:39.366 18189 18454 I OpenWeights: mem: after turn rss 2432 MB, pss 2339 MB, swap 0 MB, majflt 0, minflt 2022201, cpu 206980 ms
+11-04 17:34:39.483 18189 18208 I TestRunner: finished: reusesCachedPrefixWhenThePromptRepeats(io.github.alpharomercoma.openweights.core.engine.LlamaCppEngineTest)
+11-04 17:34:39.487 18189 18208 I TestRunner: started: loadsModelAndReportsItsShape(io.github.alpharomercoma.openweights.core.engine.LlamaCppEngineTest)
+11-04 17:34:40.582 18189 18473 I OpenWeights: weights: 3 host ranges, 685 MB
+11-04 17:34:40.656 18189 18473 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:34:40.666 18189 18473 I OpenWeights: mem: after load rss 985 MB, pss 918 MB, swap 0 MB, majflt 0, minflt 2043441, cpu 208160 ms
+11-04 17:34:40.670 18189 18473 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=2048
+11-04 17:34:40.691 18189 18208 I TestRunner: finished: loadsModelAndReportsItsShape(io.github.alpharomercoma.openweights.core.engine.LlamaCppEngineTest)
+11-04 17:34:40.698 18189 18208 I TestRunner: started: contentIsSeparatedFromReasoningByTheModelsOwnFormat(io.github.alpharomercoma.openweights.core.engine.ToolCallingTest)
+11-04 17:34:41.487 18189 18486 I OpenWeights: weights: 3 host ranges, 685 MB
+11-04 17:34:41.565 18189 18486 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:34:41.575 18189 18486 I OpenWeights: mem: after load rss 1072 MB, pss 980 MB, swap 0 MB, majflt 0, minflt 2066240, cpu 209120 ms
+11-04 17:34:41.579 18189 18486 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-04 17:34:41.583 18189 18486 I OpenWeights: mem: before turn rss 200 MB, pss 145 MB, swap 0 MB, majflt 0, minflt 2066266, cpu 209160 ms
+11-04 17:34:41.723 18189 18486 I OpenWeights: mem: after turn rss 1052 MB, pss 959 MB, swap 0 MB, majflt 0, minflt 2067504, cpu 209890 ms
+11-04 17:34:41.762 18189 18208 I TestRunner: finished: contentIsSeparatedFromReasoningByTheModelsOwnFormat(io.github.alpharomercoma.openweights.core.engine.ToolCallingTest)
+11-04 17:34:41.766 18189 18208 I TestRunner: started: modelAsksForAToolWhenOneFits(io.github.alpharomercoma.openweights.core.engine.ToolCallingTest)
+11-04 17:34:42.579 18189 18493 I OpenWeights: weights: 3 host ranges, 685 MB
+11-04 17:34:42.657 18189 18493 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:34:42.668 18189 18493 I OpenWeights: mem: after load rss 988 MB, pss 919 MB, swap 0 MB, majflt 0, minflt 2092071, cpu 210880 ms
+11-04 17:34:42.672 18189 18493 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-04 17:34:42.676 18189 18493 I OpenWeights: mem: before turn rss 1050 MB, pss 957 MB, swap 0 MB, majflt 0, minflt 2092083, cpu 210940 ms
+11-04 17:34:43.347 18189 18493 I OpenWeights: mem: after turn rss 1074 MB, pss 981 MB, swap 0 MB, majflt 0, minflt 2099823, cpu 214340 ms
+11-04 17:34:43.382 18189 18208 I TestRunner: finished: modelAsksForAToolWhenOneFits(io.github.alpharomercoma.openweights.core.engine.ToolCallingTest)
+11-04 17:34:43.387 18189 18208 I TestRunner: started: noToolsMeansNoCalls(io.github.alpharomercoma.openweights.core.engine.ToolCallingTest)
+11-04 17:34:44.211 18189 18499 I OpenWeights: weights: 3 host ranges, 685 MB
+11-04 17:34:44.289 18189 18499 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:34:44.299 18189 18499 I OpenWeights: mem: after load rss 1062 MB, pss 969 MB, swap 0 MB, majflt 0, minflt 2124624, cpu 215320 ms
+11-04 17:34:44.302 18189 18499 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-04 17:34:44.306 18189 18499 I OpenWeights: mem: before turn rss 1062 MB, pss 969 MB, swap 0 MB, majflt 0, minflt 2124637, cpu 215360 ms
+11-04 17:34:44.524 18189 18499 I OpenWeights: mem: after turn rss 1055 MB, pss 963 MB, swap 0 MB, majflt 0, minflt 2125486, cpu 216470 ms
+11-04 17:34:44.563 18189 18208 I TestRunner: finished: noToolsMeansNoCalls(io.github.alpharomercoma.openweights.core.engine.ToolCallingTest)
+11-04 17:34:44.569 18189 18208 I TestRunner: started: aFollowUpTurnOnlyPaysForWhatIsNew(io.github.alpharomercoma.openweights.core.engine.PrefixReuseOnDeviceTest)
+11-04 17:34:45.401 18189 18505 I OpenWeights: weights: 3 host ranges, 685 MB
+11-04 17:34:45.480 18189 18505 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:34:45.490 18189 18505 I OpenWeights: mem: after load rss 1020 MB, pss 947 MB, swap 0 MB, majflt 0, minflt 2150603, cpu 217480 ms
+11-04 17:34:45.493 18189 18505 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-04 17:34:45.498 18189 18505 I OpenWeights: mem: before turn rss 1057 MB, pss 964 MB, swap 0 MB, majflt 0, minflt 2150626, cpu 217520 ms
+11-04 17:34:49.829 18189 18505 I OpenWeights: mem: after turn rss 1085 MB, pss 993 MB, swap 0 MB, majflt 0, minflt 2170760, cpu 243420 ms
+11-04 17:34:49.841 18189 18208 I OpenWeights: model.gguf turn 1: prompt=1160 tokens prefill=4190ms ttft=4191ms generated=7 context=1167
+11-04 17:34:49.853 18189 18505 I OpenWeights: mem: before turn rss 1085 MB, pss 993 MB, swap 0 MB, majflt 0, minflt 2170787, cpu 243440 ms
+11-04 17:34:49.857 18189 18505 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-04 17:34:50.105 18189 18505 I OpenWeights: mem: after turn rss 1085 MB, pss 993 MB, swap 0 MB, majflt 0, minflt 2170811, cpu 244760 ms
+11-04 17:34:50.120 18189 18208 I OpenWeights: turn 2, reply stored whole: prompt=16 tokens prefill=104ms ttft=104ms generated=7 context=1190
+11-04 17:34:50.135 18189 18505 I OpenWeights: mem: before turn rss 1086 MB, pss 993 MB, swap 0 MB, majflt 0, minflt 2170846, cpu 244790 ms
+11-04 17:34:54.610 18189 18505 I OpenWeights: mem: after turn rss 1086 MB, pss 994 MB, swap 0 MB, majflt 0, minflt 2171092, cpu 271500 ms
+11-04 17:34:54.633 18189 18505 I OpenWeights: mem: before turn rss 1086 MB, pss 994 MB, swap 0 MB, majflt 0, minflt 2171127, cpu 271520 ms
+11-04 17:34:54.636 18189 18505 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-04 17:34:54.870 18189 18505 I OpenWeights: mem: after turn rss 1086 MB, pss 994 MB, swap 0 MB, majflt 0, minflt 2171143, cpu 272740 ms
+11-04 17:34:54.880 18189 18208 I OpenWeights: turn 2, reply put through the parser: prompt=16 tokens prefill=100ms ttft=100ms generated=7 context=1190
+11-04 17:34:54.880 18189 18208 I OpenWeights: reuse: untouched=16 parsed=16 against a first turn of 1160
+11-04 17:34:54.914 18189 18208 I TestRunner: finished: aFollowUpTurnOnlyPaysForWhatIsNew(io.github.alpharomercoma.openweights.core.engine.PrefixReuseOnDeviceTest)
+11-04 17:34:54.920 18189 18208 I TestRunner: started: aSecondRoundOfATurnPaysForTheWholeConversationAgain(io.github.alpharomercoma.openweights.core.engine.ToolLoopReuseOnDeviceTest)
+11-04 17:34:55.827 18189 18530 I OpenWeights: weights: 3 host ranges, 685 MB
+11-04 17:34:55.910 18189 18530 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:34:55.922 18189 18530 I OpenWeights: mem: after load rss 1035 MB, pss 945 MB, swap 0 MB, majflt 0, minflt 2196951, cpu 273840 ms
+11-04 17:34:55.926 18189 18530 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-04 17:34:55.931 18189 18530 I OpenWeights: mem: before turn rss 1026 MB, pss 939 MB, swap 0 MB, majflt 0, minflt 2196980, cpu 273880 ms
+11-04 17:35:00.902 18189 18530 I OpenWeights: mem: after turn rss 1099 MB, pss 1006 MB, swap 0 MB, majflt 0, minflt 2219393, cpu 302610 ms
+11-04 17:35:00.911 18189 18208 I OpenWeights: round 1: prompt=1163 tokens prefill=4375ms context=1181 calls=1
+11-04 17:35:00.921 18189 18530 I OpenWeights: mem: before turn rss 1099 MB, pss 1006 MB, swap 0 MB, majflt 0, minflt 2219421, cpu 302630 ms
+11-04 17:35:00.926 18189 18530 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-04 17:35:02.116 18189 18530 I OpenWeights: mem: after turn rss 1092 MB, pss 1000 MB, swap 0 MB, majflt 0, minflt 2219543, cpu 308810 ms
+11-04 17:35:02.128 18189 18208 I OpenWeights: round 2, as TurnRunner sends it: prompt=47 tokens prefill=247ms context=1275
+11-04 17:35:02.140 18189 18530 I OpenWeights: mem: before turn rss 1092 MB, pss 999 MB, swap 0 MB, majflt 0, minflt 2219575, cpu 308850 ms
+11-04 17:35:07.205 18189 18530 I OpenWeights: mem: after turn rss 1100 MB, pss 1007 MB, swap 0 MB, majflt 0, minflt 2222410, cpu 338210 ms
+11-04 17:35:07.227 18189 18530 I OpenWeights: mem: before turn rss 1100 MB, pss 1008 MB, swap 0 MB, majflt 0, minflt 2222438, cpu 338240 ms
+11-04 17:35:07.231 18189 18530 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-04 17:35:08.437 18189 18530 I OpenWeights: mem: after turn rss 1093 MB, pss 1001 MB, swap 0 MB, majflt 0, minflt 2222636, cpu 344490 ms
+11-04 17:35:08.450 18189 18208 I OpenWeights: round 2, as it was decoded:     prompt=47 tokens prefill=248ms context=1275
+11-04 17:35:08.450 18189 18208 I OpenWeights: tool loop reuse: sent=47 decoded=47 against a first round of 1163
+11-04 17:35:08.483 18189 18208 I TestRunner: finished: aSecondRoundOfATurnPaysForTheWholeConversationAgain(io.github.alpharomercoma.openweights.core.engine.ToolLoopReuseOnDeviceTest)
+11-04 17:35:08.490 18189 18208 I TestRunner: started: measuresWhatEachPassOfAToolTurnCostsToPrefill(io.github.alpharomercoma.openweights.core.engine.PrefillReuseTest)
+11-04 17:35:08.676 18189 18562 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+11-04 17:35:16.821 18189 18562 I OpenWeights: weights: 2 host ranges, 1743 MB
+11-04 17:35:17.191 18189 18562 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:35:17.208 18189 18562 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+11-04 17:35:17.225 18189 18562 I OpenWeights: mem: after load rss 2673 MB, pss 2580 MB, swap 0 MB, majflt 0, minflt 2668219, cpu 353080 ms
+11-04 17:35:17.231 18189 18562 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-04 17:35:17.256 18189 18562 I OpenWeights: mem: before turn rss 2588 MB, pss 2526 MB, swap 0 MB, majflt 0, minflt 2668276, cpu 353110 ms
+11-04 17:35:18.468 18189 18562 I OpenWeights: mem: after turn rss 2692 MB, pss 2599 MB, swap 0 MB, majflt 0, minflt 2681213, cpu 359850 ms
+11-04 17:35:18.494 18189 18562 I OpenWeights: mem: before turn rss 2692 MB, pss 2599 MB, swap 0 MB, majflt 0, minflt 2681239, cpu 359880 ms
+11-04 17:35:18.498 18189 18562 I OpenWeights: kv: diverged at 341 of 349 cached, prompt 578, re-reading 237
+11-04 17:35:19.703 18189 18562 I OpenWeights: mem: after turn rss 2692 MB, pss 2599 MB, swap 0 MB, majflt 0, minflt 2681295, cpu 366550 ms
+11-04 17:35:19.727 18189 18562 I OpenWeights: mem: before turn rss 2692 MB, pss 2600 MB, swap 0 MB, majflt 0, minflt 2681320, cpu 366590 ms
+11-04 17:35:19.731 18189 18562 I OpenWeights: kv: diverged at 187 of 586 cached, prompt 444, re-reading 257
+11-04 17:35:20.952 18189 18562 I OpenWeights: mem: after turn rss 2692 MB, pss 2600 MB, swap 0 MB, majflt 0, minflt 2681366, cpu 373350 ms
+11-04 17:35:21.092 18189 18208 I TestRunner: finished: measuresWhatEachPassOfAToolTurnCostsToPrefill(io.github.alpharomercoma.openweights.core.engine.PrefillReuseTest)
+11-04 17:35:21.100 18189 18208 I TestRunner: started: aRollbackWithinTheWindowIsStillReused(io.github.alpharomercoma.openweights.core.engine.SlidingWindowOnDeviceTest)
+11-04 17:35:21.357 18189 18610 W OpenWeights: load: control-looking token:    212 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+11-04 17:35:24.569 18189 18610 I OpenWeights: weights: 4 host ranges, 780 MB
+11-04 17:35:24.573 18189 18610 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-04 17:35:24.833 18189 18610 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:35:24.841 18189 18610 I OpenWeights: kv: this template keeps past thinking inline; replaying it verbatim
+11-04 17:35:24.851 18189 18610 I OpenWeights: mem: after load rss 1409 MB, pss 1317 MB, swap 0 MB, majflt 0, minflt 2800670, cpu 376760 ms
+11-04 17:35:24.854 18189 18610 I OpenWeights: loaded: tools=false results=false thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-04 17:35:24.861 18189 18610 I OpenWeights: mem: before turn rss 1360 MB, pss 1274 MB, swap 0 MB, majflt 0, minflt 2800700, cpu 376790 ms
+11-04 17:35:24.872 18189 18610 W OpenWeights: kleidiai: no kernel for tensor type q5_0, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+11-04 17:35:37.691 18189 18610 I OpenWeights: mem: after turn rss 1439 MB, pss 1346 MB, swap 0 MB, majflt 0, minflt 2820033, cpu 452830 ms
+11-04 17:35:37.700 18189 18208 I OpenWeights: turn 1: prompt=1158 tokens prefill=12105ms generated=22 context=1180 reply=This app keeps every conversation on the phone itself, continuously reading and 
+11-04 17:35:37.714 18189 18610 I OpenWeights: mem: before turn rss 1439 MB, pss 1347 MB, swap 0 MB, majflt 0, minflt 2820073, cpu 452860 ms
+11-04 17:35:37.722 18189 18610 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-04 17:35:37.971 18189 18610 I OpenWeights: mem: after turn rss 1439 MB, pss 1347 MB, swap 0 MB, majflt 0, minflt 2820117, cpu 454240 ms
+11-04 17:35:37.978 18189 18208 I OpenWeights: turn 2: prompt=15 tokens prefill=186ms generated=2 context=1197 reply=Listening.
+11-04 17:35:37.990 18189 18610 I OpenWeights: mem: before turn rss 1439 MB, pss 1347 MB, swap 0 MB, majflt 0, minflt 2820165, cpu 454280 ms
+11-04 17:35:37.998 18189 18610 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-04 17:35:37.998 18189 18610 I OpenWeights: kv: diverged at 1185 of 1197 cached, prompt 1196, re-reading 11
+11-04 17:35:38.272 18189 18610 I OpenWeights: mem: after turn rss 1439 MB, pss 1347 MB, swap 0 MB, majflt 0, minflt 2820185, cpu 455740 ms
+11-04 17:35:38.280 18189 18208 I OpenWeights: turn 3, short rollback: prompt=11 tokens prefill=148ms generated=4 context=1200 reply=Phone, web.
+11-04 17:35:38.352 18189 18208 I TestRunner: finished: aRollbackWithinTheWindowIsStillReused(io.github.alpharomercoma.openweights.core.engine.SlidingWindowOnDeviceTest)
+11-04 17:35:38.357 18189 18208 I TestRunner: started: aRollbackPastTheWindowStillReads(io.github.alpharomercoma.openweights.core.engine.SlidingWindowOnDeviceTest)
+11-04 17:35:38.657 18189 18644 W OpenWeights: load: control-looking token:    212 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+11-04 17:35:41.193 18189 18644 I OpenWeights: weights: 4 host ranges, 780 MB
+11-04 17:35:41.197 18189 18644 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-04 17:35:41.502 18189 18644 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:35:41.511 18189 18644 I OpenWeights: kv: this template keeps past thinking inline; replaying it verbatim
+11-04 17:35:41.522 18189 18644 I OpenWeights: mem: after load rss 1406 MB, pss 1313 MB, swap 0 MB, majflt 0, minflt 2936187, cpu 459040 ms
+11-04 17:35:41.525 18189 18644 I OpenWeights: loaded: tools=false results=false thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-04 17:35:41.535 18189 18644 I OpenWeights: mem: before turn rss 1322 MB, pss 1256 MB, swap 0 MB, majflt 0, minflt 2936210, cpu 459060 ms
+11-04 17:35:55.791 18189 18644 I OpenWeights: mem: after turn rss 1439 MB, pss 1346 MB, swap 0 MB, majflt 0, minflt 2956774, cpu 543470 ms
+11-04 17:35:55.800 18189 18208 I OpenWeights: turn 1: prompt=1158 tokens prefill=13421ms generated=22 context=1180 reply=This app keeps every conversation on the phone itself, continuously reading and 
+11-04 17:35:55.820 18189 18644 I OpenWeights: mem: before turn rss 1439 MB, pss 1346 MB, swap 0 MB, majflt 0, minflt 2956810, cpu 543500 ms
+11-04 17:35:55.838 18189 18644 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-04 17:36:11.710 18189 18644 I OpenWeights: mem: after turn rss 1443 MB, pss 1350 MB, swap 0 MB, majflt 0, minflt 2959205, cpu 637070 ms
+11-04 17:36:11.720 18189 18208 I OpenWeights: turn 2: prompt=1159 tokens prefill=14658ms generated=32 context=2371 reply=This app continuously reads and processes web content on the phone, keeping ever
+11-04 17:36:11.743 18189 18644 I OpenWeights: mem: before turn rss 1443 MB, pss 1350 MB, swap 0 MB, majflt 0, minflt 2959241, cpu 637110 ms
+11-04 17:36:11.765 18189 18644 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-04 17:36:11.765 18189 18644 I OpenWeights: kv: diverged at 1188 of 2371 cached, prompt 2339, re-reading 1151
+11-04 17:36:27.059 18189 18644 I OpenWeights: mem: after turn rss 1445 MB, pss 1352 MB, swap 0 MB, majflt 0, minflt 2960124, cpu 727620 ms
+11-04 17:36:27.069 18189 18208 I OpenWeights: turn 3, rollback past the window: prompt=1151 tokens prefill=14512ms generated=21 context=2360 reply=This app continuously reads and processes web content on the phone, keeping ever
+11-04 17:36:27.164 18189 18208 I TestRunner: finished: aRollbackPastTheWindowStillReads(io.github.alpharomercoma.openweights.core.engine.SlidingWindowOnDeviceTest)
+11-04 17:36:27.171 18189 18208 I TestRunner: started: generatesAReplyWithEveryLayerOnTheGpu(io.github.alpharomercoma.openweights.core.engine.GpuOffloadTest)
+11-04 17:37:01.280 18189 18759 I OpenWeights: weights: 1 host ranges, 128 MB
+11-04 17:37:01.300 18189 18759 W OpenWeights: resolve_fused_ops: layer 2 is assigned to device GPUOpenCL but Flash Attention is assigned to device CPU (usually due to missing support)
+11-04 17:37:01.300 18189 18759 W OpenWeights: resolve_fused_ops: Flash Attention not supported, set to disabled
+11-04 17:37:01.378 18189 18759 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:37:01.391 18189 18759 I OpenWeights: mem: after load rss 458 MB, pss 379 MB, swap 0 MB, majflt 18, minflt 3296874, cpu 759120 ms
+11-04 17:37:01.395 18189 18759 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=1024
+11-04 17:37:01.407 18189 18759 I OpenWeights: mem: before turn rss 175 MB, pss 110 MB, swap 0 MB, majflt 18, minflt 3296923, cpu 759160 ms
+11-04 17:37:01.730 18189 18759 I OpenWeights: mem: after turn rss 496 MB, pss 403 MB, swap 0 MB, majflt 18, minflt 3297922, cpu 759820 ms
+11-04 17:37:01.798 18189 18208 I TestRunner: finished: generatesAReplyWithEveryLayerOnTheGpu(io.github.alpharomercoma.openweights.core.engine.GpuOffloadTest)
+11-04 17:37:01.803 18189 18208 I TestRunner: started: loadingWithoutAProjectorReadsNothing(io.github.alpharomercoma.openweights.core.engine.MultimodalTest)
+11-04 17:37:04.192 18189 18846 I OpenWeights: weights: 2 host ranges, 1558 MB
+11-04 17:37:04.304 18189 18846 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:37:04.320 18189 18846 I OpenWeights: mem: after load rss 1767 MB, pss 1708 MB, swap 0 MB, majflt 18, minflt 3673990, cpu 762240 ms
+11-04 17:37:04.324 18189 18846 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-04 17:37:04.440 18189 18208 I TestRunner: finished: loadingWithoutAProjectorReadsNothing(io.github.alpharomercoma.openweights.core.engine.MultimodalTest)
+11-04 17:37:04.447 18189 18208 I TestRunner: started: twoPicturesInOneMessageAreBothRead(io.github.alpharomercoma.openweights.core.engine.MultimodalTest)
+11-04 17:37:06.541 18189 18852 I OpenWeights: weights: 2 host ranges, 1558 MB
+11-04 17:37:06.656 18189 18852 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:37:07.278 18189 18852 I OpenWeights: mem: after load rss 2708 MB, pss 2615 MB, swap 0 MB, majflt 18, minflt 4195658, cpu 765040 ms
+11-04 17:37:07.282 18189 18852 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=true audio=false emits=text ctx=4096
+11-04 17:37:07.300 18189 18852 I OpenWeights: mem: before turn rss 2617 MB, pss 2545 MB, swap 0 MB, majflt 18, minflt 4195680, cpu 765070 ms
+11-04 17:37:11.387 18189 18852 I OpenWeights: media: encoded 196 tokens in 4003 ms
+11-04 17:37:17.238 18189 18852 I OpenWeights: media: encoded 196 tokens in 4216 ms
+11-04 17:37:19.075 18189 18852 I OpenWeights: kv: media prompt reused 0 of 420 positions, 0 of 2 media chunk(s) in cache, 2 embeddings kept (3136 KB)
+11-04 17:37:19.903 18189 18852 I OpenWeights: mem: after turn rss 2744 MB, pss 2651 MB, swap 0 MB, majflt 18, minflt 4227340, cpu 839280 ms
+11-04 17:37:20.071 18189 18208 I TestRunner: finished: twoPicturesInOneMessageAreBothRead(io.github.alpharomercoma.openweights.core.engine.MultimodalTest)
+11-04 17:37:20.076 18189 18208 I TestRunner: started: aTextTurnAfterAnImageTurnStillWorks(io.github.alpharomercoma.openweights.core.engine.MultimodalTest)
+11-04 17:37:22.738 18189 18918 I OpenWeights: weights: 2 host ranges, 1558 MB
+11-04 17:37:22.860 18189 18918 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:37:23.527 18189 18918 I OpenWeights: mem: after load rss 2691 MB, pss 2598 MB, swap 0 MB, majflt 18, minflt 4728551, cpu 842660 ms
+11-04 17:37:23.531 18189 18918 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=true audio=false emits=text ctx=4096
+11-04 17:37:23.546 18189 18918 I OpenWeights: mem: before turn rss 2316 MB, pss 2254 MB, swap 0 MB, majflt 18, minflt 4728580, cpu 842680 ms
+11-04 17:37:27.797 18189 18918 I OpenWeights: media: encoded 196 tokens in 4164 ms
+11-04 17:37:29.631 18189 18918 I OpenWeights: kv: media prompt reused 0 of 218 positions, 0 of 1 media chunk(s) in cache, 1 embeddings kept (1568 KB)
+11-04 17:37:29.689 18189 18918 I OpenWeights: mem: after turn rss 2741 MB, pss 2648 MB, swap 0 MB, majflt 18, minflt 4757213, cpu 879300 ms
+11-04 17:37:29.717 18189 18918 I OpenWeights: mem: before turn rss 2741 MB, pss 2648 MB, swap 0 MB, majflt 18, minflt 4757241, cpu 879340 ms
+11-04 17:37:29.941 18189 18918 I OpenWeights: kv: media prompt reused 219 of 242 positions, 1 of 1 media chunk(s) in cache, 1 embeddings kept (1568 KB)
+11-04 17:37:30.000 18189 18918 I OpenWeights: mem: after turn rss 2745 MB, pss 2652 MB, swap 0 MB, majflt 18, minflt 4758290, cpu 880860 ms
+11-04 17:37:30.174 18189 18208 I TestRunner: finished: aTextTurnAfterAnImageTurnStillWorks(io.github.alpharomercoma.openweights.core.engine.MultimodalTest)
+11-04 17:37:30.176 18189 18208 I TestRunner: started: anAudioModelHearsWhatWasSaid(io.github.alpharomercoma.openweights.core.engine.MultimodalTest)
+11-04 17:37:30.189 18189 18208 E TestRunner: assumption failed: anAudioModelHearsWhatWasSaid(io.github.alpharomercoma.openweights.core.engine.MultimodalTest)
+11-04 17:37:30.192 18189 18208 E TestRunner: ----- begin exception -----
+11-04 17:37:30.192 18189 18208 E TestRunner: org.junit.AssumptionViolatedException: no audio model at /data/local/tmp/openweights/audio.gguf
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.Assume.assumeTrue(Assume.java:68)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at io.github.alpharomercoma.openweights.core.engine.MultimodalTest$anAudioModelHearsWhatWasSaid$1.invokeSuspend(MultimodalTest.kt:188)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:256)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:54)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlockingImpl(Builders.kt:30)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at kotlinx.coroutines.BuildersKt.runBlockingImpl(Unknown Source:1)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at kotlinx.coroutines.BuildersKt__Builders_concurrentKt.runBlockingK(Builders.concurrent.kt:172)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at kotlinx.coroutines.BuildersKt.runBlockingK(Unknown Source:1)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at kotlinx.coroutines.BuildersKt__Builders_concurrentKt.runBlockingK$default(Builders.concurrent.kt:157)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at kotlinx.coroutines.BuildersKt.runBlockingK$default(Unknown Source:1)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at io.github.alpharomercoma.openweights.core.engine.MultimodalTest.anAudioModelHearsWhatWasSaid(MultimodalTest.kt:187)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at java.lang.reflect.Method.invoke(Native Method)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at androidx.test.internal.runner.junit4.statement.RunBefores.evaluate(RunBefores.java:80)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at androidx.test.internal.runner.junit4.statement.RunAfters.evaluate(RunAfters.java:61)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at androidx.test.ext.junit.runners.AndroidJUnit4.run(AndroidJUnit4.java:162)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.Suite.runChild(Suite.java:128)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.Suite.runChild(Suite.java:27)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runner.JUnitCore.run(JUnitCore.java:137)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at org.junit.runner.JUnitCore.run(JUnitCore.java:115)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at androidx.test.internal.runner.TestExecutor.execute(TestExecutor.java:68)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at androidx.test.internal.runner.TestExecutor.execute(TestExecutor.java:59)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at androidx.test.runner.AndroidJUnitRunner.onStart(AndroidJUnitRunner.java:467)
+11-04 17:37:30.192 18189 18208 E TestRunner: 	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2408)
+11-04 17:37:30.192 18189 18208 E TestRunner: ----- end exception -----
+11-04 17:37:30.195 18189 18208 I TestRunner: finished: anAudioModelHearsWhatWasSaid(io.github.alpharomercoma.openweights.core.engine.MultimodalTest)
+11-04 17:37:30.197 18189 18208 I TestRunner: started: theModelDescribesTheImageItWasGiven(io.github.alpharomercoma.openweights.core.engine.MultimodalTest)
+11-04 17:37:32.938 18189 18960 I OpenWeights: weights: 2 host ranges, 1558 MB
+11-04 17:37:33.067 18189 18960 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:37:33.754 18189 18960 I OpenWeights: mem: after load rss 2694 MB, pss 2600 MB, swap 0 MB, majflt 18, minflt 5259121, cpu 884350 ms
+11-04 17:37:33.758 18189 18960 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=true audio=false emits=text ctx=4096
+11-04 17:37:33.773 18189 18960 I OpenWeights: mem: before turn rss 2310 MB, pss 2250 MB, swap 0 MB, majflt 18, minflt 5259139, cpu 884370 ms
+11-04 17:37:38.073 18189 18960 I OpenWeights: media: encoded 196 tokens in 4202 ms
+11-04 17:37:39.876 18189 18960 I OpenWeights: kv: media prompt reused 0 of 217 positions, 0 of 1 media chunk(s) in cache, 1 embeddings kept (1568 KB)
+11-04 17:37:40.181 18189 18960 I OpenWeights: mem: after turn rss 2740 MB, pss 2647 MB, swap 0 MB, majflt 18, minflt 5287844, cpu 922230 ms
+11-04 17:37:40.347 18189 18208 I TestRunner: finished: theModelDescribesTheImageItWasGiven(io.github.alpharomercoma.openweights.core.engine.MultimodalTest)
+11-04 17:37:40.353 18189 18208 I TestRunner: started: loadingAProjectorReportsWhatTheModelCanRead(io.github.alpharomercoma.openweights.core.engine.MultimodalTest)
+11-04 17:37:43.231 18189 18991 I OpenWeights: weights: 2 host ranges, 1558 MB
+11-04 17:37:43.365 18189 18991 I OpenWeights: threads: 6 workers kept alive across graphs
+11-04 17:37:44.079 18189 18991 I OpenWeights: mem: after load rss 2685 MB, pss 2591 MB, swap 0 MB, majflt 18, minflt 5786487, cpu 925900 ms
+11-04 17:37:44.084 18189 18991 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=true audio=false emits=text ctx=4096
+11-04 17:37:44.241 18189 18208 I TestRunner: finished: loadingAProjectorReportsWhatTheModelCanRead(io.github.alpharomercoma.openweights.core.engine.MultimodalTest)
+11-04 17:37:44.246 18189 18208 I TestRunner: run finished: 26 tests, 0 failed, 0 ignored

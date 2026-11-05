@@ -177,7 +177,7 @@ off. Those rules were measured helping LFM2.5, so the real gap is probably narro
 
 **The last round was the worst of it.** 23 of LFM3's turns ran five passes or more, 21 of them after four searches and
 the other two after three. They took 30 of the 71 minutes, and 14 of them were still thinking at the suite's 600-token
-cap. The app has no such cap. Nothing closed the block on a pass past the limit, because the reasoning budget only applied
+cap. The app's own cap is 1,024, and a reply stopped there is whatever had been written. Nothing closed the block on a pass past the limit, because the reasoning budget only applied
 to passes that could still call a tool. Some read the refusal as a broken tool: "The
 tool returned 'That was the last of 4 rounds...' That seems like an error".
 
@@ -239,6 +239,91 @@ Only a turn out of rounds gets this. Review found the first form also caught a p
 first, a pass that could still earn the longer budget by asking for a tool that chains, even straight after a refused
 call, and plan mode, whose reply is steps. Those keep the thinking they had, and each has a test in `TurnBudgetTest`.
 
+## What the app really does, and what was wrong
+
+Everything above ran arms that were not the app. `eval/prompt_dump.json` had not been regenerated since 2026-09-05, so
+every arm read a system prompt the app had stopped sending; the arms ran thinking off where the app turns it on whenever
+tools are on, held one tool where a fresh install has three, switched off two search rules the app runs, and capped
+replies at 600 tokens where the app caps at 1,024. The suite now has a `shipped` arm that uses the app's own
+`prefixMessages`, its three default tools, its rules, its default sampler seeded for repeatability, and the compiled engine
+the way the app builds it. It stands for a fresh install answering one question online in Auto: no history, no
+attachments, every tool approved, and the tools' own HTTP clients. The dump was regenerated too, so results recorded before
+2026-11-05 used the old one.
+
+Old build against final build, 160 questions, one SM8650, window 32768 for a GGUF and the file's own 4k for the compiled
+model. Rows: `tools/eval/results/decisions/qdc-sm8650-shipped-*`.
+
+| | LFM2.5 compiled, old | new | LFM2.5 GGUF, old | new | LFM3, old | new |
+|---|---:|---:|---:|---:|---:|---:|
+| Correct, of 160 | 53 | 55 | 55 | 64 | 75 | 85 |
+| Correct, needed a search, of 75 | 11 | 11 | 8 | 13 | 19 | 25 |
+| Searched when needed, of 75 | 45 | 47 | 49 | 51 | 71 | 71 |
+| Searched when not needed, of 60 | 22 | 20 | 24 | 26 | 40 | 39 |
+| Said it could not | 19 | 13 | 14 | 14 | 11 | 13 |
+| Still thinking at the 1,024 cap | 0 | 0 | 0 | 0 | 6 | 0 |
+| Ended on a call that could not run | 0 | 0 | 0 | 0 | 8 | 0 |
+| Reasoning found in the reply | 0 | 0 | 0 | 1 | 3 | 6 |
+| Made-up searches, or errors | 0 | 0 | 0 | 0 | 0 | 0 |
+| Median seconds | 8.1 | 8.3 | 8.1 | 9.8 | 28.0 | 28.3 |
+| p90 seconds | 12.6 | 12.7 | 11.4 | 12.3 | 78.2 | 66.7 |
+| Total minutes | 20.3 | 21.0 | 21.0 | 24.0 | 100.1 | 91.7 |
+
+Paired, new against old: the compiled model won 11 and lost 9 (p = 0.82), the GGUF won 10 and lost 1 (p = 0.012), LFM3 won 15
+and lost 5 (p = 0.041). Correct excludes answers found only in thinking that was cut off. Questions of five passes or more on
+LFM3 went from a median of 99 s to 68 s. On the final build LFM3 beat the GGUF 25 to 4 on questions only one got right
+(p = 0.0001) and the compiled model 33 to 3, at about three times the median wait.
+
+LFM2.5 has no thinking to limit, so on these questions what reaches it is the language line, the changed wording on the paths
+that reach a limit, a changed web, and run-to-run variation. One run cannot pull those apart, so read its gain as no
+regression, not as what the line is worth. Speed, as first-pass medians: decode 36 and 36 tok/s on the GGUF, 42 and 42 on the
+compiled model, 22 and 22 on LFM3; prefill 235 and 235 on the compiled model and 114 and 114 on LFM3, and 192 against 177 on the
+GGUF among rows at the same thermal status. The other two do not move, which is not proof the GGUF did not. The old GGUF run
+has 45 rows at status 0 and the new one none, so its median of 8.1 and 9.8 s is not a clean comparison, and those readings
+are end-of-row snapshots that cannot say how much of it was heat.
+
+**So what was wrong?**
+
+- **llama.cpp 0.8.0: not the cause of these problems, but not free either.** LFM2.5's search decisions were identical on b10549
+  and v0.8.0, and the one thing it did break here, several end tags for reasoning, was fixed in the budget. It still brought
+  costs recorded above that this work does not remove: KleidiAI adds memory on SME phones, and the fit estimate now promises less
+  rather than the memory shrinking; QAD-Q4_0 is about 10% slower on prefill and 13% on decode in `llama-bench` on the POCO; and
+  Gemma 3's replies and perplexity changed. And gains: LFM3 itself, and about 40% to 47% on NPU decode in the Snapdragon
+  preset runs, which are backend benchmarks and not measured in the app.
+- **The tools: mostly page reading, and one piece of wording.** Against the suite's older arm, LFM3 as shipped made 49 more tool
+  calls and took about 25 minutes longer for the same score, 76 and 75. Those calls are not searches, which fell from 181 to 176:
+  they are 54 `fetch_url` calls the older arm could not make. The two runs also differ in prompt, window, sampler and cap, so this
+  does not isolate the tool, and 75 and 76 hide 11 wins and 12 losses each way. 18 of those 54 fetches failed: seven 404s, five
+  pages with no text extracted, two rejected PDFs, one each of 401, 403, 429 and a read failure. The PDFs are the tool's own limit
+  and the five may be, so this deserves a look. The refused call's result read as a broken tool, and it now says it did not run.
+- **The system prompt: one line.** With no search involved, LFM3 answered most questions in other languages in English. Adding
+  "Reply in the language of the question." took it from 2 of 8 answered replies following the question to 5 of 8, on the Mac on
+  these prompts, and barely moved LFM2.5, which already followed it. Filipino stayed in English on LFM3. Translations and a poem
+  in Spanish still came out as asked. It stays out when the user has written their own prompt, because LFM3 told to always answer
+  in English with the line behind it answered in Spanish and German. Records: `mac/lg-*` and `mac/tr-*` in the results folder.
+- **The turn loop: this was most of it.** Passes past the limit had no cap on thinking. All 6 replies cut off and 7 of the 8 that
+  ended on a call had reached five passes and four calls. Both counts went to 0, and those questions went from a median of 99 s
+  to 68 s. The diagnosis rests on the mechanism and the before and after, not on a test that varied only this.
+
+**The last pass of a long answer.** Six long requests ("Write a detailed report, with sections, on..."), on the Mac, with
+recorded results (`mac/long-*`): with no thinking on the last pass, five finished in 200 to 480 tokens with sections or
+paragraphs, and one ran to the 1,024 cap. Under the usual note at 128, five of the six ended on a call. Six is few, and whether the
+reports are right was not graded.
+
+**A follow-up after a turn out of rounds** still reuses the cache: on the Mac, LFM3 and the hybrid LFM2.5 2.6B read 21 new tokens and
+reused 2,192 to 2,980 (`mac/follow-*`).
+
+**Thinking models outside those runs.** Budgets now reach more passes, where a forced close through a live grammar has thrown before,
+so Qwen3 1.7B Q8_0 and LFM2.5 2.6B Q4_K_M ran the 34 hardest questions on the same phone: no errors, no crashes, no "Unexpected empty
+grammar stack" in the log, with the block closed 18 times at 128 and 7 at nothing (`think-log.txt`). Qwen3 ended on a call on 3 of 34 and
+LFM2.5 2.6B on 1. These ran only the new build, so they are a check for failures and say nothing about accuracy against the old one.
+
+**What was deleted.** Five search experiments that were off in the app (`honoursGate`, `honoursUnresolved`, `judgesDenials`,
+`judgesFollowUps`, `readsTopResult`) with `Session::judge` and `JudgeQuestions`; `speculation`, `kvCacheQuantized` and
+`useMmap`, none ever switched on; code and strings nothing reached; one-shot scripts; the removed watch tools' leftovers.
+About 2,300 lines of Kotlin and C++. Through the real engine on the Mac, 31 long LFM3 turns were byte-identical before
+and after the decode loop lost its speculation path (`mac/v6-*`). Left on purpose: `imageTokens` and `batchTokens`, kept to reproduce
+findings; the NPU path, which is live; `ExecuTorchSupport.AVAILABLE`, whose callers are the right places to ask.
+
 ## A crash this found, older than the upgrade
 
 Qwen3 1.7B with thinking on failed 5 of 20 questions on the SM8850 with `generation failed: string_view::substr`, on the pass after a
@@ -282,28 +367,27 @@ their size (`repack-buffers.cpp` beside that record), so a phone with a wider ve
 
 ## What this leaves open
 
-- **Reasoning shows as the reply while a thinking model thinks.** A template that pre-fills the opening tag sends no tag
-  in the stream, so `parseAssistantReply` calls the text an answer until the closing tag arrives. Screen recording of
-  LFM3 on the old build, 2026-11-05: about six seconds of reasoning on screen, quoting the app's instructions, before it
-  collapses into "Thought for 6.2s" (`tools/snapdragon/results/2026-11-05-qdc-last-round/reasoning-on-screen.png`). The
-  rule that listens for a model saying it will search reads the same text, which has not been measured.
-- **A retry after a false denial still thinks without limit.** One of the 34 turns said it could not, was retried clean
-  with the tools taken out, and was still thinking at 600 tokens on all three builds (`agenda1.log` in the results folder).
-- **Short of the ceiling, the pass told to stop still thinks without limit.** With a chaining tool switched on and unused,
-  the pass past the short budget can still earn rounds, so it keeps the old behaviour. Not measured here.
-- **The last pass of a long research answer now has no thinking.** The answer's length is not limited, but this suite does
-  not measure the quality of a long answer.
-- **Replies to other languages come back in English on the last pass.** Twelve questions in Spanish, Filipino, Japanese
-  and German, with English results, on the Mac: all in English under the old note and the new one, so not caused by it.
-- **The whole suite on the app's own arm.** LFM3 against LFM2.5 under `doubt-search` has not been run, and the final build
-  has not run all 160.
+- **The loop reads a thinking model's private reasoning, and so does the screen.** A template that pre-fills the opening tag
+  sends no tag in the stream, so `parseAssistantReply` calls the text an answer until the closing tag arrives. Screen
+  recording of LFM3, 2026-11-05: about six seconds of reasoning on screen, quoting the app's instructions, before it collapses
+  into "Thought for 6.2s" (`tools/snapdragon/results/2026-11-05-qdc-last-round/reasoning-on-screen.png`). `Pass.spoken()`
+  returns the same unsplit text, so the rules that listen for "I don't know" or "let me search" can read reasoning too, and the
+  work block above an answer shows it (`LFM3-1.7B-Q4_K_M-search.png` in the results folder). LFM3 had 47 app-run searches on the
+  old build; the source shows reasoning can start one, and the rows cannot say how many it started. On one question a private "I
+  need to search" did, the search failed, and the reasoning became the reply (1 of 160, 2 on the old build). LFM2.5's replies here
+  carry no reasoning. This is the main thing between LFM3 and the default, and it is not fixed.
+- **After a forced close a model can still think in the reply.** 6 of 160 on LFM3, and one of them closes a block a second time
+  further into the reply, which shows as a stray tag.
+- **Non-English replies on LFM3** still came back in English on 3 of 8 tried, Filipino among them.
+- **Thinking in a custom or long conversation.** The budget on more passes and the language line were measured on single questions.
 - **A tool call written inside the reasoning.** LFM3 and Qwen3.5 2B list their call tag as an end tag, so they are covered.
   LFM2.5 and Qwen3 1.7B do not, and a host replay on LFM2.5 2.6B shows the same throw if a call came before the block
-  closed. No real reply has been seen doing that, so nothing was built for it. None of the 15 models checked has a token
+  closed. No real reply has been seen doing that, in any run here, so nothing was built for it. Budgets now reach more passes,
+  so the exposure is a little wider than it was. None of the 15 models checked has a token
   that merges a tag with other text, so matching on the end of the reply does not miss one
   (`tools/snapdragon/results/2026-11-04-qdc-v080/vocab-tags.txt`, from `vocab.cpp` beside it).
-- **A `<think>` written in a visible answer reopens the budget**, on the pass that has one, while the Kotlin parser treats
-  it as answer text. It was like this before the upgrade and has not been seen happening.
+- **A `<think>` written straight after a forced close reopens the budget**, which 1 of 160 LFM3 replies did at a budget of nothing.
+  A block holding only the engine's note no longer reaches the reply; while it is open, for a token or so, it is on screen.
 - **Templates that print the date near the head** (Llama 3.2) change prompt bytes at midnight, so one turn re-reads the
   conversation. Also unchanged by the upgrade.
 - **QAD-Q4_0 is slower in `llama-bench` on the POCO**, by 10% on prefill and 13% on decode, while Q4_K_M, the
