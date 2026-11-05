@@ -1869,6 +1869,25 @@ class ChatViewModel @Inject constructor(
                     updateLastEntry { it.copy(isStreaming = true, text = "", answer = "") }
                 }
 
+                override fun onReplyReplaced(text: String) {
+                    produced = text
+                    // Written down once. With a settled pass the end of the turn writes it, so
+                    // the entry closes here or settleTurn writes it again. A turn whose only
+                    // pass was cut short has nothing settled, and settleTurn is what writes it.
+                    val closes = settled != null
+                    updateLastEntry {
+                        it.copy(
+                            text = text,
+                            answer = text,
+                            history = text,
+                            reasoning = null,
+                            isStreaming = it.isStreaming && !closes,
+                            isReasoningInProgress = false,
+                        )
+                    }
+                    settled = settled?.let { (_, stats) -> text to stats }
+                }
+
                 override suspend fun onApproval(call: ToolCall): Boolean = askUser(call)
 
                 override fun onEngineHistory(messages: List<ChatMessage>) {

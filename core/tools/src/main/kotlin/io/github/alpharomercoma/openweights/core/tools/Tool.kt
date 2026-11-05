@@ -26,6 +26,12 @@ sealed interface ToolEvidence {
 
     /** The address requested and the final address reached by a successful page read. */
     data class Fetch(val requestedUrl: String, val finalUrl: String) : ToolEvidence
+
+    /**
+     * Every search engine failed. Proof of nothing but that, which is the point: the loop has
+     * to tell this from a call the model could fix, and a sentence is not something to match.
+     */
+    data object NoProviderAnswered : ToolEvidence
 }
 
 /**

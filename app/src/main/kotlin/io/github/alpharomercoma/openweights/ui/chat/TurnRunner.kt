@@ -46,6 +46,7 @@ import io.github.alpharomercoma.openweights.core.tools.CapabilityDenial
 import io.github.alpharomercoma.openweights.core.tools.NamedSubject
 import io.github.alpharomercoma.openweights.core.tools.PlanBoard
 import io.github.alpharomercoma.openweights.core.tools.Tool
+import io.github.alpharomercoma.openweights.core.tools.ToolEvidence
 import io.github.alpharomercoma.openweights.core.tools.ToolNotes
 import io.github.alpharomercoma.openweights.core.tools.ToolPrompting
 import io.github.alpharomercoma.openweights.core.tools.ToolRegistry
@@ -85,6 +86,9 @@ interface TurnListener {
 
     /** A new pass is about to start, so the entry should be cleared for it. */
     fun onNextPass()
+
+    /** The pass just finished held no answer, so this is the turn's reply in its place. */
+    fun onReplyReplaced(text: String) {}
 
     /** Where the pass being written stands, at most four times a second. See [LiveReadout]. */
     fun onProgress(progress: GenerationEvent.Progress) {}
@@ -730,6 +734,12 @@ class TurnRunner @Inject constructor(
          */
         private var webSearched = false
 
+        /** Whether the web has answered this turn, which a later failed search cannot undo. */
+        private var webAnswered = false
+
+        /** Whether the app's own search just found every engine gone with nothing to go on. */
+        private var searchCutOff = false
+
         /** The withdrawal, kept as the exception it should always have been. */
         private var withdrawn = false
 
@@ -931,6 +941,10 @@ class TurnRunner @Inject constructor(
             val decision = agent.step(calls, round, mode, listener::onApproval)
             val steps = decision.steps()
             listener.onSteps(steps)
+            if (cutOffBy(steps)) {
+                sayNoEngine(listener)
+                return false
+            }
             webSearched = webSearched ||
                 steps.any { it is AgentStep.Ran && it.call.name == NamedSubject.TOOL }
             // Earned here, on the evidence of what ran rather than what was offered.
@@ -1050,7 +1064,46 @@ class TurnRunner @Inject constructor(
             val intent = searchIntent(pass, mode) ?: return false
             appSearched = true
             Log.i("OpenWeights", "search intent $intent without a call: the app searches")
-            return appSearch(searchQuery(asked, conversation), mode, listener)
+            val searched = appSearch(searchQuery(asked, conversation), mode, listener)
+            // "I don't have that" was true all along, so it stands. "I have no search tool"
+            // is false with the step that just ran under it, an announcement promises a search
+            // that failed, and a claim cites one that never ran. None of those is an answer.
+            if (searchCutOff && intent != "lamented") sayNoEngine(listener)
+            return searched
+        }
+
+        /**
+         * Whether these steps leave the turn with no engine and nothing else to go on.
+         *
+         * Not when the web has answered this turn, since those results are there to read. Not
+         * when this question hands over a long paste or an address the fetch tool could open,
+         * or a file tool, a script or a page being built is on offer: each is a way on that
+         * needs no search. [asked] rather than [conversation], whose last message carries an
+         * earlier turn's notes and is over any length once a search has worked. Those notes do
+         * not count as the web answering: they may be about something else, and saying a
+         * search failed is a far smaller wrong than a figure made up beside real results.
+         */
+        private fun cutOffBy(steps: List<AgentStep>): Boolean {
+            val found = steps.any {
+                it is AgentStep.Ran &&
+                    it.successful &&
+                    (it.evidence is ToolEvidence.Search || it.evidence is ToolEvidence.Fetch)
+            }
+            webAnswered = webAnswered || found
+            val handedOver = asked.length > GROUNDING_MAX_CHARS ||
+                ("://" in asked && active.find(FETCH_TOOL) != null)
+            val otherWork = active.all.any { it.chains && it.definition.name !in WEB_TOOLS }
+            return !webAnswered &&
+                !handedOver &&
+                !otherWork &&
+                steps.any { it is AgentStep.Ran && it.evidence == ToolEvidence.NoProviderAnswered }
+        }
+
+        /** Ends the turn on the sentence. The reply is not what the cache holds, so no record. */
+        private fun sayNoEngine(listener: TurnListener) {
+            pinned = true
+            lastRaw = NO_ENGINE_REPLY
+            listener.onReplyReplaced(NO_ENGINE_REPLY)
         }
 
         /**
@@ -1136,6 +1189,7 @@ class TurnRunner @Inject constructor(
             val decision = agent.step(listOf(call), round, mode, listener::onApproval)
             val steps = decision.steps()
             listener.onSteps(steps)
+            searchCutOff = cutOffBy(steps)
             val results = (decision as? AgentDecision.Continue)?.messages.orEmpty()
                 .map(ToolBudget(headroomTokens())::fit)
                 .spelledOut(readsResults)
@@ -1167,7 +1221,7 @@ class TurnRunner @Inject constructor(
         private suspend fun repair(pass: Pass, mode: AgentMode, listener: TurnListener): Boolean =
             honourIntent(pass, mode, listener) ||
                 honourDoubt(pass, mode, listener) ||
-                push(pass, mode)
+                (!searchCutOff && push(pass, mode))
 
         /**
          * A pass the model was unsure of is searched for it.
@@ -1606,6 +1660,26 @@ class RepeatingReply :
         "The model got stuck repeating itself, so this reply was stopped. " +
             "Ask again, or try a lower repetition penalty in model settings.",
     )
+
+/**
+ * What a turn says when it needed the web and no search engine answered.
+ *
+ * Said by the app because the pass after a failed search invents. On the signed release with
+ * every engine unreachable (2026-11-06, a 16 KB emulator with no DNS), the compiled LFM2.5
+ * 1.2B read "Say so rather than guessing" and wrote "approximately 22 degrees" and "about
+ * 250,000 yen", on questions its first pass had honestly refused. The engines have each been
+ * tried by then, so going round again buys nothing. Not raised as a failure, which is what
+ * this first was: review found that kept a claimed result as the stored reply, lost the
+ * warning on reopening, and cleared a cache nothing had damaged.
+ */
+internal const val NO_ENGINE_REPLY =
+    "No search engine could be reached, so I could not look this up. " +
+        "Check the connection and ask again."
+
+private const val FETCH_TOOL = "fetch_url"
+
+/** The two tools that are the web itself, and so cannot carry a turn the web has failed. */
+private val WEB_TOOLS = setOf(NamedSubject.TOOL, FETCH_TOOL)
 
 /**
  * How many rounds a turn gets, which depends on whether its tools are steps or errands.

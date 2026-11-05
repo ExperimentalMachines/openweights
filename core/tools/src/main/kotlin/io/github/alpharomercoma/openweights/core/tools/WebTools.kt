@@ -190,10 +190,7 @@ class WebSearchTool @Inject constructor(
         // outlives the settings screen, so a value read once would be the value the process
         // started with and the slider would appear to do nothing until the app restarted.
         val (provider, results) = firstAnswer(providers, query, settings.resultCount)
-            ?: return@withContext ToolExecution.failure(
-                "No search provider could answer. The device may be offline, or the search " +
-                    "may be rate limited. Say so rather than guessing.",
-            )
+            ?: return@withContext noProviderAnswered()
 
         if (results.isEmpty()) {
             return@withContext ToolExecution(
@@ -239,6 +236,13 @@ class WebSearchTool @Inject constructor(
         ): Pair<SearchProvider, List<SearchHit>>? = providers.firstNotNullOfOrNull { provider ->
             provider.search(query, limit)?.let { provider to it }
         }
+
+        fun noProviderAnswered() = ToolExecution(
+            text = "No search provider could answer. The device may be offline, or the search " +
+                "may be rate limited. Say so rather than guessing.",
+            successful = false,
+            evidence = ToolEvidence.NoProviderAnswered,
+        )
 
         /** Builds the model-facing result while keeping its source addresses structured. */
         fun webSearchSuccess(

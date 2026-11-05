@@ -71,6 +71,14 @@ class WebSearchToolTest {
     }
 
     @Test
+    fun `no engine answering says so in a form the loop can read`() {
+        val execution = WebSearchTool.noProviderAnswered()
+
+        assertThat(execution.successful).isFalse()
+        assertThat(execution.evidence).isEqualTo(ToolEvidence.NoProviderAnswered)
+    }
+
+    @Test
     fun `successful search keeps exact normalized source addresses as typed evidence`() {
         val execution = WebSearchTool.webSearchSuccess(
             query = "topic",
