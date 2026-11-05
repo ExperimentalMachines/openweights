@@ -145,7 +145,7 @@ private const val MILLIS_PER_SECOND = 1000.0
 @Preview(showBackground = true, backgroundColor = 0xFF0D0E10)
 @Composable
 private fun ReasoningBlockPreview() {
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         Column(modifier = Modifier.padding(16.dp)) {
             ReasoningBlock(
                 reasoning = "The user wants a short definition. Keep it to one sentence.",

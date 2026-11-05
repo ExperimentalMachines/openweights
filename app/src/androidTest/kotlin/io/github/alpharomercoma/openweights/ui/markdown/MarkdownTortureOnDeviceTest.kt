@@ -75,7 +75,7 @@ class MarkdownTortureOnDeviceTest {
         // test, and a test per case would be seventeen activity launches for no gain.
         var markdown by mutableStateOf(CASES.first().second)
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 Box(
                     Modifier
                         .fillMaxWidth()
@@ -111,7 +111,7 @@ class MarkdownTortureOnDeviceTest {
     @Test
     fun aLongCodeLineCanBeReached() {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 Box(
                     Modifier
                         .fillMaxWidth()
@@ -158,7 +158,7 @@ class MarkdownTortureOnDeviceTest {
     @Test
     fun whereBoldIsLost() {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 Column(
                     Modifier
                         .fillMaxWidth()
@@ -255,7 +255,7 @@ class MarkdownTortureOnDeviceTest {
         )
 
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 Column(
                     Modifier
                         .fillMaxWidth()
@@ -302,7 +302,7 @@ class MarkdownTortureOnDeviceTest {
     @Test
     fun aTableJustUnderTheThresholdCanBeReached() {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 Box(
                     Modifier
                         .fillMaxWidth()
@@ -350,7 +350,7 @@ class MarkdownTortureOnDeviceTest {
 
         var markdown by mutableStateOf(replies.first().readText())
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 Box(
                     Modifier
                         .fillMaxWidth()
@@ -383,7 +383,7 @@ class MarkdownTortureOnDeviceTest {
     fun doTableDimensDoAnything() {
         var wide by mutableStateOf(false)
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 Box(
                     Modifier
                         .fillMaxWidth()

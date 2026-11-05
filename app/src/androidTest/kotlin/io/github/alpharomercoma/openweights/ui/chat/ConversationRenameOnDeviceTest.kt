@@ -80,7 +80,7 @@ class ConversationRenameOnDeviceTest {
 
     private fun show(onRename: (String) -> Unit = {}) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 RenameConversationDialog(
                     conversation = conversation,
                     onRename = onRename,

@@ -145,14 +145,6 @@ class ModelPreferencesTest {
     }
 
     @Test
-    fun `where the layers run stays with the model it was measured for`() = runTest {
-        repository.save("small.gguf", ModelPreferences(offload = Offload.GPU.name))
-
-        assertThat(repository.current("large.gguf").offload).isEqualTo(Offload.AUTO.name)
-        assertThat(repository.current("small.gguf").offload).isEqualTo(Offload.GPU.name)
-    }
-
-    @Test
     fun `settings written before they were shared are still read`() = runTest {
         // An install that predates this has everything under the per-model key and nothing
         // under the shared one. The first launch after the change has to look like the last

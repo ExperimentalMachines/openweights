@@ -30,38 +30,39 @@ package io.github.alpharomercoma.openweights.core.common.model
  */
 object Qwen25Prompt {
 
-    fun render(
-        messages: List<ChatMessage>,
-        tools: List<ToolDefinition> = emptyList(),
-        addGenerationPrompt: Boolean = true,
-    ): String = buildString {
-        appendSystem(messages, tools)
+    fun render(messages: List<ChatMessage>, tools: List<ToolDefinition> = emptyList()): String =
+        buildString {
+            appendSystem(messages, tools)
 
-        messages.forEachIndexed { index, message ->
-            when {
-                message.role == ChatRole.USER ||
-                    (message.role == ChatRole.SYSTEM && index > 0) ||
-                    message.role == ChatRole.ASSISTANT ->
-                    appendBlock(message.role.wireName, message.text)
+            messages.forEachIndexed { index, message ->
+                when {
+                    message.role == ChatRole.USER ||
+                        (message.role == ChatRole.SYSTEM && index > 0) ||
+                        message.role == ChatRole.ASSISTANT ->
+                        appendBlock(message.role.wireName, message.text)
 
-                message.role == ChatRole.TOOL -> {
-                    // A run of results is one user turn holding several responses, which is
-                    // what the template does and why this cannot be written per message.
-                    if (index == 0 || messages[index - 1].role != ChatRole.TOOL) {
-                        append("<|im_start|>user")
+                    message.role == ChatRole.TOOL -> {
+                        // A run of results is one user turn holding several responses, which is
+                        // what the template does and why this cannot be written per message.
+                        if (index == 0 || messages[index - 1].role != ChatRole.TOOL) {
+                            append("<|im_start|>user")
+                        }
+                        append(
+                            "\n<tool_response>\n",
+                        ).append(message.text).append("\n</tool_response>")
+                        if (index == messages.lastIndex ||
+                            messages[index + 1].role != ChatRole.TOOL
+                        ) {
+                            append("<|im_end|>\n")
+                        }
                     }
-                    append("\n<tool_response>\n").append(message.text).append("\n</tool_response>")
-                    if (index == messages.lastIndex || messages[index + 1].role != ChatRole.TOOL) {
-                        append("<|im_end|>\n")
-                    }
+
+                    else -> Unit // A system message at index 0 was hoisted above.
                 }
-
-                else -> Unit // A system message at index 0 was hoisted above.
             }
-        }
 
-        if (addGenerationPrompt) append("<|im_start|>assistant\n")
-    }
+            append("<|im_start|>assistant\n")
+        }
 
     /**
      * The system turn, which always exists: unlike Qwen3, Qwen2.5 falls back to its own

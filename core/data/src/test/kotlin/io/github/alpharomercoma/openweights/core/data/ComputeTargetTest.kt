@@ -125,7 +125,7 @@ class ComputeTargetTest {
     @Test
     fun `auto on both halves still follows the measured crossover`() {
         // A prompt-heavy history moves to the GPU; an answer-heavy one does not. This is
-        // the behaviour the single Offload control had, and it must survive the split.
+        // the behaviour the single control had, and it must survive the split.
         val promptHeavy = computeLayersFor(
             ComputeTarget.AUTO,
             ComputeTarget.AUTO,

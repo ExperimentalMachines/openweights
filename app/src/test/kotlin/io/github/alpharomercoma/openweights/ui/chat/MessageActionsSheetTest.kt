@@ -261,7 +261,7 @@ class MessageActionsSheetTest {
         memory: TurnMemory? = null,
     ) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 MessageActionsSheet(
                     entry = TranscriptEntry(
                         id = 1,

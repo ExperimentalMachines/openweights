@@ -311,7 +311,7 @@ private const val MAX_CELL_CHARS = 44
 @Preview(showBackground = true, backgroundColor = 0xFF0D0E10)
 @Composable
 private fun MarkdownTextPreview() {
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         MarkdownText(
             """
             A **KV cache** stores past attention tensors.

@@ -338,7 +338,7 @@ private fun FileTitle(inspected: InspectedFile, modifier: Modifier = Modifier) {
 @Preview(showBackground = true, backgroundColor = 0xFF0D0E10)
 @Composable
 private fun FitCardPreview() {
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         FitCard(
             inspected = InspectedFile(
                 file = HubFile("LFM2.5-2.6B-Q4_K_M.gguf", 1_674_454_848, null),

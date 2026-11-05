@@ -83,7 +83,7 @@ class ModelPickerSheetTest {
         onCancelDownload: (String) -> Unit = {},
     ) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ModelPickerSheet(
                     models = emptyList(),
                     downloads = downloads,

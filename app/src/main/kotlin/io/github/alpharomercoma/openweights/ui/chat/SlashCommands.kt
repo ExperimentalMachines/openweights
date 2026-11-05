@@ -333,7 +333,7 @@ private val PALETTE_MAX = 260.dp
 @Preview(showBackground = true, backgroundColor = 0xFF0D0E10)
 @Composable
 private fun SlashCommandPalettePreview() {
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         SlashCommandPalette(commands = SlashCommand.entries, onSelect = {})
     }
 }

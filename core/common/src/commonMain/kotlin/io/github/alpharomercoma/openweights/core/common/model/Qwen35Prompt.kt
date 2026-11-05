@@ -48,7 +48,6 @@ object Qwen35Prompt {
         messages: List<ChatMessage>,
         tools: List<ToolDefinition> = emptyList(),
         thinking: Boolean = false,
-        addGenerationPrompt: Boolean = true,
         verbatimHistory: Boolean = false,
     ): String = buildString {
         appendSystem(messages, tools)
@@ -72,10 +71,8 @@ object Qwen35Prompt {
             }
         }
 
-        if (addGenerationPrompt) {
-            append("<|im_start|>assistant\n")
-            append(if (thinking) OPEN_THINK else EMPTY_THINK)
-        }
+        append("<|im_start|>assistant\n")
+        append(if (thinking) OPEN_THINK else EMPTY_THINK)
     }
 
     /**

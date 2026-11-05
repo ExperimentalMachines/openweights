@@ -119,7 +119,7 @@ fun PlanCard(plan: TaskPlan, onTick: (Int) -> Unit, modifier: Modifier = Modifie
 @Composable
 private fun PlanCardPreview() {
     val plan = readPlan("1. Find the notes file\n2. Read the budget section\n3. Save a summary")
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         PlanCard(plan = plan!!.ticked(0), onTick = {})
     }
 }

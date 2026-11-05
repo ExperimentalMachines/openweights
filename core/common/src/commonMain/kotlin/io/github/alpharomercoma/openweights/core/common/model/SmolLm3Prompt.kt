@@ -40,7 +40,6 @@ object SmolLm3Prompt {
         messages: List<ChatMessage>,
         tools: List<ToolDefinition> = emptyList(),
         thinking: Boolean = true,
-        addGenerationPrompt: Boolean = true,
         date: String = promptDateToday().asSmolLm3Date(),
         /** Emit assistant turns exactly as stored; see Llama32Prompt for why. */
         verbatimHistory: Boolean = false,
@@ -99,10 +98,8 @@ object SmolLm3Prompt {
             }
         }
 
-        if (addGenerationPrompt) {
-            append("<|im_start|>assistant\n")
-            if (mode == NO_THINK) append("<think>\n\n</think>\n")
-        }
+        append("<|im_start|>assistant\n")
+        if (mode == NO_THINK) append("<think>\n\n</think>\n")
     }
 
     private const val THINK = "/think"

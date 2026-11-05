@@ -140,7 +140,7 @@ class PasteImageOnDeviceTest {
 
     private fun show(enabled: Boolean = true, onPasteMedia: (List<Uri>) -> Unit) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 Composer(
                     conversationKey = null,
                     enabled = enabled,

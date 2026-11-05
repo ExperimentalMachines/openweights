@@ -163,7 +163,7 @@ class DiscoverScreenTest {
         onRecommendedOnlyChange: (Boolean) -> Unit = {},
     ) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 DiscoverScreen(
                     state = DiscoverUiState(
                         query = query,

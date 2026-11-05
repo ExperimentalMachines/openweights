@@ -41,7 +41,7 @@ class CompactLandscapeChatScreenTest {
     @Test
     fun welcomeCopyAndComposerRemainDisplayedInCompactLandscape() {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ChatScreen(
                     state = ChatUiState(
                         modelName = "LFM2.5-1.2B-Instruct-QAD-Q4_0",

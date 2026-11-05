@@ -87,7 +87,7 @@ class ThinkingControlTest {
         thinking: Boolean = true,
     ) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ThinkingControl(
                     supportsEffort = supportsEffort,
                     supportsThinking = supportsThinking,

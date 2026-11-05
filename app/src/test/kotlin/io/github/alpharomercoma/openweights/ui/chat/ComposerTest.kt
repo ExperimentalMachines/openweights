@@ -212,7 +212,7 @@ class ComposerTest {
         var dispatched: SlashCommand? = null
         val enabled = mutableStateOf(true)
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 Composer(
                     conversationKey = null,
                     enabled = enabled.value,
@@ -252,7 +252,7 @@ class ComposerTest {
         // a picture came in could be sent without it, and the picture landed on the next.
         var sent: String? = null
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 Composer(
                     conversationKey = null,
                     enabled = true,
@@ -293,7 +293,7 @@ class ComposerTest {
         val listening = mutableStateOf(false)
         val shown = mutableStateOf(true)
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 if (shown.value) {
                     Composer(
                         conversationKey = null,
@@ -332,7 +332,7 @@ class ComposerTest {
         var typed = 0
         compose.mainClock.autoAdvance = false
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 Composer(
                     conversationKey = null,
                     onTyping = { typed++ },
@@ -376,7 +376,7 @@ class ComposerTest {
         val drafts = mutableListOf<String>()
         compose.mainClock.autoAdvance = false
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 Composer(
                     conversationKey = null,
                     onDraftChange = { drafts += it },
@@ -435,7 +435,7 @@ class ComposerTest {
     fun `the message field does not accept text while the composer is disabled`() {
         var sent: String? = null
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 Composer(
                     conversationKey = null,
                     enabled = false,
@@ -509,7 +509,7 @@ class ComposerTest {
         generating: Boolean = false,
     ) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 Composer(
                     conversationKey = null,
                     enabled = true,

@@ -892,7 +892,7 @@ private const val DAYS_PER_WEEK = 7
 @Preview(showBackground = true, backgroundColor = 0xFF0D0E10)
 @Composable
 private fun ConversationDrawerPreview() {
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         ConversationDrawer(
             conversations = listOf(
                 ConversationSummary(

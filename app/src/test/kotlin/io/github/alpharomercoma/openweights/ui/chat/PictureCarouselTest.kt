@@ -52,7 +52,7 @@ class PictureCarouselTest {
     @Test
     fun `swiping leaves reply text fixed and a picture opens and closes in place`() {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 Column {
                     PictureCarousel(
                         List(8) { FoundPicture("", "https://example.com/$it") },

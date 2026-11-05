@@ -158,7 +158,7 @@ internal fun answerFrom(chosen: Set<String>, typed: String, options: List<String
 @Preview(showBackground = true, backgroundColor = 0xFF0D0E10)
 @Composable
 private fun QuestionCardPreview() {
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         QuestionCard(
             question = UserQuestion(
                 text = stringResource(R.string.which_folder_did_mean),

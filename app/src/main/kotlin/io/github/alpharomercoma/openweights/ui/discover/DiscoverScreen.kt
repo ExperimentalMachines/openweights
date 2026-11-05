@@ -533,7 +533,7 @@ private fun Callout(text: String) {
 @Preview(showBackground = true, backgroundColor = 0xFF0D0E10)
 @Composable
 private fun DiscoverScreenPreview() {
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         DiscoverScreen(
             state = DiscoverUiState(
                 query = HubQuery(text = stringResource(R.string.lfm2_5)),

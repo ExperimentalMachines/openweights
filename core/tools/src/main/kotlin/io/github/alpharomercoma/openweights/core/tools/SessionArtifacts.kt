@@ -55,8 +55,6 @@ class SessionArtifacts @Inject constructor(private val workspace: Workspace) {
         if (identity.scope == started.workspace) created[path] = identity
     }
 
-    fun isOwn(path: String): Boolean = check(path).own
-
     @Synchronized
     internal fun check(path: String): Check {
         val started = scope()

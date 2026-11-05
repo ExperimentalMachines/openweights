@@ -113,7 +113,7 @@ class FitCardTest {
     @Test
     fun `a prefill estimate is shown alongside decode, not in place of it`() {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 FitCard(
                     inspected = InspectedFile(
                         file = HubFile(
@@ -202,7 +202,7 @@ class FitCardTest {
         onCancel: () -> Unit = {},
     ) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 FitCard(
                     inspected = InspectedFile(
                         file = HubFile(

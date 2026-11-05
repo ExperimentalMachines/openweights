@@ -36,7 +36,6 @@ object Llama32Prompt {
     fun render(
         messages: List<ChatMessage>,
         tools: List<ToolDefinition> = emptyList(),
-        addGenerationPrompt: Boolean = true,
         date: String = promptDateToday().asLlamaDate(),
         includeBos: Boolean = true,
         /**
@@ -86,7 +85,7 @@ object Llama32Prompt {
             }
         }
 
-        if (addGenerationPrompt) append("<|start_header_id|>assistant<|end_header_id|>\n\n")
+        append("<|start_header_id|>assistant<|end_header_id|>\n\n")
     }
 
     private const val TOOLS_GUIDANCE =

@@ -139,7 +139,7 @@ class SessionArtifactsTest {
     fun `a missing document loses ownership even if it returns under the same id`() = runTest {
         writer.execute(writeCall("notes.txt", "same"))
         workspace.delete("notes.txt")
-        assertThat(artifacts.isOwn("notes.txt")).isFalse()
+        assertThat(artifacts.check("notes.txt").own).isFalse()
         workspace.put("notes.txt", "same")
 
         assertThat(deleter.asksInAuto(deleteCall("notes.txt"))).isTrue()

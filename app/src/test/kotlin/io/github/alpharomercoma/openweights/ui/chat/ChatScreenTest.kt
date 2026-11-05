@@ -447,7 +447,7 @@ class ChatScreenTest {
         onSteerGoal: (String) -> Unit = {},
     ) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ChatScreen(
                     state = ChatUiState(
                         modelName = "LFM2.5-2.6B-Q4_K_M",

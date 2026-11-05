@@ -115,7 +115,7 @@ class SettingsScreenTest {
         onClearToken: () -> Unit = {},
     ) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 SettingsScreen(
                     state = SettingsUiState(hasToken = hasToken, theme = theme),
                     onSelectTheme = onSelectTheme,

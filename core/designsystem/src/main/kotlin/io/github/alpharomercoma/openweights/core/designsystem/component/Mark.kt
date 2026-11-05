@@ -100,7 +100,7 @@ const val TILE_CORNER = 0.24f
 @Preview
 @Composable
 private fun MarkPreview() {
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         Mark(size = 96.dp)
     }
 }

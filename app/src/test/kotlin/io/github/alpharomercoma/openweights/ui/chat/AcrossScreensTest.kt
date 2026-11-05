@@ -111,7 +111,7 @@ class AcrossScreensTest {
 
     private fun stage() {
         compose.setContent {
-            OpenWeightsTheme(themeMode = ThemeMode.DARK, dynamicColor = false) {
+            OpenWeightsTheme(themeMode = ThemeMode.DARK) {
                 ChatScreen(
                     state = ChatUiState(
                         modelName = "LFM2.5-2.6B-QAD-Q4_0",

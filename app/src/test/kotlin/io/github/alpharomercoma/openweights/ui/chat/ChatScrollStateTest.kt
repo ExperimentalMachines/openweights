@@ -94,7 +94,7 @@ class ChatScrollStateTest {
     private fun showLongChat(): MutableState<ChatUiState> {
         val state = mutableStateOf(longChat(1, "Original"))
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ChatScreen(
                     state = state.value,
                     onSend = { true },

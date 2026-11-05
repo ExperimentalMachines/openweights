@@ -553,7 +553,7 @@ private fun Long.asDuration(): String {
 @Preview(showBackground = true, backgroundColor = 0xFF0D0E10)
 @Composable
 private fun DashboardScreenPreview() {
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         DashboardScreen(
             summary = UsageSummary(
                 lifetimePromptTokens = 18_204,

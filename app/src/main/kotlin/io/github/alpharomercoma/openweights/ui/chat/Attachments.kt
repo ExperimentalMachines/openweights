@@ -426,7 +426,7 @@ private const val SENT_SIZE = 76
 @Preview(showBackground = true, backgroundColor = 0xFF0D0E10)
 @Composable
 private fun StagedAttachmentsPreview() {
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         StagedAttachments(
             attachments = listOf(
                 MessagePart.File("/tmp/a.jpg", "image/jpeg", "photo.jpg"),

@@ -32,7 +32,6 @@ data class SamplerParams(
     val topP: Float = DEFAULT_TOP_P,
     val minP: Float = DEFAULT_MIN_P,
     val repeatPenalty: Float = DEFAULT_REPEAT_PENALTY,
-    val repeatLastN: Int = DEFAULT_REPEAT_LAST_N,
     /** `null` means "pick a new random seed for every generation". */
     val seed: Int? = null,
     /** 0 means "generate until the model stops or the context fills". */
@@ -69,7 +68,6 @@ data class SamplerParams(
         const val DEFAULT_TOP_P = 0.95f
         const val DEFAULT_MIN_P = 0.05f
         const val DEFAULT_REPEAT_PENALTY = 1.1f
-        const val DEFAULT_REPEAT_LAST_N = 64
         const val NO_REASONING_BUDGET = -1
     }
 }

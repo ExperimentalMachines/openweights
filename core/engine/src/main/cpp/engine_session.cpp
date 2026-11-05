@@ -80,6 +80,9 @@ static bool ends_with(const std::string & text, const std::string & suffix) {
 namespace openweights {
 namespace {
 
+// How far back the repeat penalty looks. Nothing in the app ever varied it, so it is not a setting.
+constexpr int32_t REPEAT_WINDOW = 64;
+
 #if defined(__linux__) && !defined(MADV_POPULATE_READ)
 // Linux 5.14. The NDK's headers can be older than the kernel the phone runs.
 #define MADV_POPULATE_READ 22
@@ -383,11 +386,11 @@ llama_sampler * build_sampler(
         llama_sampler_chain_add(chain, grammar);
     }
 
-    if (cfg.repeat_penalty != 1.0f && cfg.repeat_last_n != 0) {
+    if (cfg.repeat_penalty != 1.0f) {
         llama_sampler_chain_add(
             chain,
             llama_sampler_init_penalties(
-                llama_vocab_n_tokens(vocab), cfg.repeat_last_n, cfg.repeat_penalty, 0.0f, 0.0f));
+                llama_vocab_n_tokens(vocab), REPEAT_WINDOW, cfg.repeat_penalty, 0.0f, 0.0f));
     }
 
     // temperature <= 0 means greedy: skip the truncation samplers entirely.
@@ -988,7 +991,6 @@ void Session::free_threadpools() {
         api.destroy(threadpool_);
     }
     threadpool_ = nullptr;
-    pool_threads_ = 0;
 }
 
 /**
@@ -1040,7 +1042,6 @@ void Session::attach_threadpools(int32_t n_threads, int32_t n_threads_batch) {
     }
 
     threadpool_   = pool;
-    pool_threads_ = width;
     llama_attach_threadpool(ctx_, threadpool_, nullptr);
     LOGI("threads: %d workers kept alive across graphs", width);
 }

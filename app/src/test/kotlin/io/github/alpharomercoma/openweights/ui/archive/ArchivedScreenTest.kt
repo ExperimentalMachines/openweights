@@ -74,7 +74,7 @@ class ArchivedScreenTest {
         var state by mutableStateOf(ArchiveUiState(loaded = true, conversations = listOf(filed)))
         var backs = 0
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ArchivedScreen(
                     state = state,
                     onSearch = {},
@@ -188,7 +188,7 @@ class ArchivedScreenTest {
 
     private fun show(state: ArchiveUiState) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ArchivedScreen(
                     state = state,
                     onSearch = {},

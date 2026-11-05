@@ -79,7 +79,7 @@ class KeepTailPinnedTest {
     fun `a section opening while the reader is at the bottom keeps them there`() {
         var expanded by mutableStateOf(false)
         lateinit var listState: LazyListState
-        compose.setContent { OpenWeightsTheme(dynamicColor = false) { listState = list(expanded) } }
+        compose.setContent { OpenWeightsTheme { listState = list(expanded) } }
         compose.waitForIdle()
         assertThat(listState.atBottom()).isTrue()
 
@@ -96,7 +96,7 @@ class KeepTailPinnedTest {
         // somebody off the paragraph they went back to read.
         var expanded by mutableStateOf(false)
         lateinit var listState: LazyListState
-        compose.setContent { OpenWeightsTheme(dynamicColor = false) { listState = list(expanded) } }
+        compose.setContent { OpenWeightsTheme { listState = list(expanded) } }
         compose.waitForIdle()
 
         // A real drag, not a programmatic scroll: detaching is driven by the drag

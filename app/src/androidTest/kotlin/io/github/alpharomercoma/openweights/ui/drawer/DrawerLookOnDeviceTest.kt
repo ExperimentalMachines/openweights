@@ -66,7 +66,7 @@ class DrawerLookOnDeviceTest {
         var term by mutableStateOf("")
         var searchShot = false
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ConversationDrawer(
                     conversations = history,
                     activeId = 2,

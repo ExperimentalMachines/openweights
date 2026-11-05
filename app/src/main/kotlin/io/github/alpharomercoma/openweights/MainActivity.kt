@@ -66,7 +66,7 @@ class MainActivity : ComponentActivity() {
             // same thing the app did before anyone could choose.
             val choice by appearance.themeChoice.collectAsStateWithLifecycle(ThemeChoice.SYSTEM)
 
-            OpenWeightsTheme(themeMode = choice.toThemeMode(), dynamicColor = false) {
+            OpenWeightsTheme(themeMode = choice.toThemeMode()) {
                 OpenWeightsApp(
                     openModel = openModel,
                     onModelOpened = { openModel.compareAndSet(it, null) },

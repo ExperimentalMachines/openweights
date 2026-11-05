@@ -69,7 +69,7 @@ class ConversationDrawerTest {
         // rather than of a place, and is what made it read as anonymous beside ChatGPT's
         // and Claude's.
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ConversationDrawer(
                     conversations = listOf(loose),
                     activeId = null,
@@ -90,7 +90,7 @@ class ConversationDrawerTest {
         // to actually produce the box.
         var term by mutableStateOf("")
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ConversationDrawer(
                     conversations = listOf(loose),
                     activeId = null,
@@ -117,7 +117,7 @@ class ConversationDrawerTest {
         // by a caller, still has to bring a box with it, or the results underneath have
         // nothing above them saying what they are results of.
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ConversationDrawer(
                     conversations = listOf(loose),
                     activeId = null,
@@ -138,7 +138,7 @@ class ConversationDrawerTest {
     fun `closing the search puts the history back rather than leaving a term behind`() {
         var term by mutableStateOf("packing")
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ConversationDrawer(
                     conversations = listOf(loose),
                     activeId = null,
@@ -168,7 +168,7 @@ class ConversationDrawerTest {
         var opened = false
         var shown by mutableStateOf(listOf(loose))
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ConversationDrawer(
                     conversations = shown,
                     activeId = null,
@@ -241,7 +241,7 @@ class ConversationDrawerTest {
         val many = (1L..20L).map { ConversationSummary(it, "chat $it", "lfm", NOW) }
         var shown by mutableStateOf(many)
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ConversationDrawer(
                     conversations = shown,
                     activeId = null,
@@ -268,7 +268,7 @@ class ConversationDrawerTest {
         // because the sheet looked its conversation up in a list that had never heard of
         // it. It offers Unarchive, and no Pin, because a pin would move nothing.
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ConversationDrawer(
                     conversations = listOf(loose),
                     activeId = null,
@@ -300,7 +300,7 @@ class ConversationDrawerTest {
         onOpenArchive: () -> Unit = {},
     ) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ConversationDrawer(
                     conversations = conversations,
                     activeId = null,

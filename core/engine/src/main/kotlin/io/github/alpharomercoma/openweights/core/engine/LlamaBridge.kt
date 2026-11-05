@@ -198,7 +198,6 @@ internal class LlamaBridge {
         topP: Float,
         minP: Float,
         repeatPenalty: Float,
-        repeatLastN: Int,
         seed: Int,
         maxTokens: Int,
         /** Thinking tokens before the engine closes the block itself; -1 for no cap. */

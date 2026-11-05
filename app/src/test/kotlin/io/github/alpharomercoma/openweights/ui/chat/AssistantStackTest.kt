@@ -253,7 +253,7 @@ class AssistantStackTest {
         }
 
         compose.setContent {
-            OpenWeightsTheme(themeMode = ThemeMode.DARK, dynamicColor = false) {
+            OpenWeightsTheme(themeMode = ThemeMode.DARK) {
                 ChatScreen(
                     state = ChatUiState(
                         modelName = "Hammer2.1-1.5B-Q4_0",

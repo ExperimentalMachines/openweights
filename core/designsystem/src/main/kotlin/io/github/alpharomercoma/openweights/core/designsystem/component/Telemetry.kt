@@ -208,7 +208,7 @@ private val METER_HEIGHT = 2.dp
 @Preview(showBackground = true, backgroundColor = 0xFF0D0E10)
 @Composable
 private fun TelemetryPreview() {
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         androidx.compose.foundation.layout.Column {
             ContextMeter(used = 1204, total = 4096)
             ContextMeter(

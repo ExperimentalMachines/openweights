@@ -230,7 +230,6 @@ class LlamaCppEngine internal constructor(
         topP = params.topP,
         minP = params.minP,
         repeatPenalty = params.repeatPenalty,
-        repeatLastN = params.repeatLastN,
         seed = params.seed ?: Random.nextInt(),
         maxTokens = params.maxTokens,
         reasoningBudget = params.reasoningBudget,

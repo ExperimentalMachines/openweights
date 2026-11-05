@@ -133,8 +133,6 @@ data class ModelPreferences(
     val thinking: Boolean = true,
     /** Stored by name so an unknown value from a newer build falls back to the default. */
     val reasoningEffort: String = ReasoningEffort.DEFAULT.name,
-    /** Stored by name so an unknown value from a newer build falls back to the default. */
-    val offload: String = Offload.AUTO.name,
     /**
      * How many tokens a picture is worth to the model, which is what a picture costs.
      *
@@ -586,13 +584,11 @@ class ModelPreferencesRepository @Inject constructor(
      * model for one question. Keeping them apart meant the sheet quietly reset every time
      * the model changed, which reads as the app forgetting rather than as scoping.
      *
-     * Two are genuinely about the model and stay with it. [ModelPreferences.contextLength]
+     * One is genuinely about the model and stays with it. [ModelPreferences.contextLength]
      * is bounded by what the file can address and what this phone can hold for that file,
-     * and its automatic value resolves differently per model. [ModelPreferences.offload] is
-     * a claim about where one model's layers run fastest, measured per model, and the same
-     * answer for a 1.2B and an 8B would be wrong for one of them.
+     * and its automatic value resolves differently per model.
      *
-     * So the shared set is read first and the two per-model fields are layered over it.
+     * So the shared set is read first and that one field is layered over it.
      */
     fun observe(modelName: String): Flow<ModelPreferences> =
         context.settingsDataStore.data.orEmptyWhenUnreadable().map { preferences ->
@@ -622,7 +618,7 @@ class ModelPreferencesRepository @Inject constructor(
                 if (preferences[sharedKey()] == null) {
                     it
                 } else {
-                    shared.copy(contextLength = it.contextLength, offload = it.offload)
+                    shared.copy(contextLength = it.contextLength)
                 }
             } ?: shared
         }
@@ -659,10 +655,7 @@ class ModelPreferencesRepository @Inject constructor(
             // here would be one model's window silently applied to a different model on a
             // phone that may not have the memory for it.
             store[sharedKey()] = json.encodeToString(
-                stamped.copy(
-                    contextLength = ModelPreferences.AUTOMATIC,
-                    offload = Offload.AUTO.name,
-                ),
+                stamped.copy(contextLength = ModelPreferences.AUTOMATIC),
             )
             store[key(modelName)] = json.encodeToString(stamped)
         }
@@ -717,7 +710,7 @@ class ModelPreferencesRepository @Inject constructor(
 /**
  * Where one half of a turn runs.
  *
- * Split from a single [Offload] choice because the two halves want opposite things: a GPU
+ * Two choices rather than one because the two halves want opposite things: a GPU
  * reads a prompt several times faster than the CPU and writes an answer slower, so the
  * useful answer is often "prompt on the GPU, answer on the CPU" rather than one or the
  * other for both.
@@ -748,31 +741,11 @@ enum class ComputeTarget(val label: String) {
 }
 
 /**
- * Which processor a model's layers are loaded onto.
- *
- * A choice rather than a slider because splitting layers across both pays the transfer in
- * each direction for every token, which measured slower than either end on its own.
- */
-enum class Offload(val label: String) {
-    /** Decide from what this model has actually been used for. See [layersFor]. */
-    AUTO("Auto"),
-
-    // Written out rather than title-cased from the name, which produced "Cpu" and "Gpu".
-    CPU("CPU"),
-    GPU("GPU"),
-    ;
-
-    companion object {
-        fun fromName(name: String): Offload = entries.firstOrNull { it.name == name } ?: AUTO
-    }
-}
-
-/**
  * How many layers to hand to the GPU, which is all of them or none.
  *
  * The two processors are good at opposite halves of a turn: the GPU reads a prompt several
  * times faster and writes an answer slower. So the question is only ever what shape the
- * turns are, and [Offload.AUTO] answers it from the usage ledger, which has recorded both
+ * turns are, and this answers it from the usage ledger, which has recorded both
  * totals per model since it existed and therefore needs no new bookkeeping.
  *
  * **No constant can be right, and the one below is the largest crossover ever measured, so
@@ -818,17 +791,10 @@ enum class Offload(val label: String) {
  * Decided at load, because llama.cpp assigns layers when the weights are mapped. A model
  * with nothing recorded stays on the CPU.
  */
-fun Offload.layersFor(hasGpu: Boolean, promptTokens: Long, generatedTokens: Long): Int {
-    if (!hasGpu) return 0
-    return when (this) {
-        Offload.CPU -> 0
-        Offload.GPU -> ALL_LAYERS
-        Offload.AUTO -> {
-            val prefillHeavy = generatedTokens > 0 &&
-                promptTokens * CROSSOVER_DENOMINATOR > generatedTokens * CROSSOVER_NUMERATOR
-            if (prefillHeavy) ALL_LAYERS else 0
-        }
-    }
+internal fun automaticLayers(hasGpu: Boolean, promptTokens: Long, generatedTokens: Long): Int {
+    val prefillHeavy = generatedTokens > 0 &&
+        promptTokens * CROSSOVER_DENOMINATOR > generatedTokens * CROSSOVER_NUMERATOR
+    return if (hasGpu && prefillHeavy) ALL_LAYERS else 0
 }
 
 /**
@@ -876,7 +842,7 @@ fun computeLayersFor(
 
         // Writing pinned to the CPU with reading left open: the measured heuristic decides,
         // which is what the single control did.
-        else -> Offload.AUTO.layersFor(hasGpu, promptTokens, generatedTokens)
+        else -> automaticLayers(hasGpu, promptTokens, generatedTokens)
     }
 }
 

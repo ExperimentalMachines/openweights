@@ -353,7 +353,7 @@ private const val RATE_WEIGHT = 1.1f
 @Preview(showBackground = true, backgroundColor = 0xFF0D0E10)
 @Composable
 private fun TurnStatsPanelPreview() {
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         TurnStatsPanel(
             entry = TranscriptEntry(
                 id = 1,

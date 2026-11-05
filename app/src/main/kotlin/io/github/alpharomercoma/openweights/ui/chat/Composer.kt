@@ -907,7 +907,7 @@ private const val TOUCH_TARGET = 48
 @Preview(showBackground = true, backgroundColor = 0xFF0D0E10)
 @Composable
 private fun ComposerPreview() {
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.bodyLarge) {
             Composer(
                 conversationKey = null,

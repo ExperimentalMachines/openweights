@@ -160,7 +160,7 @@ fun rememberMessageClipboard(): MessageClipboard {
 @Preview(showBackground = true, backgroundColor = 0xFF0D0E10)
 @Composable
 private fun MessageActionsPreview() {
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         MessageActions(isSpeaking = false, onCopy = {}, onReadAloud = {})
     }
 }

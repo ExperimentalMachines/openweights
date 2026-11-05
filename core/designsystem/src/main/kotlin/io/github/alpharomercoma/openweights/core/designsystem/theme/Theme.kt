@@ -20,13 +20,10 @@ import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
@@ -40,29 +37,16 @@ val LocalIsDarkTheme = staticCompositionLocalOf { true }
  * The app theme.
  *
  * @param themeMode the user's explicit light/dark choice, or [ThemeMode.SYSTEM].
- * @param dynamicColor take neutrals and accent from the device wallpaper (Material You).
- *   Off by default: the signal scale carries meaning, and a wallpaper-derived accent would
- *   compete with it.
  */
 @Composable
-fun OpenWeightsTheme(
-    themeMode: ThemeMode = ThemeMode.SYSTEM,
-    dynamicColor: Boolean = false,
-    content: @Composable () -> Unit,
-) {
+fun OpenWeightsTheme(themeMode: ThemeMode = ThemeMode.SYSTEM, content: @Composable () -> Unit) {
     val darkTheme = when (themeMode) {
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
     }
 
-    val context = LocalContext.current
-    val colorScheme: ColorScheme = when {
-        dynamicColor && darkTheme -> dynamicDarkColorScheme(context)
-        dynamicColor -> dynamicLightColorScheme(context)
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    val colorScheme: ColorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
     val view = LocalView.current
     if (!view.isInEditMode) {

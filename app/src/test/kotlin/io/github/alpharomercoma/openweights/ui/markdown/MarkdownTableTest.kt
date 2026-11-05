@@ -68,7 +68,7 @@ class MarkdownTableTest {
     @Test
     fun `only the table scrolls sideways, not the sentence beside it`() {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 Box(Modifier.width(360.dp)) { MarkdownText(content = reply) }
             }
         }
@@ -97,7 +97,7 @@ class MarkdownTableTest {
         // scroll around the whole reply. Without a table, so that this measures the check
         // and not the renderer. If the check above can pass either way it is worth nothing.
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 Box(Modifier.width(360.dp)) {
                     MarkdownText(
                         content = paragraph,

@@ -111,7 +111,7 @@ class ReportSheetTest {
 
     private fun showSheet(onSubmit: (ReportReason, String) -> Unit = { _, _ -> }) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ReportSheet(
                     modelName = "Hammer2.1-1.5B-Q4_0",
                     replyText = "The moon is made of cheese.",

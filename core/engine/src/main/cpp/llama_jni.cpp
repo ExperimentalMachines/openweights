@@ -605,7 +605,6 @@ Java_io_github_alpharomercoma_openweights_core_engine_LlamaBridge_nativeGenerate
     jfloat top_p,
     jfloat min_p,
     jfloat repeat_penalty,
-    jint repeat_last_n,
     jint seed,
     jint max_tokens,
     jint reasoning_budget,
@@ -670,7 +669,6 @@ Java_io_github_alpharomercoma_openweights_core_engine_LlamaBridge_nativeGenerate
     sampler.top_p          = top_p;
     sampler.min_p          = min_p;
     sampler.repeat_penalty = repeat_penalty;
-    sampler.repeat_last_n  = repeat_last_n;
     sampler.seed           = static_cast<uint32_t>(seed);
     sampler.max_tokens     = max_tokens;
     sampler.reasoning_budget = reasoning_budget;

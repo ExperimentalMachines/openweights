@@ -27,30 +27,27 @@ package io.github.alpharomercoma.openweights.core.common.model
  */
 object Phi4Prompt {
 
-    fun render(
-        messages: List<ChatMessage>,
-        tools: List<ToolDefinition> = emptyList(),
-        addGenerationPrompt: Boolean = true,
-    ): String = buildString {
-        val leadingSystem = messages.firstOrNull()?.takeIf { it.role == ChatRole.SYSTEM }
-        if (tools.isNotEmpty()) {
-            append("<|system|>").append(leadingSystem?.text.orEmpty())
-            append("<|tool|>[")
-            tools.forEachIndexed { index, tool ->
-                if (index > 0) append(", ")
-                append(tool.asToolJson())
+    fun render(messages: List<ChatMessage>, tools: List<ToolDefinition> = emptyList()): String =
+        buildString {
+            val leadingSystem = messages.firstOrNull()?.takeIf { it.role == ChatRole.SYSTEM }
+            if (tools.isNotEmpty()) {
+                append("<|system|>").append(leadingSystem?.text.orEmpty())
+                append("<|tool|>[")
+                tools.forEachIndexed { index, tool ->
+                    if (index > 0) append(", ")
+                    append(tool.asToolJson())
+                }
+                append("]<|/tool|>").append("<|end|>")
+            } else if (leadingSystem != null) {
+                append("<|system|>").append(leadingSystem.text).append("<|end|>")
             }
-            append("]<|/tool|>").append("<|end|>")
-        } else if (leadingSystem != null) {
-            append("<|system|>").append(leadingSystem.text).append("<|end|>")
-        }
 
-        messages.forEachIndexed { index, message ->
-            if (index == 0 && leadingSystem != null) return@forEachIndexed
-            append("<|").append(message.role.wireName).append("|>")
-            append(message.text).append("<|end|>")
-        }
+            messages.forEachIndexed { index, message ->
+                if (index == 0 && leadingSystem != null) return@forEachIndexed
+                append("<|").append(message.role.wireName).append("|>")
+                append(message.text).append("<|end|>")
+            }
 
-        if (addGenerationPrompt) append("<|assistant|>")
-    }
+            append("<|assistant|>")
+        }
 }

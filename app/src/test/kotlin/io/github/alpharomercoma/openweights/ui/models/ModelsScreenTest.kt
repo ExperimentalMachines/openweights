@@ -174,7 +174,7 @@ class ModelsScreenTest {
         onRetryDownload: (String) -> Unit = {},
     ) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ModelsScreen(
                     state = ModelsUiState(models = models, downloads = downloads),
                     onUse = {},

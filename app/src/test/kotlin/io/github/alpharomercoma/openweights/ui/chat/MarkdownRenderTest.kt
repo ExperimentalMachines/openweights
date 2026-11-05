@@ -54,7 +54,7 @@ class MarkdownRenderTest {
      */
     private fun render(markdown: String, until: String) {
         compose.setContent {
-            OpenWeightsTheme(themeMode = ThemeMode.DARK, dynamicColor = false) {
+            OpenWeightsTheme(themeMode = ThemeMode.DARK) {
                 MarkdownText(content = markdown)
             }
         }

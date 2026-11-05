@@ -66,7 +66,7 @@ class ToolsScreenTest {
             ),
         )
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ToolsScreen(state.value, onToggle = { _, on ->
                     state.value =
                         state.value.copy(tools = state.value.tools.map { it.copy(isEnabled = on) })
@@ -241,7 +241,7 @@ class ToolsScreenTest {
         onSearchResults: (Int) -> Unit = {},
     ) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ToolsScreen(
                     state = ToolsUiState(
                         tools = listOf(

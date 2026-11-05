@@ -41,7 +41,7 @@ import java.io.File
  *
  * Both are measured here, through the engine that ships. What this prints that a table of
  * wall clocks does not is the **crossover**, the prompt-to-answer ratio at which the two
- * processors cost the same wall time. `Offload.AUTO` is a threshold on exactly that number,
+ * processors cost the same wall time. `automaticLayers` is a threshold on exactly that number,
  * so the benchmark should produce it rather than leave it to be solved by hand off a table.
  *
  * For a turn of P prompt tokens and G generated tokens the wall time is `P/pp + G/tg`, so

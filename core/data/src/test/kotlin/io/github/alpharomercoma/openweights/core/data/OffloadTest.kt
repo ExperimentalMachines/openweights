@@ -28,44 +28,32 @@ import org.junit.Test
 class OffloadTest {
     @Test
     fun `a device with no gpu is always on the cpu`() {
-        Offload.entries.forEach { choice ->
-            assertThat(choice.layersFor(hasGpu = false, promptTokens = 9_000, generatedTokens = 1))
-                .isEqualTo(0)
-        }
-    }
-
-    @Test
-    fun `asking for one processor gets that processor whatever the history says`() {
-        // Chat-shaped history, which auto would answer with the CPU.
-        assertThat(Offload.GPU.layersFor(hasGpu = true, promptTokens = 16, generatedTokens = 300))
-            .isGreaterThan(0)
-        // Agent-shaped history, which auto would answer with the GPU.
-        assertThat(Offload.CPU.layersFor(hasGpu = true, promptTokens = 2_017, generatedTokens = 46))
+        assertThat(automaticLayers(hasGpu = false, promptTokens = 9_000, generatedTokens = 1))
             .isEqualTo(0)
     }
 
     @Test
-    fun `auto puts a model that has only ever chatted on the cpu`() {
+    fun `it puts a model that has only ever chatted on the cpu`() {
         // The chat turn as measured: sixteen tokens in, three hundred out. The CPU finished
         // it in 6.4 seconds and the GPU took 10.2.
-        assertThat(Offload.AUTO.layersFor(hasGpu = true, promptTokens = 16, generatedTokens = 300))
+        assertThat(automaticLayers(hasGpu = true, promptTokens = 16, generatedTokens = 300))
             .isEqualTo(0)
     }
 
     @Test
-    fun `auto puts a model that reads more than it writes on the gpu`() {
+    fun `it puts a model that reads more than it writes on the gpu`() {
         // The agent turn as measured: two thousand tokens of conversation and search
         // results in, forty-six out. The GPU finished it in 4.6 seconds and the CPU 14.5.
         assertThat(
-            Offload.AUTO.layersFor(hasGpu = true, promptTokens = 2_017, generatedTokens = 46),
+            automaticLayers(hasGpu = true, promptTokens = 2_017, generatedTokens = 46),
         ).isGreaterThan(0)
     }
 
     @Test
-    fun `auto stays on the cpu until there is something to go on`() {
+    fun `it stays on the cpu until there is something to go on`() {
         // A fresh install has nothing recorded. Being slower to write is felt on the first
         // reply; being slower to read is not felt at all until a conversation is long.
-        assertThat(Offload.AUTO.layersFor(hasGpu = true, promptTokens = 0, generatedTokens = 0))
+        assertThat(automaticLayers(hasGpu = true, promptTokens = 0, generatedTokens = 0))
             .isEqualTo(0)
     }
 
@@ -73,10 +61,10 @@ class OffloadTest {
     fun `the crossover sits at the demanding end of the models measured`() {
         // Gemma crosses at 1.4 and Qwen at 10, and the constant is the second. Either side
         // of it by a hair, so it cannot drift unnoticed.
-        assertThat(Offload.AUTO.layersFor(hasGpu = true, promptTokens = 999, generatedTokens = 100))
+        assertThat(automaticLayers(hasGpu = true, promptTokens = 999, generatedTokens = 100))
             .isEqualTo(0)
         assertThat(
-            Offload.AUTO.layersFor(hasGpu = true, promptTokens = 1_001, generatedTokens = 100),
+            automaticLayers(hasGpu = true, promptTokens = 1_001, generatedTokens = 100),
         ).isGreaterThan(0)
     }
 
@@ -85,13 +73,7 @@ class OffloadTest {
         // Five hundred tokens of conversation and a hundred and fifty of answer. The old
         // constant sent this to the GPU, where Qwen took three seconds longer, and charged
         // eleven extra seconds of loading for the privilege.
-        assertThat(Offload.AUTO.layersFor(hasGpu = true, promptTokens = 500, generatedTokens = 150))
+        assertThat(automaticLayers(hasGpu = true, promptTokens = 500, generatedTokens = 150))
             .isEqualTo(0)
-    }
-
-    @Test
-    fun `an offload written by a newer build falls back to auto`() {
-        assertThat(Offload.fromName("NPU")).isEqualTo(Offload.AUTO)
-        assertThat(ModelPreferences().offload).isEqualTo(Offload.AUTO.name)
     }
 }

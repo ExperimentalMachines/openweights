@@ -1809,7 +1809,7 @@ private fun CompactionMarker(note: String) {
 @Preview(showBackground = true, backgroundColor = 0xFF0D0E10)
 @Composable
 private fun ChatScreenPreview() {
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         ChatScreen(
             state = ChatUiState(
                 modelName = "LFM2.5-2.6B-Q4_K_M",

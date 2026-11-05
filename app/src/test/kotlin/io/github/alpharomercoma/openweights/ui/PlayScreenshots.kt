@@ -232,7 +232,6 @@ class PlayScreenshots {
         compose.setContent {
             OpenWeightsTheme(
                 themeMode = if (dark) ThemeMode.DARK else ThemeMode.LIGHT,
-                dynamicColor = false,
             ) { content() }
         }
         // Markdown is parsed off the composition and swapped in when it finishes, so a

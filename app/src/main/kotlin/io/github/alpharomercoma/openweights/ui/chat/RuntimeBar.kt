@@ -174,7 +174,7 @@ private const val CHEVRON = 18
 @Preview(showBackground = true, backgroundColor = 0xFF0D0E10)
 @Composable
 private fun RuntimeBarPreview() {
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             RuntimeBar(
                 state = ChatUiState(

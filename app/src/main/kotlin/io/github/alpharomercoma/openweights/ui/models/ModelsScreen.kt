@@ -396,7 +396,7 @@ private fun ModelRow(model: LocalModel, onUse: () -> Unit, onDelete: () -> Unit)
 @Preview(showBackground = true, backgroundColor = 0xFF0D0E10)
 @Composable
 private fun ModelsScreenPreview() {
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         ModelsScreen(
             state = ModelsUiState(
                 downloads = listOf(

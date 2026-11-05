@@ -113,7 +113,7 @@ class ToolStepBlockTest {
 
     private fun showStep(step: AgentStep) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) { ToolStepBlock(step = step) }
+            OpenWeightsTheme { ToolStepBlock(step = step) }
         }
     }
 
@@ -123,7 +123,7 @@ class ToolStepBlockTest {
         // A program rendered as prose has no language, no colours and nothing to copy, and
         // copying is the whole reason to show generated code to a person at all.
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ToolStepBlock(
                     step = AgentStep.Ran(
                         call = ToolCall(
@@ -161,7 +161,7 @@ class ToolStepBlockTest {
         // The counterweight. Only the sandbox gets the editor treatment; a search result is
         // prose and should stay prose.
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ToolStepBlock(
                     step = AgentStep.Ran(
                         call = ToolCall(

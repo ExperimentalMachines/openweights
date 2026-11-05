@@ -85,7 +85,7 @@ class MemoryEditOnDeviceTest {
 
     private fun show(onSave: (String) -> Unit = {}) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 MemoryEditDialog(
                     original = "Prefers Kotlin",
                     onSave = onSave,

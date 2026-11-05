@@ -27,17 +27,16 @@ package io.github.alpharomercoma.openweights.core.common.model
  */
 object SmolLm2Prompt {
 
-    fun render(messages: List<ChatMessage>, addGenerationPrompt: Boolean = true): String =
-        buildString {
-            if (messages.firstOrNull()?.role != ChatRole.SYSTEM) {
-                appendBlock("system", DEFAULT_SYSTEM)
-            }
-            // Every message renders under its own role, wherever it sits: a later system
-            // message is an ordinary turn, and a tool result renders under "tool" because
-            // that is what the template does with a role it never heard of.
-            messages.forEach { appendBlock(it.role.wireName, it.text) }
-            if (addGenerationPrompt) append("<|im_start|>assistant\n")
+    fun render(messages: List<ChatMessage>): String = buildString {
+        if (messages.firstOrNull()?.role != ChatRole.SYSTEM) {
+            appendBlock("system", DEFAULT_SYSTEM)
         }
+        // Every message renders under its own role, wherever it sits: a later system
+        // message is an ordinary turn, and a tool result renders under "tool" because
+        // that is what the template does with a role it never heard of.
+        messages.forEach { appendBlock(it.role.wireName, it.text) }
+        append("<|im_start|>assistant\n")
+    }
 
     private fun StringBuilder.appendBlock(role: String, content: String) {
         append("<|im_start|>").append(role).append('\n').append(content).append("<|im_end|>\n")

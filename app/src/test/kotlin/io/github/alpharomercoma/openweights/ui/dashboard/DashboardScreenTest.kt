@@ -130,7 +130,7 @@ class DashboardScreenTest {
 
     private fun showDashboard(summary: UsageSummary) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) { DashboardScreen(summary = summary) }
+            OpenWeightsTheme { DashboardScreen(summary = summary) }
         }
     }
 }

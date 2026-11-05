@@ -108,7 +108,6 @@ struct SamplerConfig {
     float top_p         = 0.95f;
     float min_p         = 0.05f;
     float repeat_penalty = 1.1f;
-    int32_t repeat_last_n = 64;
     uint32_t seed          = LLAMA_DEFAULT_SEED;
     int32_t max_tokens    = 0;  // 0 = until EOG or context is full
     /**
@@ -610,9 +609,6 @@ private:
      * while the context is alive is a use-after-free. See `attach_threadpools`.
      */
     ggml_threadpool_t threadpool_ = nullptr;
-
-    /** How wide it was built, which is the widest either half will ever ask for. */
-    int32_t pool_threads_ = 0;
 
     /** Builds it once, wide enough for both halves, and hands it to the context. */
     void attach_threadpools(int32_t n_threads, int32_t n_threads_batch);

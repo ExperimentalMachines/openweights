@@ -257,7 +257,7 @@ class ParameterSheetTest {
         onReset: () -> Unit = {},
     ) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 ParameterSheet(
                     modelName = "LFM2.5-2.6B-Q4_K_M",
                     preferences = ModelPreferences(),

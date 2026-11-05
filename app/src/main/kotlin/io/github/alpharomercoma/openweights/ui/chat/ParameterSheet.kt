@@ -713,7 +713,7 @@ private fun imageDetailLabel(tokens: Int): String = when (tokens) {
 @Preview(showBackground = true, backgroundColor = 0xFF0D0E10)
 @Composable
 private fun ParameterSheetPreview() {
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         ParameterSheet(
             modelName = "LFM2.5-2.6B-Q4_K_M",
             preferences = ModelPreferences(),

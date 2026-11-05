@@ -91,7 +91,7 @@ fun AccentButton(
 @Preview
 @Composable
 private fun AccentButtonPreview() {
-    OpenWeightsTheme(dynamicColor = false) {
+    OpenWeightsTheme {
         AccentButton(onClick = {}, modifier = Modifier.padding(16.dp)) { Text("New chat") }
     }
 }

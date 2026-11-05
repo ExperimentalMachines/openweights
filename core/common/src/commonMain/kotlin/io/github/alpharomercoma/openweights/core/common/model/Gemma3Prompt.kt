@@ -36,7 +36,6 @@ object Gemma3Prompt {
      */
     fun render(
         messages: List<ChatMessage>,
-        addGenerationPrompt: Boolean = true,
         includeBos: Boolean = true,
         /** Emit assistant turns exactly as stored; see Llama32Prompt for why. */
         verbatimHistory: Boolean = false,
@@ -55,6 +54,6 @@ object Gemma3Prompt {
             append(if (keepRaw) message.text else message.text.trim())
             append("<end_of_turn>\n")
         }
-        if (addGenerationPrompt) append("<start_of_turn>model\n")
+        append("<start_of_turn>model\n")
     }
 }

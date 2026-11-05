@@ -95,7 +95,7 @@ class RuntimeBarTest {
         onClick: () -> Unit = {},
     ) {
         compose.setContent {
-            OpenWeightsTheme(dynamicColor = false) {
+            OpenWeightsTheme {
                 RuntimeBar(
                     state = ChatUiState(
                         modelName = "LFM2.5-1.2B-Q4_K_M",
