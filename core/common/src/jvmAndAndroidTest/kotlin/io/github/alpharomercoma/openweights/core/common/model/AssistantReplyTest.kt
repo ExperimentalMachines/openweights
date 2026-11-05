@@ -132,32 +132,27 @@ class AssistantReplyTest {
     }
 
     @Test
-    fun `a block opened again straight after the close is not the answer`() {
-        // LFM3 1.7B, a turn out of rounds, on 2 of 160 questions: closed at once with the note,
-        // it opens a block of its own, and the engine closes that at once too.
-        val note = "No more tool calls."
+    fun `the engine's note in a second block is not the answer`() {
+        // LFM3 1.7B, a turn out of rounds, on 1 of 160 questions: closed at once with the note,
+        // it opened a block of its own, and the engine closed that at once too.
+        val note = PAST_LIMIT_NOTE
         val closedTwice = "\n\n$note\n</think>\n<think>\n\n$note\n</think>\nBoston."
-        val prefilled = parseAssistantReply(closedTwice)
-        val written = parseAssistantReply("<think>why</think>\n<think>\nmore\n</think>\nBoston.")
 
-        assertThat(prefilled.answer).isEqualTo("Boston.")
-        assertThat(written.answer).isEqualTo("Boston.")
+        assertThat(parseAssistantReply(closedTwice).answer).isEqualTo("Boston.")
     }
 
     @Test
-    fun `tags the answer is talking about stay in the answer`() {
+    fun `tags the answer is about stay in the answer`() {
         val spoken = parseAssistantReply("<think>why</think>\n<think> and </think> mark the block.")
         val later = parseAssistantReply("<think>why</think>\nThe tags are <think>\nand </think>.")
+        // Asked to print a block, which reads exactly like a model reopening one but for the note.
+        val printed = parseAssistantReply("<think>why</think>\n<think>\nprint this\n</think>")
+        val closing = parseAssistantReply("<think>why</think>\nWrite </think> to close a block.")
 
         assertThat(spoken.answer).isEqualTo("<think> and </think> mark the block.")
         assertThat(later.answer).isEqualTo("The tags are <think>\nand </think>.")
-    }
-
-    @Test
-    fun `a closing tag later in the answer is still the answer's`() {
-        val reply = parseAssistantReply("<think>why</think>\nWrite </think> to close a block.")
-
-        assertThat(reply.answer).isEqualTo("Write </think> to close a block.")
+        assertThat(printed.answer).isEqualTo("<think>\nprint this\n</think>")
+        assertThat(closing.answer).isEqualTo("Write </think> to close a block.")
     }
 
     @Test

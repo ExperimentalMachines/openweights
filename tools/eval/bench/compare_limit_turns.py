@@ -14,6 +14,7 @@ sys.path.insert(0, 'tools/eval/bench')
 import grade_decisions as g
 
 OPEN, CLOSE = '<think>', '</think>'
+PAST_LIMIT_NOTE = 'No more tool calls. My reply will be only the answer, or that I could not find it.'
 MARKUP = [re.compile(r'<\|tool_call_start\|>.*?<\|tool_call_end\|>', re.S), re.compile(r'<tool_call>.*?</tool_call>', re.S)]
 # Reasoning-shaped prose in the part of the reply the user reads. A rough count, the same for every run.
 SPILL = re.compile(r"\bWait\b|\? No\b|\bno, that|\bLet me (check|think|re|correct|search|see)|\bI need to\b|\bThe user\b|\bHmm\b|\bI should\b|\bMaybe\b|the (tool|search) (returned|call|tool|results? (is|are) not)|tool calls?\b", re.I)
@@ -24,7 +25,7 @@ def repeated(t):
     while True:
         n = r.lstrip('\n')
         if n.startswith(CLOSE): r = n[len(CLOSE):]; seen = True
-        elif n.startswith(OPEN + '\n') and CLOSE in n: r = n.split(CLOSE, 1)[1]; seen = True
+        elif n.startswith(OPEN) and CLOSE in n and n[len(OPEN):].split(CLOSE, 1)[0].strip() == PAST_LIMIT_NOTE: r = n.split(CLOSE, 1)[1]; seen = True
         else: return n if seen else r
 
 def parse(raw):

@@ -24,6 +24,7 @@ import io.github.alpharomercoma.openweights.core.common.context.readPlan
 import io.github.alpharomercoma.openweights.core.common.model.ChatMessage
 import io.github.alpharomercoma.openweights.core.common.model.ChatRole
 import io.github.alpharomercoma.openweights.core.common.model.MessagePart
+import io.github.alpharomercoma.openweights.core.common.model.PAST_LIMIT_NOTE
 import io.github.alpharomercoma.openweights.core.common.model.SamplerParams
 import io.github.alpharomercoma.openweights.core.common.model.ToolCall
 import io.github.alpharomercoma.openweights.core.common.model.assistantHistoryText
@@ -1728,10 +1729,6 @@ internal const val TOOL_PASS_REASONING_BUDGET = 128
 
 /** Thinking tokens on the pass of a turn that is out of rounds. See [deciding]. */
 internal const val PAST_LIMIT_REASONING_BUDGET = 0
-
-/** What the model is made to say on such a pass, where it has nothing left to act on. */
-internal const val PAST_LIMIT_NOTE =
-    "No more tool calls. My reply will be only the answer, or that I could not find it."
 
 /**
  * The same results, with the last one carrying word that the tools are finished.

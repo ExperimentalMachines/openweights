@@ -40,6 +40,17 @@ class EngineMessagesTest {
     }
 
     @Test
+    fun `a user's own prompt decides the language`() {
+        // Told to always answer in English with this line behind it, LFM3 1.7B answered in Spanish
+        // and German on the Mac.
+        val own = ModelPreferences(systemPrompt = "Always answer in English.")
+
+        val head = ChatUiState(toolsAvailable = true, preferences = own).prefixMessages().single()
+
+        assertThat(head.text).doesNotContain("Reply in the language of the question.")
+    }
+
+    @Test
     fun `a model whose template cannot render tools is not told it has any`() {
         val state = ChatUiState(
             transcript = transcript(1),

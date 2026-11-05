@@ -198,7 +198,8 @@ interface ConversationFilingDao {
      * Written as `UPDATE` rather than read-modify-write on purpose. The read-then-write
      * shape loses whichever of two concurrent edits finishes first — pin from the sheet
      * while a reply lands in the same conversation, and the reply's `touch` writes back a
-     * row it read before the pin. One statement per column also means none of these touch [ConversationEntity.updatedAt],
+     * row it read before the pin. One statement per column also means none of these touch
+     * [ConversationEntity.updatedAt],
      * which is what the day headings are made of: filing a chat is not talking in it, and a
      * chat that jumped to "Today" because it was renamed would be lying about itself.
      */

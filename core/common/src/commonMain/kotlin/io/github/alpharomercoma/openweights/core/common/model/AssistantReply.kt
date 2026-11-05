@@ -91,15 +91,23 @@ fun parseAssistantReply(raw: String): AssistantReply {
 }
 
 /**
- * What follows a block, less any closing tags or further blocks straight after it.
+ * What a model on a turn out of rounds is made to say as its thinking closes. Here so the parser
+ * can tell a block the engine closed at once from anything a reply could mean to print.
+ */
+const val PAST_LIMIT_NOTE: String =
+    "No more tool calls. My reply will be only the answer, or that I could not find it."
+
+/**
+ * What follows a block, less any closing tags or engine-closed blocks straight after it.
  *
  * Qwen3 1.7B writes its own tag right after the one the reasoning budget wrote for it, 10 to 14
  * of 20 replies on an SM8850 (2026-11-04), and it showed as the start of the answer. LFM3 1.7B,
- * closed at once on a turn out of rounds, opens a block of its own on 2 of 160, and the engine
- * closes that too. Only at the very start: a tag further on is something the answer is saying, and
- * so is an opening tag with text on its line ("<think> and </think> mark the block"). Text with no
- * repeat comes back untouched, newlines and all, since the callers own those. A part of a tag is
- * left alone: the tag is one token in every model checked, and a reply could really be `</`.
+ * closed at once on a turn out of rounds, opened a block of its own on 1 of 160, and the engine
+ * closed that too, so a block holding only that note goes as well. Only at the very start: a tag
+ * further on is something the answer is saying, and any other block is one it may have been asked
+ * to print. Text with no repeat comes back untouched, newlines and all, since the callers own
+ * those. A part of a tag is left alone: the tag is one token in every model checked, and a reply
+ * could really be `</`.
  */
 private fun String.withoutRepeatedClose(): String {
     var rest = this
@@ -108,13 +116,17 @@ private fun String.withoutRepeatedClose(): String {
         val next = rest.trimStart('\n')
         when {
             next.startsWith(CLOSE_TAG) -> rest = next.removePrefix(CLOSE_TAG)
-            next.startsWith(OPEN_TAG + "\n") && CLOSE_TAG in next ->
-                rest = next.substringAfter(CLOSE_TAG)
+            next.isNoteBlock() -> rest = next.substringAfter(CLOSE_TAG)
             else -> return if (repeated) next else rest
         }
         repeated = true
     }
 }
+
+/** Whether this opens with a block holding the note and nothing else. */
+private fun String.isNoteBlock(): Boolean = startsWith(OPEN_TAG) &&
+    CLOSE_TAG in this &&
+    substringBefore(CLOSE_TAG).removePrefix(OPEN_TAG).trim() == PAST_LIMIT_NOTE
 
 /**
  * The reply exactly as the model wrote it, ready to be sent back as history.

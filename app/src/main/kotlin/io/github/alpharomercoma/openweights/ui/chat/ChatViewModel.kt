@@ -3946,7 +3946,9 @@ private enum class StepOutcome {
  * Last, which is where it was measured. LFM3 1.7B with the prompt as it stood answered most
  * questions in other languages in English, search or no search, and followed the question on 2
  * of 8 replies against 5 of 8 with this line, on the Mac (2026-11-05). LFM2.5 1.2B already
- * followed it and did not change. Filipino stayed in English on LFM3 either way.
+ * followed it and did not change. Filipino stayed in English on LFM3 either way. Explicit requests
+ * still win, such as a translation or a poem in Spanish. A user's own prompt does not, since LFM3 told
+ * to always answer in English with this line behind it answered in Spanish, so it stays out then.
  */
 private const val REPLY_LANGUAGE: String = "Reply in the language of the question."
 
@@ -3987,7 +3989,7 @@ internal fun ChatUiState.prefixMessages(toolPromptOverride: String? = null): Lis
             toolPromptOverride ?: preferences.toolPrompt,
             anyTools = toolsAvailable,
         ),
-        REPLY_LANGUAGE,
+        REPLY_LANGUAGE.takeIf { preferences.systemPrompt.isBlank() },
     ).joinToString("\n\n")
 
     return instructions
