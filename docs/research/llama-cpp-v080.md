@@ -295,9 +295,9 @@ are end-of-row snapshots that cannot say how much of it was heat.
   does not isolate the tool, and 75 and 76 hide 11 wins and 12 losses each way. 18 of those 54 fetches failed: seven 404s, five
   pages with no text extracted, two rejected PDFs, one each of 401, 403, 429 and a read failure. The PDFs are the tool's own limit
   and the five may be, so this deserves a look. The refused call's result read as a broken tool, and it now says it did not run.
-- **The system prompt: one line.** With no search involved, LFM3 answered most questions in other languages in English. Adding
-  "Reply in the language of the question." took it from 2 of 8 answered replies following the question to 5 of 8, on the Mac on
-  these prompts, and barely moved LFM2.5, which already followed it. Filipino stayed in English on LFM3. Translations and a poem
+- **The system prompt: one line.** LFM3 answered most questions in other languages in English, with or without a search result to
+  read. Adding "Reply in the language of the question." took it from 2 of 8 replies following the question to 5 of 8 on the Mac:
+  four direct questions (1 to 2) and four with a recorded search result (1 to 3). It barely moved LFM2.5, which already followed it. Filipino stayed in English on LFM3. Translations and a poem
   in Spanish still came out as asked. It stays out when the user has written their own prompt, because LFM3 told to always answer
   in English with the line behind it answered in Spanish and German. Records: `mac/lg-*` and `mac/tr-*` in the results folder.
 - **The turn loop: this was most of it.** Passes past the limit had no cap on thinking. All 6 replies cut off and 7 of the 8 that
@@ -316,6 +316,13 @@ reused 2,192 to 2,980 (`mac/follow-*`).
 so Qwen3 1.7B Q8_0 and LFM2.5 2.6B Q4_K_M ran the 34 hardest questions on the same phone: no errors, no crashes, no "Unexpected empty
 grammar stack" in the log, with the block closed 18 times at 128 and 7 at nothing (`think-log.txt`). Qwen3 ended on a call on 3 of 34 and
 LFM2.5 2.6B on 1. These ran only the new build, so they are a check for failures and say nothing about accuracy against the old one.
+
+**Regression on the final code.** `ktlintCheck detekt test jvmTest`, `:app:assembleDebug` and `:app:bundleRelease` pass, with 2,173 tests and
+`verifyJniSymbols` finding all 17 names and 2 signatures. `ChatProvenanceTest` failed once while R8 ran alongside it, then passed a full rerun
+and six runs alone, so it looks timing-sensitive under load and was not changed. On the SM8650, engine device tests 25 passed, 1 skipped for
+want of an audio model, 0 failed; `ToolTurnOnDeviceTest`, `HarnessSmokeTest` and `LongConversationOnDeviceTest` passed. The bundle signed with
+the upload key, installed as a universal APK under the real package name, answered on the compiled model, the GGUF and LFM3 with an empty crash
+buffer. Those device runs came before the last parser and prompt-guard edits except the release smoke, which ran on the final commit.
 
 **What was deleted.** Five search experiments that were off in the app (`honoursGate`, `honoursUnresolved`, `judgesDenials`,
 `judgesFollowUps`, `readsTopResult`) with `Session::judge` and `JudgeQuestions`; `speculation`, `kvCacheQuantized` and
@@ -378,7 +385,7 @@ their size (`repack-buffers.cpp` beside that record), so a phone with a wider ve
   carry no reasoning. This is the main thing between LFM3 and the default, and it is not fixed.
 - **After a forced close a model can still think in the reply.** 6 of 160 on LFM3, and one of them closes a block a second time
   further into the reply, which shows as a stray tag.
-- **Non-English replies on LFM3** still came back in English on 3 of 8 tried, Filipino among them.
+- **Non-English replies on LFM3** still came back in English on 3 of the 8 answered replies tried, Filipino among them.
 - **Thinking in a custom or long conversation.** The budget on more passes and the language line were measured on single questions.
 - **A tool call written inside the reasoning.** LFM3 and Qwen3.5 2B list their call tag as an end tag, so they are covered.
   LFM2.5 and Qwen3 1.7B do not, and a host replay on LFM2.5 2.6B shows the same throw if a call came before the block

@@ -302,6 +302,19 @@ class TurnRepairsTest {
     }
 
     @Test
+    fun `a refusal for want of live data is searched`() = runBlocking<Unit> {
+        engine.scripted += ScriptedPass(
+            "I don’t have real-time weather data at the moment, so I can’t give the conditions.",
+        )
+        engine.scripted += ScriptedPass("It is 18 degrees and clear in Tokyo.")
+
+        val reply = answering("what is the weather in tokyo today", withTools = true)
+
+        assertThat(engine.prompts[1].last().role).isEqualTo(ChatRole.TOOL)
+        assertThat(reply).contains("18 degrees")
+    }
+
+    @Test
     fun `the app searches once a turn, and a model that announces twice is shown its second`() =
         runBlocking<Unit> {
             // One allowance, like every repair: a model handed real results that announces

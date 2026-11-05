@@ -194,7 +194,7 @@ object CapabilityDenial {
      * ("my capabilities are focused on searching the web") and would flip class.
      */
     private val LOOKUP_SHAPED = Regex(
-        "latest|up.?to.?date|real.?time|current |meta data|in stock|price" +
+        "latest|up.?to.?date|real.?time|\\blive |current |meta data|in stock|price" +
             // "biograph": the mid-conversation lament for an unrecognised person names
             // the genre, not the act of looking up — "a tool that can instantly provide
             // a biography" — and without this it fell through to the prose-only push,
@@ -210,7 +210,12 @@ object CapabilityDenial {
      */
     private val KNOWLEDGE = Regex(
         "enough information|information (about|on)|familiar with|details (about|on)" +
-            "|public information|record of|not aware of",
+            "|public information|record of|not aware of" +
+            // "I don't have real-time weather data": LFM2.5 1.2B on the weather, a rate and a
+            // price, on both runtimes, with web_search in hand. Replayed over 171 recorded
+            // replies with no call, this reads 4 and they were all this shrug.
+            "|(real.?time|up.?to.?date|live) ([\\w-]+ ){0,3}?(data|information|info|updates?|" +
+            "results?|prices?|rates?|figures|feeds?|access|reports?)\\b",
     )
 
     /** A model asking what was meant is conversing, not lamenting; never push against it. */

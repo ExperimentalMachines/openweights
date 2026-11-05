@@ -247,4 +247,31 @@ class CapabilityDenialTest {
         assertThat(CapabilityDenial.retryRequest(WebSearchTool.NAME))
             .contains(WebSearchTool.NAME)
     }
+
+    @Test
+    fun `saying it has no live data is a lament, typed with the model's own apostrophe`() {
+        // LFM2.5 1.2B on a phone, asked the weather, a rate and a price, with web_search in hand.
+        listOf(
+            "I don’t have real-time weather data at the moment, so I can’t provide the conditions.",
+            "I don’t have real-time financial data at the moment, so I can’t give the rate.",
+            "I don't have real-time market data access, but the price is typically high.",
+            "Unfortunately, I don’t have access to real-time event results for that tournament.",
+            "I don't have live sports results for this week.",
+            "I can't give you up-to-date prices.",
+        ).forEach { reply ->
+            assertThat(CapabilityDenial.lamentsUnknown(reply)).isTrue()
+            assertThat(CapabilityDenial.fitting(reply, "the weather")).contains(WebSearchTool.NAME)
+        }
+    }
+
+    @Test
+    fun `live data that is not a lament stays an answer`() {
+        // The user's own things stay private, whatever the model calls them.
+        assertThat(
+            CapabilityDenial.lamentsUnknown("I don't have real-time access to your calendar."),
+        ).isFalse()
+        // Said about the thing asked for, with no claim about the model.
+        assertThat(CapabilityDenial.lamentsUnknown("Real-time data is what a trading desk uses."))
+            .isFalse()
+    }
 }
