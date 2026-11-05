@@ -93,7 +93,9 @@ internal abstract class HtmlSearchProvider(private val client: OkHttpClient) : S
  *
  * The real address hides in the tracking redirect: every organic anchor points at
  * `r.search.yahoo.com/...RU=<encoded url>/...`, and the `RU` segment is the destination.
- * Organic anchors are the ones carrying an `h3.title`; the site navigation carries none.
+ * Organic anchors are the ones tied to an `h3.title`, which the site navigation is not. The
+ * link sat around the heading in the page captured on 2026-08-31 and inside it in the page
+ * captured on 2026-11-06, which read as no results at all, so both layouts are read.
  */
 internal class YahooProvider(client: OkHttpClient) : HtmlSearchProvider(client) {
     override val id = "yahoo"
@@ -106,7 +108,9 @@ internal class YahooProvider(client: OkHttpClient) : HtmlSearchProvider(client) 
         .build()
 
     override fun results(page: org.jsoup.nodes.Document): List<Element> =
-        page.select("a[href*=/RU=]").filter { it.selectFirst("h3.title") != null }
+        page.select("a[href*=/RU=]").filter {
+            it.selectFirst("h3.title") != null || it.parent()?.`is`("h3.title") == true
+        }
 
     override fun hit(block: Element): SearchHit? {
         val destination = REDIRECT_TARGET.find(block.attr("href"))?.groupValues?.get(1)
@@ -115,13 +119,15 @@ internal class YahooProvider(client: OkHttpClient) : HtmlSearchProvider(client) 
         // The ad system resolves through Bing's click tracker; a result that does is paid
         // placement, not an answer.
         if (!destination.startsWith("http") || ADVERT in destination) return null
-        val title = block.textOf("h3.title").ifEmpty { return null }
+        // The label, because inside the heading the anchor's text starts with the address.
+        val title = block.textOf("h3.title").ifEmpty { block.attr("aria-label").trim() }
+            .ifEmpty { return null }
         // The snippet lives beside the anchor, not inside it. Walking a few parents up
         // finds the result's own card; further than that would reach the page and pair
         // every result with the first snippet on it.
         val snippet = block.parents().take(PARENT_HOPS)
             .firstNotNullOfOrNull { parent ->
-                parent.selectFirst("p[class*=fc-dustygray]")?.text()?.trim()
+                parent.selectFirst("p[class*=fc-dustygray], p.s-desc")?.text()?.trim()
                     ?.takeIf { it.isNotEmpty() }
             }
             .orEmpty()

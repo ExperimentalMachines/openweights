@@ -65,4 +65,49 @@ class YahooParseTest {
             assertThat(hit.url).doesNotContain("shopping.yahoo.com")
         }
     }
+
+    /**
+     * The layout Yahoo served on 2026-11-06 for "capital of australia": the link now sits
+     * inside the heading rather than around it, with the address in the heading's text and
+     * the snippet in `p.s-desc`. The old selectors read none of it, so the third engine in
+     * the chain answered nothing and nobody could see why.
+     */
+    private val current = checkNotNull(
+        javaClass.classLoader?.getResourceAsStream("yahoo-search-2026-11.html"),
+    ).bufferedReader().readText()
+
+    @Test
+    fun `the current layout gives results with real destinations`() {
+        val hits = provider.parse(current, limit = 8)
+
+        assertThat(hits).isNotEmpty()
+        hits.forEach { assertThat(it.url).doesNotContain("r.search.yahoo.com") }
+        assertThat(hits.map { it.url }.any { "wikipedia.org" in it }).isTrue()
+    }
+
+    @Test
+    fun `the current layout carries its snippets`() {
+        val hits = provider.parse(current, limit = 8)
+
+        assertThat(hits.all { it.snippet.isNotBlank() }).isTrue()
+        assertThat(hits.any { "Canberra" in it.snippet }).isTrue()
+    }
+
+    @Test
+    fun `a current title is the title and not the address above it`() {
+        val hits = provider.parse(current, limit = 8)
+
+        hits.forEach {
+            assertThat(it.title).isNotEmpty()
+            assertThat(it.title).doesNotContain("https://")
+            assertThat(it.title).doesNotContain("\u203A")
+        }
+    }
+
+    @Test
+    fun `each current result keeps its own snippet`() {
+        val snippets = provider.parse(current, limit = 8).map { it.snippet }
+
+        assertThat(snippets.toSet()).hasSize(snippets.size)
+    }
 }
