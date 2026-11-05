@@ -1,0 +1,31 @@
+# Device tests on the 16 KB emulator at 5a91605f. 0 is passed, -4 is a skip, -2 is failed.
+
+## LFM2.5 GGUF as model.gguf, no Qwen file
+inst-engine-set.txt 0=pass -3=ignored -4=assumption -2=fail: {'-4': 7, '0': 14}
+  skip LlamaCppEngineTest#reusesCachedPrefixOnFollowUpTurns
+  skip LlamaCppEngineTest#reusesCachedPrefixWhenThePromptRepeats
+  skip PrefillReuseTest#measuresWhatEachPassOfAToolTurnCostsToPrefill
+  skip ToolLoopReuseOnDeviceTest#aSecondRoundOfATurnPaysForTheWholeConversationAgain
+  skip SlidingWindowOnDeviceTest#aRollbackWithinTheWindowIsStillReused
+  skip SlidingWindowOnDeviceTest#aRollbackPastTheWindowStillReads
+  skip LiveReadoutOnDeviceTest#readoutCostsNothingMeasurableAndEndsNearTheFinishedFigure
+  tail: INSTRUMENTATION_CODE: -1
+inst-app-set.txt 0=pass -3=ignored -4=assumption -2=fail: {'0': 3}
+  tail: INSTRUMENTATION_CODE: -1
+
+## The same classes that skipped, with Qwen3 1.7B Q8_0 as bench/qwen.gguf
+0=pass -3=ignored -4=assumption -2=fail: {'0': 6, '-4': 4}
+  0 LlamaCppEngineTest#reusesCachedPrefixOnFollowUpTurns
+  0 LlamaCppEngineTest#generatesAReplyAndMeasuresThroughput
+  0 LlamaCppEngineTest#reportsBackendsAndCpuFeatures
+  0 LlamaCppEngineTest#reusesCachedPrefixWhenThePromptRepeats
+  0 LlamaCppEngineTest#loadsModelAndReportsItsShape
+  0 PrefillReuseTest#measuresWhatEachPassOfAToolTurnCostsToPrefill
+  -4 ToolLoopReuseOnDeviceTest#aSecondRoundOfATurnPaysForTheWholeConversationAgain
+  -4 SlidingWindowOnDeviceTest#aRollbackWithinTheWindowIsStillReused
+  -4 SlidingWindowOnDeviceTest#aRollbackPastTheWindowStillReads
+  -4 LiveReadoutOnDeviceTest#readoutCostsNothingMeasurableAndEndsNearTheFinishedFigure
+ stack org.junit.AssumptionViolatedException: the model did not call a tool
+ stack org.junit.AssumptionViolatedException: no sliding-window model at /data/local/tmp/openweights/bench/gemma.gguf
+ stack org.junit.AssumptionViolatedException: no sliding-window model at /data/local/tmp/openweights/bench/gemma.gguf
+ stack org.junit.AssumptionViolatedException: LFM2.5-1.2B-Instruct-QAD-Q4_0.gguf not pushed

@@ -410,6 +410,10 @@ under load, some while a Gradle run was on the same Mac. They are excluded, and 
 clears what did not go. LFM3 is slow enough here that some of its first-run rows hit the driver's wait, so read the second set. `fetch_url`
 asking first in Auto, which those rows show as "approved a tool", is the existing rule for an address the model chose.
 
+**Device tests at the pushed commit, on the emulator.** Engine: 17 passed, 0 failed, 4 skipped: two want a sliding-window model and one the QAD file, none on this
+emulator, and in `ToolLoopReuseOnDeviceTest` the Qwen3 1.7B never called a tool, so the check did not run. The cache-reuse tests that pass are `reusesCachedPrefix...` and
+`PrefillReuseTest`. App: `ToolTurnOnDeviceTest`, `HarnessSmokeTest` and `LongConversationOnDeviceTest` passed. No crash in the buffer (`device-tests.txt`).
+
 **A second dead-code pass.** A name scan and a Codex pass found `Offload` and its field, which nothing read since the per-half choices
 replaced them; `addGenerationPrompt` on eight templates; `dynamicColor`; `repeatLastN`, 64 on every path through a positional JNI argument;
 `pool_threads_`; `SessionArtifacts.isOwn`; and `tools/tokenizer_export`, 3.4 MB for the reverted Stable Diffusion runtime. The regenerated

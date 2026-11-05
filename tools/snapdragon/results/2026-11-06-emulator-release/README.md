@@ -22,4 +22,4 @@ Not results, and left out of every count:
 
 Recorded by hand, with nothing here to show for it: the compiled model's SHA-256 matched the hub's `x-linked-etag` (`99517d410ee813ff...`), an earlier local
 copy did not and was not used; QDC refused `sa945510`; lint, detekt and 2,197 unit tests with 10 skipped passed at the commit; the engine's
-`ReasoningBudgetOnDeviceTest` passed 6 of 6 on this emulator; the mutation checks and the four Codex reviews.
+the mutation checks and the four Codex reviews. Device tests are in `device-tests.txt`.
