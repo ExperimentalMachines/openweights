@@ -132,6 +132,28 @@ class AssistantReplyTest {
     }
 
     @Test
+    fun `a block opened again straight after the close is not the answer`() {
+        // LFM3 1.7B, a turn out of rounds, on 2 of 160 questions: closed at once with the note,
+        // it opens a block of its own, and the engine closes that at once too.
+        val note = "No more tool calls."
+        val closedTwice = "\n\n$note\n</think>\n<think>\n\n$note\n</think>\nBoston."
+        val prefilled = parseAssistantReply(closedTwice)
+        val written = parseAssistantReply("<think>why</think>\n<think>\nmore\n</think>\nBoston.")
+
+        assertThat(prefilled.answer).isEqualTo("Boston.")
+        assertThat(written.answer).isEqualTo("Boston.")
+    }
+
+    @Test
+    fun `tags the answer is talking about stay in the answer`() {
+        val spoken = parseAssistantReply("<think>why</think>\n<think> and </think> mark the block.")
+        val later = parseAssistantReply("<think>why</think>\nThe tags are <think>\nand </think>.")
+
+        assertThat(spoken.answer).isEqualTo("<think> and </think> mark the block.")
+        assertThat(later.answer).isEqualTo("The tags are <think>\nand </think>.")
+    }
+
+    @Test
     fun `a closing tag later in the answer is still the answer's`() {
         val reply = parseAssistantReply("<think>why</think>\nWrite </think> to close a block.")
 

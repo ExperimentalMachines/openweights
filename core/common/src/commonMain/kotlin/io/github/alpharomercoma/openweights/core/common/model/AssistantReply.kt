@@ -91,13 +91,15 @@ fun parseAssistantReply(raw: String): AssistantReply {
 }
 
 /**
- * What follows a block, less any closing tags the model repeated straight after it.
+ * What follows a block, less any closing tags or further blocks straight after it.
  *
  * Qwen3 1.7B writes its own tag right after the one the reasoning budget wrote for it, 10 to 14
- * of 20 replies on an SM8850 (2026-11-04), and it showed as the start of the answer. Only at the
- * very start: a tag further on is something the answer is saying. Text with no repeat comes back
- * untouched, newlines and all, since the callers own those. A part of a tag is left alone: the tag
- * is one token in every model checked, and a reply could really be `</`.
+ * of 20 replies on an SM8850 (2026-11-04), and it showed as the start of the answer. LFM3 1.7B,
+ * closed at once on a turn out of rounds, opens a block of its own on 2 of 160, and the engine
+ * closes that too. Only at the very start: a tag further on is something the answer is saying, and
+ * so is an opening tag with text on its line ("<think> and </think> mark the block"). Text with no
+ * repeat comes back untouched, newlines and all, since the callers own those. A part of a tag is
+ * left alone: the tag is one token in every model checked, and a reply could really be `</`.
  */
 private fun String.withoutRepeatedClose(): String {
     var rest = this
@@ -105,12 +107,12 @@ private fun String.withoutRepeatedClose(): String {
     while (true) {
         val next = rest.trimStart('\n')
         when {
-            next.startsWith(CLOSE_TAG) -> {
-                rest = next.removePrefix(CLOSE_TAG)
-                repeated = true
-            }
+            next.startsWith(CLOSE_TAG) -> rest = next.removePrefix(CLOSE_TAG)
+            next.startsWith(OPEN_TAG + "\n") && CLOSE_TAG in next ->
+                rest = next.substringAfter(CLOSE_TAG)
             else -> return if (repeated) next else rest
         }
+        repeated = true
     }
 }
 

@@ -24,6 +24,7 @@ def repeated(t):
     while True:
         n = r.lstrip('\n')
         if n.startswith(CLOSE): r = n[len(CLOSE):]; seen = True
+        elif n.startswith(OPEN + '\n') and CLOSE in n: r = n.split(CLOSE, 1)[1]; seen = True
         else: return n if seen else r
 
 def parse(raw):
