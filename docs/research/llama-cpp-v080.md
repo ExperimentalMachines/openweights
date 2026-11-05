@@ -322,7 +322,17 @@ LFM2.5 2.6B on 1. These ran only the new build, so they are a check for failures
 and six runs alone, so it looks timing-sensitive under load and was not changed. On the SM8650, engine device tests 25 passed, 1 skipped for
 want of an audio model, 0 failed; `ToolTurnOnDeviceTest`, `HarnessSmokeTest` and `LongConversationOnDeviceTest` passed. The bundle signed with
 the upload key, installed as a universal APK under the real package name, answered on the compiled model, the GGUF and LFM3 with an empty crash
-buffer. Those device runs came before the last parser and prompt-guard edits except the release smoke, which ran on the final commit.
+buffer. Those device runs came before the last parser and prompt-guard edits, and the phone runs before the live-data rule below, which ran on a 16 KB
+emulator.
+
+**A refusal no run had shown.** Asked the weather in Tokyo through the signed release, LFM2.5 1.2B said "I don't have real-time weather data"
+on 8 of 10 replies across both runtimes, with web_search in hand, and the same on rates and prices. It is not from this work: on the Mac the old
+and new prompts refuse alike. The rule that turns a lament into a search knew "information about" and its kin and not this, and the public
+questions almost never ask about the weather, which is the first thing a person asks. It now reads "real-time", "up-to-date" and "live" with a
+data noun. Replayed over 171 recorded replies with no call it reads 4, all this shrug, and a reply about the user's own things stays out. The signed
+release on a 16 KB emulator then searched on both weather questions and the Bitcoin price and answered from the results, searched on the exchange
+rate and still said it could not read one, and answered the capital of France without a search, with an empty crash buffer. The reservation ended
+before this ran on the phone, and it was not run through the public questions again, since it reads only those 4.
 
 **What was deleted.** Five search experiments that were off in the app (`honoursGate`, `honoursUnresolved`, `judgesDenials`,
 `judgesFollowUps`, `readsTopResult`) with `Session::judge` and `JudgeQuestions`; `speculation`, `kvCacheQuantized` and
