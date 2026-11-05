@@ -343,6 +343,84 @@ About 2,300 lines of Kotlin and C++. Through the real engine on the Mac, 31 long
 and after the decode loop lost its speculation path (`mac/v6-*`). Left on purpose: `imageTokens` and `batchTokens`, kept to reproduce
 findings; the NPU path, which is live; `ExecuTorchSupport.AVAILABLE`, whose callers are the right places to ask.
 
+## When search fails, and the last check of the release
+
+A reservation for the final phone run never connected: the recorded key was refused on sa945510 on every attempt, so what follows
+ran on a 16 KB emulator (6 cores, Android 16, `es-16k`) through the signed release's own UI, with the compiled model's file checked
+against the hub's hash. It stands in for a phone on behaviour, not on speed. Rows, driver and scripts are in
+`tools/snapdragon/results/2026-11-06-emulator-release/`.
+
+**The worst thing the check found was the emulator losing DNS.** Asked the weather with every engine failing and the network still
+reading as up, which is what a captive portal or a rate limit looks like to the app, the tool answered "No search provider could
+answer ... Say so rather than guessing". The compiled LFM2.5 1.2B the app recommends then wrote "the weather in Tokyo today is mild with a
+high chance of light rain" and "Manila is experiencing warm temperatures" (`emu-dns-lost/`). Measured on purpose, with DNS pointed nowhere, version 726:
+
+| Question, every engine failing | Version 726 | With the rule below |
+|---|---|---|
+| Weather in Tokyo | "approximately 22°C with a light breeze and a 10% chance of rain" | the sentence, and on a second try "I don't have real-time weather data available right now" |
+| 500 USD to yen | "approximately ¥250,000, based on recent data sources" | the sentence |
+| Price of Bitcoin | "typically traded between $70,000 and $75,000" | "I don't have real-time market data" |
+| Capital of France | Paris, no search | Paris, no search |
+
+It is our own regression, in a failure mode. Before the live-data rule the first pass's "I don't have real-time weather data" was the
+reply, and it was true. That rule earns the search; when the search failed, the denial push sent the model on and it wrote numbers.
+The GGUF and LFM3 did not invent on the rows that ran cleanly, and took the same honest shape afterwards.
+
+**The rule.** A search no engine answered, with no web result this turn, no paste or usable address in the question, and no file tool,
+script or page build on offer, ends the turn with no further pass. A plain "I don't have that" stands, since it was true. A false
+"I have no tool for that", an announcement and a claimed search are replaced by a sentence, stored as the reply: "No search engine
+could be reached, so I could not look this up. Check the connection and ask again." An answer the app only searched because a token was
+unlikely stands. With search working the rule cannot fire, and it did not: `ToolEvidence.NoProviderAnswered` comes only from the
+one line where every engine has failed. A failed turn also takes one pass or two rather than three or four. Review warned that a replaced reply
+would cost the compiled runtime a whole re-read of the next turn, since its prompt must extend what it was fed. Measured, the next turn showed
+0.7 s and 99 percent of 996 tokens reused. The warm-up after the turn is the likely reason; the row does not show it.
+
+**Four reviews changed it, and each was right.** Codex said no three times before saying yes. The first version raised an error, which
+kept a claimed result as the stored reply, lost the warning on reopening and cleared a cache nothing had damaged. The second read
+"long message" off a conversation whose last message carries the tool notes, so one working search switched the rule off, and could
+write the reply twice after a cut pass; the test written for that did not reach the order until mutation showed it passing with the
+fix removed. The third let any earlier result exempt a later question, and kept a false denial. Saying a search failed is a far
+smaller wrong than a made-up figure, so results from an earlier turn no longer count. It also cost a design of mine: `web_search` and
+`fetch_url` both count as chaining tools, so the exemption as first planned would have switched the rule off in the default tool set.
+
+**With search working, what the replies show.** The search chain is DuckDuckGo first, which took 856 of 860 searches in the lab, and
+on this network gave 5 hits with snippets on all 4 questions tried, as did Brave. What the model can say depends on what the snippet
+holds:
+
+- The Bitcoin snippet holds the price. The compiled model and the GGUF gave $75,800 to $76,500 across two runs each. LFM3 went to pages instead and
+  gave $76,170 on one run and $78,050 on the other, which review found to be a dated figure offered as today's.
+- The exchange-rate snippets hold no rate ("Convert 500 USD to JPY with the Wise Currency Converter"), and neither do most weather
+  snippets. The figure is in the page: on an approved `fetch_url`, LFM3 answered 1 USD = 157.739 JPY citing XE, about 78,870 yen for 500, in line with
+  the 158 on Wise's page fetched separately. The compiled model does not fetch and says it cannot read a rate. That reply is honest, and it is the gap the earlier write-up left
+  open: **what the tools return and what the small model does with them, not the prompt or llama.cpp**. No rate-shaped rule was added. The experiment
+  that read the top result, which was never switched on, was among those deleted above.
+- **LFM2.5 invents when the snippet has no figure, the GGUF nearly always.** Tokyo, Manila and the rate, on two builds, leaving out the one row my
+  driver truncated: the GGUF gave a figure on all 5 it answered (Manila "between 28°C and 32°C", 500 USD as "0.93 EUR" on one run and "150,000 to
+  155,000 yen" on another, against the 78,870 above). The compiled model gave one on 1 of 6 (Manila, "around 28°C to 32°C"), and pointed to a source on the
+  other 5. Few rows, and open.
+
+**Yahoo, the third engine, had stopped answering.** Through the real parser from this network: 0 hits on 4 questions, with a 200 on both
+HTTP versions. The link had moved inside the heading and the snippet to `p.s-desc`. Both layouts are now read. It went unseen because the
+first two engines nearly always answer. curl's "Error in the HTTP2 framing layer" from the same host was not the cause: OkHttp gets a 200.
+
+**Two things the emulator run looked like and was not.** `graph_compute ... failed with error 1` and `llama_decode: failed to decode, ret =
+2` on LFM3 are `GGML_STATUS_ABORTED`, from the session's own cancel flag: a warm-up cancelled by the next load or turn, followed by a
+successful one. And several rows ("What is the", a question merged with the one before, "NOT TYPED" in the row files) were my driver typing
+under load, some while a Gradle run was on the same Mac. They are excluded, and the driver now waits for the whole question before it sends and
+clears what did not go. LFM3 is slow enough here that some of its first-run rows hit the driver's wait, so read the second set. `fetch_url`
+asking first in Auto, which those rows show as "approved a tool", is the existing rule for an address the model chose.
+
+**A second dead-code pass.** A name scan and a Codex pass found `Offload` and its field, which nothing read since the per-half choices
+replaced them; `addGenerationPrompt` on eight templates; `dynamicColor`; `repeatLastN`, 64 on every path through a positional JNI argument;
+`pool_threads_`; `SessionArtifacts.isOwn`; and `tools/tokenizer_export`, 3.4 MB for the reverted Stable Diffusion runtime. The regenerated
+prompt dump differs only in the date, and the JNI signature check holds on the new argument count.
+
+**A review that had not happened.** The automatic security review of the push returned no verdict, so Codex read `22eb7966..0836daa8` for it: no
+high or medium finding, no new egress, no secret in the 73 result files added. Web pages the runs captured do hold public emails and
+addresses. Its one low finding stands, since it is only theoretical and loses only the engine's own note: a model that wrote that exact note
+inside a second think block would have it dropped. The fixture captured for Yahoo had this network's location in its footer, which my own scan
+missed and Codex caught before it was pushed; it was removed along with the tracking identifiers.
+
 ## A crash this found, older than the upgrade
 
 Qwen3 1.7B with thinking on failed 5 of 20 questions on the SM8850 with `generation failed: string_view::substr`, on the pass after a
@@ -395,6 +473,8 @@ their size (`repack-buffers.cpp` beside that record), so a phone with a wider ve
   old build; the source shows reasoning can start one, and the rows cannot say how many it started. On one question a private "I
   need to search" did, the search failed, and the reasoning became the reply (1 of 160, 2 on the old build). LFM2.5's replies here
   carry no reasoning. This is the main thing between LFM3 and the default, and it is not fixed.
+- **The final release has not run on a real phone.** Version 723 did, before the live-data rule. Everything after it ran on the 16 KB emulator.
+- **LFM2.5 can invent a figure when the search snippet holds none**, the GGUF on 5 of 5 rows and the compiled model on 1 of 6. See "When search fails" above.
 - **After a forced close a model can still think in the reply.** 6 of 160 on LFM3, and one of them closes a block a second time
   further into the reply, which shows as a stray tag.
 - **Non-English replies on LFM3** still came back in English on 3 of the 8 answered replies tried, Filipino among them.
