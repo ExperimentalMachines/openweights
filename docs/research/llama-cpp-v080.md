@@ -425,6 +425,53 @@ addresses. Its one low finding stands, since it is only theoretical and loses on
 inside a second think block would have it dropped. The fixture captured for Yahoo had this network's location in its footer, which my own scan
 missed and Codex caught before it was pushed; it was removed along with the tracking identifiers.
 
+## On a real phone
+
+The check the emulator stood in for, on an SM8650 with Android 14 (`tools/snapdragon/results/2026-11-06-qdc-final/`). Signed release 731, installed from the file that was built,
+through its real UI. Two reservations were lost first. The recorded key was refused on two reservations, and I told the owner it had probably expired. It had not: on the owner's
+instruction to try every key, an older one was accepted. That reservation ended seven minutes later, on the first question. A new key then worked on a third.
+
+**No crash was seen.** The crash buffer was empty after each model on both UI runs (`run-output.txt`). All 320 replies below ended normally, though the buffer was not read after them, since the
+reservation ended first.
+
+**With every engine failing,** by blocking this app's network so the system's network still reads as up, nothing was invented on any of the 12 search questions across the three models: 3 refusals and 9
+of the sentence. The capital of France was right with no search on all three. On the compiled model, where this began, that is one refusal and three of the sentence, against the 22°C and
+¥250,000 of version 726 on the emulator. The change holds on the hardware.
+
+**With search working,** the replies were the shape the emulator showed:
+
+| Question | Compiled LFM2.5 | LFM2.5 GGUF | LFM3 |
+|---|---|---|---|
+| Weather in Tokyo | Pointed to a source | Gave 22°C and 14°C | Gave a forecast after opening a page |
+| Weather in Manila | Gave 28°C | Gave 28°C and 22°C | Said it could not get the page |
+| 500 USD to yen | Refused, for want of a live rate | Refused, for want of a live rate | ¥78,867, at 157.734 |
+| Price of Bitcoin | $75,397.85 | $70,231.19, naming two sources | $76,094.55, citing CoinDesk |
+| Capital of France, author of Pride and Prejudice | Right, no search | Right, no search | Right, no search |
+
+These rows do not record what the search returned, so a figure cannot be traced to a snippet here. On the Mac the same day the weather snippets held no figure, so the weather replies from the two
+LFM2.5 builds look invented, and the GGUF's Bitcoin price sits about $5,000 under the other two. It is not proof, and it is the same open item as above.
+
+**Device tests, on the debug build of the same app code.** Engine: 20 passed, 0 failed, 6 skipped, all `MultimodalTest`, for want of a vision model on this phone. That includes the cache-reuse and tool-loop
+tests the emulator could not run. App: `ToolTurnOnDeviceTest`, `HarnessSmokeTest` and `LongConversationOnDeviceTest` passed.
+
+**The 160 questions at the final code, against the same arm before the live-data rule and the failed-search rule.** One chip, not necessarily one unit.
+
+| Model | Correct, before and final | Paired, before only and final only | Errors | Median |
+|---|---|---|---|---|
+| Compiled LFM2.5 | 55, 53 | 10, 8, p=0.82 | 0, 0 | 8.3 s, 6.8 s |
+| LFM2.5 GGUF | 64, 59 | 9, 4, p=0.27 | 0, 0 | 9.8 s, 9.7 s |
+
+**Both scores went down, and neither paired difference is statistically significant. These runs cannot show the two builds are equal, and cannot say whether either new rule cost a given question.** What they do show:
+
+- The system prompt and tool list hash the same. The inputs are not identical: the date in the prompt moved a day and the web's results differ, and 11 and 54 of 160 replies were byte-identical between the two runs.
+- The failed-search rule did not fire: the sentence is in none of the 320 replies and no search exhausted every engine. Two compiled rows had a search rejected as too long, then searched again, in both runs.
+- How often the live-data rule fired is **unknown**. The rows keep each turn's last reply and each pass's statistics, not the text of a pass the loop dropped, so a refusal that earned a search leaves no trace. The nearest
+  evidence is searches whose query is the question itself, which is what the app sends and which a model could also write: 30 and 31 rows on the compiled model, 39 and 43 on the GGUF. Rows with one only in the final run: 11 and 8. None of those
+  lost its answer and 2 of each gained one. That leans against the rule costing answers. It does not clear it.
+
+It also weakens something above. The GGUF's rise from 55 to 64 (p=0.012) came down to 59 on a rerun of the same prompts, so that gain was smaller than it looked, or part of it was lost since. LFM3 got 13 rows before the reservation ended, with no
+errors, so its 85 was not rerun at this code.
+
 ## A crash this found, older than the upgrade
 
 Qwen3 1.7B with thinking on failed 5 of 20 questions on the SM8850 with `generation failed: string_view::substr`, on the pass after a
@@ -477,7 +524,7 @@ their size (`repack-buffers.cpp` beside that record), so a phone with a wider ve
   old build; the source shows reasoning can start one, and the rows cannot say how many it started. On one question a private "I
   need to search" did, the search failed, and the reasoning became the reply (1 of 160, 2 on the old build). LFM2.5's replies here
   carry no reasoning. This is the main thing between LFM3 and the default, and it is not fixed.
-- **The final release has not run on a real phone.** Version 723 did, before the live-data rule. Everything after it ran on the 16 KB emulator.
+- **LFM3 was not rerun through all 160 questions at the final code.** It got 13 rows, plus the everyday questions through the UI.
 - **LFM2.5 can invent a figure when the search snippet holds none**, the GGUF on 5 of 5 rows and the compiled model on 1 of 6. See "When search fails" above.
 - **After a forced close a model can still think in the reply.** 6 of 160 on LFM3, and one of them closes a block a second time
   further into the reply, which shows as a stray tag.
