@@ -1,7 +1,7 @@
 # Prefill and decode on CPU, GPU and NPU: every pairing on a Snapdragon 8 Elite Gen 5
 
-**Measured 2026-10-24 to 2026-11-03 on Qualcomm Device Cloud handsets, `canoe`: SM8850 (Snapdragon
-8 Elite Gen 5), Android 16, 23 GB, `adb` as root, on AC power in Qualcomm's rack, over nine
+**Measured 2026-10-24 to 2026-11-09 on Qualcomm Device Cloud handsets, `canoe`: SM8850 (Snapdragon
+8 Elite Gen 5), Android 16, 23 GB, `adb` as root, on AC power in Qualcomm's rack, over eleven
 reservations.** The first ran r1 to r4 and ended at about 16:55 phone time; the second (about
 20:30 to 04:20) ran the three models the first could not reach (r6), LFM2.5 2.6B (r7), the
 ExecuTorch NPU comparison (e1) and a second pass of five models in another cell order (r5). The
@@ -11,7 +11,10 @@ both on a third unit (c581fd31), ran what the fourth could not finish (r10, r11)
 models have reply-length results ([below](#at-the-datasets-own-reply-lengths)). The seventh to
 ninth, on 2026-11-02 and 03 on units 64a112da, c581fd31 and 783ee7e5, ran all nine pairings of
 every model at reply length, each model on one unit (r12 to r16,
-[below](#all-nine-pairings-at-reply-length-r12-to-r16)).
+[below](#all-nine-pairings-at-reply-length-r12-to-r16)). An eleventh, on 2026-11-08 and 09 on
+c581fd31, measured what the throttles cost on the same fixed work
+([r20](#what-the-throttles-cost-on-fixed-work-r20)) and ran 2 CPU threads against 6 on the cell
+that stalled most ([r19](#six-threads-against-two-r19)).
 
 | Processor | What it is, as read from the phone |
 |---|---|
@@ -545,8 +548,7 @@ reserved graph has 874 nodes, some skipped or fused). With two cores left, finis
 them while workers with work wait to be scheduled, at hundreds of synchronisation points per token.
 Unlike CPython's GIL, whose waiters sleep, these waiters keep their core. The stuck stretches wrote 5
 to 20 tokens in 44 to 71 s (single tokens 0.6 to 18.3 s), far below what fair sharing of two cores
-would give. A test of 6 threads against 2 on the same cell was running when this was written; its
-results will be added here.
+would give. The test of 6 threads against 2 is [below](#six-threads-against-two-r19).
 
 **The app.** `ThermalPolicy` sets the decode threads once per reply (`ModelRuntime.planThreads`) from
 Android's thermal status: half the cores (4 here), 3 at light or moderate, 2 at severe, and no reply
@@ -558,6 +560,49 @@ already running keeps its count, so these readings do not show that the app avoi
 `llama_set_n_threads`); let a waiting worker sleep or yield after a short spin in `ggml_barrier`;
 write on the NPU during a cool-down. Matching threads to `sched_getaffinity` is ruled out on this
 phone by the mask above; pinning alone does not stop six threads sharing two cores.
+
+### Six threads against two (r19)
+
+On 2026-11-08 and 09, on unit c581fd31, the cell with the most stuck tokens, Qwen3 4B with GPU
+prefill and CPU decode, ran with `--threads 2` against the `--threads 6` used everywhere else: the
+same build (binary sha256 prefix 204879540c459b5e), model (92f4a83cdfe691b2), conversations, flags
+and 120 s gate as r18b. A throwaway 6-thread cell came first; the fixed order after it, set before
+any result, was 6 2 2 6 2 6 6 2, repeated twice. The reservation ended during the third cell, so one complete cell
+of each ran: one ordered pair, not the planned replication. Every gate timed out (the phone was
+never back at 55 °C). Two loggers ran beside it: `trig20b.sh` (every 2 s: the XO thermistor, the
+hottest GPU sensor, the GPU's clock, allowed ceiling and power level, each pause switch, `kgsl`,
+`cdsp` and each CPU policy's ceiling) and `place19.sh` (every 2 s: each benchmark thread's last
+CPU and its CPU time). The analysis is `analyze_throttle.py threads`; "excess stall" is the time
+each step took past 500 ms, summed, so a few long stalls weigh as much as many short ones.
+
+| Cell | Threads | Peak XO | Pauses | Steps over 500 ms | Excess stall | Longest step | Decode, summed | Turns, summed |
+|---|---|---|---|---|---|---|---|---|
+| r19warm (not counted) | 6 | 78.4 °C | 6, 360 s | 30 | 338 s | 18.4 s | 1,373 s | 1,487 s |
+| r19-1-t6 | 6 | 78.4 °C | 7, 392 s | 36 | 372 s | 18.6 s | 1,391 s | 1,505 s |
+| r19-2-t2 | 2 | 76.3 °C | none | 0 | 0 | 0.25 s | 1,581 s | 1,695 s |
+
+- **With 6 threads, every stall was in or at the edge of a pause.** Of the 6-thread cell's 372 s of
+  excess, 241 s were in steps that ran wholly under a pause and 130 s in steps that straddled a
+  switch; none in a step with no pause. The warm-up repeated it (222 s and 116 s, none outside).
+- **During a pause the threads ran on cores 0 and 1.** Of 1,358 samples of a benchmark thread that
+  had used CPU time since its last sample, taken while a pause was on, 1,354 (99.7%) last ran on CPU
+  0 or 1; with no pause they spread over all eight. The process's allowed-CPU list stayed 0 to 7
+  throughout. That is consistent with the mechanism above, six threads on the two cores the pause
+  leaves, though a last-CPU field does not trace every core a thread used between samples.
+- **With 2 threads the phone stayed under the trip.** The XO thermistor peaked at 76.3 °C against
+  78.4 °C in both 6-thread cells, so there was no pause and no step over 0.25 s; its CPU zones ended
+  turns at a median 102 °C against 106 °C. The cell never decoded inside a pause, so it shows
+  nothing about what 2 threads do in one.
+- **And 2 threads were slower.** Decode, summed over the 33 turns, took 1,581 s against 1,391 s
+  (13.6% longer), turns 1,695 s against 1,505 s (12.6%), the 6-thread figures including their
+  stalls. Take the excess out and the 6-thread decode is about 1,020 s.
+
+In this pair, the 2-thread cell stayed below the trip and decoded about 12% fewer tokens per second,
+including the 6-thread cell's stalls. One ordered pair does not separate the thread count from the heat each
+cell inherited: both started with the XO thermistor at about 65 °C, but the 2-thread cell's
+hottest CPU zone read 70.2 °C at its gate against 78.3 °C for the 6-thread cell's. It is not the
+counterbalanced set that was planned, and it is one model on one unit. The candidate change above, dropping to 2 threads after one slow token, is still not
+measured: it would switch inside a pause, which no 2-thread cell met here.
 
 ### Throttling and the GPU's rank
 
@@ -589,6 +634,58 @@ does not say which phase it hit.
 - **In r2**, where the cell starts read 73 to 98 °C on the CPU, 70 to 86 °C on the GPU and 72 to
   87 °C on the NPU, Llama 3.2 1B's GPU prefill was 396 tok/s and its CPU decode 41, against r4's
   532 and 49.
+
+### What the throttles cost on fixed work (r20)
+
+The comparisons above could not separate the GPU's cap from the rest: few turns, early in replay
+order, the GPU cap and the CPU ceilings seen together. So before the thread test, in the same
+reservation, the same work ran again and again while the phone heated: Qwen3 4B, the first three
+turns of one conversation (`probe.jsonl`, UltraChat-200k-2) with the dataset's histories and 128
+output tokens a turn (127 timed steps), on a GPU-only cell and a CPU-only cell, alternating which
+went first, with no gate. A CPU-only cell ran between probes to heat the phone. A turn of a given
+index is then the same work at the same position every time, and only the phone's state changes.
+Each turn is classed by the state over its decode steps, read from the 2 s loggers (`trig20.sh`,
+then `trig20b.sh` from the fifth probe; a turn counts only if at least 90% of its decode time ran
+in one pause state and one GPU power level). The analysis is `analyze_throttle.py ladder`; the two
+ways of placing steps in time it compares agree on 22,096 of 22,098.
+
+The plan was to heat until six probes had run through a pause, then idle back to uncapped and
+repeat. In 25 rounds over 109 minutes only three probes did: pauses came in three episodes, 109,
+120 and 114 s, 343 s in all. The ladder stopped at its heat limit, and the cool-down and its
+uncapped repeats never ran, so the uncapped GPU figures are one probe, the first, and the cool CPU
+figures two or three turns from the first three.
+
+- **The mild throttle set in within minutes and stayed.** The GPU's thermal power level first went
+  to 8 (an allowed ceiling of 578 MHz against 1,200) 227 s in, went back to 0 three times, and from
+  528 s in stayed at 8 to the end.
+- **Observed ratios on the same turn:** median rate at power level 8 with no pause divided by median
+  rate uncapped and unpaused:
+
+  | Turn (position, new tokens) | GPU decode | GPU prefill | CPU decode | CPU prefill |
+  |---|---|---|---|---|
+  | 0 (0, 139) | 13.2 of 19.3 tok/s, 0.68 | 138 of 271, 0.51 | 18.0 of 21.9, 0.82 | 78 of 123, 0.63 |
+  | 1 (139, 1,104) | 9.2 of 14.4, 0.64 | 120 of 237, 0.51 | 13.9 of 17.6, 0.79 | 60 of 91, 0.66 |
+  | 2 (1,243, 538) | 2.7 of 3.4, 0.80 | 90 of 178, 0.50 | 12.2 of 15.8, 0.77 | 44 of 65, 0.67 |
+
+  GPU prefill retained about half its uncapped rate, close to the clock ratio (578 of 1,200 is
+  0.48); decode retained 0.64 to 0.80. These timings do not establish why decode lost less. They are
+  ratios of medians from one model on one unit, with a one-probe GPU baseline, not correction factors
+  for other cells.
+- **The cool-down did not visibly slow GPU decode.** On the three probes whose GPU turns 1 and 2 ran
+  through a pause, decode was 0.997 and 0.994 of the same turns with no pause at the same power level.
+  The pause switches move with `kgsl` and `cdsp`, so this does not isolate them, and no CPU-only
+  probe ran through a pause.
+- **The GPU's slowdown on a long conversation is there uncapped.** In the uncapped probe GPU decode
+  fell from 19.3 tok/s at the start to 3.4 at position 1,243, the CPU's from 21.9 to 15.8. The large
+  slowdown is present even without the logged GPU cap or CPU pauses, so those limits cannot fully
+  explain it. This one probe does not isolate context length from other turn-dependent effects or
+  identify a backend or hardware cause.
+- **What it means for the matrix.** Every GPU-prefill and GPU-decode turn selected for the matrix
+  recorded power level 8 at both ends (891 of 891 each, by the selection in the site's
+  `build-prefill-decode-data.mjs`), as the CPU's turns recorded its lowered ceilings. The matrix
+  compares the processors as this phone runs them once warm, not at their best: in these thermal
+  states the GPU retained 0.64 to 0.80 of its uncapped decode rate and the CPU retained 0.77 to 0.82.
+  This comparison does not isolate individual caps.
 
 ### Where the work ran
 
@@ -836,12 +933,24 @@ another seed.
   the rest did (it did: 121 s, 61.4 °C, GPU at power level 8, CPU ceilings lowered). The order is
   still one order. Then r12's. 297
   turns and the warm-up's 33, none failed, and every file matched the phone's by checksum.
+- **r20 and r19.** An eleventh reservation, sa959107, on 2026-11-08 and 09, on unit c581fd31, with
+  the benchmark package fetched again from the build box (binary sha256 prefix 204879540c459b5e) and
+  the models from Hugging Face on the phone (Qwen3 4B 92f4a83cdfe691b2). r20, the ladder: 29 probes,
+  174 turns, none failed, run by `chain20.sh` and, from the fifth probe, `chain20b.sh` after a review
+  of the first (it counts a probe as hot only if the logger saw a pause during it, stops on a failure
+  and requires the cool-down to clear every cap); it ended at `LADDER_HEAT_LIMIT`. `trig20b.sh`
+  stopped after its first two samples and was restarted, so its fields are missing from probes 5 and
+  6 (`trig20.sh` covers them for the pause, `kgsl` and power level). r19: started by `follow20.sh`
+  at the ladder's limit; the warm-up and two cells complete, the third cut at its first turn when
+  the reservation ended (`r19-3-t2`, not counted). `follow19.sh`, which would have idled the phone
+  back to uncapped and repeated the probe four times, never started. Results were pulled every three
+  minutes and checked by sha256.
 - **r18, r18warm and r18b.** A tenth reservation on 2026-11-04 (local time; 3 November on the
   phone's clock), on a fourth unit, 4816891, rerun Qwen3 4B's GPU prefill with CPU decode warm,
   because r14's had run after a passed gate. The benchmark package was fetched again from the build
   box (binary sha256 prefix 204879540c459b5e, as before). A one-conversation CPU-only warm-up
   (r18warm, 148.2 s) was too short: r18's gate passed after 40 s at 54.4 °C with nothing capped, so
-  r18 was stopped at 22 turns, with the phone hot, and started again at once as r18b, whose gate timed
+  r18 was stopped at 26 turns, with the phone hot, and started again at once as r18b, whose gate timed
   out after 121 s at 69.1 °C with the GPU capped and the CPU ceilings lowered. 33 turns, none failed,
   and every file matched the phone's by checksum. The 2 s logger (`trig-r18.txt`) caught five hard
   throttles at the same switch points as on unit 783ee7e5 (first readings after each switch on 78.00
@@ -868,6 +977,11 @@ another seed.
   measured.
 - **Energy.** Nothing measured power or battery drain.
 - **Answer quality.** Outputs were compared token for token with the CPU, not graded.
+- **Fewer threads inside a pause.** The 2-thread cell never met one, and the thread test is one
+  ordered pair on one model, not the planned 16 cells. 4 threads, which the app uses, and 1 were
+  not run.
+- **The GPU uncapped, more than once.** The ladder's uncapped GPU figures are its first probe; its
+  idle-back-to-uncapped repeats never ran. A CPU-only probe never ran through a pause.
 - **A second pass of Gemma 3 1B, Qwen3 1.7B Q8_0, LFM2.5 2.6B and Llama 3.2 3B at 64 tokens.**
   Each of their 64-token cells is one run.
 - **At reply length:** a second run of all nine cells of any model on one unit (some cells repeat
