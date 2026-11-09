@@ -1488,7 +1488,11 @@ another seed.
   (`trig31.sh`, `trig-r31.txt`) ran throughout, and results were pulled every three minutes.
   After it, r38 (`chain38.sh`, `follow38.sh`) and r39 (`chain39.sh`, `follow39.sh`), each from the
   same pause check, with `trig39.sh` logging all eleven pause devices every second (`pause39.txt`)
-  from r39's start; r39-S's 45-minute budget outlasted the conversations. Codex reviewed the guard
+  from r39's start; r39-S's 45-minute budget outlasted the conversations. r40 (`chain40.sh`,
+  `follow40.sh`) was to run two such sessions back to back, the second without a gate, to reach a
+  natural pause with the guard on; the reservation ended about 22 minutes into the first (23 turns,
+  no pause device on, no fallback logged, the XO at most 75.0 °C), and it is not counted above. A second
+  `trig39.sh` started with it, so `pause39.txt` holds two loggers' samples from then. Codex reviewed the guard
   three times before it shipped to the phone (Reviews).
 - **r22 and r27.** A thirteenth reservation, sa962766, on 2026-11-09, on a fifth unit, 5d3e8f0a,
   five hours. The phone had been wiped: the benchmark package was pushed again (sha256 prefix
