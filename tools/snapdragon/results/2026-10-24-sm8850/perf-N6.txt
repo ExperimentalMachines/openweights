@@ -1,0 +1,15 @@
+Cmdline: /system/bin/simpleperf record -e cpu-clock -f 1000 -p 28778 --duration 20 -o perf-N6.data
+Arch: arm64
+Event: cpu-clock (type 1, config 0)
+Samples: 69192
+Event count: 69192000000
+
+Overhead  Shared Object                                   Symbol
+60.67%    /data/local/tmp/sd/pkg/lib/libggml-cpu.so       ggml::cpu::repack::tensor_traits<block_q4_0, 8l, 4l, (ggml_type)8>::compute_forward(ggml_compute_params*, ggml_tensor*)
+10.29%    /data/local/tmp/sd/pkg/lib/libggml-cpu.so       ggml_gemv_q6_K_8x8_q8_K
+8.56%     /data/local/tmp/sd/pkg/lib/libggml-cpu.so       ggml_graph_compute_thread
+6.86%     /data/local/tmp/sd/pkg/lib/libggml-cpu.so       ggml_compute_forward_flash_attn_ext_f16_one_chunk(ggml_compute_params const*, ggml_tensor*, int, int, long, long, float*, long)
+4.13%     /data/local/tmp/sd/pkg/lib/libggml-cpu.so       ggml_vec_dot_f16
+3.19%     /data/local/tmp/sd/pkg/lib/libggml-cpu.so       ggml_vec_dot_q4_1_q8_1
+3.17%     /data/local/tmp/sd/pkg/lib/libggml-cpu.so       ggml_compute_forward_flash_attn_ext
+1.39%     /apex/com.android.runtime/lib64/bionic/libm.so  expf

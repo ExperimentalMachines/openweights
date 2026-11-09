@@ -1,0 +1,25 @@
+--- snapdragon/llama.cpp/ggml/src/ggml-cpu/ggml-cpu.c	2026-08-21 17:27:18.000000000 +0200
++++ snapyield/llama.cpp/ggml/src/ggml-cpu/ggml-cpu.c	2026-11-09 12:23:11.804847097 +0100
+@@ -596,8 +596,21 @@
+     }
+ 
+     // wait for other threads
++    // Experiment (OpenWeights r29): after GGML_BARRIER_YIELD_SPINS spins a waiting thread yields its
++    // core, so that threads with work can run when the cores are fewer than the threads (a CPU pause).
++    // Unset or 0, the wait is the plain spin it has always been.
++    static int yield_spins = -1;
++    if (yield_spins < 0) {
++        const char * e = getenv("GGML_BARRIER_YIELD_SPINS");
++        yield_spins = e ? atoi(e) : 0;
++    }
++    int spins = 0;
+     while (atomic_load_explicit(&tp->n_barrier_passed, memory_order_relaxed) == n_passed) {
+-        ggml_thread_cpu_relax();
++        if (yield_spins > 0 && ++spins >= yield_spins) {
++            sched_yield();
++        } else {
++            ggml_thread_cpu_relax();
++        }
+     }
+ 
+     // exit barrier (full seq-cst fence)

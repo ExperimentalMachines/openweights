@@ -1,0 +1,8 @@
+Cmdline: /system/bin/simpleperf record -e cpu-clock -f 1000 -p 28778 --duration 20 -o perf-N6.data
+Arch: arm64
+Event: cpu-clock (type 1, config 0)
+Samples: 69192
+Event count: 69192000000
+
+Overhead  Command       Tid
+17.62%    pd_bench_ref  28778

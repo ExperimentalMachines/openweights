@@ -1,0 +1,82 @@
+--------- beginning of main
+         1794238642.936 13941 13987 I OpenWeightsBench: SESSION threads=4 maxTokens=512 thinkMs=30000 budgetMs=1800000 stallGuard=default
+         1794238642.970 13941 13993 I OpenWeights: using CPU backend libggml-cpu-android_armv9.0_1.so (score 55)
+         1794238642.985 13941 13993 W OpenWeights: ggml_opencl: unsupported GPU 'Mali-G925-Immortalis MC11 r0p1'.
+         1794238642.985 13941 13993 W OpenWeights: ggml_opencl: drop unsupported device 'Mali-G925-Immortalis MC11 r0p1'.
+         1794238642.985 13941 13993 I OpenWeights: OpenCL backend registered
+         1794238643.169 13941 13993 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794238650.128 13941 13993 I OpenWeights: weights: 3 host ranges, 2328 MB
+         1794238651.439 13941 13993 I OpenWeights: threads: 4 workers kept alive across graphs
+         1794238651.462 13941 13993 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794238651.522 13941 13993 I OpenWeights: mem: after load rss 3760 MB, pss 3655 MB, swap 241 MB, majflt 2826, minflt 1627932, cpu 8740 ms
+         1794238651.532 13941 13993 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=8192
+         1794238651.618 13941 13993 I OpenWeights: mem: before turn rss 3751 MB, pss 3646 MB, swap 251 MB, majflt 2930, minflt 1628245, cpu 8860 ms
+         1794238651.626 13941 13993 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794238698.933 13941 13993 I OpenWeights: mem: after turn rss 3954 MB, pss 3851 MB, swap 57 MB, majflt 54942, minflt 1635836, cpu 197050 ms
+         1794238698.949 13941 13987 I OpenWeightsBench: TURN n=0 conv=WildChat-1M-18 atMs=14 prompt=63 prefill=42.1 decode=11.2 ttft=1497 generated=512
+         1794238729.016 13941 13993 I OpenWeights: mem: before turn rss 3954 MB, pss 3852 MB, swap 57 MB, majflt 54946, minflt 1636120, cpu 197170 ms
+         1794238729.020 13941 13993 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+         1794238783.547 13941 13993 I OpenWeights: mem: after turn rss 3953 MB, pss 3851 MB, swap 56 MB, majflt 55154, minflt 1639829, cpu 414200 ms
+         1794238783.557 13941 13987 I OpenWeightsBench: TURN n=1 conv=WildChat-1M-18 atMs=77417 prompt=56 prefill=35.1 decode=9.7 ttft=1598 generated=512
+         1794238813.624 13941 13993 I OpenWeights: mem: before turn rss 3953 MB, pss 3851 MB, swap 56 MB, majflt 55154, minflt 1639872, cpu 414270 ms
+         1794238813.632 13941 13993 I OpenWeights: kv: 2 remembered replies spliced into the prompt
+         1794238885.074 13941 13993 I OpenWeights: mem: after turn rss 3964 MB, pss 3863 MB, swap 55 MB, majflt 55637, minflt 1647342, cpu 698310 ms
+         1794238885.087 13941 13987 I OpenWeightsBench: TURN n=2 conv=WildChat-1M-18 atMs=162025 prompt=114 prefill=10.0 decode=8.5 ttft=11347 generated=512
+         1794238915.157 13941 13993 I OpenWeights: mem: before turn rss 3959 MB, pss 3859 MB, swap 55 MB, majflt 55637, minflt 1647529, cpu 698410 ms
+         1794238915.166 13941 13993 I OpenWeights: kv: 3 remembered replies spliced into the prompt
+         1794239031.259 13941 13993 I OpenWeights: mem: after turn rss 3977 MB, pss 3878 MB, swap 60 MB, majflt 55967, minflt 1664113, cpu 1160610 ms
+         1794239031.271 13941 13987 I OpenWeightsBench: TURN n=3 conv=WildChat-1M-18 atMs=263555 prompt=296 prefill=6.6 decode=7.2 ttft=44899 generated=512
+         1794239061.341 13941 13993 I OpenWeights: mem: before turn rss 3977 MB, pss 3878 MB, swap 61 MB, majflt 55968, minflt 1664174, cpu 1160700 ms
+         1794239061.350 13941 13993 I OpenWeights: kv: 4 remembered replies spliced into the prompt
+         1794239142.244 13941 13993 I OpenWeights: mem: after turn rss 3981 MB, pss 3882 MB, swap 60 MB, majflt 56125, minflt 1668580, cpu 1483010 ms
+         1794239142.256 13941 13987 I OpenWeightsBench: TURN n=4 conv=WildChat-1M-18 atMs=409738 prompt=47 prefill=16.0 decode=6.6 ttft=2939 generated=512
+         1794239172.326 13941 13993 I OpenWeights: mem: before turn rss 3981 MB, pss 3882 MB, swap 60 MB, majflt 56125, minflt 1668631, cpu 1483100 ms
+         1794239172.338 13941 13993 I OpenWeights: kv: 5 remembered replies spliced into the prompt
+         1794239172.338 13941 13993 I OpenWeights: kv: diverged at 2623 of 3136 cached, prompt 3173, re-reading 550
+         1794239367.786 13941 13993 I OpenWeights: mem: after turn rss 3723 MB, pss 3626 MB, swap 343 MB, majflt 56379, minflt 1691031, cpu 2263020 ms
+         1794239367.790 13941 13987 I OpenWeightsBench: TURN n=5 conv=WildChat-1M-18 atMs=520724 prompt=550 prefill=5.1 decode=5.9 ttft=108435 generated=512
+         1794239397.858 13941 13993 I OpenWeights: mem: before turn rss 3723 MB, pss 3626 MB, swap 343 MB, majflt 56379, minflt 1691086, cpu 2263090 ms
+         1794239397.871 13941 13993 I OpenWeights: kv: 6 remembered replies spliced into the prompt
+         1794239495.841 13941 13993 I OpenWeights: mem: after turn rss 3680 MB, pss 3583 MB, swap 384 MB, majflt 57171, minflt 1696320, cpu 2652800 ms
+         1794239495.855 13941 13987 I OpenWeightsBench: TURN n=6 conv=WildChat-1M-18 atMs=746258 prompt=47 prefill=12.4 decode=5.4 ttft=3802 generated=512
+         1794239525.928 13941 13993 I OpenWeights: mem: before turn rss 3680 MB, pss 3583 MB, swap 384 MB, majflt 57172, minflt 1696360, cpu 2652880 ms
+         1794239525.930 13941 13993 I OpenWeights: kv: diverged at 3 of 4244 cached, prompt 18, re-reading 15
+         1794239575.640 13941 13993 I OpenWeights: mem: after turn rss 3684 MB, pss 3587 MB, swap 383 MB, majflt 57352, minflt 1698890, cpu 2851140 ms
+         1794239575.651 13941 13987 I OpenWeightsBench: TURN n=7 conv=WildChat-1M-23 atMs=874325 prompt=15 prefill=34.4 decode=10.4 ttft=437 generated=512
+         1794239605.723 13941 13993 I OpenWeights: mem: before turn rss 3671 MB, pss 3574 MB, swap 395 MB, majflt 57352, minflt 1698930, cpu 2851220 ms
+         1794239605.727 13941 13993 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+         1794239664.376 13941 13993 I OpenWeights: mem: after turn rss 3672 MB, pss 3575 MB, swap 395 MB, majflt 57483, minflt 1701985, cpu 3084990 ms
+         1794239664.387 13941 13987 I OpenWeightsBench: TURN n=8 conv=WildChat-1M-23 atMs=954119 prompt=20 prefill=27.1 decode=8.8 ttft=739 generated=512
+         1794239694.458 13941 13993 I OpenWeights: mem: before turn rss 3668 MB, pss 3571 MB, swap 398 MB, majflt 57483, minflt 1702026, cpu 3085070 ms
+         1794239694.463 13941 13993 I OpenWeights: kv: 2 remembered replies spliced into the prompt
+         1794239730.858 13941 13993 I OpenWeights: mem: after turn rss 3652 MB, pss 3555 MB, swap 412 MB, majflt 57627, minflt 1704050, cpu 3229990 ms
+         1794239730.868 13941 13987 I OpenWeightsBench: TURN n=9 conv=WildChat-1M-23 atMs=1042856 prompt=14 prefill=18.9 decode=8.2 ttft=743 generated=292
+         1794239760.944 13941 13993 I OpenWeights: mem: before turn rss 3652 MB, pss 3555 MB, swap 412 MB, majflt 57636, minflt 1704176, cpu 3230080 ms
+         1794239760.953 13941 13993 I OpenWeights: kv: diverged at 3 of 1368 cached, prompt 263, re-reading 260
+         1794239824.980 13941 13993 I OpenWeights: mem: after turn rss 3656 MB, pss 3559 MB, swap 409 MB, majflt 58484, minflt 1707499, cpu 3485440 ms
+         1794239824.996 13941 13987 I OpenWeightsBench: TURN n=10 conv=WildChat-1M-40 atMs=1109338 prompt=260 prefill=24.3 decode=9.6 ttft=10688 generated=512
+         1794239855.070 13941 13993 I OpenWeights: mem: before turn rss 3656 MB, pss 3559 MB, swap 409 MB, majflt 58484, minflt 1707545, cpu 3485530 ms
+         1794239855.075 13941 13993 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+         1794239919.045 13941 13993 I OpenWeights: mem: after turn rss 3657 MB, pss 3560 MB, swap 408 MB, majflt 58567, minflt 1710804, cpu 3740370 ms
+         1794239919.058 13941 13987 I OpenWeightsBench: TURN n=11 conv=WildChat-1M-40 atMs=1203466 prompt=43 prefill=23.4 decode=8.2 ttft=1836 generated=512
+         1794239949.130 13941 13993 I OpenWeights: mem: before turn rss 3658 MB, pss 3561 MB, swap 408 MB, majflt 58567, minflt 1710846, cpu 3740450 ms
+         1794239949.138 13941 13993 I OpenWeights: kv: 2 remembered replies spliced into the prompt
+         1794240029.359 13941 13993 I OpenWeights: mem: after turn rss 3395 MB, pss 3299 MB, swap 669 MB, majflt 58714, minflt 1715171, cpu 4057880 ms
+         1794240029.371 13941 13987 I OpenWeightsBench: TURN n=12 conv=WildChat-1M-40 atMs=1297525 prompt=64 prefill=7.4 decode=7.1 ttft=8606 generated=512
+         1794240059.443 13941 13993 I OpenWeights: mem: before turn rss 3395 MB, pss 3299 MB, swap 669 MB, majflt 58714, minflt 1715217, cpu 4057960 ms
+         1794240059.452 13941 13993 I OpenWeights: kv: 3 remembered replies spliced into the prompt
+         1794240139.665 13941 13993 I OpenWeights: mem: after turn rss 3373 MB, pss 3277 MB, swap 690 MB, majflt 58860, minflt 1719449, cpu 4377330 ms
+         1794240139.675 13941 13987 I OpenWeightsBench: TURN n=13 conv=WildChat-1M-40 atMs=1407839 prompt=52 prefill=16.0 decode=6.6 ttft=3248 generated=512
+         1794240169.745 13941 13993 I OpenWeights: mem: before turn rss 3374 MB, pss 3277 MB, swap 690 MB, majflt 58860, minflt 1719493, cpu 4377410 ms
+         1794240169.755 13941 13993 I OpenWeights: kv: 4 remembered replies spliced into the prompt
+         1794240256.484 13941 13993 I OpenWeights: mem: after turn rss 3374 MB, pss 3278 MB, swap 689 MB, majflt 58983, minflt 1724079, cpu 4722690 ms
+         1794240256.495 13941 13987 I OpenWeightsBench: TURN n=14 conv=WildChat-1M-40 atMs=1518143 prompt=46 prefill=13.6 decode=6.1 ttft=3396 generated=512
+         1794240286.567 13941 13993 I OpenWeights: mem: before turn rss 3373 MB, pss 3276 MB, swap 691 MB, majflt 58983, minflt 1724128, cpu 4722780 ms
+         1794240286.578 13941 13993 I OpenWeights: kv: 5 remembered replies spliced into the prompt
+         1794240383.319 13941 13993 I OpenWeights: mem: after turn rss 3274 MB, pss 3179 MB, swap 789 MB, majflt 59090, minflt 1729060, cpu 5101310 ms
+         1794240383.332 13941 13987 I OpenWeightsBench: TURN n=15 conv=WildChat-1M-40 atMs=1634963 prompt=31 prefill=11.5 decode=5.4 ttft=2697 generated=512
+         1794240413.400 13941 13993 I OpenWeights: mem: before turn rss 3274 MB, pss 3179 MB, swap 790 MB, majflt 59090, minflt 1729103, cpu 5101390 ms
+         1794240413.406 13941 13993 I OpenWeights: kv: diverged at 3 of 3571 cached, prompt 133, re-reading 130
+         1794240465.597 13941 13993 I OpenWeights: mem: after turn rss 3263 MB, pss 3168 MB, swap 799 MB, majflt 60920, minflt 1732011, cpu 5309020 ms
+         1794240465.607 13941 13987 I OpenWeightsBench: TURN n=16 conv=UltraChat-200k-0 atMs=1761801 prompt=130 prefill=21.5 decode=9.8 ttft=6039 generated=454
+         1794240495.610 13941 13987 I OpenWeightsBench: SESSION done turns=17 ms=1844076

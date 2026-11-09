@@ -1,0 +1,11 @@
+Cmdline: /system/bin/simpleperf record -e cpu-clock -f 1000 -p 31403 --duration 30 -o perf-P6.data
+Arch: arm64
+Event: cpu-clock (type 1, config 0)
+Samples: 55029
+Event count: 55029000000
+
+Overhead  Shared Object                              Symbol
+69.57%    /data/local/tmp/sd/pkg/lib/libggml-cpu.so  ggml_graph_compute_thread
+25.47%    /data/local/tmp/sd/pkg/lib/libggml-cpu.so  ggml::cpu::repack::tensor_traits<block_q4_0, 8l, 4l, (ggml_type)8>::compute_forward(ggml_compute_params*, ggml_tensor*)
+3.42%     /data/local/tmp/sd/pkg/lib/libggml-cpu.so  ggml_compute_forward_flash_attn_ext
+0.69%     /data/local/tmp/sd/pkg/lib/libggml-cpu.so  ggml_compute_forward_mul_mat

@@ -1,7 +1,7 @@
 # Prefill and decode on CPU, GPU and NPU: every pairing on a Snapdragon 8 Elite Gen 5
 
-**Measured 2026-10-24 to 2026-11-09 on Qualcomm Device Cloud handsets, `canoe`: SM8850 (Snapdragon
-8 Elite Gen 5), Android 16, 23 GB, `adb` as root, on AC power in Qualcomm's rack, over thirteen
+**Measured 2026-10-24 to 2026-11-10 on Qualcomm Device Cloud handsets, `canoe`: SM8850 (Snapdragon
+8 Elite Gen 5), Android 16, 23 GB, `adb` as root, on AC power in Qualcomm's rack, over fourteen
 reservations.** The first ran r1 to r4 and ended at about 16:55 phone time; the second (about
 20:30 to 04:20) ran the three models the first could not reach (r6), LFM2.5 2.6B (r7), the
 ExecuTorch NPU comparison (e1) and a second pass of five models in another cell order (r5). The
@@ -19,7 +19,13 @@ set each throttle's state by hand on a cool phone, so that heat and state no lon
 ([r21, r23 to r27](#the-throttles-states-set-by-hand-on-a-cool-phone-r21-r23-to-r27)). A thirteenth,
 the same day on a fifth unit (5d3e8f0a), ran the counterbalanced thread test from a shared gate
 ([r22](#from-a-shared-gate-on-a-fifth-unit-r22)) and the app's own engine in a pause set by hand
-([r27](#the-apps-own-engine-in-a-pause-r27)).
+([r27](#the-apps-own-engine-in-a-pause-r27)), and in its extension profiled a paused run
+([r28](#where-a-paused-threads-time-goes-r28)) and tried a barrier that gives up its core (r29). A
+fourteenth, on 2026-11-09 and 10 on unit 4816891, tried that barrier with a later yield
+([r31](#a-barrier-that-gives-up-its-core-r29-r31)), measured a fallback built into the app's engine
+([r34, r38](#a-fallback-in-the-apps-engine-r34-r38)) and chatted at a person's pace for half an hour
+and more ([r33](#ordinary-use-r33-r37)); the owner's POCO X8 Pro Max (MediaTek MT6991), not a QDC
+phone, ran one such session (r37).
 
 | Processor | What it is, as read from the phone |
 |---|---|
@@ -988,6 +994,216 @@ coarse in a pause). The analysis is `analyze_app.py`.
   short context, and the pause set by hand; the app's thermal policy, which picks the count from Android's status before
   each reply, was not in the loop, and no slow-step detector was tried.
 
+#### Where a paused thread's time goes (r28)
+
+Everything above fits threads that spin while they wait, and nothing had shown it. On the fifth
+unit (5d3e8f0a), the benchmark decoded with 6 threads with the pause on (P6) and off (N6) while
+`simpleperf record -e cpu-clock -f 1000` sampled its process (30 s paused, 20 s not; `chain28.sh`,
+`perf-P6.txt`, `perf-N6.txt`).
+
+| | Paused, 6 threads | Not paused, 6 threads |
+|---|---|---|
+| Samples, and cores busy on average | 55,029 in 30 s, 1.83 | 69,192 in 20 s, 3.46 |
+| `ggml_graph_compute_thread` | 69.6% | 8.6% |
+| The Q4_0 matrix kernel (repacked) | 25.5% | 60.7% |
+| Flash attention | 3.4% | 6.9% (plus 10.3% in the Q6_K kernel) |
+
+`ggml_barrier` is inlined into `ggml_graph_compute_thread`; its wait (`disasm-r28.txt`,
+0x282ec to 0x282fc) loads the barrier's counter, compares it with the value at entry, leaves if it
+moved, and otherwise executes a `yield` hint and loops. The hint does not give up the core. So with
+six threads on the two cores the pause leaves, about 70% of the CPU time went to the function that
+holds that wait, against 9% unpaused, while the matrix and attention kernels' share fell from about
+four fifths to under a third.
+The samples were kept by function and by thread, not by instruction, so the split inside
+`ggml_graph_compute_thread` between the wait and its other code is not in the files; its other code
+is a loop over the graph's nodes, 8.6% of an unpaused run that does about a hundred times the work.
+
+#### A barrier that gives up its core (r29, r31)
+
+If the waiting threads gave their cores back, the working ones could finish. A patch to llama.cpp's
+CPU backend (`barrier-yield.patch`, built into `libggml-cpu.so` 5e5eebcd) adds a `sched_yield()`
+after a set number of spins, read from `GGML_BARRIER_YIELD_SPINS`; unset, it is the stock loop.
+The benchmark ran Qwen3 4B Q4_0 on one three-turn conversation (UltraChat-200k-2, 128 tokens a
+turn, prompts on the GPU, replies on the CPU), each arm after r23's gate, the pause off (N) or on
+(P) for the whole arm, 6 or 4 threads, and Y0 (the stock wait), Y10k or Y1M spins before a yield,
+in orders fixed before any result: r23's work, so its N6 matches r23's 21.0 s over the three turns.
+r29 ran on the fifth unit, r31 on phone D (4816891); a 300 s watchdog stopped an arm with turns still
+to go.
+
+| Arm | r29, tok/s per turn | r31, tok/s per turn |
+|---|---|---|
+| N6-Y0, stock, not paused | 22.58, 18.15, 16.31 | 21.98, 17.50, 15.78; 22.39, 17.68, 15.31 |
+| N6-Y1M | | 21.95, 17.53, 15.83; 22.05, 17.32, 15.88 |
+| N6-Y10k | 6.98, 6.12, 10.13 | 4.41, 17.56, 16.20 |
+| P6-Y0, stock, paused | no turn finished | no turn in 300 s |
+| P6-Y1M | | 0.63, then stopped; twice |
+| P4-Y1M | | 1.20, 1.16, then stopped; twice |
+| P6-Y10k | 3.42, 3.11, 2.98; 3.56, 3.28, 3.17 | 3.51, 3.21, 3.07 |
+| P4-Y10k | 3.56, 3.24, 3.11; 3.57, 3.27, 3.23 | |
+
+Decode steps over decode time, per turn; each arm's turns in order, separated by semicolons where an
+arm ran twice. The rate falls from turn to turn as the context grows.
+
+- **Yielding ends the stall, and how early it yields decides what it costs.** After 10,000 spins
+  the paused phone decoded 3.0 to 3.6 tok/s with 6 or 4 threads, where the stock wait finished no
+  turn. But the same setting slowed unpaused decode, in all three of r29's turns (to 31% to 62% of
+  the stock rate) and in the first of r31's (20%), so a yield that early costs the case with no
+  pause, and not predictably.
+- **After 1,000,000 spins it cost nothing measurable unpaused and saved little paused.** Unpaused,
+  Y1M's turns fell inside or beside the stock wait's two runs (21.95 to 22.05, 17.32 to 17.53 and
+  15.83 to 15.88 tok/s, against 21.98 to 22.39, 17.50 to 17.68 and 15.31 to 15.78). Paused, it
+  decoded 0.63 tok/s with 6 threads and 1.2 with 4, against about 3.2 for Y10k.
+- **Neither beats fewer threads.** On this same work, in the same pause, 2 threads decoded 6.88 to
+  6.97 tok/s with the stock wait (r23, P2), about twice Y10k's rate. A budget between the two, or a yield that
+  starts late and then comes sooner, was not tried; what an upstream change would need is a wait
+  that costs nothing when every thread has a core and gives the core up when one does not.
+
+### A fallback in the app's engine (r34, r38)
+
+An app cannot count on reading the pause: on this QDC build the test process could read all eleven
+pause devices, but on the owner's retail POCO it could not even list `/sys/class/thermal` (r36's
+check). What every app has is how long each decode step took. So the engine now carries a guard
+(`stall_guard.h`, `StallGuard`) that watches its own steps: two steps in a row more than 8 times the
+recent normal step and over 250 ms (or over 1.5 s with no history yet) drop decode, and prompt
+reading with it, to 2 threads; every 30 s, once it has at least four steps at 2 threads, it tries
+one step at the planned count, and keeps it if that step took at most 3 times the median of its last
+eight steps at 2 threads. A thermal re-plan never ends a fallback, and a try whose decode fails is
+dropped, not judged. It does nothing to a plan of 2 or fewer threads, and
+`OPENWEIGHTS_STALL_GUARD=0` turns it off. Its host test (`stall_guard_test.cpp`, 14 cases on step
+times modelled on r27) runs in CI.
+
+r34 ran the engine's own `ThreadCountBenchmark` on phone D at a realistic length: a 1,751-token
+prompt (one user message, `prompt-r30.txt`), up to 1,024 tokens of reply, an 8,192-token window, 4 threads
+unless named. Arms: N, no pause; W, both switches on from 10 s after decode starts to 40 s after (a
+pause that comes and goes); M, on from 10 s after decode starts to the run's end; each with the
+guard off (0) or on (G). Decode's start was read from the run's own progress lines as it ran. Block 1
+(`engine-test4`) ran W4-G M4-0 N2-0 N4-G M4-G W4-0 N4-0; block 2 (`engine-test5`, the guard after
+the third review) the reverse order. r38 repeated the M arm four times on `engine-test5`
+(M4-G M4-0 M4-G M4-0) and recorded, every 2 s, the CPU each of the test process's threads last ran on.
+
+| Arm | Runs | Tokens | Decode tok/s | Guard |
+|---|---|---|---|---|
+| N4-0, no pause | r34-7, r34-8 | 1,022; 1,024 | 10.04, 10.30 | off |
+| N4-G | r34-4, r34-11 | 1,024; 1,024 | 8.90, 10.18 | fell back 105 s into decode in r34-4 (below) |
+| N2-0 | r34-3, r34-12 | 1,024; 1,024 | 8.94, 9.16 | off |
+| W4-0, a 30 s pause | r34-6, r34-9 | 1,023; 1,024 | 8.20, 8.38 | off |
+| W4-G | r34-1 | 1,024 | 8.84 | fell back 6 s after the pause began, back 6 s after it ended |
+| M4-0, a pause that stays | r34-2, r34-13, r38-2 | 192, 181, 183 by the watchdog | 0.61, 0.57, 0.58 | off |
+| M4-G | r34-5, r38-1, r38-3 | 1,013 by the watchdog; 1,024; 1,024 | 3.21, 3.37, 3.36 | fell back 7, 19 and 15 s after the pause began |
+
+Tokens after the first over the decode time to the last progress line (`analyze_guard.py`); the
+watchdog stopped a run 420 s after it started.
+
+- **A pause that stays: 5.5 to 5.9 times the tokens a second.** With the guard the engine wrote
+  3.21 to 3.37 tok/s through the rest of the reply; without it 0.57 to 0.61. Each try at 4 threads
+  in the pause costs one stalled step, 2.6 to 5.7 s in r34-5 and 5.0 to 8.7 s in r38's two runs,
+  one try every 33 to 38 s.
+- **A pause that comes and goes.** The one W4-G run that held its pause decoded in 115.7 s, 7.6 s less
+  than the mean of the two W4-0 runs (124.6 and 122.0 s), and returned to 4 threads 6 s after the
+  pause ended.
+- **Falling back costs a little where the pause never came.** N2-0 decoded 11% slower than N4-0
+  here (medians 9.05 against 10.17 tok/s). The guard only falls back on a stall: the one guarded run
+  with none, r34-11, decoded 10.18 tok/s, between the two unguarded runs (10.04 and 10.30); one run
+  cannot measure what its bookkeeping costs.
+- **One stall with no pause on the logged switches.** In r34-4 (N4-G) two steps took 3.9 and 4.8 s
+  against a normal 129 ms, 105 s into decode, with no pause switch on, no major page fault and the
+  CPU ceilings unchanged; the hottest CPU zone fell from 89 to 73 °C over those seconds, as it does
+  in a pause, and the guard fell back for the run's last 10 s. The logger read three of the unit's
+  eleven pause devices (both `thermal-pause-3C` and `thermal-pause-C0`); the eight one-core devices
+  (`thermal-pause-1` to `-80`) were not logged, so a pause through them is not ruled out. No other
+  unpaused run had a step over 1.5 s.
+- **At least one of twelve pauses set by hand did not hold, and likely three.** In r38-4 (M4-0) the test's busy threads ran
+  on CPUs 0, 1, 6 and 7 with both written switches and the third reading 1, about 3.6 cores of CPU
+  time a second, and decode went on at 6.72 tok/s; in the three r38 runs whose pause held, they ran
+  on CPUs 0 and 1 only, 1.7 cores a second. Two runs in r34's block 2 (r34-10 M4-G and r34-14
+  W4-G) behaved the same way by every measure kept for them (no step over 1.5 s, decode at about 70%
+  of unpaused, about four cores of CPU time, the hottest CPU zone near 80 °C rather than the low 60s
+  of a held pause), but have no placement log to show it; they are left out of the table as likely
+  pauses that did not hold, not counted as guard results either way. So `thermal-pause-C0` written to 1 does not always keep work off
+  CPU 6 and 7 on this unit; why was not found.
+- **What it does not show.** One unit, one model, one prompt; the pause set by hand; the build that
+  ships (`engine-test5`) fell back and tried 4 threads again in r38, where the pause stayed, but its
+  return to 4 threads was seen only on `engine-test4` (r34-1); the two differ in the try's rules,
+  which the host test covers.
+  A pause that starts while the prompt is being read is not watched: the guard reads decode steps,
+  and r27's paused prompt reading at 4 threads ran at 2.8 tok/s against 27.7 with 2.
+
+### Ordinary use (r33, r37)
+
+Does a person's chat reach the hard throttle? `SessionBenchmark` chats through the study's nine
+conversations turn by turn, each reply the model's own (greedy, up to 512 tokens) and kept in the
+history, with a reading pause before each next message, on one loaded engine for the whole session
+and a new history for each conversation, as a new chat is in the app: 4 threads, an 8,192-token
+window, the guard on. On phone D, screen on at a middle brightness, on the rack's supply, after r23's
+gate: r33-A with 30 s between turns for 40 minutes, then r33-B with 5 s for 30 minutes. On the
+owner's POCO (r37), on USB power and charging, screen on at a fixed brightness, 30 s for 30 minutes.
+
+| | r33-A, 30 s pause | r33-B, 5 s pause | r37, POCO, 30 s pause |
+|---|---|---|---|
+| Turns | 29 in 40.7 min | 31 in 30.4 min | 17 in 30.9 min |
+| Hottest reading | XO 64.2 °C | XO 73.7 °C | CPU 73.8 °C, skin 44.6 °C |
+| Hard throttle | none of 1,876 samples | none of 1,453 | thermal status 0 throughout |
+| CPU ceilings below top | 98% of samples | 99% | not readable |
+| Decode, median (range) | 12.8 (5.6 to 20.1) tok/s | 13.3 (5.6 to 20.8) | 8.2 (5.4 to 11.2) |
+| First token, median (max) | 4.8 s (119.3) | 4.8 s (119.4) | 3.2 s (108.4) |
+| Guard fallbacks | 0 | 0 | 0 |
+
+`analyze_session.py`. The SM8850's hard throttle switches on at 78 °C on the XO thermistor.
+
+- **Neither pace reached the hard throttle on the rack phone**, but the brisk one came within 4.3 °C
+  and held 70 to 73 °C on the XO over its last five minutes. The soft throttle held almost
+  throughout both: the CPU ceilings sat at about half their top (1.90 GHz, and 1.98 to 2.23 against
+  3.63 and 4.61) from early in each session.
+- **Decode slowed within each conversation as its context grew**, from 14 to 21 tok/s on a
+  conversation's first turn to 5.6 on the seventh turn of the first, and recovered with each new
+  conversation; the POCO showed the same shape, lower (11.2 to 5.4).
+- **Some first tokens took about two minutes, on both phones, after the cache stopped matching.**
+  Before the sixth turn of the first conversation the engine logged "5 remembered replies spliced
+  into the prompt" and then "diverged at 2623 of 3136 cached, prompt 3173, re-reading 550": the
+  prompt stopped matching the cache 550 tokens from its end, where the cache still held 513 tokens
+  that it dropped. That took 119 s on the SM8850 and 108 s on the POCO, about 5 tok/s, where each
+  conversation's first turn read 21 to 97 tok/s (15 to 265 tokens). The engine warns at load that
+  this template drops past thinking; why the splice did not keep this prefix, and why reading at
+  that depth was this slow, were not traced, and no cool run of the same turn separated heat.
+- **The guard never fell back** in 77 turns on two phones, one with no Snapdragon pause at all.
+- **What it does not show.** A rack phone in open air and a phone on a desk, not in a hand or a
+  pocket; one model; the POCO charging, which adds its own heat; one session of each kind.
+
+### What the model writes at each thread count
+
+Every turn record keeps its greedy tokens, decoded on the same teacher-forced context, so cells can
+be compared token for token (`agree_threads.py`). r19's two cells (phone B) and r22's four (the
+fifth unit), 33 turns each:
+
+- **The same thread count gave the same tokens on both phones**: 6 against 6 and 2 against 2, 33 of
+  33 turns identical, within a unit and across the two.
+- **6 threads against 2 changed the reply in 23 of 33 turns.** Every pairing of a 6 with a 2 agreed
+  on the same 10 turns and first diverged at the same token in the others, from the 13th to the
+  305th (median 109th). A different thread count adds the same numbers in a different order, and a
+  greedy choice between two close tokens can flip; after that the reply is different text. Which is
+  better was not graded.
+- **So a thread change mid-reply can change what follows it.** The stall guard above switches
+  between 4 and 2 threads when steps stall, so with it on, a reply can depend on when a pause came as
+  well as on the prompt. 4 against 2, and switches mid-reply, were not compared token for token.
+
+### Memory
+
+The engine logs its resident set after loading and around each turn (`mem:` lines). Qwen3 4B Q4_0
+in the app's engine on the SM8850: 3,534 MB resident (3,424 MB proportional) with a 2,048-token
+window (r27); 4,399 MB after loading with an 8,192-token window and 4,462 to 4,467 MB after a reply
+of up to 1,024 tokens (r34), none of it in swap. On the owner's POCO X8 Pro Max (MediaTek MT6991),
+the same file: 3,020 MB resident after loading with 2,048 tokens and 3,760 MB with 8,192, with 110
+and 241 MB of the process in swap (a check before r36, and r37). Why the SM8850's process is larger
+at the same window was not traced; the two load different variants of the CPU backend.
+
+### Energy, and what a rack phone cannot measure
+
+The QDC phones run from the rack's supply with the battery bypassed: the gauge read 1 to 7 mA idle
+or loaded and USB offline, and through `perfetto`'s `android.power` source the PowerStats rails the
+platform lists read zero (CPU, GPU, NPU) or 2^64 - 1 (SoC). So no QDC run measured energy. The owner's POCO
+has a working gauge; r36 is built to measure energy per token there, unplugged, at 4 and 2 threads,
+and has not run (Runs).
+
 ### Where the work ran
 
 From the load logs. The CPU instance is one graph. The GPU instance puts every layer, the output
@@ -1094,8 +1310,9 @@ unmeasured:
 - **Live conversations.** The replay teacher-forces the dataset's replies, so the prefill side
   never needed the decode side's own tokens. A real split must feed the generated reply back to the
   NPU context, or copy the state back, before the next turn.
-- **Memory, energy and battery.** Three instances were resident at once in the 64-token runs (two
-  in most reply-length runs); nothing measured power.
+- **Energy and battery.** No run measured power: the rack phones cannot ([energy](#energy-and-what-a-rack-phone-cannot-measure)).
+  Memory is measured for one instance in the app's engine ([memory](#memory)), not for an NPU split,
+  which keeps two instances resident.
 
 ## What runs
 
@@ -1234,6 +1451,39 @@ another seed.
   the rest did (it did: 121 s, 61.4 °C, GPU at power level 8, CPU ceilings lowered). The order is
   still one order. Then r12's. 297
   turns and the warm-up's 33, none failed, and every file matched the phone's by checksum.
+- **r36 and r37.** On the owner's POCO X8 Pro Max (MediaTek MT6991, HyperOS OS3.0.304.0, Android
+  16), not a QDC phone, on 2026-11-09 and 10, over USB and then Wi-Fi debugging; the engine's test APK
+  as on phone D (416d8c86b7f9aadf) and the study's Qwen3 4B (pushed from the Mac, 92f4a83cdfe691b2).
+  The phone's shell cannot read its thermal zones, cooling devices or battery files; the thermal
+  service (`dumpsys thermalservice`) and the battery service (`dumpsys battery get -f current_now`,
+  about a second a read) can, so `logger.sh` samples those. r36 (`chain36.sh`, energy per token
+  unplugged, then a session) waited three times for the phone to be unplugged and never ran: the
+  first start took one stray read (the cable out for about 4 s and back) for the unplug and was
+  stopped by hand in its first idle, before any run; the chain now wants ten unplugged reads in a
+  row, and its second and third starts timed out after 30 minutes on USB power. Each start held the
+  screen on at the brightness it found and put the timeout and automatic brightness back when it
+  ended. r37 (`chain37.sh`) ran the session on USB power instead. A first check of the benchmark
+  before r36 was killed by the system's backup agent, which backed up the newly installed test
+  package and killed its process; the second check ran (12.1 tok/s, 8 tokens).
+- **r28, r29, r32, r31, r33 and r34.** r28 and r29 in the thirteenth reservation's extension, on
+  5d3e8f0a after r27; then a fourteenth reservation, sa963265, on 2026-11-09 and 10, on phone D
+  (4816891), whose model was fetched on the phone (92f4a83cdfe691b2). r28 (`chain28.sh`) profiled
+  one paused and one unpaused 6-thread run with `simpleperf`. r29 (`chain29.sh`) ran 7 of its 9
+  probes before the reservation moved; its patched library was built on the build box from
+  `barrier-yield.patch` (sha256 prefix 5e5eebcd) beside the stock one (c91baa82). r30 (`chain30.sh`,
+  `follow30.sh`), the guard's first device test, was queued there and never started before the
+  reservation moved; r32 is its design on phone D. On phone D, r32
+  (`chain32.sh`) timed its pause from each run's start; the pause would have come during prompt
+  reading (about 95 s of the 2,257-token prompt), so it was stopped by hand after its first run
+  (`r32-1-N4-0`, kept as one more unpaused 4-thread run) and redesigned as r34, whose pause starts 10
+  s after decode does, found from the run's own progress lines in logcat. r34's first start was
+  stopped in its first run to fix the guard after review, and block 1 ran on that build
+  (`engine-test4`, 9ccfad1b16dd6996). r33 (`chain33.sh`) installed the build after the second review
+  (`engine-test5`, 416d8c86b7f9aadf), which r31 did not use and block 2 and r33-B did. Every chain
+  that writes a pause began by checking that the two switches hold six busy loops to CPU 0 and 1.
+  `follow35.sh` ran them in the order r34 block 1, r33-A, r31, r34 block 2, r33-B; the logger
+  (`trig31.sh`, `trig-r31.txt`) ran throughout, and results were pulled every three minutes.
+  Codex reviewed the guard three times before it shipped to the phone (Reviews).
 - **r22 and r27.** A thirteenth reservation, sa962766, on 2026-11-09, on a fifth unit, 5d3e8f0a,
   five hours. The phone had been wiped: the benchmark package was pushed again (sha256 prefix
   204879540c459b5e) and Qwen3 4B fetched on the phone (92f4a83cdfe691b2). This unit numbers its
@@ -1311,17 +1561,22 @@ another seed.
 - **ExecuTorch's CPU and GPU cells**, and any ExecuTorch model but Qwen3 0.6B.
 - **Prompts past 4,096 tokens of context**, cold starts, and live (not teacher-forced)
   conversations.
-- **Memory.** Two or three model instances were resident at once, so no deployment's footprint was
-  measured.
-- **Energy.** Nothing measured power or battery drain.
-- **Answer quality.** Outputs were compared token for token with the CPU, not graded.
+- **Memory of a split.** The benchmark keeps two or three model instances resident, so no split's
+  footprint was measured; one instance in the app's engine was ([memory](#memory)).
+- **Energy.** Nothing measured power or battery drain: the rack phones' gauge is bypassed, and r36,
+  built for the owner's POCO, did not run because the phone stayed on USB power.
+- **Answer quality.** Outputs were compared token for token with the CPU and across thread counts,
+  not graded.
 - **The thread test in natural heat, repeated.** r19 is one ordered pair on phone B; r22 is one
   counterbalanced block (two cells of each count) on a fifth unit, its second block cut for r27.
   Inside a pause set by hand, r23 and r26 (the benchmark) and r27 (the app's engine) measured 6, 4,
   3 and 2 threads, on short fixed work, one model.
-- **A switch an app could make.** The switching arm read the pause switches as root. No detector
-  an app can use (a slow step, Android's thermal status) was measured, nor switching through a
-  natural pause.
+- **A fallback through a natural pause.** The engine's guard (r34, r38) was measured against a
+  pause set by hand; no natural pause came during its runs or the paced sessions, and its return to
+  4 threads was seen once, on the build before the shipped one. Android's thermal status was not
+  tried as a signal.
+- **Other chips.** The pause is a Qualcomm mechanism measured on the SM8850 only; the POCO session
+  checked only that the guard stays quiet on a MediaTek phone in ordinary use.
 - **A CPU-only probe through a pause**, and the pause together with `kgsl` and `cdsp` at 5 as the
   natural hard throttle sets them.
 - **A second pass of Gemma 3 1B, Qwen3 1.7B Q8_0, LFM2.5 2.6B and Llama 3.2 3B at 64 tokens.**
@@ -1429,3 +1684,18 @@ the stalls' cost or test switching, so the trade it was said to support is left 
 up decode rate, not first-token time, which was later. It had the analysis tie each run's log lines to
 its own process and thread count, check both written switches and the logger's coverage, and take
 medians from unrounded rates.
+
+For r28 to r38, Codex reviewed the guard three times before it reached a phone. The first round
+found a fallback that could never end once the step times grew for another reason, prompt reading
+left at the planned count, a thermal re-plan that handed back the stalled count, and a baseline
+inflated by slow steps; the second, a try judged against a mean that one slow step after falling back
+could inflate enough to pass a still-stalled try, and a failed decode leaving a try's count applied.
+All were fixed with host-test cases, and the third found it ready behind its switch. A fourth round
+read this report and its scripts, reproduced the r29 and r31, guard, session and agreement tables,
+and corrected: the slow sixth turn's 550 tokens were read after the prompt stopped matching the
+cache, not all new, and heat was not separated from it; only r38-4's failed pause is shown by
+placement, so r34-10's and r34-14's are likely, not shown; one guarded run without a stall cannot show
+what the guard costs; 6 against 2 threads shows a thread count can
+change the reply, not that a switch mid-reply does; Y1M's unpaused cost is within run-to-run
+variation, not nothing; and `analyze_energy.py`, not yet run, used one voltage per window, timed
+decode from the end of prompt reading rather than the first token, and counted the first token.

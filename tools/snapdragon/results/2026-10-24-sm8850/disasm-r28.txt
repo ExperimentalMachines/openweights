@@ -1,0 +1,71 @@
+# llvm-objdump -d of pkg/lib/libggml-cpu.so (the reference build, sha256 of the package as in the chain logs), 0x28200 to 0x28310:
+# ggml_graph_compute_thread with ggml_barrier inlined. The spin wait is 0x282ec to 0x282fc: load n_barrier_passed,
+# compare with the value at entry, leave if it moved, else the yield hint and loop. r28's samples, perf-P6.txt and perf-N6.txt.
+   28200: b90007e8     	str	w8, [sp, #0x4]
+   28204: 3940c2e8     	ldrb	w8, [x23, #0x30]
+   28208: a900afe9     	stp	x9, x11, [sp, #0x8]
+   2820c: 7100055f     	cmp	w10, #0x1
+   28210: 390083e8     	strb	w8, [sp, #0x20]
+   28214: 5400446b     	b.lt	0x28aa0 <ggml_graph_compute_thread+0x8fc>
+   28218: 2a1f03f9     	mov	w25, wzr
+   2821c: 900008da     	adrp	x26, 0x140000 <ggml_table_f32_ue4m3+0x324>
+   28220: 5280003c     	mov	w28, #0x1               // =1
+   28224: 14000006     	b	0x2823c <ggml_graph_compute_thread+0x98>
+   28228: d5033bbf     	dmb	ish
+   2822c: b940070a     	ldr	w10, [x24, #0x4]
+   28230: 11000739     	add	w25, w25, #0x1
+   28234: 6b0a033f     	cmp	w25, w10
+   28238: 5400434a     	b.ge	0x28aa0 <ggml_graph_compute_thread+0x8fc>
+   2823c: b9410ac8     	ldr	w8, [x22, #0x108]
+   28240: 6b19011f     	cmp	w8, w25
+   28244: 540042e0     	b.eq	0x28aa0 <ggml_graph_compute_thread+0x8fc>
+   28248: f9400b08     	ldr	x8, [x24, #0x10]
+   2824c: 8b39cd08     	add	x8, x8, w25, sxtw #3
+   28250: f9400114     	ldr	x20, [x8]
+   28254: b940528b     	ldr	w11, [x20, #0x50]
+   28258: 51009169     	sub	w9, w11, #0x24
+   2825c: 7100113f     	cmp	w9, #0x4
+   28260: 7a402964     	ccmp	w11, #0x0, #0x4, hs
+   28264: 54fffe40     	b.eq	0x2822c <ggml_graph_compute_thread+0x88>
+   28268: b9409689     	ldr	w9, [x20, #0x94]
+   2826c: 3627fe09     	tbz	w9, #0x4, 0x2822c <ggml_graph_compute_thread+0x88>
+   28270: 3943934c     	ldrb	w12, [x26, #0xe4]
+   28274: 3600046c     	tbz	w12, #0x0, 0x28300 <ggml_graph_compute_thread+0x15c>
+   28278: b9405288     	ldr	w8, [x20, #0x50]
+   2827c: 34000108     	cbz	w8, 0x2829c <ggml_graph_compute_thread+0xf8>
+   28280: aa1403e0     	mov	x0, x20
+   28284: 94023477     	bl	0xb5460 <ggml_is_empty@plt>
+   28288: 370000a0     	tbnz	w0, #0x0, 0x2829c <ggml_graph_compute_thread+0xf8>
+   2828c: 910003e0     	mov	x0, sp
+   28290: aa1403e1     	mov	x1, x20
+   28294: 940234b3     	bl	0xb5560 <ggml_cpu_extra_compute_forward@plt>
+   28298: 36000e40     	tbz	w0, #0x0, 0x28460 <ggml_graph_compute_thread+0x2bc>
+   2829c: b9421a68     	ldr	w8, [x19, #0x218]
+   282a0: 34000ce8     	cbz	w8, 0x2843c <ggml_graph_compute_thread+0x298>
+   282a4: b9400708     	ldr	w8, [x24, #0x4]
+   282a8: 11000729     	add	w9, w25, #0x1
+   282ac: 6b08013f     	cmp	w9, w8
+   282b0: 54fffbea     	b.ge	0x2822c <ggml_graph_compute_thread+0x88>
+   282b4: f9410a68     	ldr	x8, [x19, #0x210]
+   282b8: b9406909     	ldr	w9, [x8, #0x68]
+   282bc: 12003d29     	and	w9, w9, #0xffff
+   282c0: 7100052a     	subs	w10, w9, #0x1
+   282c4: 54fffb40     	b.eq	0x2822c <ggml_graph_compute_thread+0x88>
+   282c8: 9102010b     	add	x11, x8, #0x80
+   282cc: b940c109     	ldr	w9, [x8, #0xc0]
+   282d0: b8fc016b     	ldaddal	w28, w11, [x11]
+   282d4: 6b0a017f     	cmp	w11, w10
+   282d8: 540000a1     	b.ne	0x282ec <ggml_graph_compute_thread+0x148>
+   282dc: b900811f     	str	wzr, [x8, #0x80]
+   282e0: 91030108     	add	x8, x8, #0xc0
+   282e4: b8fc0108     	ldaddal	w28, w8, [x8]
+   282e8: 17ffffd1     	b	0x2822c <ggml_graph_compute_thread+0x88>
+   282ec: b940c10a     	ldr	w10, [x8, #0xc0]
+   282f0: 6b09015f     	cmp	w10, w9
+   282f4: 54fff9a1     	b.ne	0x28228 <ggml_graph_compute_thread+0x84>
+   282f8: d503203f     	yield
+   282fc: 17fffffc     	b	0x282ec <ggml_graph_compute_thread+0x148>
+   28300: 7100657f     	cmp	w11, #0x19
+   28304: 54fffba1     	b.ne	0x28278 <ggml_graph_compute_thread+0xd4>
+   28308: 3940c2eb     	ldrb	w11, [x23, #0x30]
+   2830c: 3707fb6b     	tbnz	w11, #0x0, 0x28278 <ggml_graph_compute_thread+0xd4>
