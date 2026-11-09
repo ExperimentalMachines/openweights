@@ -49,6 +49,14 @@ jobs:
       - name: Python tests
         run: tools/run_python_tests.sh
 
+      # StallGuard decides the decode thread count in the native engine and has no llama.cpp in it,
+      # so it is tested on the host; Gradle builds the native code for Android only and never runs it.
+      - name: Native host tests
+        run: |
+          c++ -std=c++17 -Wall -Wextra -Werror -I core/engine/src/main/cpp \
+            core/engine/src/hostTest/cpp/stall_guard_test.cpp -o "$RUNNER_TEMP/stall_guard_test"
+          "$RUNNER_TEMP/stall_guard_test"
+
       - name: Assemble debug APK
         run: ./gradlew :app:assembleDebug
 

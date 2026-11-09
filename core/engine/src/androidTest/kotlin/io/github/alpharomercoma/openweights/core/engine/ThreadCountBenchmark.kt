@@ -17,6 +17,7 @@
 package io.github.alpharomercoma.openweights.core.engine
 
 import android.os.SystemClock
+import android.system.Os
 import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -41,10 +42,13 @@ import java.io.File
  *
  * Instrumentation arguments narrow it for a run driven from outside, as the Snapdragon
  * throttle study does with the CPU pause set by hand (`docs/research/snapdragon-pd-matrix.md`):
- * `threads` (a comma list), `maxTokens` and `model`. With `threads` given, prompts are read
+ * `threads` (a comma list), `maxTokens`, `model`, `contextLength`, `promptFile` (the user
+ * message read from a file, for a realistic length) and `stallGuard` (0 turns the engine's stall
+ * fallback off for the run, so one build measures it against itself). With `threads` given, prompts are read
  * with the same count, as `ThermalPolicy` plans them in the app. Every live progress event is
  * logged with the time since the run started, so a run stopped before it ends keeps its last
- * count and when it was reached.
+ * count and when it was reached. It also logs whether this process, an ordinary app's, can read
+ * the CPU pause switches the thermal engine sets, which decides how an app could see a pause.
  */
 @RunWith(AndroidJUnit4::class)
 class ThreadCountBenchmark {
@@ -61,15 +65,21 @@ class ThreadCountBenchmark {
 
         val cores = Runtime.getRuntime().availableProcessors()
         Log.i(TAG, "device reports $cores cores")
+        logPauseSwitchAccess()
 
         val asked = args.getString("threads")?.split(',')?.map { it.trim().toInt() }
         val maxTokens = args.getString("maxTokens")?.toInt() ?: DEFAULT_MAX_TOKENS
+        val contextLength = args.getString("contextLength")?.toInt() ?: CONTEXT_LENGTH
+        val prompt = args.getString("promptFile")?.let { File(it).readText() } ?: PROMPT
+        // Read by the native session when it loads, so it has to be in place before the engine is.
+        args.getString("stallGuard")?.let { Os.setenv("OPENWEIGHTS_STALL_GUARD", it, true) }
+        Log.i(TAG, "stallGuard=${args.getString("stallGuard") ?: "default"}")
         for (threads in asked ?: THREAD_COUNTS.filter { it <= cores }) {
             val engine = LlamaCppEngine()
             engine.load(
                 model,
                 ModelLoadParams(
-                    contextLength = CONTEXT_LENGTH,
+                    contextLength = contextLength,
                     threadCount = threads,
                     batchThreadCount = if (asked != null) threads else null,
                 ),
@@ -79,10 +89,7 @@ class ThreadCountBenchmark {
             val started = SystemClock.elapsedRealtime()
             val completed = engine.chat(
                 messages = listOf(
-                    ChatMessage.text(
-                        ChatRole.USER,
-                        "Write a short paragraph about tide pools. No preamble.",
-                    ),
+                    ChatMessage.text(ChatRole.USER, prompt),
                 ),
                 params = SamplerParams(temperature = 0.2f, maxTokens = maxTokens, seed = 1),
             ).onEach { event ->
@@ -110,10 +117,32 @@ class ThreadCountBenchmark {
         }
     }
 
+    /** Each cooling device whose type names a CPU pause: readable from here, and what it reads. */
+    private fun logPauseSwitchAccess() {
+        val devices = File("/sys/class/thermal").listFiles { f ->
+            f.name.startsWith("cooling_device")
+        }
+        if (devices == null) {
+            Log.i(TAG, "SWITCHES /sys/class/thermal not listable from this process")
+            return
+        }
+        val seen = mutableListOf<String>()
+        for (dir in devices) {
+            val type = runCatching { File(dir, "type").readText().trim() }.getOrNull()
+            if (type == null || !type.startsWith("thermal-pause")) continue
+            val state = runCatching { File(dir, "cur_state").readText().trim() }
+            val shown = state.getOrElse { "unreadable (${it.javaClass.simpleName})" }
+            seen += "$type=$shown"
+        }
+        val listed = if (seen.isEmpty()) "none readable" else seen.joinToString()
+        Log.i(TAG, "SWITCHES ${devices.size} cooling devices listable; pause switches: $listed")
+    }
+
     private companion object {
         const val TAG = "OpenWeightsBench"
         const val CONTEXT_LENGTH = 2048
         const val DEFAULT_MAX_TOKENS = 64
+        const val PROMPT = "Write a short paragraph about tide pools. No preamble."
         val THREAD_COUNTS = listOf(2, 3, 4, 5, 6, 8)
         val MODEL = File("/data/local/tmp/openweights/model.gguf")
     }

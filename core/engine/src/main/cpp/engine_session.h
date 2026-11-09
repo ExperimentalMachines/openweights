@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "llama.h"
+#include "stall_guard.h"
 
 namespace openweights {
 
@@ -612,6 +613,20 @@ private:
 
     /** Builds it once, wide enough for both halves, and hands it to the context. */
     void attach_threadpools(int32_t n_threads, int32_t n_threads_batch);
+
+    /**
+     * Falls back to two threads when decode steps stall, as they do in a CPU pause, and climbs
+     * back once they do not; see stall_guard.h. OPENWEIGHTS_STALL_GUARD=0 in the environment turns
+     * it off, so a device test can measure the engine with and without it in one build.
+     */
+    StallGuard stall_guard_;
+    /** The prompt-reading count the app planned, kept so the fallback can lower it and restore it. */
+    int32_t planned_batch_ = 0;
+    /** The decode count llama.cpp was last given. */
+    int32_t threads_now_ = 0;
+
+    /** Gives llama.cpp the guard's decode count, and the planned prompt count unless fallen back. */
+    void apply_guarded_threads(int32_t n_threads);
 
     /** Frees it. Only safe once the context that was given it is gone. */
     void free_threadpools();

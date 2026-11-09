@@ -886,6 +886,12 @@ Session * Session::load(
     // Before anything computes, so the load-time warm already runs on workers that live
     // longer than one graph. A thread re-plan later rebuilds them for its own counts.
     session->attach_threadpools(n_threads, n_threads_batch);
+    {
+        const char * guard = std::getenv("OPENWEIGHTS_STALL_GUARD");
+        session->stall_guard_ = StallGuard(guard == nullptr || std::string(guard) != "0");
+        session->planned_batch_ = n_threads_batch;
+        session->threads_now_ = session->stall_guard_.plan(n_threads);
+    }
     // Stop must mean now. The cooperative checks between batches and between tokens give
     // Stop a worst-case latency of one whole prefill batch - several seconds of a long
     // prompt on a phone - and the user reads that as the button not working. ggml polls
@@ -1048,8 +1054,20 @@ void Session::attach_threadpools(int32_t n_threads, int32_t n_threads_batch) {
 
 void Session::set_threads(int32_t n_threads, int32_t n_threads_batch) {
     // Only the count. The pool itself is built once at load and outlives every re-plan;
-    // see attach_threadpools for why rebuilding it is not safe.
-    llama_set_n_threads(ctx_, n_threads, n_threads_batch);
+    // see attach_threadpools for why rebuilding it is not safe. A re-plan during a stall
+    // fallback keeps the fallback: the pause that caused it does not end with the reply.
+    planned_batch_ = n_threads_batch;
+    apply_guarded_threads(stall_guard_.plan(n_threads));
+}
+
+void Session::apply_guarded_threads(int32_t n_threads) {
+    // While fallen back, prompts are read with the fallback count too: a pause slows a batch
+    // read by more threads than cores as it slows decode (r27: 2.8 against 27.7 tok/s).
+    const int32_t batch = stall_guard_.fallen()
+        ? std::min(planned_batch_, StallGuard::FALLBACK_THREADS)
+        : planned_batch_;
+    llama_set_n_threads(ctx_, n_threads, batch);
+    threads_now_ = n_threads;
 }
 
 void Session::reset() {
@@ -3054,7 +3072,29 @@ StopReason Session::generate(
         }
 
         llama_batch batch = llama_batch_get_one(&token, 1);
+        const int64_t step_started = now_ms();
         const int ret = llama_decode(ctx_, batch);
+        if (ret == 0) {
+            const int64_t step_ended = now_ms();
+            const bool was_fallen = stall_guard_.fallen();
+            const int32_t want = stall_guard_.step(static_cast<double>(step_ended - step_started), step_ended);
+            // A try that succeeds keeps the decode count it already ran with but ends the fallback,
+            // and the prompt count has to come back with it (review).
+            if (want != threads_now_ || stall_guard_.fallen() != was_fallen) {
+                apply_guarded_threads(want);
+                if (stall_guard_.fallen() && !was_fallen) {
+                    LOGI("threads: decode steps stalled (%lld ms against %.0f); %d until they recover",
+                         static_cast<long long>(step_ended - step_started), stall_guard_.normal_ms(), want);
+                } else if (!stall_guard_.fallen() && was_fallen) {
+                    LOGI("threads: decode steps are fast again; back to %d", want);
+                }
+            }
+        } else {
+            stall_guard_.abandon(now_ms());
+            // An abandoned try leaves llama.cpp on the planned count; the fallback's goes back now,
+            // or the next reply's first steps would be timed as the fallback's (second review).
+            if (stall_guard_.active() != threads_now_) apply_guarded_threads(stall_guard_.active());
+        }
         if (ret != 0) {
             // See ingest_prompt: an aborted graph is Stop landing mid-batch, and the
             // one-token decode this loop just lost is exactly the reply.flush() case -
