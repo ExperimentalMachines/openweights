@@ -23,8 +23,8 @@ the same day on a fifth unit (5d3e8f0a), ran the counterbalanced thread test fro
 ([r28](#where-a-paused-threads-time-goes-r28)) and tried a barrier that gives up its core (r29). A
 fourteenth, on 2026-11-09 and 10 on unit 4816891, tried that barrier with a later yield
 ([r31](#a-barrier-that-gives-up-its-core-r29-r31)), measured a fallback built into the app's engine
-([r34, r38](#a-fallback-in-the-apps-engine-r34-r38)) and chatted at a person's pace for half an hour
-and more ([r33](#ordinary-use-r33-r37)); the owner's POCO X8 Pro Max (MediaTek MT6991), not a QDC
+([r34, r38, r39](#a-fallback-in-the-apps-engine-r34-r38-r39)) and chatted at a person's pace for half an hour
+and more ([r33, r39](#ordinary-use-r33-r37-r39)); the owner's POCO X8 Pro Max (MediaTek MT6991), not a QDC
 phone, ran one such session (r37).
 
 | Processor | What it is, as read from the phone |
@@ -1058,7 +1058,7 @@ arm ran twice. The rate falls from turn to turn as the context grows.
   starts late and then comes sooner, was not tried; what an upstream change would need is a wait
   that costs nothing when every thread has a core and gives the core up when one does not.
 
-### A fallback in the app's engine (r34, r38)
+### A fallback in the app's engine (r34, r38, r39)
 
 An app cannot count on reading the pause: on this QDC build the test process could read all eleven
 pause devices, but on the owner's retail POCO it could not even list `/sys/class/thermal` (r36's
@@ -1079,7 +1079,8 @@ pause that comes and goes); M, on from 10 s after decode starts to the run's end
 guard off (0) or on (G). Decode's start was read from the run's own progress lines as it ran. Block 1
 (`engine-test4`) ran W4-G M4-0 N2-0 N4-G M4-G W4-0 N4-0; block 2 (`engine-test5`, the guard after
 the third review) the reverse order. r38 repeated the M arm four times on `engine-test5`
-(M4-G M4-0 M4-G M4-0) and recorded, every 2 s, the CPU each of the test process's threads last ran on.
+(M4-G M4-0 M4-G M4-0) and recorded, every 2 s, the CPU each of the test process's threads last ran on;
+r39 ran W4-G twice more on `engine-test5` with the same record.
 
 | Arm | Runs | Tokens | Decode tok/s | Guard |
 |---|---|---|---|---|
@@ -1087,7 +1088,7 @@ the third review) the reverse order. r38 repeated the M arm four times on `engin
 | N4-G | r34-4, r34-11 | 1,024; 1,024 | 8.90, 10.18 | fell back 105 s into decode in r34-4 (below) |
 | N2-0 | r34-3, r34-12 | 1,024; 1,024 | 8.94, 9.16 | off |
 | W4-0, a 30 s pause | r34-6, r34-9 | 1,023; 1,024 | 8.20, 8.38 | off |
-| W4-G | r34-1 | 1,024 | 8.84 | fell back 6 s after the pause began, back 6 s after it ended |
+| W4-G | r34-1, r39-1, r39-2 | 1,024; 1,024; 1,023 | 8.84, 8.84, 8.61 | fell back 6, 12 and 14 s after the pause began, back 6, 12 and 14 s after it ended |
 | M4-0, a pause that stays | r34-2, r34-13, r38-2 | 192, 181, 183 by the watchdog | 0.61, 0.57, 0.58 | off |
 | M4-G | r34-5, r38-1, r38-3 | 1,013 by the watchdog; 1,024; 1,024 | 3.21, 3.37, 3.36 | fell back 7, 19 and 15 s after the pause began |
 
@@ -1098,9 +1099,9 @@ watchdog stopped a run 420 s after it started.
   3.21 to 3.37 tok/s through the rest of the reply; without it 0.57 to 0.61. Each try at 4 threads
   in the pause costs one stalled step, 2.6 to 5.7 s in r34-5 and 5.0 to 8.7 s in r38's two runs,
   one try every 33 to 38 s.
-- **A pause that comes and goes.** The one W4-G run that held its pause decoded in 115.7 s, 7.6 s less
-  than the mean of the two W4-0 runs (124.6 and 122.0 s), and returned to 4 threads 6 s after the
-  pause ended.
+- **A pause that comes and goes.** The three W4-G runs that held their pause decoded in 115.7, 115.8
+  and 118.7 s, against 124.6 and 122.0 s for the two W4-0 runs. The return to 4 threads comes at the
+  guard's first try, 30 s after it fell back, so 6 to 14 s after the pause ended here.
 - **Falling back costs a little where the pause never came.** N2-0 decoded 11% slower than N4-0
   here (medians 9.05 against 10.17 tok/s). The guard only falls back on a stall: the one guarded run
   with none, r34-11, decoded 10.18 tok/s, between the two unguarded runs (10.04 and 10.30); one run
@@ -1112,47 +1113,49 @@ watchdog stopped a run 420 s after it started.
   eleven pause devices (both `thermal-pause-3C` and `thermal-pause-C0`); the eight one-core devices
   (`thermal-pause-1` to `-80`) were not logged, so a pause through them is not ruled out. No other
   unpaused run had a step over 1.5 s.
-- **At least one of twelve pauses set by hand did not hold, and likely three.** In r38-4 (M4-0) the test's busy threads ran
+- **At least one of fourteen pauses set by hand did not hold, and likely three.** In r38-4 (M4-0) the test's busy threads ran
   on CPUs 0, 1, 6 and 7 with both written switches and the third reading 1, about 3.6 cores of CPU
   time a second, and decode went on at 6.72 tok/s; in the three r38 runs whose pause held, they ran
-  on CPUs 0 and 1 only, 1.7 cores a second. Two runs in r34's block 2 (r34-10 M4-G and r34-14
+  on CPUs 0 and 1 only, 1.7 cores a second, as did r39's two (1.6). Two runs in r34's block 2 (r34-10 M4-G and r34-14
   W4-G) behaved the same way by every measure kept for them (no step over 1.5 s, decode at about 70%
   of unpaused, about four cores of CPU time, the hottest CPU zone near 80 °C rather than the low 60s
   of a held pause), but have no placement log to show it; they are left out of the table as likely
   pauses that did not hold, not counted as guard results either way. So `thermal-pause-C0` written to 1 does not always keep work off
   CPU 6 and 7 on this unit; why was not found.
 - **What it does not show.** One unit, one model, one prompt; the pause set by hand; the build that
-  ships (`engine-test5`) fell back and tried 4 threads again in r38, where the pause stayed, but its
-  return to 4 threads was seen only on `engine-test4` (r34-1); the two differ in the try's rules,
-  which the host test covers.
+  ships (`engine-test5`) fell back and tried 4 threads again in r38, where the pause stayed, and
+  fell back and returned in r39.
   A pause that starts while the prompt is being read is not watched: the guard reads decode steps,
   and r27's paused prompt reading at 4 threads ran at 2.8 tok/s against 27.7 with 2.
 
-### Ordinary use (r33, r37)
+### Ordinary use (r33, r37, r39)
 
 Does a person's chat reach the hard throttle? `SessionBenchmark` chats through the study's nine
 conversations turn by turn, each reply the model's own (greedy, up to 512 tokens) and kept in the
 history, with a reading pause before each next message, on one loaded engine for the whole session
 and a new history for each conversation, as a new chat is in the app: 4 threads, an 8,192-token
 window, the guard on. On phone D, screen on at a middle brightness, on the rack's supply, after r23's
-gate: r33-A with 30 s between turns for 40 minutes, then r33-B with 5 s for 30 minutes. On the
-owner's POCO (r37), on USB power and charging, screen on at a fixed brightness, 30 s for 30 minutes.
+gate: r33-A with 30 s between turns for 40 minutes, then r33-B with 5 s for 30 minutes, then r39-S
+with no pause at all (an agent's loop, or a reader who sends at once), set for 45 minutes, which ran
+out of the conversations' 34 user turns at 30.6. On the owner's POCO (r37), on USB power and
+charging, screen on at a fixed brightness, 30 s for 30 minutes.
 
-| | r33-A, 30 s pause | r33-B, 5 s pause | r37, POCO, 30 s pause |
-|---|---|---|---|
-| Turns | 29 in 40.7 min | 31 in 30.4 min | 17 in 30.9 min |
-| Hottest reading | XO 64.2 °C | XO 73.7 °C | CPU 73.8 °C, skin 44.6 °C |
-| Hard throttle | none of 1,876 samples | none of 1,453 | thermal status 0 throughout |
-| CPU ceilings below top | 98% of samples | 99% | not readable |
-| Decode, median (range) | 12.8 (5.6 to 20.1) tok/s | 13.3 (5.6 to 20.8) | 8.2 (5.4 to 11.2) |
-| First token, median (max) | 4.8 s (119.3) | 4.8 s (119.4) | 3.2 s (108.4) |
-| Guard fallbacks | 0 | 0 | 0 |
+| | r33-A, 30 s pause | r33-B, 5 s pause | r39-S, no pause | r37, POCO, 30 s pause |
+|---|---|---|---|---|
+| Turns | 29 in 40.7 min | 31 in 30.4 min | 34 in 30.6 min | 17 in 30.9 min |
+| Hottest reading | XO 64.2 °C | XO 73.7 °C | XO 76.4 °C | CPU 73.8 °C, skin 44.6 °C |
+| Hard throttle | none of 1,876 samples | none of 1,453 | none of 1,709, all eleven devices read | thermal status 0 throughout |
+| CPU ceilings below top | 98% of samples | 99% | 100% | not readable |
+| Decode, median (range) | 12.8 (5.6 to 20.1) tok/s | 13.3 (5.6 to 20.8) | 12.7 (5.9 to 20.5) | 8.2 (5.4 to 11.2) |
+| First token, median (max) | 4.8 s (119.3) | 4.8 s (119.4) | 4.9 s (119.4) | 3.2 s (108.4) |
+| Guard fallbacks | 0 | 0 | 0 | 0 |
 
 `analyze_session.py`. The SM8850's hard throttle switches on at 78 °C on the XO thermistor.
 
-- **Neither pace reached the hard throttle on the rack phone**, but the brisk one came within 4.3 °C
-  and held 70 to 73 °C on the XO over its last five minutes. The soft throttle held almost
-  throughout both: the CPU ceilings sat at about half their top (1.90 GHz, and 1.98 to 2.23 against
+- **No pace reached the hard throttle on the rack phone.** With no pause between turns the XO peaked
+  at 76.4 °C, 1.6 °C under the trip, first passing 76.2 at 24.7 minutes; its per-minute mean ran 74.2
+  to 75.9 °C over the last ten minutes and was 75.9 when the turns ran out, so a longer session might
+  have reached the trip. With 5 s it held 70 to 73 °C over its last five minutes. The soft throttle held almost throughout all three: the CPU ceilings sat at about half their top (1.90 GHz, and 1.98 to 2.23 against
   3.63 and 4.61) from early in each session.
 - **Decode slowed within each conversation as its context grew**, from 14 to 21 tok/s on a
   conversation's first turn to 5.6 on the seventh turn of the first, and recovered with each new
@@ -1165,7 +1168,7 @@ owner's POCO (r37), on USB power and charging, screen on at a fixed brightness, 
   conversation's first turn read 21 to 97 tok/s (15 to 265 tokens). The engine warns at load that
   this template drops past thinking; why the splice did not keep this prefix, and why reading at
   that depth was this slow, were not traced, and no cool run of the same turn separated heat.
-- **The guard never fell back** in 77 turns on two phones, one with no Snapdragon pause at all.
+- **The guard never fell back** in 111 turns on two phones, one with no Snapdragon pause at all.
 - **What it does not show.** A rack phone in open air and a phone on a desk, not in a hand or a
   pocket; one model; the POCO charging, which adds its own heat; one session of each kind.
 
@@ -1465,7 +1468,7 @@ another seed.
   ended. r37 (`chain37.sh`) ran the session on USB power instead. A first check of the benchmark
   before r36 was killed by the system's backup agent, which backed up the newly installed test
   package and killed its process; the second check ran (12.1 tok/s, 8 tokens).
-- **r28, r29, r32, r31, r33 and r34.** r28 and r29 in the thirteenth reservation's extension, on
+- **r28, r29, r32, r31, r33, r34, r38 and r39.** r28 and r29 in the thirteenth reservation's extension, on
   5d3e8f0a after r27; then a fourteenth reservation, sa963265, on 2026-11-09 and 10, on phone D
   (4816891), whose model was fetched on the phone (92f4a83cdfe691b2). r28 (`chain28.sh`) profiled
   one paused and one unpaused 6-thread run with `simpleperf`. r29 (`chain29.sh`) ran 7 of its 9
@@ -1483,7 +1486,10 @@ another seed.
   that writes a pause began by checking that the two switches hold six busy loops to CPU 0 and 1.
   `follow35.sh` ran them in the order r34 block 1, r33-A, r31, r34 block 2, r33-B; the logger
   (`trig31.sh`, `trig-r31.txt`) ran throughout, and results were pulled every three minutes.
-  Codex reviewed the guard three times before it shipped to the phone (Reviews).
+  After it, r38 (`chain38.sh`, `follow38.sh`) and r39 (`chain39.sh`, `follow39.sh`), each from the
+  same pause check, with `trig39.sh` logging all eleven pause devices every second (`pause39.txt`)
+  from r39's start; r39-S's 45-minute budget outlasted the conversations. Codex reviewed the guard
+  three times before it shipped to the phone (Reviews).
 - **r22 and r27.** A thirteenth reservation, sa962766, on 2026-11-09, on a fifth unit, 5d3e8f0a,
   five hours. The phone had been wiped: the benchmark package was pushed again (sha256 prefix
   204879540c459b5e) and Qwen3 4B fetched on the phone (92f4a83cdfe691b2). This unit numbers its
@@ -1571,10 +1577,9 @@ another seed.
   counterbalanced block (two cells of each count) on a fifth unit, its second block cut for r27.
   Inside a pause set by hand, r23 and r26 (the benchmark) and r27 (the app's engine) measured 6, 4,
   3 and 2 threads, on short fixed work, one model.
-- **A fallback through a natural pause.** The engine's guard (r34, r38) was measured against a
-  pause set by hand; no natural pause came during its runs or the paced sessions, and its return to
-  4 threads was seen once, on the build before the shipped one. Android's thermal status was not
-  tried as a signal.
+- **A fallback through a natural pause.** The engine's guard (r34, r38, r39) was measured against a
+  pause set by hand; no natural pause came during its runs or the paced sessions, the heaviest of
+  which peaked 1.6 °C under the trip when its conversations ran out. Android's thermal status was not tried as a signal.
 - **Other chips.** The pause is a Qualcomm mechanism measured on the SM8850 only; the POCO session
   checked only that the guard stays quiet on a MediaTek phone in ordinary use.
 - **A CPU-only probe through a pause**, and the pause together with `kgsl` and `cdsp` at 5 as the
@@ -1698,4 +1703,8 @@ placement, so r34-10's and r34-14's are likely, not shown; one guarded run witho
 what the guard costs; 6 against 2 threads shows a thread count can
 change the reply, not that a switch mid-reply does; Y1M's unpaused cost is within run-to-run
 variation, not nothing; and `analyze_energy.py`, not yet run, used one voltage per window, timed
-decode from the end of prompt reading rather than the first token, and counted the first token.
+decode from the end of prompt reading rather than the first token, and counted the first token. Two
+shorter rounds checked those fixes (the slow turn's log does not say which of the 550 tokens were
+the previous reply, and one run cannot bound the guard's cost) and r39 (the XO did not hold at 76.2
+to 76.4 °C over the session's last ten minutes, as first written: it first passed 76.2 at 24.7
+minutes, and its per-minute mean was 74.2 to 75.9).
