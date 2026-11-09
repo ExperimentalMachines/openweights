@@ -13,9 +13,9 @@
 // limitations under the License.
 
 // Host test for StallGuard, which has no llama.cpp in it. CI runs it (ci.yml, "Native host tests");
-// from the repo root:
-//   c++ -std=c++17 -Wall -Wextra -Werror -I core/engine/src/main/cpp \
-//     core/engine/src/hostTest/cpp/stall_guard_test.cpp -o /tmp/stall_guard_test && /tmp/stall_guard_test
+// from the repo root, as one line (no backslash: GCC reads one at the end of a // comment as joining
+// the next line into the comment, and -Werror fails on its warning):
+//   c++ -std=c++17 -Wall -Wextra -Werror -I core/engine/src/main/cpp core/engine/src/hostTest/cpp/stall_guard_test.cpp -o /tmp/stall_guard_test && /tmp/stall_guard_test
 // Step times are modelled on r27 (docs/research/snapdragon-pd-matrix.md): about 43 ms a step at
 // 4 threads, about 4,100 ms at 4 threads in a pause, about 95 ms at 2 threads in one.
 
