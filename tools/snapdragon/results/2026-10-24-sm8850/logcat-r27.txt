@@ -1,0 +1,1291 @@
+--------- beginning of main
+         1794213955.910 23318 23333 I OpenWeightsBench: device reports 8 cores
+         1794213955.926 23318 23335 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794213955.940 23318 23335 I OpenWeights: OpenCL backend registered
+         1794213956.003 23318 23335 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794213957.384 23318 23335 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794213957.515 23318 23335 I OpenWeights: threads: 4 workers kept alive across graphs
+         1794213957.522 23318 23335 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794213957.524 23318 23335 I OpenWeights: mem: after load rss 3534 MB, pss 3424 MB, swap 0 MB, majflt 1, minflt 26969, cpu 2000 ms
+         1794213957.527 23318 23335 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794213957.527 23318 23333 I OpenWeightsBench: START threads=4 maxTokens=64
+         1794213957.534 23318 23335 I OpenWeights: mem: before turn rss 3534 MB, pss 3422 MB, swap 0 MB, majflt 1, minflt 27183, cpu 2050 ms
+         1794213957.535 23318 23335 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794213957.785 23318 23333 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=257 reading=false promptRead=19 prefillMs=208 generated=1 decodeMs=null
+         1794213958.036 23318 23333 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=509 reading=false promptRead=19 prefillMs=208 generated=7 decodeMs=251
+         1794213958.288 23318 23333 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=761 reading=false promptRead=19 prefillMs=208 generated=13 decodeMs=503
+         1794213958.540 23318 23333 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1012 reading=false promptRead=19 prefillMs=208 generated=19 decodeMs=755
+         1794213958.791 23318 23333 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1264 reading=false promptRead=19 prefillMs=208 generated=25 decodeMs=1010
+         1794213959.042 23318 23333 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1515 reading=false promptRead=19 prefillMs=208 generated=31 decodeMs=1269
+         1794213959.293 23318 23333 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1766 reading=false promptRead=19 prefillMs=208 generated=37 decodeMs=1523
+         1794213959.545 23318 23333 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2018 reading=false promptRead=19 prefillMs=208 generated=43 decodeMs=1780
+         1794213959.796 23318 23333 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2269 reading=false promptRead=19 prefillMs=208 generated=49 decodeMs=2046
+         1794213960.048 23318 23333 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2520 reading=false promptRead=19 prefillMs=208 generated=54 decodeMs=2276
+         1794213960.299 23318 23333 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2772 reading=false promptRead=19 prefillMs=208 generated=60 decodeMs=2547
+         1794213960.512 23318 23335 I OpenWeights: mem: after turn rss 3532 MB, pss 3421 MB, swap 0 MB, majflt 1, minflt 28302, cpu 13940 ms
+         1794213960.515 23318 23333 I OpenWeightsBench: BENCH threads=4 prefill=91.3 tok/s decode=22.8 tok/s ttft=209 ms
+         1794214052.276 27490 27523 I OpenWeightsBench: device reports 8 cores
+         1794214052.331 27490 27536 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794214052.361 27490 27536 I OpenWeights: OpenCL backend registered
+         1794214052.469 27490 27536 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794214054.821 27490 27536 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794214055.062 27490 27536 I OpenWeights: threads: 4 workers kept alive across graphs
+         1794214055.091 27490 27536 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794214055.095 27490 27536 I OpenWeights: mem: after load rss 3534 MB, pss 3423 MB, swap 0 MB, majflt 0, minflt 25902, cpu 3030 ms
+         1794214055.100 27490 27536 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794214055.101 27490 27523 I OpenWeightsBench: START threads=4 maxTokens=64
+         1794214055.114 27490 27536 I OpenWeights: mem: before turn rss 3533 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 26076, cpu 3050 ms
+         1794214055.116 27490 27536 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794214055.367 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=266 reading=true promptRead=0 prefillMs=null generated=0 decodeMs=null
+         1794214061.991 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=6890 reading=false promptRead=19 prefillMs=6786 generated=1 decodeMs=null
+         1794214069.160 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=14059 reading=false promptRead=19 prefillMs=6786 generated=2 decodeMs=7221
+         1794214073.232 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=18131 reading=false promptRead=19 prefillMs=6786 generated=3 decodeMs=11285
+         1794214077.550 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=22449 reading=false promptRead=19 prefillMs=6786 generated=4 decodeMs=15495
+         1794214083.101 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=27999 reading=false promptRead=19 prefillMs=6786 generated=5 decodeMs=21076
+         1794214087.637 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=32536 reading=false promptRead=19 prefillMs=6786 generated=6 decodeMs=25504
+         1794214091.168 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=36067 reading=false promptRead=19 prefillMs=6786 generated=7 decodeMs=29035
+         1794214094.188 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=39086 reading=false promptRead=19 prefillMs=6786 generated=8 decodeMs=32232
+         1794214099.494 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=44393 reading=false promptRead=19 prefillMs=6786 generated=9 decodeMs=37399
+         1794214105.035 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=49934 reading=false promptRead=19 prefillMs=6786 generated=10 decodeMs=43016
+         1794214109.300 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=54199 reading=false promptRead=19 prefillMs=6786 generated=11 decodeMs=47320
+         1794214114.316 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=59215 reading=false promptRead=19 prefillMs=6786 generated=12 decodeMs=52244
+         1794214118.835 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=63733 reading=false promptRead=19 prefillMs=6786 generated=13 decodeMs=56910
+         1794214122.865 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=67764 reading=false promptRead=19 prefillMs=6786 generated=14 decodeMs=60761
+         1794214129.695 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=74594 reading=false promptRead=19 prefillMs=6786 generated=15 decodeMs=67557
+         1794214132.723 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=77622 reading=false promptRead=19 prefillMs=6786 generated=16 decodeMs=70802
+         1794214136.739 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=81638 reading=false promptRead=19 prefillMs=6786 generated=17 decodeMs=74604
+         1794214141.256 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=86155 reading=false promptRead=19 prefillMs=6786 generated=18 decodeMs=79195
+         1794214147.282 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=92180 reading=false promptRead=19 prefillMs=6786 generated=19 decodeMs=85173
+         1794214151.796 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=96695 reading=false promptRead=19 prefillMs=6786 generated=20 decodeMs=89856
+         1794214156.590 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=101489 reading=false promptRead=19 prefillMs=6786 generated=21 decodeMs=94476
+         1794214161.113 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=106011 reading=false promptRead=19 prefillMs=6786 generated=22 decodeMs=99065
+         1794214165.408 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=110307 reading=false promptRead=19 prefillMs=6786 generated=23 decodeMs=103440
+         1794214169.433 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=114332 reading=false promptRead=19 prefillMs=6786 generated=24 decodeMs=107375
+         1794214179.532 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=124430 reading=false promptRead=19 prefillMs=6786 generated=26 decodeMs=117622
+         1794214184.082 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=128981 reading=false promptRead=19 prefillMs=6786 generated=27 decodeMs=122024
+         1794214188.107 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=133006 reading=false promptRead=19 prefillMs=6786 generated=28 decodeMs=126184
+         1794214191.127 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=136026 reading=false promptRead=19 prefillMs=6786 generated=29 decodeMs=129209
+         1794214198.238 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=143137 reading=false promptRead=19 prefillMs=6786 generated=30 decodeMs=136334
+         1794214202.260 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=147158 reading=false promptRead=19 prefillMs=6786 generated=31 decodeMs=140142
+         1794214206.032 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=150931 reading=false promptRead=19 prefillMs=6786 generated=32 decodeMs=143900
+         1794214211.054 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=155953 reading=false promptRead=19 prefillMs=6786 generated=33 decodeMs=148924
+         1794214215.588 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=160487 reading=false promptRead=19 prefillMs=6786 generated=34 decodeMs=153456
+         1794214221.610 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=166508 reading=false promptRead=19 prefillMs=6786 generated=35 decodeMs=159610
+         1794214226.404 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=171303 reading=false promptRead=19 prefillMs=6786 generated=36 decodeMs=164371
+         1794214231.954 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=176853 reading=false promptRead=19 prefillMs=6786 generated=37 decodeMs=169818
+         1794214238.544 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=183442 reading=false promptRead=19 prefillMs=6786 generated=38 decodeMs=176531
+         1794214245.121 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=190020 reading=false promptRead=19 prefillMs=6786 generated=39 decodeMs=183064
+         1794214249.913 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=194812 reading=false promptRead=19 prefillMs=6786 generated=40 decodeMs=187794
+         1794214253.953 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=198852 reading=false promptRead=19 prefillMs=6786 generated=41 decodeMs=191941
+         1794214258.239 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=203137 reading=false promptRead=19 prefillMs=6786 generated=42 decodeMs=196258
+         1794214262.065 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=206964 reading=false promptRead=19 prefillMs=6786 generated=43 decodeMs=200095
+         1794214266.379 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=211277 reading=false promptRead=19 prefillMs=6786 generated=44 decodeMs=204338
+         1794214269.430 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=214329 reading=false promptRead=19 prefillMs=6786 generated=45 decodeMs=207429
+         1794214274.472 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=219370 reading=false promptRead=19 prefillMs=6786 generated=46 decodeMs=212468
+         1794214279.522 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=224421 reading=false promptRead=19 prefillMs=6786 generated=47 decodeMs=217616
+         1794214282.792 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=227690 reading=false promptRead=19 prefillMs=6786 generated=48 decodeMs=220668
+         1794214286.826 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=231725 reading=false promptRead=19 prefillMs=6786 generated=49 decodeMs=224876
+         1794214292.614 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=237513 reading=false promptRead=19 prefillMs=6786 generated=50 decodeMs=230611
+         1794214296.391 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=241290 reading=false promptRead=19 prefillMs=6786 generated=51 decodeMs=234367
+         1794214300.157 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=245055 reading=false promptRead=19 prefillMs=6786 generated=52 decodeMs=238227
+         1794214305.186 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=250085 reading=false promptRead=19 prefillMs=6786 generated=53 decodeMs=243279
+         1794214310.224 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=255122 reading=false promptRead=19 prefillMs=6786 generated=54 decodeMs=248076
+         1794214314.760 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=259659 reading=false promptRead=19 prefillMs=6786 generated=55 decodeMs=252644
+         1794214317.018 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=261917 reading=false promptRead=19 prefillMs=6786 generated=56 decodeMs=255063
+         1794214320.035 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=264934 reading=false promptRead=19 prefillMs=6786 generated=57 decodeMs=258021
+         1794214322.800 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=267699 reading=false promptRead=19 prefillMs=6786 generated=58 decodeMs=260736
+         1794214327.313 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=272212 reading=false promptRead=19 prefillMs=6786 generated=59 decodeMs=265259
+         1794214331.331 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=276229 reading=false promptRead=19 prefillMs=6786 generated=60 decodeMs=269362
+         1794214336.356 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=281255 reading=false promptRead=19 prefillMs=6786 generated=61 decodeMs=274210
+         1794214338.867 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=283765 reading=false promptRead=19 prefillMs=6786 generated=62 decodeMs=276964
+         1794214341.626 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=286525 reading=false promptRead=19 prefillMs=6786 generated=63 decodeMs=279642
+         1794214345.417 27490 27523 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=290316 reading=false promptRead=19 prefillMs=6786 generated=64 decodeMs=283307
+         1794214350.378 27490 27536 I OpenWeights: mem: after turn rss 3533 MB, pss 3421 MB, swap 0 MB, majflt 0, minflt 37131, cpu 501240 ms
+         1794214350.381 27490 27523 I OpenWeightsBench: BENCH threads=4 prefill=2.8 tok/s decode=0.2 tok/s ttft=6787 ms
+         1794214500.070 17159 17175 I OpenWeightsBench: device reports 8 cores
+         1794214500.117 17159 17192 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794214500.169 17159 17192 I OpenWeights: OpenCL backend registered
+         1794214500.358 17159 17192 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794214502.728 17159 17192 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794214502.961 17159 17192 I OpenWeights: threads: 2 workers kept alive across graphs
+         1794214502.973 17159 17192 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794214502.976 17159 17192 I OpenWeights: mem: after load rss 3534 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 25908, cpu 3080 ms
+         1794214502.981 17159 17192 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794214502.982 17159 17175 I OpenWeightsBench: START threads=2 maxTokens=64
+         1794214502.990 17159 17192 I OpenWeights: mem: before turn rss 3533 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 26095, cpu 3110 ms
+         1794214502.992 17159 17192 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794214503.242 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=261 reading=true promptRead=0 prefillMs=null generated=0 decodeMs=null
+         1794214503.755 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=773 reading=false promptRead=19 prefillMs=686 generated=1 decodeMs=null
+         1794214504.009 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1027 reading=false promptRead=19 prefillMs=686 generated=2 decodeMs=117
+         1794214504.264 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1283 reading=false promptRead=19 prefillMs=686 generated=4 decodeMs=520
+         1794214504.515 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1534 reading=false promptRead=19 prefillMs=686 generated=7 decodeMs=785
+         1794214504.767 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1786 reading=false promptRead=19 prefillMs=686 generated=10 decodeMs=1032
+         1794214505.024 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2043 reading=false promptRead=19 prefillMs=686 generated=13 decodeMs=1275
+         1794214505.275 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2294 reading=false promptRead=19 prefillMs=686 generated=15 decodeMs=1456
+         1794214505.526 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2545 reading=false promptRead=19 prefillMs=686 generated=18 decodeMs=1833
+         1794214505.777 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2796 reading=false promptRead=19 prefillMs=686 generated=21 decodeMs=2067
+         1794214506.029 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3047 reading=false promptRead=19 prefillMs=686 generated=24 decodeMs=2305
+         1794214506.282 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3301 reading=false promptRead=19 prefillMs=686 generated=27 decodeMs=2533
+         1794214506.542 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3560 reading=false promptRead=19 prefillMs=686 generated=30 decodeMs=2796
+         1794214506.792 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3811 reading=false promptRead=19 prefillMs=686 generated=32 decodeMs=3058
+         1794214507.046 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=4065 reading=false promptRead=19 prefillMs=686 generated=35 decodeMs=3299
+         1794214507.298 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=4317 reading=false promptRead=19 prefillMs=686 generated=37 decodeMs=3553
+         1794214507.551 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=4570 reading=false promptRead=19 prefillMs=686 generated=39 decodeMs=3748
+         1794214507.806 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=4825 reading=false promptRead=19 prefillMs=686 generated=41 decodeMs=3990
+         1794214508.062 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=5081 reading=false promptRead=19 prefillMs=686 generated=43 decodeMs=4347
+         1794214508.313 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=5332 reading=false promptRead=19 prefillMs=686 generated=46 decodeMs=4593
+         1794214508.566 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=5585 reading=false promptRead=19 prefillMs=686 generated=49 decodeMs=4845
+         1794214508.818 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=5837 reading=false promptRead=19 prefillMs=686 generated=52 decodeMs=5090
+         1794214509.077 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=6096 reading=false promptRead=19 prefillMs=686 generated=55 decodeMs=5335
+         1794214509.328 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=6347 reading=false promptRead=19 prefillMs=686 generated=56 decodeMs=5495
+         1794214509.579 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=6597 reading=false promptRead=19 prefillMs=686 generated=60 decodeMs=5887
+         1794214509.831 17159 17175 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=6850 reading=false promptRead=19 prefillMs=686 generated=63 decodeMs=6117
+         1794214509.958 17159 17192 I OpenWeights: mem: after turn rss 3533 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 27540, cpu 14680 ms
+         1794214509.968 17159 17175 I OpenWeightsBench: BENCH threads=2 prefill=27.7 tok/s decode=10.0 tok/s ttft=688 ms
+         1794214596.522 21223 21243 I OpenWeightsBench: device reports 8 cores
+         1794214596.537 21223 21253 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794214596.550 21223 21253 I OpenWeights: OpenCL backend registered
+         1794214596.610 21223 21253 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794214597.991 21223 21253 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794214598.122 21223 21253 I OpenWeights: threads: 2 workers kept alive across graphs
+         1794214598.129 21223 21253 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794214598.131 21223 21253 I OpenWeights: mem: after load rss 3533 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 25926, cpu 1980 ms
+         1794214598.134 21223 21253 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794214598.134 21223 21243 I OpenWeightsBench: START threads=2 maxTokens=64
+         1794214598.141 21223 21253 I OpenWeights: mem: before turn rss 3533 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 26119, cpu 2000 ms
+         1794214598.142 21223 21253 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794214598.393 21223 21243 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=259 reading=true promptRead=0 prefillMs=null generated=0 decodeMs=null
+         1794214598.647 21223 21243 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=512 reading=false promptRead=19 prefillMs=269 generated=6 decodeMs=209
+         1794214598.900 21223 21243 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=766 reading=false promptRead=19 prefillMs=269 generated=12 decodeMs=464
+         1794214599.153 21223 21243 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1018 reading=false promptRead=19 prefillMs=269 generated=18 decodeMs=728
+         1794214599.405 21223 21243 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1271 reading=false promptRead=19 prefillMs=269 generated=23 decodeMs=951
+         1794214599.658 21223 21243 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1524 reading=false promptRead=19 prefillMs=269 generated=29 decodeMs=1211
+         1794214599.911 21223 21243 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1776 reading=false promptRead=19 prefillMs=269 generated=35 decodeMs=1473
+         1794214600.164 21223 21243 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2029 reading=false promptRead=19 prefillMs=269 generated=41 decodeMs=1735
+         1794214600.415 21223 21243 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2281 reading=false promptRead=19 prefillMs=269 generated=47 decodeMs=2000
+         1794214600.668 21223 21243 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2534 reading=false promptRead=19 prefillMs=269 generated=52 decodeMs=2224
+         1794214600.921 21223 21243 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2787 reading=false promptRead=19 prefillMs=269 generated=58 decodeMs=2491
+         1794214601.174 21223 21243 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3040 reading=false promptRead=19 prefillMs=269 generated=64 decodeMs=2758
+         1794214601.217 21223 21253 I OpenWeights: mem: after turn rss 3532 MB, pss 3421 MB, swap 0 MB, majflt 0, minflt 27226, cpu 8190 ms
+         1794214601.221 21223 21243 I OpenWeightsBench: BENCH threads=2 prefill=70.6 tok/s decode=22.5 tok/s ttft=270 ms
+         1794214666.862 24363 24413 I OpenWeightsBench: device reports 8 cores
+         1794214666.903 24363 24423 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794214666.954 24363 24423 I OpenWeights: OpenCL backend registered
+         1794214667.050 24363 24423 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794214669.514 24363 24423 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794214669.774 24363 24423 I OpenWeights: threads: 3 workers kept alive across graphs
+         1794214669.788 24363 24423 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794214669.793 24363 24423 I OpenWeights: mem: after load rss 3535 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 25935, cpu 3040 ms
+         1794214669.800 24363 24423 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794214669.801 24363 24413 I OpenWeightsBench: START threads=3 maxTokens=64
+         1794214669.816 24363 24423 I OpenWeights: mem: before turn rss 3534 MB, pss 3423 MB, swap 0 MB, majflt 0, minflt 26059, cpu 3070 ms
+         1794214669.819 24363 24423 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794214670.068 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=266 reading=true promptRead=0 prefillMs=null generated=0 decodeMs=null
+         1794214673.105 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=3304 reading=false promptRead=19 prefillMs=3035 generated=1 decodeMs=null
+         1794214674.879 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=5078 reading=false promptRead=19 prefillMs=3035 generated=2 decodeMs=1820
+         1794214676.953 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=7152 reading=false promptRead=19 prefillMs=3035 generated=3 decodeMs=3873
+         1794214678.981 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=9179 reading=false promptRead=19 prefillMs=3035 generated=4 decodeMs=5880
+         1794214680.492 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=10691 reading=false promptRead=19 prefillMs=3035 generated=5 decodeMs=7431
+         1794214682.259 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=12458 reading=false promptRead=19 prefillMs=3035 generated=6 decodeMs=9385
+         1794214684.281 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=14480 reading=false promptRead=19 prefillMs=3035 generated=7 decodeMs=11229
+         1794214685.544 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=15743 reading=false promptRead=19 prefillMs=3035 generated=8 decodeMs=12584
+         1794214687.811 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=18010 reading=false promptRead=19 prefillMs=3035 generated=9 decodeMs=14792
+         1794214689.582 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=19780 reading=false promptRead=19 prefillMs=3035 generated=10 decodeMs=16677
+         1794214691.596 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=21795 reading=false promptRead=19 prefillMs=3035 generated=11 decodeMs=18561
+         1794214693.615 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=23814 reading=false promptRead=19 prefillMs=3035 generated=12 decodeMs=20619
+         1794214694.874 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=25073 reading=false promptRead=19 prefillMs=3035 generated=13 decodeMs=21870
+         1794214697.396 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=27595 reading=false promptRead=19 prefillMs=3035 generated=14 decodeMs=24361
+         1794214698.404 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=28603 reading=false promptRead=19 prefillMs=3035 generated=15 decodeMs=25464
+         1794214700.671 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=30869 reading=false promptRead=19 prefillMs=3035 generated=16 decodeMs=27732
+         1794214701.931 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=32130 reading=false promptRead=19 prefillMs=3035 generated=17 decodeMs=29004
+         1794214703.941 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=34139 reading=false promptRead=19 prefillMs=3035 generated=18 decodeMs=30995
+         1794214705.455 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=35654 reading=false promptRead=19 prefillMs=3035 generated=19 decodeMs=32360
+         1794214707.464 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=37663 reading=false promptRead=19 prefillMs=3035 generated=20 decodeMs=34409
+         1794214708.976 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=39175 reading=false promptRead=19 prefillMs=3035 generated=21 decodeMs=36103
+         1794214711.242 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=41441 reading=false promptRead=19 prefillMs=3035 generated=22 decodeMs=38166
+         1794214712.748 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=42947 reading=false promptRead=19 prefillMs=3035 generated=23 decodeMs=39709
+         1794214715.269 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=45468 reading=false promptRead=19 prefillMs=3035 generated=24 decodeMs=42204
+         1794214716.533 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=46731 reading=false promptRead=19 prefillMs=3035 generated=25 decodeMs=43519
+         1794214719.054 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=49253 reading=false promptRead=19 prefillMs=3035 generated=26 decodeMs=46022
+         1794214721.583 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=51781 reading=false promptRead=19 prefillMs=3035 generated=27 decodeMs=48530
+         1794214723.360 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=53558 reading=false promptRead=19 prefillMs=3035 generated=28 decodeMs=50285
+         1794214725.876 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=56075 reading=false promptRead=19 prefillMs=3035 generated=29 decodeMs=52866
+         1794214727.131 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=57330 reading=false promptRead=19 prefillMs=3035 generated=30 decodeMs=54197
+         1794214729.401 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=59600 reading=false promptRead=19 prefillMs=3035 generated=31 decodeMs=56396
+         1794214730.659 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=60858 reading=false promptRead=19 prefillMs=3035 generated=32 decodeMs=57684
+         1794214732.933 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=63132 reading=false promptRead=19 prefillMs=3035 generated=33 decodeMs=60058
+         1794214734.444 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=64643 reading=false promptRead=19 prefillMs=3035 generated=34 decodeMs=61417
+         1794214736.705 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=66903 reading=false promptRead=19 prefillMs=3035 generated=35 decodeMs=63796
+         1794214738.963 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=69162 reading=false promptRead=19 prefillMs=3035 generated=36 decodeMs=66105
+         1794214740.473 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=70671 reading=false promptRead=19 prefillMs=3035 generated=37 decodeMs=67489
+         1794214743.244 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=73443 reading=false promptRead=19 prefillMs=3035 generated=38 decodeMs=70138
+         1794214744.749 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=74948 reading=false promptRead=19 prefillMs=3035 generated=39 decodeMs=71668
+         1794214747.263 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=77462 reading=false promptRead=19 prefillMs=3035 generated=40 decodeMs=74267
+         1794214748.768 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=78967 reading=false promptRead=19 prefillMs=3035 generated=41 decodeMs=75856
+         1794214751.284 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=81483 reading=false promptRead=19 prefillMs=3035 generated=42 decodeMs=78199
+         1794214753.553 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=83752 reading=false promptRead=19 prefillMs=3035 generated=43 decodeMs=80463
+         1794214755.061 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=85260 reading=false promptRead=19 prefillMs=3035 generated=44 decodeMs=82004
+         1794214757.586 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=87784 reading=false promptRead=19 prefillMs=3035 generated=45 decodeMs=84521
+         1794214758.597 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=88795 reading=false promptRead=19 prefillMs=3035 generated=46 decodeMs=85704
+         1794214761.363 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=91562 reading=false promptRead=19 prefillMs=3035 generated=47 decodeMs=88284
+         1794214762.872 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=93071 reading=false promptRead=19 prefillMs=3035 generated=48 decodeMs=89865
+         1794214765.140 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=95338 reading=false promptRead=19 prefillMs=3035 generated=49 decodeMs=92186
+         1794214767.151 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=97350 reading=false promptRead=19 prefillMs=3035 generated=50 decodeMs=94254
+         1794214768.904 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=99102 reading=false promptRead=19 prefillMs=3035 generated=51 decodeMs=95982
+         1794214771.171 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=101369 reading=false promptRead=19 prefillMs=3035 generated=52 decodeMs=98307
+         1794214772.425 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=102623 reading=false promptRead=19 prefillMs=3035 generated=53 decodeMs=99527
+         1794214775.200 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=105399 reading=false promptRead=19 prefillMs=3035 generated=54 decodeMs=102215
+         1794214776.458 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=106657 reading=false promptRead=19 prefillMs=3035 generated=55 decodeMs=103475
+         1794214778.720 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=108919 reading=false promptRead=19 prefillMs=3035 generated=56 decodeMs=105759
+         1794214779.977 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=110176 reading=false promptRead=19 prefillMs=3035 generated=57 decodeMs=106973
+         1794214782.240 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=112439 reading=false promptRead=19 prefillMs=3035 generated=58 decodeMs=109235
+         1794214783.499 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=113698 reading=false promptRead=19 prefillMs=3035 generated=59 decodeMs=110441
+         1794214785.757 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=115955 reading=false promptRead=19 prefillMs=3035 generated=60 decodeMs=112760
+         1794214786.759 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=116958 reading=false promptRead=19 prefillMs=3035 generated=61 decodeMs=113777
+         1794214789.033 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=119232 reading=false promptRead=19 prefillMs=3035 generated=62 decodeMs=115930
+         1794214790.043 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=120242 reading=false promptRead=19 prefillMs=3035 generated=63 decodeMs=117145
+         1794214792.051 24363 24413 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=122250 reading=false promptRead=19 prefillMs=3035 generated=64 decodeMs=119088
+         1794214793.448 24363 24423 I OpenWeights: mem: after turn rss 3540 MB, pss 3428 MB, swap 0 MB, majflt 0, minflt 31454, cpu 211180 ms
+         1794214793.451 24363 24413 I OpenWeightsBench: BENCH threads=3 prefill=6.3 tok/s decode=0.5 tok/s ttft=3040 ms
+         1794214906.031  2622  2637 I OpenWeightsBench: device reports 8 cores
+         1794214906.045  2622  2639 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794214906.060  2622  2639 I OpenWeights: OpenCL backend registered
+         1794214906.125  2622  2639 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794214907.508  2622  2639 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794214907.637  2622  2639 I OpenWeights: threads: 3 workers kept alive across graphs
+         1794214907.644  2622  2639 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794214907.646  2622  2639 I OpenWeights: mem: after load rss 3533 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 25958, cpu 1980 ms
+         1794214907.649  2622  2639 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794214907.649  2622  2637 I OpenWeightsBench: START threads=3 maxTokens=64
+         1794214907.661  2622  2639 I OpenWeights: mem: before turn rss 3533 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 26120, cpu 2040 ms
+         1794214907.663  2622  2639 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794214907.911  2622  2637 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=261 reading=false promptRead=19 prefillMs=240 generated=1 decodeMs=null
+         1794214908.162  2622  2637 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=512 reading=false promptRead=19 prefillMs=240 generated=7 decodeMs=257
+         1794214908.413  2622  2637 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=764 reading=false promptRead=19 prefillMs=240 generated=12 decodeMs=474
+         1794214908.664  2622  2637 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=1015 reading=false promptRead=19 prefillMs=240 generated=18 decodeMs=735
+         1794214908.915  2622  2637 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=1266 reading=false promptRead=19 prefillMs=240 generated=24 decodeMs=1001
+         1794214909.167  2622  2637 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=1518 reading=false promptRead=19 prefillMs=240 generated=29 decodeMs=1224
+         1794214909.419  2622  2637 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=1769 reading=false promptRead=19 prefillMs=240 generated=35 decodeMs=1497
+         1794214909.670  2622  2637 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=2021 reading=false promptRead=19 prefillMs=240 generated=40 decodeMs=1729
+         1794214909.921  2622  2637 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=2272 reading=false promptRead=19 prefillMs=240 generated=46 decodeMs=2006
+         1794214910.173  2622  2637 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=2523 reading=false promptRead=19 prefillMs=240 generated=51 decodeMs=2233
+         1794214910.424  2622  2637 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=2775 reading=false promptRead=19 prefillMs=240 generated=57 decodeMs=2505
+         1794214910.676  2622  2637 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=3026 reading=false promptRead=19 prefillMs=240 generated=62 decodeMs=2731
+         1794214910.771  2622  2639 I OpenWeights: mem: after turn rss 3538 MB, pss 3427 MB, swap 0 MB, majflt 0, minflt 27220, cpu 11340 ms
+         1794214910.774  2622  2637 I OpenWeightsBench: BENCH threads=3 prefill=79.2 tok/s decode=22.0 tok/s ttft=241 ms
+         1794214976.076  8453  8469 I OpenWeightsBench: device reports 8 cores
+         1794214976.092  8453  8471 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794214976.107  8453  8471 I OpenWeights: OpenCL backend registered
+         1794214976.172  8453  8471 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794214977.555  8453  8471 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794214977.688  8453  8471 I OpenWeights: threads: 6 workers kept alive across graphs
+         1794214977.694  8453  8471 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794214977.697  8453  8471 I OpenWeights: mem: after load rss 3534 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 27001, cpu 2000 ms
+         1794214977.700  8453  8471 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794214977.700  8453  8469 I OpenWeightsBench: START threads=6 maxTokens=64
+         1794214977.705  8453  8471 I OpenWeights: mem: before turn rss 3534 MB, pss 3423 MB, swap 0 MB, majflt 0, minflt 27169, cpu 2050 ms
+         1794214977.706  8453  8471 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794214977.955  8453  8469 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=256 reading=false promptRead=19 prefillMs=151 generated=3 decodeMs=81
+         1794214978.207  8453  8469 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=507 reading=false promptRead=19 prefillMs=151 generated=9 decodeMs=325
+         1794214978.458  8453  8469 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=759 reading=false promptRead=19 prefillMs=151 generated=15 decodeMs=571
+         1794214978.710  8453  8469 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=1010 reading=false promptRead=19 prefillMs=151 generated=21 decodeMs=818
+         1794214978.961  8453  8469 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=1262 reading=false promptRead=19 prefillMs=151 generated=27 decodeMs=1076
+         1794214979.213  8453  8469 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=1513 reading=false promptRead=19 prefillMs=151 generated=33 decodeMs=1325
+         1794214979.464  8453  8469 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=1765 reading=false promptRead=19 prefillMs=151 generated=39 decodeMs=1575
+         1794214979.716  8453  8469 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=2016 reading=false promptRead=19 prefillMs=151 generated=45 decodeMs=1841
+         1794214979.976  8453  8469 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=2277 reading=false promptRead=19 prefillMs=151 generated=51 decodeMs=2111
+         1794214980.232  8453  8469 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=2530 reading=false promptRead=19 prefillMs=151 generated=56 decodeMs=2353
+         1794214980.484  8453  8469 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=2785 reading=false promptRead=19 prefillMs=151 generated=62 decodeMs=2621
+         1794214980.609  8453  8471 I OpenWeights: mem: after turn rss 3538 MB, pss 3427 MB, swap 0 MB, majflt 0, minflt 28305, cpu 19320 ms
+         1794214980.612  8453  8469 I OpenWeightsBench: BENCH threads=6 prefill=125.8 tok/s decode=22.9 tok/s ttft=152 ms
+         1794215040.783 11512 11551 I OpenWeightsBench: device reports 8 cores
+         1794215040.802 11512 11554 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794215040.819 11512 11554 I OpenWeights: OpenCL backend registered
+         1794215040.923 11512 11554 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794215043.293 11512 11554 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794215043.530 11512 11554 I OpenWeights: threads: 6 workers kept alive across graphs
+         1794215043.549 11512 11554 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794215043.556 11512 11554 I OpenWeights: mem: after load rss 3533 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 25920, cpu 3040 ms
+         1794215043.564 11512 11554 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794215043.565 11512 11551 I OpenWeightsBench: START threads=6 maxTokens=64
+         1794215043.581 11512 11554 I OpenWeights: mem: before turn rss 3534 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 26021, cpu 3080 ms
+         1794215043.584 11512 11554 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794215043.830 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=264 reading=true promptRead=0 prefillMs=null generated=0 decodeMs=null
+         1794215056.796 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=13231 reading=false promptRead=19 prefillMs=13071 generated=1 decodeMs=null
+         1794215066.132 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=22566 reading=false promptRead=19 prefillMs=13071 generated=2 decodeMs=9281
+         1794215075.717 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=32152 reading=false promptRead=19 prefillMs=13071 generated=3 decodeMs=18902
+         1794215086.584 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=43019 reading=false promptRead=19 prefillMs=13071 generated=4 decodeMs=29799
+         1794215099.684 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=56118 reading=false promptRead=19 prefillMs=13071 generated=5 decodeMs=43021
+         1794215114.519 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=70953 reading=false promptRead=19 prefillMs=13071 generated=6 decodeMs=57621
+         1794215129.039 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=85474 reading=false promptRead=19 prefillMs=13071 generated=7 decodeMs=72223
+         1794215140.701 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=97136 reading=false promptRead=19 prefillMs=13071 generated=8 decodeMs=83845
+         1794215153.127 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=109562 reading=false promptRead=19 prefillMs=13071 generated=9 decodeMs=96295
+         1794215163.486 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=119921 reading=false promptRead=19 prefillMs=13071 generated=10 decodeMs=106651
+         1794215176.932 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=133367 reading=false promptRead=19 prefillMs=13071 generated=11 decodeMs=120037
+         1794215190.634 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=147068 reading=false promptRead=19 prefillMs=13071 generated=12 decodeMs=133954
+         1794215202.816 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=159251 reading=false promptRead=19 prefillMs=13071 generated=13 decodeMs=145986
+         1794215216.203 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=172638 reading=false promptRead=19 prefillMs=13071 generated=14 decodeMs=159355
+         1794215227.886 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=184321 reading=false promptRead=19 prefillMs=13071 generated=15 decodeMs=170999
+         1794215242.397 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=198832 reading=false promptRead=19 prefillMs=13071 generated=16 decodeMs=185703
+         1794215252.242 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=208677 reading=false promptRead=19 prefillMs=13071 generated=17 decodeMs=195505
+         1794215264.369 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=220803 reading=false promptRead=19 prefillMs=13071 generated=18 decodeMs=207530
+         1794215278.680 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=235115 reading=false promptRead=19 prefillMs=13071 generated=19 decodeMs=221843
+         1794215294.252 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=250687 reading=false promptRead=19 prefillMs=13071 generated=20 decodeMs=237355
+         1794215305.600 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=262034 reading=false promptRead=19 prefillMs=13071 generated=21 decodeMs=248918
+         1794215315.968 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=272403 reading=false promptRead=19 prefillMs=13071 generated=22 decodeMs=259096
+         1794215326.103 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=282538 reading=false promptRead=19 prefillMs=13071 generated=23 decodeMs=269339
+         1794215337.500 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=293935 reading=false promptRead=19 prefillMs=13071 generated=24 decodeMs=280801
+         1794215350.410 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=306845 reading=false promptRead=19 prefillMs=13071 generated=25 decodeMs=293681
+         1794215362.092 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=318527 reading=false promptRead=19 prefillMs=13071 generated=26 decodeMs=305337
+         1794215375.018 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=331453 reading=false promptRead=19 prefillMs=13071 generated=27 decodeMs=318246
+         1794215383.119 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=339554 reading=false promptRead=19 prefillMs=13071 generated=28 decodeMs=326400
+         1794215394.516 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=350951 reading=false promptRead=19 prefillMs=13071 generated=29 decodeMs=337843
+         1794215405.924 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=362359 reading=false promptRead=19 prefillMs=13071 generated=30 decodeMs=349251
+         1794215418.060 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=374495 reading=false promptRead=19 prefillMs=13071 generated=31 decodeMs=361361
+         1794215428.460 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=384895 reading=false promptRead=19 prefillMs=13071 generated=32 decodeMs=371658
+         1794215436.574 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=393009 reading=false promptRead=19 prefillMs=13071 generated=33 decodeMs=379909
+         1794215449.682 11512 11551 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=406116 reading=false promptRead=19 prefillMs=13071 generated=34 decodeMs=392858
+         1794215652.163  7646  7677 I OpenWeightsBench: device reports 8 cores
+         1794215652.181  7646  7689 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794215652.199  7646  7689 I OpenWeights: OpenCL backend registered
+         1794215652.307  7646  7689 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794215654.774  7646  7689 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794215655.012  7646  7689 I OpenWeights: threads: 6 workers kept alive across graphs
+         1794215655.025  7646  7689 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794215655.029  7646  7689 I OpenWeights: mem: after load rss 3534 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 25956, cpu 3030 ms
+         1794215655.034  7646  7689 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794215655.034  7646  7677 I OpenWeightsBench: START threads=6 maxTokens=64
+         1794215655.044  7646  7689 I OpenWeights: mem: before turn rss 3536 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 26050, cpu 3060 ms
+         1794215655.046  7646  7689 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794215655.292  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=258 reading=true promptRead=0 prefillMs=null generated=0 decodeMs=null
+         1794215669.732  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=14698 reading=false promptRead=19 prefillMs=14493 generated=1 decodeMs=null
+         1794215683.068  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=28034 reading=false promptRead=19 prefillMs=14493 generated=2 decodeMs=13395
+         1794215697.702  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=42668 reading=false promptRead=19 prefillMs=14493 generated=3 decodeMs=28090
+         1794215710.938  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=55904 reading=false promptRead=19 prefillMs=14493 generated=4 decodeMs=41285
+         1794215723.340  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=68306 reading=false promptRead=19 prefillMs=14493 generated=5 decodeMs=53681
+         1794215736.251  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=81217 reading=false promptRead=19 prefillMs=14493 generated=6 decodeMs=66576
+         1794215749.467  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=94433 reading=false promptRead=19 prefillMs=14493 generated=7 decodeMs=79892
+         1794215763.714  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=108679 reading=false promptRead=19 prefillMs=14493 generated=8 decodeMs=94052
+         1794215774.884  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=119849 reading=false promptRead=19 prefillMs=14493 generated=9 decodeMs=105229
+         1794215802.357  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=147323 reading=false promptRead=19 prefillMs=14493 generated=11 decodeMs=132609
+         1794215815.424  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=160390 reading=false promptRead=19 prefillMs=14493 generated=12 decodeMs=145859
+         1794215830.023  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=174989 reading=false promptRead=19 prefillMs=14493 generated=13 decodeMs=160443
+         1794215841.678  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=186643 reading=false promptRead=19 prefillMs=14493 generated=14 decodeMs=172119
+         1794215855.061  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=200027 reading=false promptRead=19 prefillMs=14493 generated=15 decodeMs=185467
+         1794215868.139  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=213105 reading=false promptRead=19 prefillMs=14493 generated=16 decodeMs=198438
+         1794215879.752  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=224718 reading=false promptRead=19 prefillMs=14493 generated=17 decodeMs=210059
+         1794215892.936  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=237902 reading=false promptRead=19 prefillMs=14493 generated=18 decodeMs=223318
+         1794215903.323  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=248289 reading=false promptRead=19 prefillMs=14493 generated=19 decodeMs=233623
+         1794215913.204  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=258170 reading=false promptRead=19 prefillMs=14493 generated=20 decodeMs=243431
+         1794215925.603  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=270568 reading=false promptRead=19 prefillMs=14493 generated=21 decodeMs=256048
+         1794215934.968  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=279934 reading=false promptRead=19 prefillMs=14493 generated=22 decodeMs=265182
+         1794215947.883  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=292848 reading=false promptRead=19 prefillMs=14493 generated=23 decodeMs=278163
+         1794215959.264  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=304230 reading=false promptRead=19 prefillMs=14493 generated=24 decodeMs=289598
+         1794215968.620  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=313586 reading=false promptRead=19 prefillMs=14493 generated=25 decodeMs=299029
+         1794215978.694  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=323660 reading=false promptRead=19 prefillMs=14493 generated=26 decodeMs=309055
+         1794215990.576  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=335542 reading=false promptRead=19 prefillMs=14493 generated=27 decodeMs=321014
+         1794216000.174  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=345139 reading=false promptRead=19 prefillMs=14493 generated=28 decodeMs=330518
+         1794216011.482  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=356448 reading=false promptRead=19 prefillMs=14493 generated=29 decodeMs=341693
+         1794216022.311  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=367276 reading=false promptRead=19 prefillMs=14493 generated=30 decodeMs=352647
+         1794216034.132  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=379097 reading=false promptRead=19 prefillMs=14493 generated=31 decodeMs=364346
+         1794216045.270  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=390236 reading=false promptRead=19 prefillMs=14493 generated=32 decodeMs=375623
+         1794216057.933  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=402899 reading=false promptRead=19 prefillMs=14493 generated=33 decodeMs=388359
+         1794216070.588  7646  7677 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=415554 reading=false promptRead=19 prefillMs=14493 generated=34 decodeMs=401019
+         1794216279.447  1503  1600 I OpenWeightsBench: device reports 8 cores
+         1794216279.462  1503  1611 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794216279.475  1503  1611 I OpenWeights: OpenCL backend registered
+         1794216279.537  1503  1611 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794216280.915  1503  1611 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794216281.045  1503  1611 I OpenWeights: threads: 6 workers kept alive across graphs
+         1794216281.052  1503  1611 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794216281.054  1503  1611 I OpenWeights: mem: after load rss 3534 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 25948, cpu 1960 ms
+         1794216281.057  1503  1611 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794216281.059  1503  1600 I OpenWeightsBench: START threads=6 maxTokens=64
+         1794216281.065  1503  1611 I OpenWeights: mem: before turn rss 3533 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 26187, cpu 2010 ms
+         1794216281.067  1503  1611 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794216281.316  1503  1600 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=257 reading=false promptRead=19 prefillMs=151 generated=3 decodeMs=81
+         1794216281.567  1503  1600 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=508 reading=false promptRead=19 prefillMs=151 generated=9 decodeMs=325
+         1794216281.819  1503  1600 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=760 reading=false promptRead=19 prefillMs=151 generated=15 decodeMs=571
+         1794216282.073  1503  1600 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=1013 reading=false promptRead=19 prefillMs=151 generated=21 decodeMs=820
+         1794216282.324  1503  1600 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=1264 reading=false promptRead=19 prefillMs=151 generated=27 decodeMs=1096
+         1794216282.576  1503  1600 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=1517 reading=false promptRead=19 prefillMs=151 generated=32 decodeMs=1320
+         1794216282.829  1503  1600 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=1770 reading=false promptRead=19 prefillMs=151 generated=38 decodeMs=1594
+         1794216283.081  1503  1600 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=2022 reading=false promptRead=19 prefillMs=151 generated=44 decodeMs=1852
+         1794216283.332  1503  1600 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=2273 reading=false promptRead=19 prefillMs=151 generated=50 decodeMs=2111
+         1794216283.584  1503  1600 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=2525 reading=false promptRead=19 prefillMs=151 generated=55 decodeMs=2329
+         1794216283.836  1503  1600 I OpenWeightsBench: PROGRESS threads=6 elapsedMs=2777 reading=false promptRead=19 prefillMs=151 generated=61 decodeMs=2583
+         1794216283.974  1503  1611 I OpenWeights: mem: after turn rss 3538 MB, pss 3427 MB, swap 0 MB, majflt 0, minflt 27327, cpu 19320 ms
+         1794216283.977  1503  1600 I OpenWeightsBench: BENCH threads=6 prefill=125.8 tok/s decode=22.9 tok/s ttft=152 ms
+         1794216360.052  8258  8286 I OpenWeightsBench: device reports 8 cores
+         1794216360.066  8258  8296 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794216360.078  8258  8296 I OpenWeights: OpenCL backend registered
+         1794216360.137  8258  8296 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794216361.517  8258  8296 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794216361.646  8258  8296 I OpenWeights: threads: 3 workers kept alive across graphs
+         1794216361.653  8258  8296 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794216361.655  8258  8296 I OpenWeights: mem: after load rss 3534 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 25972, cpu 1940 ms
+         1794216361.658  8258  8296 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794216361.658  8258  8286 I OpenWeightsBench: START threads=3 maxTokens=64
+         1794216361.663  8258  8296 I OpenWeights: mem: before turn rss 3533 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 26150, cpu 1970 ms
+         1794216361.664  8258  8296 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794216361.914  8258  8286 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=255 reading=false promptRead=19 prefillMs=227 generated=1 decodeMs=null
+         1794216362.165  8258  8286 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=506 reading=false promptRead=19 prefillMs=227 generated=7 decodeMs=253
+         1794216362.416  8258  8286 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=758 reading=false promptRead=19 prefillMs=227 generated=13 decodeMs=508
+         1794216362.667  8258  8286 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=1009 reading=false promptRead=19 prefillMs=227 generated=19 decodeMs=769
+         1794216362.919  8258  8286 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=1261 reading=false promptRead=19 prefillMs=227 generated=24 decodeMs=987
+         1794216363.170  8258  8286 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=1512 reading=false promptRead=19 prefillMs=227 generated=30 decodeMs=1249
+         1794216363.421  8258  8286 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=1763 reading=false promptRead=19 prefillMs=227 generated=36 decodeMs=1511
+         1794216363.673  8258  8286 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=2014 reading=false promptRead=19 prefillMs=227 generated=42 decodeMs=1780
+         1794216363.924  8258  8286 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=2266 reading=false promptRead=19 prefillMs=227 generated=47 decodeMs=2012
+         1794216364.176  8258  8286 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=2518 reading=false promptRead=19 prefillMs=227 generated=52 decodeMs=2242
+         1794216364.427  8258  8286 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=2769 reading=false promptRead=19 prefillMs=227 generated=58 decodeMs=2515
+         1794216364.678  8258  8286 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=3020 reading=false promptRead=19 prefillMs=227 generated=64 decodeMs=2783
+         1794216364.721  8258  8296 I OpenWeights: mem: after turn rss 3538 MB, pss 3427 MB, swap 0 MB, majflt 0, minflt 27266, cpu 11130 ms
+         1794216364.723  8258  8286 I OpenWeightsBench: BENCH threads=3 prefill=83.7 tok/s decode=22.3 tok/s ttft=227 ms
+         1794216445.955 12142 12156 I OpenWeightsBench: device reports 8 cores
+         1794216445.977 12142 12158 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794216445.992 12142 12158 I OpenWeights: OpenCL backend registered
+         1794216446.101 12142 12158 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794216448.580 12142 12158 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794216448.841 12142 12158 I OpenWeights: threads: 3 workers kept alive across graphs
+         1794216448.853 12142 12158 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794216448.856 12142 12158 I OpenWeights: mem: after load rss 3534 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 25935, cpu 3080 ms
+         1794216448.862 12142 12158 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794216448.862 12142 12156 I OpenWeightsBench: START threads=3 maxTokens=64
+         1794216448.871 12142 12158 I OpenWeights: mem: before turn rss 3534 MB, pss 3423 MB, swap 0 MB, majflt 0, minflt 26166, cpu 3100 ms
+         1794216448.873 12142 12158 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794216449.123 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=260 reading=true promptRead=0 prefillMs=null generated=0 decodeMs=null
+         1794216451.640 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=2778 reading=false promptRead=19 prefillMs=2704 generated=1 decodeMs=null
+         1794216452.657 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=3794 reading=false promptRead=19 prefillMs=2704 generated=2 decodeMs=940
+         1794216454.668 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=5805 reading=false promptRead=19 prefillMs=2704 generated=3 decodeMs=3030
+         1794216455.945 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=7083 reading=false promptRead=19 prefillMs=2704 generated=4 decodeMs=4169
+         1794216457.458 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=8596 reading=false promptRead=19 prefillMs=2704 generated=5 decodeMs=5746
+         1794216459.222 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=10360 reading=false promptRead=19 prefillMs=2704 generated=6 decodeMs=7549
+         1794216462.232 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=13370 reading=false promptRead=19 prefillMs=2704 generated=7 decodeMs=10424
+         1794216464.492 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=15629 reading=false promptRead=19 prefillMs=2704 generated=8 decodeMs=12722
+         1794216466.252 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=17390 reading=false promptRead=19 prefillMs=2704 generated=9 decodeMs=14612
+         1794216468.261 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=19399 reading=false promptRead=19 prefillMs=2704 generated=10 decodeMs=16503
+         1794216470.023 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=21160 reading=false promptRead=19 prefillMs=2704 generated=11 decodeMs=18251
+         1794216471.787 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=22924 reading=false promptRead=19 prefillMs=2704 generated=12 decodeMs=20096
+         1794216473.296 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=24434 reading=false promptRead=19 prefillMs=2704 generated=13 decodeMs=21633
+         1794216475.057 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=26194 reading=false promptRead=19 prefillMs=2704 generated=14 decodeMs=23434
+         1794216476.814 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=27952 reading=false promptRead=19 prefillMs=2704 generated=15 decodeMs=25131
+         1794216480.076 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=31214 reading=false promptRead=19 prefillMs=2704 generated=16 decodeMs=28300
+         1794216482.333 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=33471 reading=false promptRead=19 prefillMs=2704 generated=17 decodeMs=30644
+         1794216484.592 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=35730 reading=false promptRead=19 prefillMs=2704 generated=18 decodeMs=32960
+         1794216487.602 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=38740 reading=false promptRead=19 prefillMs=2704 generated=19 decodeMs=35881
+         1794216489.866 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=41003 reading=false promptRead=19 prefillMs=2704 generated=20 decodeMs=38176
+         1794216491.874 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=43012 reading=false promptRead=19 prefillMs=2704 generated=21 decodeMs=40191
+         1794216494.386 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=45524 reading=false promptRead=19 prefillMs=2704 generated=22 decodeMs=42632
+         1794216495.654 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=46792 reading=false promptRead=19 prefillMs=2704 generated=23 decodeMs=43924
+         1794216497.417 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=48554 reading=false promptRead=19 prefillMs=2704 generated=24 decodeMs=45820
+         1794216498.671 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=49809 reading=false promptRead=19 prefillMs=2704 generated=25 decodeMs=46892
+         1794216500.682 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=51819 reading=false promptRead=19 prefillMs=2704 generated=26 decodeMs=48892
+         1794216501.940 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=53078 reading=false promptRead=19 prefillMs=2704 generated=27 decodeMs=50278
+         1794216503.708 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=54846 reading=false promptRead=19 prefillMs=2704 generated=28 decodeMs=51983
+         1794216505.213 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=56351 reading=false promptRead=19 prefillMs=2704 generated=29 decodeMs=53580
+         1794216506.973 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=58111 reading=false promptRead=19 prefillMs=2704 generated=30 decodeMs=55219
+         1794216508.731 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=59868 reading=false promptRead=19 prefillMs=2704 generated=31 decodeMs=56999
+         1794216510.497 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=61635 reading=false promptRead=19 prefillMs=2704 generated=32 decodeMs=58718
+         1794216512.524 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=63661 reading=false promptRead=19 prefillMs=2704 generated=33 decodeMs=60772
+         1794216515.295 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=66433 reading=false promptRead=19 prefillMs=2704 generated=34 decodeMs=63643
+         1794216518.330 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=69467 reading=false promptRead=19 prefillMs=2704 generated=35 decodeMs=66532
+         1794216520.361 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=71498 reading=false promptRead=19 prefillMs=2704 generated=36 decodeMs=68553
+         1794216522.635 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=73773 reading=false promptRead=19 prefillMs=2704 generated=37 decodeMs=70991
+         1794216524.924 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=76062 reading=false promptRead=19 prefillMs=2704 generated=38 decodeMs=73289
+         1794216526.190 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=77328 reading=false promptRead=19 prefillMs=2704 generated=39 decodeMs=74587
+         1794216527.960 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=79098 reading=false promptRead=19 prefillMs=2704 generated=40 decodeMs=76223
+         1794216529.723 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=80861 reading=false promptRead=19 prefillMs=2704 generated=41 decodeMs=78044
+         1794216531.232 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=82370 reading=false promptRead=19 prefillMs=2704 generated=42 decodeMs=79654
+         1794216533.519 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=84656 reading=false promptRead=19 prefillMs=2704 generated=43 decodeMs=81774
+         1794216536.289 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=87427 reading=false promptRead=19 prefillMs=2704 generated=44 decodeMs=84575
+         1794216538.314 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=89452 reading=false promptRead=19 prefillMs=2704 generated=45 decodeMs=86492
+         1794216540.077 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=91215 reading=false promptRead=19 prefillMs=2704 generated=46 decodeMs=88448
+         1794216541.592 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=92730 reading=false promptRead=19 prefillMs=2704 generated=47 decodeMs=89858
+         1794216543.854 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=94991 reading=false promptRead=19 prefillMs=2704 generated=48 decodeMs=92163
+         1794216545.376 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=96514 reading=false promptRead=19 prefillMs=2704 generated=49 decodeMs=93628
+         1794216547.642 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=98779 reading=false promptRead=19 prefillMs=2704 generated=50 decodeMs=95900
+         1794216549.408 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=100545 reading=false promptRead=19 prefillMs=2704 generated=51 decodeMs=97733
+         1794216551.428 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=102566 reading=false promptRead=19 prefillMs=2704 generated=52 decodeMs=99718
+         1794216554.198 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=105336 reading=false promptRead=19 prefillMs=2704 generated=53 decodeMs=102521
+         1794216556.223 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=107361 reading=false promptRead=19 prefillMs=2704 generated=54 decodeMs=104519
+         1794216558.237 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=109374 reading=false promptRead=19 prefillMs=2704 generated=55 decodeMs=106469
+         1794216560.251 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=111389 reading=false promptRead=19 prefillMs=2704 generated=56 decodeMs=108524
+         1794216561.763 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=112901 reading=false promptRead=19 prefillMs=2704 generated=57 decodeMs=110180
+         1794216564.538 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=115676 reading=false promptRead=19 prefillMs=2704 generated=58 decodeMs=112721
+         1794216566.055 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=117193 reading=false promptRead=19 prefillMs=2704 generated=59 decodeMs=114273
+         1794216568.335 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=119473 reading=false promptRead=19 prefillMs=2704 generated=60 decodeMs=116612
+         1794216570.351 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=121489 reading=false promptRead=19 prefillMs=2704 generated=61 decodeMs=118725
+         1794216572.365 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=123503 reading=false promptRead=19 prefillMs=2704 generated=62 decodeMs=120572
+         1794216574.391 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=125528 reading=false promptRead=19 prefillMs=2704 generated=63 decodeMs=122663
+         1794216575.905 12142 12156 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=127043 reading=false promptRead=19 prefillMs=2704 generated=64 decodeMs=124150
+         1794216577.938 12142 12158 I OpenWeights: mem: after turn rss 3539 MB, pss 3427 MB, swap 0 MB, majflt 0, minflt 31818, cpu 220610 ms
+         1794216577.941 12142 12156 I OpenWeightsBench: BENCH threads=3 prefill=7.0 tok/s decode=0.5 tok/s ttft=2705 ms
+         1794216674.956 21647 21663 I OpenWeightsBench: device reports 8 cores
+         1794216674.969 21647 21665 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794216674.982 21647 21665 I OpenWeights: OpenCL backend registered
+         1794216675.042 21647 21665 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794216676.416 21647 21665 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794216676.545 21647 21665 I OpenWeights: threads: 2 workers kept alive across graphs
+         1794216676.552 21647 21665 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794216676.554 21647 21665 I OpenWeights: mem: after load rss 3534 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 27039, cpu 1940 ms
+         1794216676.557 21647 21665 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794216676.557 21647 21663 I OpenWeightsBench: START threads=2 maxTokens=64
+         1794216676.562 21647 21665 I OpenWeights: mem: before turn rss 3534 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 27233, cpu 1960 ms
+         1794216676.563 21647 21665 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794216676.814 21647 21663 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=257 reading=true promptRead=0 prefillMs=null generated=0 decodeMs=null
+         1794216677.067 21647 21663 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=510 reading=false promptRead=19 prefillMs=269 generated=6 decodeMs=208
+         1794216677.320 21647 21663 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=763 reading=false promptRead=19 prefillMs=269 generated=12 decodeMs=459
+         1794216677.574 21647 21663 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1017 reading=false promptRead=19 prefillMs=269 generated=18 decodeMs=714
+         1794216677.827 21647 21663 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1270 reading=false promptRead=19 prefillMs=269 generated=24 decodeMs=979
+         1794216678.080 21647 21663 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1523 reading=false promptRead=19 prefillMs=269 generated=30 decodeMs=1245
+         1794216678.332 21647 21663 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1775 reading=false promptRead=19 prefillMs=269 generated=35 decodeMs=1471
+         1794216678.586 21647 21663 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2028 reading=false promptRead=19 prefillMs=269 generated=41 decodeMs=1736
+         1794216678.838 21647 21663 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2281 reading=false promptRead=19 prefillMs=269 generated=47 decodeMs=2001
+         1794216679.091 21647 21663 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2534 reading=false promptRead=19 prefillMs=269 generated=52 decodeMs=2222
+         1794216679.344 21647 21663 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2787 reading=false promptRead=19 prefillMs=269 generated=58 decodeMs=2488
+         1794216679.596 21647 21663 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3039 reading=false promptRead=19 prefillMs=269 generated=64 decodeMs=2756
+         1794216679.635 21647 21665 I OpenWeights: mem: after turn rss 3532 MB, pss 3421 MB, swap 0 MB, majflt 0, minflt 28350, cpu 8150 ms
+         1794216679.638 21647 21663 I OpenWeightsBench: BENCH threads=2 prefill=70.6 tok/s decode=22.5 tok/s ttft=270 ms
+         1794216744.960 24635 24671 I OpenWeightsBench: device reports 8 cores
+         1794216744.995 24635 24682 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794216745.041 24635 24682 I OpenWeights: OpenCL backend registered
+         1794216745.285 24635 24682 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794216747.670 24635 24682 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794216747.905 24635 24682 I OpenWeights: threads: 2 workers kept alive across graphs
+         1794216747.917 24635 24682 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794216747.920 24635 24682 I OpenWeights: mem: after load rss 3534 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 26933, cpu 3080 ms
+         1794216747.925 24635 24682 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794216747.927 24635 24671 I OpenWeightsBench: START threads=2 maxTokens=64
+         1794216747.936 24635 24682 I OpenWeights: mem: before turn rss 3534 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 27203, cpu 3100 ms
+         1794216747.938 24635 24682 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794216748.188 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=260 reading=true promptRead=0 prefillMs=null generated=0 decodeMs=null
+         1794216748.956 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1028 reading=false promptRead=19 prefillMs=940 generated=1 decodeMs=null
+         1794216749.206 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1279 reading=false promptRead=19 prefillMs=940 generated=5 decodeMs=322
+         1794216749.457 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1530 reading=false promptRead=19 prefillMs=940 generated=8 decodeMs=560
+         1794216749.709 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1782 reading=false promptRead=19 prefillMs=940 generated=11 decodeMs=801
+         1794216749.981 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2054 reading=false promptRead=19 prefillMs=940 generated=13 decodeMs=962
+         1794216750.232 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2305 reading=false promptRead=19 prefillMs=940 generated=16 decodeMs=1337
+         1794216750.483 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2556 reading=false promptRead=19 prefillMs=940 generated=19 decodeMs=1584
+         1794216750.734 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2807 reading=false promptRead=19 prefillMs=940 generated=22 decodeMs=1827
+         1794216750.985 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3058 reading=false promptRead=19 prefillMs=940 generated=25 decodeMs=2087
+         1794216751.242 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3315 reading=false promptRead=19 prefillMs=940 generated=27 decodeMs=2340
+         1794216751.493 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3566 reading=false promptRead=19 prefillMs=940 generated=30 decodeMs=2608
+         1794216751.745 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3817 reading=false promptRead=19 prefillMs=940 generated=32 decodeMs=2834
+         1794216751.999 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=4071 reading=false promptRead=19 prefillMs=940 generated=34 decodeMs=3021
+         1794216752.252 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=4325 reading=false promptRead=19 prefillMs=940 generated=36 decodeMs=3269
+         1794216752.514 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=4587 reading=false promptRead=19 prefillMs=940 generated=38 decodeMs=3623
+         1794216752.768 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=4840 reading=false promptRead=19 prefillMs=940 generated=40 decodeMs=3822
+         1794216753.018 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=5091 reading=false promptRead=19 prefillMs=940 generated=44 decodeMs=4140
+         1794216753.270 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=5342 reading=false promptRead=19 prefillMs=940 generated=46 decodeMs=4315
+         1794216753.528 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=5595 reading=false promptRead=19 prefillMs=940 generated=50 decodeMs=4630
+         1794216753.776 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=5849 reading=false promptRead=19 prefillMs=940 generated=51 decodeMs=4751
+         1794216754.028 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=6101 reading=false promptRead=19 prefillMs=940 generated=54 decodeMs=5075
+         1794216754.279 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=6352 reading=false promptRead=19 prefillMs=940 generated=58 decodeMs=5390
+         1794216754.531 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=6604 reading=false promptRead=19 prefillMs=940 generated=61 decodeMs=5638
+         1794216754.782 24635 24671 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=6855 reading=false promptRead=19 prefillMs=940 generated=64 decodeMs=5877
+         1794216754.884 24635 24682 I OpenWeights: mem: after turn rss 3534 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 28656, cpu 14650 ms
+         1794216754.909 24635 24671 I OpenWeightsBench: BENCH threads=2 prefill=20.2 tok/s decode=10.5 tok/s ttft=941 ms
+         1794216804.537 27239 27255 I OpenWeightsBench: device reports 8 cores
+         1794216804.568 27239 27258 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794216804.593 27239 27258 I OpenWeights: OpenCL backend registered
+         1794216804.749 27239 27258 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794216807.152 27239 27258 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794216807.386 27239 27258 I OpenWeights: threads: 4 workers kept alive across graphs
+         1794216807.403 27239 27258 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794216807.410 27239 27258 I OpenWeights: mem: after load rss 3534 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 25891, cpu 3040 ms
+         1794216807.415 27239 27258 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794216807.415 27239 27255 I OpenWeightsBench: START threads=4 maxTokens=64
+         1794216807.428 27239 27258 I OpenWeights: mem: before turn rss 3533 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 26003, cpu 3060 ms
+         1794216807.430 27239 27258 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794216807.681 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=266 reading=true promptRead=0 prefillMs=null generated=0 decodeMs=null
+         1794216812.492 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=5076 reading=false promptRead=19 prefillMs=4825 generated=1 decodeMs=null
+         1794216816.555 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=9140 reading=false promptRead=19 prefillMs=4825 generated=2 decodeMs=4083
+         1794216821.345 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=13930 reading=false promptRead=19 prefillMs=4825 generated=3 decodeMs=8853
+         1794216826.122 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=18706 reading=false promptRead=19 prefillMs=4825 generated=4 decodeMs=13746
+         1794216829.905 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=22490 reading=false promptRead=19 prefillMs=4825 generated=5 decodeMs=17636
+         1794216833.687 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=26272 reading=false promptRead=19 prefillMs=4825 generated=6 decodeMs=21283
+         1794216839.994 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=32579 reading=false promptRead=19 prefillMs=4825 generated=7 decodeMs=27611
+         1794216843.793 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=36378 reading=false promptRead=19 prefillMs=4825 generated=8 decodeMs=31380
+         1794216849.892 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=42477 reading=false promptRead=19 prefillMs=4825 generated=9 decodeMs=37519
+         1794216854.685 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=47270 reading=false promptRead=19 prefillMs=4825 generated=10 decodeMs=42368
+         1794216858.723 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=51308 reading=false promptRead=19 prefillMs=4825 generated=11 decodeMs=46311
+         1794216863.501 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=56086 reading=false promptRead=19 prefillMs=4825 generated=12 decodeMs=51112
+         1794216868.526 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=61111 reading=false promptRead=19 prefillMs=4825 generated=13 decodeMs=56100
+         1794216872.043 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=64627 reading=false promptRead=19 prefillMs=4825 generated=14 decodeMs=59742
+         1794216875.315 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=67900 reading=false promptRead=19 prefillMs=4825 generated=15 decodeMs=62923
+         1794216878.383 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=70968 reading=false promptRead=19 prefillMs=4825 generated=16 decodeMs=66075
+         1794216881.406 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=73991 reading=false promptRead=19 prefillMs=4825 generated=17 decodeMs=69015
+         1794216883.924 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=76509 reading=false promptRead=19 prefillMs=4825 generated=18 decodeMs=71531
+         1794216887.723 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=80308 reading=false promptRead=19 prefillMs=4825 generated=19 decodeMs=75252
+         1794216891.750 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=84335 reading=false promptRead=19 prefillMs=4825 generated=20 decodeMs=79262
+         1794216895.776 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=88361 reading=false promptRead=19 prefillMs=4825 generated=21 decodeMs=83408
+         1794216899.311 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=91895 reading=false promptRead=19 prefillMs=4825 generated=22 decodeMs=86849
+         1794216902.334 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=94919 reading=false promptRead=19 prefillMs=4825 generated=23 decodeMs=89891
+         1794216907.375 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=99960 reading=false promptRead=19 prefillMs=4825 generated=24 decodeMs=94913
+         1794216911.160 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=103745 reading=false promptRead=19 prefillMs=4825 generated=25 decodeMs=98722
+         1794216914.682 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=107267 reading=false promptRead=19 prefillMs=4825 generated=26 decodeMs=102249
+         1794216918.203 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=110787 reading=false promptRead=19 prefillMs=4825 generated=27 decodeMs=105880
+         1794216924.781 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=117366 reading=false promptRead=19 prefillMs=4825 generated=28 decodeMs=112392
+         1794216930.605 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=123190 reading=false promptRead=19 prefillMs=4825 generated=29 decodeMs=118283
+         1794216935.625 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=128210 reading=false promptRead=19 prefillMs=4825 generated=30 decodeMs=123151
+         1794216939.888 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=132473 reading=false promptRead=19 prefillMs=4825 generated=31 decodeMs=127611
+         1794216944.655 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=137239 reading=false promptRead=19 prefillMs=4825 generated=32 decodeMs=132391
+         1794216948.672 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=141257 reading=false promptRead=19 prefillMs=4825 generated=33 decodeMs=136362
+         1794216952.434 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=145019 reading=false promptRead=19 prefillMs=4825 generated=34 decodeMs=140057
+         1794216954.952 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=147537 reading=false promptRead=19 prefillMs=4825 generated=35 decodeMs=142475
+         1794216957.717 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=150302 reading=false promptRead=19 prefillMs=4825 generated=36 decodeMs=145283
+         1794216962.748 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=155333 reading=false promptRead=19 prefillMs=4825 generated=37 decodeMs=150367
+         1794216965.268 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=157853 reading=false promptRead=19 prefillMs=4825 generated=38 decodeMs=153007
+         1794216970.284 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=162869 reading=false promptRead=19 prefillMs=4825 generated=39 decodeMs=157791
+         1794216973.051 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=165635 reading=false promptRead=19 prefillMs=4825 generated=40 decodeMs=160652
+         1794216978.087 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=170672 reading=false promptRead=19 prefillMs=4825 generated=41 decodeMs=165664
+         1794216981.347 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=173932 reading=false promptRead=19 prefillMs=4825 generated=42 decodeMs=169028
+         1794216984.870 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=177455 reading=false promptRead=19 prefillMs=4825 generated=43 decodeMs=172437
+         1794216988.387 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=180972 reading=false promptRead=19 prefillMs=4825 generated=44 decodeMs=176090
+         1794216992.401 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=184986 reading=false promptRead=19 prefillMs=4825 generated=45 decodeMs=179930
+         1794216996.919 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=189504 reading=false promptRead=19 prefillMs=4825 generated=46 decodeMs=184542
+         1794217002.433 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=195018 reading=false promptRead=19 prefillMs=4825 generated=47 decodeMs=189979
+         1794217007.242 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=199826 reading=false promptRead=19 prefillMs=4825 generated=48 decodeMs=194817
+         1794217012.021 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=204606 reading=false promptRead=19 prefillMs=4825 generated=49 decodeMs=199670
+         1794217016.817 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=209402 reading=false promptRead=19 prefillMs=4825 generated=50 decodeMs=204536
+         1794217023.372 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=215957 reading=false promptRead=19 prefillMs=4825 generated=51 decodeMs=210915
+         1794217026.142 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=218726 reading=false promptRead=19 prefillMs=4825 generated=52 decodeMs=213804
+         1794217031.171 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=223756 reading=false promptRead=19 prefillMs=4825 generated=53 decodeMs=218698
+         1794217034.444 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=227028 reading=false promptRead=19 prefillMs=4825 generated=54 decodeMs=221953
+         1794217038.457 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=231042 reading=false promptRead=19 prefillMs=4825 generated=55 decodeMs=226011
+         1794217042.747 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=235332 reading=false promptRead=19 prefillMs=4825 generated=56 decodeMs=230259
+         1794217046.282 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=238867 reading=false promptRead=19 prefillMs=4825 generated=57 decodeMs=233926
+         1794217049.558 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=242142 reading=false promptRead=19 prefillMs=4825 generated=58 decodeMs=237070
+         1794217053.077 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=245662 reading=false promptRead=19 prefillMs=4825 generated=59 decodeMs=240770
+         1794217057.112 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=249697 reading=false promptRead=19 prefillMs=4825 generated=60 decodeMs=244835
+         1794217060.890 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=253475 reading=false promptRead=19 prefillMs=4825 generated=61 decodeMs=248423
+         1794217066.167 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=258752 reading=false promptRead=19 prefillMs=4825 generated=62 decodeMs=253802
+         1794217070.496 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=263080 reading=false promptRead=19 prefillMs=4825 generated=63 decodeMs=258089
+         1794217073.531 27239 27255 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=266116 reading=false promptRead=19 prefillMs=4825 generated=64 decodeMs=261037
+         1794217076.633 27239 27258 I OpenWeights: mem: after turn rss 3534 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 36258, cpu 457240 ms
+         1794217076.637 27239 27255 I OpenWeightsBench: BENCH threads=4 prefill=3.9 tok/s decode=0.2 tok/s ttft=4826 ms
+         1794217221.133 15693 15709 I OpenWeightsBench: device reports 8 cores
+         1794217221.147 15693 15711 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794217221.159 15693 15711 I OpenWeights: OpenCL backend registered
+         1794217221.219 15693 15711 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794217222.594 15693 15711 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794217222.725 15693 15711 I OpenWeights: threads: 4 workers kept alive across graphs
+         1794217222.732 15693 15711 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794217222.734 15693 15711 I OpenWeights: mem: after load rss 3533 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 27001, cpu 1950 ms
+         1794217222.737 15693 15711 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794217222.738 15693 15709 I OpenWeightsBench: START threads=4 maxTokens=64
+         1794217222.748 15693 15711 I OpenWeights: mem: before turn rss 3533 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 27192, cpu 2010 ms
+         1794217222.749 15693 15711 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794217222.998 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=261 reading=false promptRead=19 prefillMs=217 generated=1 decodeMs=null
+         1794217223.250 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=512 reading=false promptRead=19 prefillMs=217 generated=7 decodeMs=249
+         1794217223.501 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=764 reading=false promptRead=19 prefillMs=217 generated=13 decodeMs=502
+         1794217223.752 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1015 reading=false promptRead=19 prefillMs=217 generated=19 decodeMs=753
+         1794217224.004 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1266 reading=false promptRead=19 prefillMs=217 generated=25 decodeMs=1009
+         1794217224.255 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1518 reading=false promptRead=19 prefillMs=217 generated=31 decodeMs=1265
+         1794217224.506 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1769 reading=false promptRead=19 prefillMs=217 generated=37 decodeMs=1520
+         1794217224.758 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2021 reading=false promptRead=19 prefillMs=217 generated=43 decodeMs=1785
+         1794217225.009 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2272 reading=false promptRead=19 prefillMs=217 generated=48 decodeMs=2006
+         1794217225.263 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2525 reading=false promptRead=19 prefillMs=217 generated=54 decodeMs=2284
+         1794217225.514 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2777 reading=false promptRead=19 prefillMs=217 generated=59 decodeMs=2506
+         1794217225.735 15693 15711 I OpenWeights: mem: after turn rss 3532 MB, pss 3421 MB, swap 0 MB, majflt 0, minflt 28308, cpu 13950 ms
+         1794217225.737 15693 15709 I OpenWeightsBench: BENCH threads=4 prefill=87.6 tok/s decode=22.8 tok/s ttft=218 ms
+--------- beginning of main
+         1794217221.133 15693 15709 I OpenWeightsBench: device reports 8 cores
+         1794217221.147 15693 15711 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794217221.159 15693 15711 I OpenWeights: OpenCL backend registered
+         1794217221.219 15693 15711 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794217222.594 15693 15711 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794217222.725 15693 15711 I OpenWeights: threads: 4 workers kept alive across graphs
+         1794217222.732 15693 15711 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794217222.734 15693 15711 I OpenWeights: mem: after load rss 3533 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 27001, cpu 1950 ms
+         1794217222.737 15693 15711 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794217222.738 15693 15709 I OpenWeightsBench: START threads=4 maxTokens=64
+         1794217222.748 15693 15711 I OpenWeights: mem: before turn rss 3533 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 27192, cpu 2010 ms
+         1794217222.749 15693 15711 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794217222.998 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=261 reading=false promptRead=19 prefillMs=217 generated=1 decodeMs=null
+         1794217223.250 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=512 reading=false promptRead=19 prefillMs=217 generated=7 decodeMs=249
+         1794217223.501 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=764 reading=false promptRead=19 prefillMs=217 generated=13 decodeMs=502
+         1794217223.752 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1015 reading=false promptRead=19 prefillMs=217 generated=19 decodeMs=753
+         1794217224.004 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1266 reading=false promptRead=19 prefillMs=217 generated=25 decodeMs=1009
+         1794217224.255 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1518 reading=false promptRead=19 prefillMs=217 generated=31 decodeMs=1265
+         1794217224.506 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1769 reading=false promptRead=19 prefillMs=217 generated=37 decodeMs=1520
+         1794217224.758 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2021 reading=false promptRead=19 prefillMs=217 generated=43 decodeMs=1785
+         1794217225.009 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2272 reading=false promptRead=19 prefillMs=217 generated=48 decodeMs=2006
+         1794217225.263 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2525 reading=false promptRead=19 prefillMs=217 generated=54 decodeMs=2284
+         1794217225.514 15693 15709 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2777 reading=false promptRead=19 prefillMs=217 generated=59 decodeMs=2506
+         1794217225.735 15693 15711 I OpenWeights: mem: after turn rss 3532 MB, pss 3421 MB, swap 0 MB, majflt 0, minflt 28308, cpu 13950 ms
+         1794217225.737 15693 15709 I OpenWeightsBench: BENCH threads=4 prefill=87.6 tok/s decode=22.8 tok/s ttft=218 ms
+         1794217514.843 11280 11307 I OpenWeightsBench: device reports 8 cores
+         1794217514.880 11280 11337 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794217514.919 11280 11337 I OpenWeights: OpenCL backend registered
+         1794217515.050 11280 11337 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794217517.421 11280 11337 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794217517.675 11280 11337 I OpenWeights: threads: 4 workers kept alive across graphs
+         1794217517.698 11280 11337 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794217517.703 11280 11337 I OpenWeights: mem: after load rss 3533 MB, pss 3423 MB, swap 0 MB, majflt 0, minflt 25922, cpu 3040 ms
+         1794217517.709 11280 11337 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794217517.709 11280 11307 I OpenWeightsBench: START threads=4 maxTokens=64
+         1794217517.719 11280 11337 I OpenWeights: mem: before turn rss 3533 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 26145, cpu 3060 ms
+         1794217517.721 11280 11337 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794217517.972 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=263 reading=true promptRead=0 prefillMs=null generated=0 decodeMs=null
+         1794217521.510 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=3801 reading=false promptRead=19 prefillMs=3588 generated=1 decodeMs=null
+         1794217524.822 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=7112 reading=false promptRead=19 prefillMs=3588 generated=2 decodeMs=3388
+         1794217528.613 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=10904 reading=false promptRead=19 prefillMs=3588 generated=3 decodeMs=7197
+         1794217532.668 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=14959 reading=false promptRead=19 prefillMs=3588 generated=4 decodeMs=11328
+         1794217536.955 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=19246 reading=false promptRead=19 prefillMs=3588 generated=5 decodeMs=15533
+         1794217540.231 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=22522 reading=false promptRead=19 prefillMs=3588 generated=6 decodeMs=18730
+         1794217542.751 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=25041 reading=false promptRead=19 prefillMs=3588 generated=7 decodeMs=21439
+         1794217546.037 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=28328 reading=false promptRead=19 prefillMs=3588 generated=8 decodeMs=24644
+         1794217551.336 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=33627 reading=false promptRead=19 prefillMs=3588 generated=9 decodeMs=29845
+         1794217556.371 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=38662 reading=false promptRead=19 prefillMs=3588 generated=10 decodeMs=34860
+         1794217560.167 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=42457 reading=false promptRead=19 prefillMs=3588 generated=11 decodeMs=38615
+         1794217565.728 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=48019 reading=false promptRead=19 prefillMs=3588 generated=12 decodeMs=44207
+         1794217570.282 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=52573 reading=false promptRead=19 prefillMs=3588 generated=13 decodeMs=48909
+         1794217573.316 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=55607 reading=false promptRead=19 prefillMs=3588 generated=14 decodeMs=51803
+         1794217576.095 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=58386 reading=false promptRead=19 prefillMs=3588 generated=15 decodeMs=54653
+         1794217579.377 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=61668 reading=false promptRead=19 prefillMs=3588 generated=16 decodeMs=57929
+         1794217582.156 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=64447 reading=false promptRead=19 prefillMs=3588 generated=17 decodeMs=60798
+         1794217585.964 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=68255 reading=false promptRead=19 prefillMs=3588 generated=18 decodeMs=64413
+         1794217589.755 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=72046 reading=false promptRead=19 prefillMs=3588 generated=19 decodeMs=68245
+         1794217592.536 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=74827 reading=false promptRead=19 prefillMs=3588 generated=20 decodeMs=70980
+         1794217595.563 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=77854 reading=false promptRead=19 prefillMs=3588 generated=21 decodeMs=74127
+         1794217599.093 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=81384 reading=false promptRead=19 prefillMs=3588 generated=22 decodeMs=77571
+         1794217602.628 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=84918 reading=false promptRead=19 prefillMs=3588 generated=23 decodeMs=81068
+         1794217605.398 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=87689 reading=false promptRead=19 prefillMs=3588 generated=24 decodeMs=83991
+         1794217608.917 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=91208 reading=false promptRead=19 prefillMs=3588 generated=25 decodeMs=87377
+         1794217611.182 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=93472 reading=false promptRead=19 prefillMs=3588 generated=26 decodeMs=89841
+         1794217613.957 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=96247 reading=false promptRead=19 prefillMs=3588 generated=27 decodeMs=92452
+         1794217618.483 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=100774 reading=false promptRead=19 prefillMs=3588 generated=28 decodeMs=97051
+         1794217623.272 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=105563 reading=false promptRead=19 prefillMs=3588 generated=29 decodeMs=101752
+         1794217627.808 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=110099 reading=false promptRead=19 prefillMs=3588 generated=30 decodeMs=106337
+         1794217632.359 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=114650 reading=false promptRead=19 prefillMs=3588 generated=31 decodeMs=111003
+         1794217637.143 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=119434 reading=false promptRead=19 prefillMs=3588 generated=32 decodeMs=115806
+         1794217641.179 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=123470 reading=false promptRead=19 prefillMs=3588 generated=33 decodeMs=119793
+         1794217645.712 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=128002 reading=false promptRead=19 prefillMs=3588 generated=34 decodeMs=124227
+         1794217650.502 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=132792 reading=false promptRead=19 prefillMs=3588 generated=35 decodeMs=129011
+         1794217654.536 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=136827 reading=false promptRead=19 prefillMs=3588 generated=36 decodeMs=133182
+         1794217657.813 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=140103 reading=false promptRead=19 prefillMs=3588 generated=37 decodeMs=136486
+         1794217661.830 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=144120 reading=false promptRead=19 prefillMs=3588 generated=38 decodeMs=140279
+         1794217665.862 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=148153 reading=false promptRead=19 prefillMs=3588 generated=39 decodeMs=144521
+         1794217669.897 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=152188 reading=false promptRead=19 prefillMs=3588 generated=40 decodeMs=148408
+         1794217674.688 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=156978 reading=false promptRead=19 prefillMs=3588 generated=41 decodeMs=153249
+         1794217678.968 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=161258 reading=false promptRead=19 prefillMs=3588 generated=42 decodeMs=157522
+         1794217683.761 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=166052 reading=false promptRead=19 prefillMs=3588 generated=43 decodeMs=162347
+         1794217687.284 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=169575 reading=false promptRead=19 prefillMs=3588 generated=44 decodeMs=165785
+         1794217691.328 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=173619 reading=false promptRead=19 prefillMs=3588 generated=45 decodeMs=169836
+         1794217696.126 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=178416 reading=false promptRead=19 prefillMs=3588 generated=46 decodeMs=174651
+         1794217700.152 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=182442 reading=false promptRead=19 prefillMs=3588 generated=47 decodeMs=178593
+         1794217704.952 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=187243 reading=false promptRead=19 prefillMs=3588 generated=48 decodeMs=183411
+         1794217710.256 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=192546 reading=false promptRead=19 prefillMs=3588 generated=49 decodeMs=188771
+         1794217715.556 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=197847 reading=false promptRead=19 prefillMs=3588 generated=50 decodeMs=194135
+         1794217719.839 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=202128 reading=false promptRead=19 prefillMs=3588 generated=51 decodeMs=198347
+         1794217723.143 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=205434 reading=false promptRead=19 prefillMs=3588 generated=52 decodeMs=201659
+         1794217726.404 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=208694 reading=false promptRead=19 prefillMs=3588 generated=53 decodeMs=204858
+         1794217730.440 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=212731 reading=false promptRead=19 prefillMs=3588 generated=54 decodeMs=208926
+         1794217734.724 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=217015 reading=false promptRead=19 prefillMs=3588 generated=55 decodeMs=213282
+         1794217737.237 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=219528 reading=false promptRead=19 prefillMs=3588 generated=56 decodeMs=215860
+         1794217742.256 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=224547 reading=false promptRead=19 prefillMs=3588 generated=57 decodeMs=220873
+         1794217747.773 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=230063 reading=false promptRead=19 prefillMs=3588 generated=58 decodeMs=226379
+         1794217754.297 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=236588 reading=false promptRead=19 prefillMs=3588 generated=59 decodeMs=232833
+         1794217759.585 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=241876 reading=false promptRead=19 prefillMs=3588 generated=60 decodeMs=238150
+         1794217762.610 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=244900 reading=false promptRead=19 prefillMs=3588 generated=61 decodeMs=241260
+         1794217766.134 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=248425 reading=false promptRead=19 prefillMs=3588 generated=62 decodeMs=244747
+         1794217770.918 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=253209 reading=false promptRead=19 prefillMs=3588 generated=63 decodeMs=249519
+         1794217775.211 11280 11307 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=257502 reading=false promptRead=19 prefillMs=3588 generated=64 decodeMs=253818
+         1794217779.285 11280 11337 I OpenWeights: mem: after turn rss 3533 MB, pss 3421 MB, swap 0 MB, majflt 0, minflt 35942, cpu 443720 ms
+         1794217779.293 11280 11307 I OpenWeightsBench: BENCH threads=4 prefill=5.3 tok/s decode=0.2 tok/s ttft=3591 ms
+         1794217913.248 27507 27522 I OpenWeightsBench: device reports 8 cores
+         1794217913.261 27507 27524 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794217913.275 27507 27524 I OpenWeights: OpenCL backend registered
+         1794217913.337 27507 27524 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794217914.713 27507 27524 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794217914.843 27507 27524 I OpenWeights: threads: 4 workers kept alive across graphs
+         1794217914.850 27507 27524 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794217914.852 27507 27524 I OpenWeights: mem: after load rss 3533 MB, pss 3423 MB, swap 0 MB, majflt 0, minflt 26969, cpu 1960 ms
+         1794217914.855 27507 27524 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794217914.856 27507 27522 I OpenWeightsBench: START threads=4 maxTokens=64
+         1794217914.863 27507 27524 I OpenWeights: mem: before turn rss 3533 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 27211, cpu 1990 ms
+         1794217914.864 27507 27524 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794217915.114 27507 27522 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=258 reading=false promptRead=19 prefillMs=209 generated=1 decodeMs=null
+         1794217915.365 27507 27522 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=509 reading=false promptRead=19 prefillMs=209 generated=8 decodeMs=291
+         1794217915.616 27507 27522 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=760 reading=false promptRead=19 prefillMs=209 generated=13 decodeMs=501
+         1794217915.868 27507 27522 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1012 reading=false promptRead=19 prefillMs=209 generated=19 decodeMs=757
+         1794217916.120 27507 27522 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1263 reading=false promptRead=19 prefillMs=209 generated=25 decodeMs=1018
+         1794217916.371 27507 27522 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1515 reading=false promptRead=19 prefillMs=209 generated=31 decodeMs=1280
+         1794217916.622 27507 27522 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1766 reading=false promptRead=19 prefillMs=209 generated=37 decodeMs=1547
+         1794217916.874 27507 27522 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2017 reading=false promptRead=19 prefillMs=209 generated=42 decodeMs=1770
+         1794217917.125 27507 27522 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2269 reading=false promptRead=19 prefillMs=209 generated=48 decodeMs=2029
+         1794217917.376 27507 27522 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2520 reading=false promptRead=19 prefillMs=209 generated=54 decodeMs=2295
+         1794217917.627 27507 27522 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2771 reading=false promptRead=19 prefillMs=209 generated=59 decodeMs=2511
+         1794217917.846 27507 27524 I OpenWeights: mem: after turn rss 3538 MB, pss 3427 MB, swap 0 MB, majflt 0, minflt 28324, cpu 13900 ms
+         1794217917.849 27507 27522 I OpenWeightsBench: BENCH threads=4 prefill=90.9 tok/s decode=22.7 tok/s ttft=210 ms
+         1794217998.935 31265 31280 I OpenWeightsBench: device reports 8 cores
+         1794217998.954 31265 31282 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794217998.968 31265 31282 I OpenWeights: OpenCL backend registered
+         1794217999.027 31265 31282 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794218000.405 31265 31282 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794218000.533 31265 31282 I OpenWeights: threads: 2 workers kept alive across graphs
+         1794218000.540 31265 31282 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794218000.542 31265 31282 I OpenWeights: mem: after load rss 3534 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 25951, cpu 1970 ms
+         1794218000.545 31265 31282 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794218000.545 31265 31280 I OpenWeightsBench: START threads=2 maxTokens=64
+         1794218000.550 31265 31282 I OpenWeights: mem: before turn rss 3534 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 26083, cpu 1990 ms
+         1794218000.551 31265 31282 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794218000.806 31265 31280 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=261 reading=true promptRead=0 prefillMs=null generated=0 decodeMs=null
+         1794218001.059 31265 31280 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=514 reading=false promptRead=19 prefillMs=278 generated=6 decodeMs=206
+         1794218001.312 31265 31280 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=767 reading=false promptRead=19 prefillMs=278 generated=12 decodeMs=462
+         1794218001.566 31265 31280 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1021 reading=false promptRead=19 prefillMs=278 generated=18 decodeMs=721
+         1794218001.819 31265 31280 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1273 reading=false promptRead=19 prefillMs=278 generated=24 decodeMs=987
+         1794218002.072 31265 31280 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1526 reading=false promptRead=19 prefillMs=278 generated=29 decodeMs=1205
+         1794218002.325 31265 31280 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1779 reading=false promptRead=19 prefillMs=278 generated=35 decodeMs=1465
+         1794218002.578 31265 31280 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2032 reading=false promptRead=19 prefillMs=278 generated=41 decodeMs=1727
+         1794218002.830 31265 31280 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2285 reading=false promptRead=19 prefillMs=278 generated=47 decodeMs=1991
+         1794218003.083 31265 31280 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2538 reading=false promptRead=19 prefillMs=278 generated=52 decodeMs=2212
+         1794218003.336 31265 31280 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2791 reading=false promptRead=19 prefillMs=278 generated=58 decodeMs=2478
+         1794218003.589 31265 31280 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3044 reading=false promptRead=19 prefillMs=278 generated=64 decodeMs=2745
+         1794218003.620 31265 31282 I OpenWeights: mem: after turn rss 3538 MB, pss 3427 MB, swap 0 MB, majflt 0, minflt 27221, cpu 8190 ms
+         1794218003.624 31265 31280 I OpenWeightsBench: BENCH threads=2 prefill=68.3 tok/s decode=22.6 tok/s ttft=279 ms
+         1794218048.153  1186  1337 I OpenWeightsBench: device reports 8 cores
+         1794218048.199  1186  1386 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794218048.232  1186  1386 I OpenWeights: OpenCL backend registered
+         1794218048.357  1186  1386 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794218050.771  1186  1386 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794218051.025  1186  1386 I OpenWeights: threads: 2 workers kept alive across graphs
+         1794218051.039  1186  1386 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794218051.042  1186  1386 I OpenWeights: mem: after load rss 3535 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 26948, cpu 3030 ms
+         1794218051.049  1186  1386 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794218051.049  1186  1337 I OpenWeightsBench: START threads=2 maxTokens=64
+         1794218051.061  1186  1386 I OpenWeights: mem: before turn rss 3534 MB, pss 3423 MB, swap 0 MB, majflt 0, minflt 27196, cpu 3050 ms
+         1794218051.064  1186  1386 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794218051.310  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=261 reading=true promptRead=0 prefillMs=null generated=0 decodeMs=null
+         1794218051.816  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=767 reading=false promptRead=19 prefillMs=714 generated=1 decodeMs=null
+         1794218052.065  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1016 reading=false promptRead=19 prefillMs=714 generated=3 decodeMs=270
+         1794218052.316  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1267 reading=false promptRead=19 prefillMs=714 generated=6 decodeMs=512
+         1794218052.567  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1518 reading=false promptRead=19 prefillMs=714 generated=9 decodeMs=742
+         1794218052.821  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1771 reading=false promptRead=19 prefillMs=714 generated=12 decodeMs=977
+         1794218053.072  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2023 reading=false promptRead=19 prefillMs=714 generated=15 decodeMs=1203
+         1794218053.323  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2273 reading=false promptRead=19 prefillMs=714 generated=17 decodeMs=1496
+         1794218053.576  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2527 reading=false promptRead=19 prefillMs=714 generated=21 decodeMs=1798
+         1794218053.827  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2778 reading=false promptRead=19 prefillMs=714 generated=23 decodeMs=1974
+         1794218054.078  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3029 reading=false promptRead=19 prefillMs=714 generated=26 decodeMs=2215
+         1794218054.332  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3283 reading=false promptRead=19 prefillMs=714 generated=28 decodeMs=2449
+         1794218054.581  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3532 reading=false promptRead=19 prefillMs=714 generated=29 decodeMs=2618
+         1794218054.835  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3786 reading=false promptRead=19 prefillMs=714 generated=32 decodeMs=3056
+         1794218055.087  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=4037 reading=false promptRead=19 prefillMs=714 generated=35 decodeMs=3301
+         1794218055.338  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=4288 reading=false promptRead=19 prefillMs=714 generated=38 decodeMs=3542
+         1794218055.593  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=4544 reading=false promptRead=19 prefillMs=714 generated=41 decodeMs=3789
+         1794218055.846  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=4797 reading=false promptRead=19 prefillMs=714 generated=42 decodeMs=3980
+         1794218056.097  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=5047 reading=false promptRead=19 prefillMs=714 generated=45 decodeMs=4301
+         1794218056.349  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=5299 reading=false promptRead=19 prefillMs=714 generated=48 decodeMs=4531
+         1794218056.599  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=5550 reading=false promptRead=19 prefillMs=714 generated=51 decodeMs=4768
+         1794218056.859  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=5810 reading=false promptRead=19 prefillMs=714 generated=54 decodeMs=4999
+         1794218057.108  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=6059 reading=false promptRead=19 prefillMs=714 generated=56 decodeMs=5235
+         1794218057.358  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=6309 reading=false promptRead=19 prefillMs=714 generated=59 decodeMs=5532
+         1794218057.612  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=6563 reading=false promptRead=19 prefillMs=714 generated=62 decodeMs=5789
+         1794218057.867  1186  1337 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=6817 reading=false promptRead=19 prefillMs=714 generated=64 decodeMs=6032
+         1794218057.925  1186  1386 I OpenWeights: mem: after turn rss 3540 MB, pss 3428 MB, swap 0 MB, majflt 0, minflt 28636, cpu 14510 ms
+         1794218057.941  1186  1337 I OpenWeightsBench: BENCH threads=2 prefill=26.6 tok/s decode=10.3 tok/s ttft=716 ms
+         1794218107.655  7065  7100 I OpenWeightsBench: device reports 8 cores
+         1794218107.691  7065  7130 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794218107.744  7065  7130 I OpenWeights: OpenCL backend registered
+         1794218107.907  7065  7130 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794218110.268  7065  7130 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794218110.501  7065  7130 I OpenWeights: threads: 2 workers kept alive across graphs
+         1794218110.513  7065  7130 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794218110.516  7065  7130 I OpenWeights: mem: after load rss 3534 MB, pss 3423 MB, swap 0 MB, majflt 0, minflt 25902, cpu 3030 ms
+         1794218110.522  7065  7130 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794218110.523  7065  7100 I OpenWeightsBench: START threads=2 maxTokens=64
+         1794218110.537  7065  7130 I OpenWeights: mem: before turn rss 3533 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 26149, cpu 3050 ms
+         1794218110.539  7065  7130 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794218110.796  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=274 reading=true promptRead=0 prefillMs=null generated=0 decodeMs=null
+         1794218111.551  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1029 reading=false promptRead=19 prefillMs=989 generated=1 decodeMs=null
+         1794218111.805  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1283 reading=false promptRead=19 prefillMs=989 generated=4 decodeMs=240
+         1794218112.056  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1534 reading=false promptRead=19 prefillMs=989 generated=7 decodeMs=482
+         1794218112.309  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1786 reading=false promptRead=19 prefillMs=989 generated=10 decodeMs=717
+         1794218112.564  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2042 reading=false promptRead=19 prefillMs=989 generated=13 decodeMs=956
+         1794218112.812  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2290 reading=false promptRead=19 prefillMs=989 generated=15 decodeMs=1213
+         1794218113.064  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2541 reading=false promptRead=19 prefillMs=989 generated=18 decodeMs=1495
+         1794218113.315  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2793 reading=false promptRead=19 prefillMs=989 generated=21 decodeMs=1722
+         1794218113.567  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3044 reading=false promptRead=19 prefillMs=989 generated=25 decodeMs=2031
+         1794218113.818  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3296 reading=false promptRead=19 prefillMs=989 generated=28 decodeMs=2268
+         1794218114.072  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3550 reading=false promptRead=19 prefillMs=989 generated=29 decodeMs=2399
+         1794218114.325  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3803 reading=false promptRead=19 prefillMs=989 generated=31 decodeMs=2715
+         1794218114.578  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=4056 reading=false promptRead=19 prefillMs=989 generated=34 decodeMs=3041
+         1794218114.832  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=4310 reading=false promptRead=19 prefillMs=989 generated=36 decodeMs=3289
+         1794218115.084  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=4561 reading=false promptRead=19 prefillMs=989 generated=38 decodeMs=3471
+         1794218115.334  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=4812 reading=false promptRead=19 prefillMs=989 generated=40 decodeMs=3679
+         1794218115.586  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=5063 reading=false promptRead=19 prefillMs=989 generated=43 decodeMs=4019
+         1794218115.837  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=5315 reading=false promptRead=19 prefillMs=989 generated=46 decodeMs=4258
+         1794218116.089  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=5567 reading=false promptRead=19 prefillMs=989 generated=49 decodeMs=4540
+         1794218116.344  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=5822 reading=false promptRead=19 prefillMs=989 generated=52 decodeMs=4772
+         1794218116.595  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=6073 reading=false promptRead=19 prefillMs=989 generated=54 decodeMs=5005
+         1794218116.846  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=6323 reading=false promptRead=19 prefillMs=989 generated=57 decodeMs=5305
+         1794218117.097  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=6575 reading=false promptRead=19 prefillMs=989 generated=60 decodeMs=5561
+         1794218117.348  7065  7100 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=6826 reading=false promptRead=19 prefillMs=989 generated=63 decodeMs=5792
+         1794218117.489  7065  7130 I OpenWeights: mem: after turn rss 3537 MB, pss 3425 MB, swap 0 MB, majflt 0, minflt 27596, cpu 14570 ms
+         1794218117.498  7065  7100 I OpenWeightsBench: BENCH threads=2 prefill=19.2 tok/s decode=10.6 tok/s ttft=991 ms
+         1794218167.168 10068 10083 I OpenWeightsBench: device reports 8 cores
+         1794218167.182 10068 10089 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794218167.196 10068 10089 I OpenWeights: OpenCL backend registered
+         1794218167.256 10068 10089 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794218168.639 10068 10089 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794218168.768 10068 10089 I OpenWeights: threads: 2 workers kept alive across graphs
+         1794218168.775 10068 10089 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794218168.777 10068 10089 I OpenWeights: mem: after load rss 3534 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 25960, cpu 1980 ms
+         1794218168.780 10068 10089 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794218168.780 10068 10083 I OpenWeightsBench: START threads=2 maxTokens=64
+         1794218168.788 10068 10089 I OpenWeights: mem: before turn rss 3534 MB, pss 3423 MB, swap 0 MB, majflt 0, minflt 26118, cpu 2000 ms
+         1794218168.789 10068 10089 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794218169.040 10068 10083 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=260 reading=true promptRead=0 prefillMs=null generated=0 decodeMs=null
+         1794218169.293 10068 10083 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=512 reading=false promptRead=19 prefillMs=273 generated=6 decodeMs=207
+         1794218169.546 10068 10083 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=765 reading=false promptRead=19 prefillMs=273 generated=12 decodeMs=458
+         1794218169.799 10068 10083 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1018 reading=false promptRead=19 prefillMs=273 generated=18 decodeMs=712
+         1794218170.051 10068 10083 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1270 reading=false promptRead=19 prefillMs=273 generated=24 decodeMs=971
+         1794218170.304 10068 10083 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1523 reading=false promptRead=19 prefillMs=273 generated=30 decodeMs=1230
+         1794218170.557 10068 10083 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=1776 reading=false promptRead=19 prefillMs=273 generated=36 decodeMs=1491
+         1794218170.810 10068 10083 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2030 reading=false promptRead=19 prefillMs=273 generated=41 decodeMs=1712
+         1794218171.063 10068 10083 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2283 reading=false promptRead=19 prefillMs=273 generated=47 decodeMs=1980
+         1794218171.316 10068 10083 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2535 reading=false promptRead=19 prefillMs=273 generated=53 decodeMs=2252
+         1794218171.568 10068 10083 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=2788 reading=false promptRead=19 prefillMs=273 generated=58 decodeMs=2475
+         1794218171.821 10068 10083 I OpenWeightsBench: PROGRESS threads=2 elapsedMs=3041 reading=false promptRead=19 prefillMs=273 generated=64 decodeMs=2743
+         1794218171.851 10068 10089 I OpenWeights: mem: after turn rss 3532 MB, pss 3421 MB, swap 0 MB, majflt 0, minflt 27212, cpu 8180 ms
+         1794218171.855 10068 10083 I OpenWeightsBench: BENCH threads=2 prefill=69.6 tok/s decode=22.6 tok/s ttft=274 ms
+         1794218231.992 12909 12926 I OpenWeightsBench: device reports 8 cores
+         1794218232.007 12909 12937 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794218233.459 12909 12937 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794218233.589 12909 12937 I OpenWeights: threads: 4 workers kept alive across graphs
+         1794218233.596 12909 12937 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794218233.598 12909 12937 I OpenWeights: mem: after load rss 3534 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 26968, cpu 1980 ms
+         1794218233.601 12909 12937 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794218233.601 12909 12926 I OpenWeightsBench: START threads=4 maxTokens=64
+         1794218233.609 12909 12937 I OpenWeights: mem: before turn rss 3534 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 27157, cpu 2030 ms
+         1794218233.610 12909 12937 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794218233.859 12909 12926 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=258 reading=false promptRead=19 prefillMs=219 generated=1 decodeMs=null
+         1794218234.111 12909 12926 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=510 reading=false promptRead=19 prefillMs=219 generated=7 decodeMs=252
+         1794218234.362 12909 12926 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=761 reading=false promptRead=19 prefillMs=219 generated=13 decodeMs=511
+         1794218234.614 12909 12926 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1012 reading=false promptRead=19 prefillMs=219 generated=19 decodeMs=778
+         1794218234.865 12909 12926 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1264 reading=false promptRead=19 prefillMs=219 generated=24 decodeMs=1002
+         1794218235.117 12909 12926 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1515 reading=false promptRead=19 prefillMs=219 generated=30 decodeMs=1255
+         1794218235.368 12909 12926 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=1767 reading=false promptRead=19 prefillMs=219 generated=36 decodeMs=1511
+         1794218235.619 12909 12926 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2018 reading=false promptRead=19 prefillMs=219 generated=42 decodeMs=1769
+         1794218235.871 12909 12926 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2269 reading=false promptRead=19 prefillMs=219 generated=48 decodeMs=2033
+         1794218236.122 12909 12926 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2521 reading=false promptRead=19 prefillMs=219 generated=53 decodeMs=2252
+         1794218236.374 12909 12926 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=2772 reading=false promptRead=19 prefillMs=219 generated=59 decodeMs=2512
+         1794218236.605 12909 12937 I OpenWeights: mem: after turn rss 3538 MB, pss 3427 MB, swap 0 MB, majflt 0, minflt 28261, cpu 14000 ms
+         1794218236.608 12909 12926 I OpenWeightsBench: BENCH threads=4 prefill=86.8 tok/s decode=22.7 tok/s ttft=220 ms
+         1794218280.800 15140 15174 I OpenWeightsBench: device reports 8 cores
+         1794218280.819 15140 15176 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794218280.835 15140 15176 I OpenWeights: OpenCL backend registered
+         1794218280.953 15140 15176 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794218283.301 15140 15176 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794218283.541 15140 15176 I OpenWeights: threads: 4 workers kept alive across graphs
+         1794218283.558 15140 15176 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794218283.562 15140 15176 I OpenWeights: mem: after load rss 3534 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 25948, cpu 3030 ms
+         1794218283.570 15140 15176 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794218283.571 15140 15174 I OpenWeightsBench: START threads=4 maxTokens=64
+         1794218283.585 15140 15176 I OpenWeights: mem: before turn rss 3536 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 26065, cpu 3060 ms
+         1794218283.588 15140 15176 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794218283.838 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=266 reading=true promptRead=0 prefillMs=null generated=0 decodeMs=null
+         1794218288.392 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=4820 reading=false promptRead=19 prefillMs=4572 generated=1 decodeMs=null
+         1794218293.001 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=9429 reading=false promptRead=19 prefillMs=4572 generated=2 decodeMs=4625
+         1794218297.785 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=14213 reading=false promptRead=19 prefillMs=4572 generated=3 decodeMs=9491
+         1794218301.819 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=18248 reading=false promptRead=19 prefillMs=4572 generated=4 decodeMs=13559
+         1794218306.103 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=22531 reading=false promptRead=19 prefillMs=4572 generated=5 decodeMs=17748
+         1794218310.129 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=26558 reading=false promptRead=19 prefillMs=4572 generated=6 decodeMs=21732
+         1794218312.896 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=29325 reading=false promptRead=19 prefillMs=4572 generated=7 decodeMs=24701
+         1794218317.426 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=33854 reading=false promptRead=19 prefillMs=4572 generated=8 decodeMs=29054
+         1794218322.452 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=38880 reading=false promptRead=19 prefillMs=4572 generated=9 decodeMs=34245
+         1794218325.983 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=42411 reading=false promptRead=19 prefillMs=4572 generated=10 decodeMs=37571
+         1794218330.284 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=46713 reading=false promptRead=19 prefillMs=4572 generated=11 decodeMs=41902
+         1794218333.818 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=50247 reading=false promptRead=19 prefillMs=4572 generated=12 decodeMs=45544
+         1794218337.855 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=54284 reading=false promptRead=19 prefillMs=4572 generated=13 decodeMs=49675
+         1794218342.651 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=59080 reading=false promptRead=19 prefillMs=4572 generated=14 decodeMs=54254
+         1794218347.973 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=64401 reading=false promptRead=19 prefillMs=4572 generated=15 decodeMs=59620
+         1794218351.282 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=67710 reading=false promptRead=19 prefillMs=4572 generated=16 decodeMs=63062
+         1794218357.119 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=73548 reading=false promptRead=19 prefillMs=4572 generated=17 decodeMs=68825
+         1794218361.660 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=78088 reading=false promptRead=19 prefillMs=4572 generated=18 decodeMs=73276
+         1794218365.945 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=82374 reading=false promptRead=19 prefillMs=4572 generated=19 decodeMs=77618
+         1794218370.491 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=86920 reading=false promptRead=19 prefillMs=4572 generated=20 decodeMs=82313
+         1794218375.279 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=91708 reading=false promptRead=19 prefillMs=4572 generated=21 decodeMs=87076
+         1794218379.561 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=95989 reading=false promptRead=19 prefillMs=4572 generated=22 decodeMs=91211
+         1794218382.840 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=99269 reading=false promptRead=19 prefillMs=4572 generated=23 decodeMs=94620
+         1794218387.378 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=103807 reading=false promptRead=19 prefillMs=4572 generated=24 decodeMs=99030
+         1794218391.416 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=107845 reading=false promptRead=19 prefillMs=4572 generated=25 decodeMs=103063
+         1794218395.446 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=111875 reading=false promptRead=19 prefillMs=4572 generated=26 decodeMs=107211
+         1794218397.968 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=114397 reading=false promptRead=19 prefillMs=4572 generated=27 decodeMs=109806
+         1794218403.524 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=119953 reading=false promptRead=19 prefillMs=4572 generated=28 decodeMs=115255
+         1794218409.079 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=125508 reading=false promptRead=19 prefillMs=4572 generated=29 decodeMs=120780
+         1794218411.340 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=127769 reading=false promptRead=19 prefillMs=4572 generated=30 decodeMs=123100
+         1794218415.866 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=132294 reading=false promptRead=19 prefillMs=4572 generated=31 decodeMs=127458
+         1794218420.134 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=136563 reading=false promptRead=19 prefillMs=4572 generated=32 decodeMs=131884
+         1794218423.647 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=140076 reading=false promptRead=19 prefillMs=4572 generated=33 decodeMs=135318
+         1794218428.417 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=144846 reading=false promptRead=19 prefillMs=4572 generated=34 decodeMs=140013
+         1794218431.958 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=148386 reading=false promptRead=19 prefillMs=4572 generated=35 decodeMs=143758
+         1794218434.732 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=151161 reading=false promptRead=19 prefillMs=4572 generated=36 decodeMs=146553
+         1794218437.506 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=153934 reading=false promptRead=19 prefillMs=4572 generated=37 decodeMs=149148
+         1794218442.554 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=158983 reading=false promptRead=19 prefillMs=4572 generated=38 decodeMs=154144
+         1794218446.588 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=163017 reading=false promptRead=19 prefillMs=4572 generated=39 decodeMs=158174
+         1794218449.854 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=166283 reading=false promptRead=19 prefillMs=4572 generated=40 decodeMs=161597
+         1794218453.126 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=169554 reading=false promptRead=19 prefillMs=4572 generated=41 decodeMs=164779
+         1794218457.657 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=174086 reading=false promptRead=19 prefillMs=4572 generated=42 decodeMs=169313
+         1794218461.940 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=178369 reading=false promptRead=19 prefillMs=4572 generated=43 decodeMs=173626
+         1794218465.732 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=182161 reading=false promptRead=19 prefillMs=4572 generated=44 decodeMs=177539
+         1794218469.788 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=186217 reading=false promptRead=19 prefillMs=4572 generated=45 decodeMs=181408
+         1794218473.085 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=189513 reading=false promptRead=19 prefillMs=4572 generated=46 decodeMs=184695
+         1794218475.616 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=192045 reading=false promptRead=19 prefillMs=4572 generated=47 decodeMs=187363
+         1794218478.900 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=195329 reading=false promptRead=19 prefillMs=4572 generated=48 decodeMs=190553
+         1794218483.428 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=199857 reading=false promptRead=19 prefillMs=4572 generated=49 decodeMs=195127
+         1794218488.718 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=205147 reading=false promptRead=19 prefillMs=4572 generated=50 decodeMs=200348
+         1794218493.012 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=209441 reading=false promptRead=19 prefillMs=4572 generated=51 decodeMs=204650
+         1794218497.572 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=214001 reading=false promptRead=19 prefillMs=4572 generated=52 decodeMs=209268
+         1794218500.095 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=216524 reading=false promptRead=19 prefillMs=4572 generated=53 decodeMs=211793
+         1794218503.876 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=220305 reading=false promptRead=19 prefillMs=4572 generated=54 decodeMs=215686
+         1794218509.421 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=225850 reading=false promptRead=19 prefillMs=4572 generated=55 decodeMs=221250
+         1794218515.466 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=231895 reading=false promptRead=19 prefillMs=4572 generated=56 decodeMs=227136
+         1794218520.267 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=236696 reading=false promptRead=19 prefillMs=4572 generated=57 decodeMs=231898
+         1794218524.297 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=240726 reading=false promptRead=19 prefillMs=4572 generated=58 decodeMs=235901
+         1794218527.840 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=244268 reading=false promptRead=19 prefillMs=4572 generated=59 decodeMs=239503
+         1794218531.121 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=247550 reading=false promptRead=19 prefillMs=4572 generated=60 decodeMs=242798
+         1794218535.159 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=251588 reading=false promptRead=19 prefillMs=4572 generated=61 decodeMs=246987
+         1794218538.692 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=255121 reading=false promptRead=19 prefillMs=4572 generated=62 decodeMs=250488
+         1794218541.707 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=258136 reading=false promptRead=19 prefillMs=4572 generated=63 decodeMs=253458
+         1794218546.002 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=262430 reading=false promptRead=19 prefillMs=4572 generated=64 decodeMs=257734
+         1794218550.276 15140 15176 I OpenWeights: mem: after turn rss 3534 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 36188, cpu 452240 ms
+         1794218550.280 15140 15174 I OpenWeightsBench: BENCH threads=4 prefill=4.2 tok/s decode=0.2 tok/s ttft=4573 ms
+--------- beginning of main
+         1794218446.588 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=163017 reading=false promptRead=19 prefillMs=4572 generated=39 decodeMs=158174
+         1794218449.854 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=166283 reading=false promptRead=19 prefillMs=4572 generated=40 decodeMs=161597
+         1794218453.126 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=169554 reading=false promptRead=19 prefillMs=4572 generated=41 decodeMs=164779
+         1794218457.657 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=174086 reading=false promptRead=19 prefillMs=4572 generated=42 decodeMs=169313
+         1794218461.940 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=178369 reading=false promptRead=19 prefillMs=4572 generated=43 decodeMs=173626
+         1794218465.732 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=182161 reading=false promptRead=19 prefillMs=4572 generated=44 decodeMs=177539
+         1794218469.788 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=186217 reading=false promptRead=19 prefillMs=4572 generated=45 decodeMs=181408
+         1794218473.085 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=189513 reading=false promptRead=19 prefillMs=4572 generated=46 decodeMs=184695
+         1794218475.616 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=192045 reading=false promptRead=19 prefillMs=4572 generated=47 decodeMs=187363
+         1794218478.900 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=195329 reading=false promptRead=19 prefillMs=4572 generated=48 decodeMs=190553
+         1794218483.428 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=199857 reading=false promptRead=19 prefillMs=4572 generated=49 decodeMs=195127
+         1794218488.718 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=205147 reading=false promptRead=19 prefillMs=4572 generated=50 decodeMs=200348
+         1794218493.012 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=209441 reading=false promptRead=19 prefillMs=4572 generated=51 decodeMs=204650
+         1794218497.572 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=214001 reading=false promptRead=19 prefillMs=4572 generated=52 decodeMs=209268
+         1794218500.095 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=216524 reading=false promptRead=19 prefillMs=4572 generated=53 decodeMs=211793
+         1794218503.876 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=220305 reading=false promptRead=19 prefillMs=4572 generated=54 decodeMs=215686
+         1794218509.421 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=225850 reading=false promptRead=19 prefillMs=4572 generated=55 decodeMs=221250
+         1794218515.466 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=231895 reading=false promptRead=19 prefillMs=4572 generated=56 decodeMs=227136
+         1794218520.267 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=236696 reading=false promptRead=19 prefillMs=4572 generated=57 decodeMs=231898
+         1794218524.297 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=240726 reading=false promptRead=19 prefillMs=4572 generated=58 decodeMs=235901
+         1794218527.840 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=244268 reading=false promptRead=19 prefillMs=4572 generated=59 decodeMs=239503
+         1794218531.121 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=247550 reading=false promptRead=19 prefillMs=4572 generated=60 decodeMs=242798
+         1794218535.159 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=251588 reading=false promptRead=19 prefillMs=4572 generated=61 decodeMs=246987
+         1794218538.692 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=255121 reading=false promptRead=19 prefillMs=4572 generated=62 decodeMs=250488
+         1794218541.707 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=258136 reading=false promptRead=19 prefillMs=4572 generated=63 decodeMs=253458
+         1794218546.002 15140 15174 I OpenWeightsBench: PROGRESS threads=4 elapsedMs=262430 reading=false promptRead=19 prefillMs=4572 generated=64 decodeMs=257734
+         1794218550.276 15140 15176 I OpenWeights: mem: after turn rss 3534 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 36188, cpu 452240 ms
+         1794218550.280 15140 15174 I OpenWeightsBench: BENCH threads=4 prefill=4.2 tok/s decode=0.2 tok/s ttft=4573 ms
+         1794218824.079 19591 19624 I OpenWeightsBench: device reports 8 cores
+         1794218824.111 19591 19626 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794218824.135 19591 19626 I OpenWeights: OpenCL backend registered
+         1794218824.289 19591 19626 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794218826.645 19591 19626 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794218826.879 19591 19626 I OpenWeights: threads: 3 workers kept alive across graphs
+         1794218826.891 19591 19626 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794218826.894 19591 19626 I OpenWeights: mem: after load rss 3535 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 26951, cpu 3050 ms
+         1794218826.899 19591 19626 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794218826.899 19591 19624 I OpenWeightsBench: START threads=3 maxTokens=64
+         1794218826.908 19591 19626 I OpenWeights: mem: before turn rss 3534 MB, pss 3423 MB, swap 0 MB, majflt 0, minflt 27206, cpu 3070 ms
+         1794218826.910 19591 19626 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794218827.170 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=271 reading=true promptRead=0 prefillMs=null generated=0 decodeMs=null
+         1794218829.438 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=2539 reading=false promptRead=19 prefillMs=2491 generated=1 decodeMs=null
+         1794218831.204 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=4305 reading=false promptRead=19 prefillMs=2491 generated=2 decodeMs=1638
+         1794218832.465 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=5565 reading=false promptRead=19 prefillMs=2491 generated=3 decodeMs=2915
+         1794218834.509 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=7610 reading=false promptRead=19 prefillMs=2491 generated=4 decodeMs=4861
+         1794218835.524 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=8625 reading=false promptRead=19 prefillMs=2491 generated=5 decodeMs=6022
+         1794218837.795 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=10896 reading=false promptRead=19 prefillMs=2491 generated=6 decodeMs=8168
+         1794218838.804 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=11905 reading=false promptRead=19 prefillMs=2491 generated=7 decodeMs=9197
+         1794218840.820 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=13921 reading=false promptRead=19 prefillMs=2491 generated=8 decodeMs=11212
+         1794218842.081 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=15182 reading=false promptRead=19 prefillMs=2491 generated=9 decodeMs=12524
+         1794218843.851 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=16951 reading=false promptRead=19 prefillMs=2491 generated=10 decodeMs=14339
+         1794218845.607 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=18707 reading=false promptRead=19 prefillMs=2491 generated=11 decodeMs=15965
+         1794218847.375 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=20476 reading=false promptRead=19 prefillMs=2491 generated=12 decodeMs=17779
+         1794218848.905 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=22005 reading=false promptRead=19 prefillMs=2491 generated=13 decodeMs=19316
+         1794218851.173 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=24273 reading=false promptRead=19 prefillMs=2491 generated=14 decodeMs=21746
+         1794218852.432 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=25533 reading=false promptRead=19 prefillMs=2491 generated=15 decodeMs=22890
+         1794218854.196 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=27297 reading=false promptRead=19 prefillMs=2491 generated=16 decodeMs=24788
+         1794218855.707 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=28808 reading=false promptRead=19 prefillMs=2491 generated=17 decodeMs=26276
+         1794218858.240 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=31341 reading=false promptRead=19 prefillMs=2491 generated=18 decodeMs=28631
+         1794218860.757 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=33858 reading=false promptRead=19 prefillMs=2491 generated=19 decodeMs=31292
+         1794218863.792 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=36893 reading=false promptRead=19 prefillMs=2491 generated=20 decodeMs=34272
+         1794218866.838 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=39938 reading=false promptRead=19 prefillMs=2491 generated=21 decodeMs=37333
+         1794218869.626 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=42727 reading=false promptRead=19 prefillMs=2491 generated=22 decodeMs=40028
+         1794218872.411 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=45511 reading=false promptRead=19 prefillMs=2491 generated=23 decodeMs=42893
+         1794218874.680 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=47781 reading=false promptRead=19 prefillMs=2491 generated=24 decodeMs=45175
+         1794218876.687 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=49787 reading=false promptRead=19 prefillMs=2491 generated=25 decodeMs=47110
+         1794218877.947 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=51048 reading=false promptRead=19 prefillMs=2491 generated=26 decodeMs=48444
+         1794218880.219 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=53319 reading=false promptRead=19 prefillMs=2491 generated=27 decodeMs=50589
+         1794218881.236 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=54337 reading=false promptRead=19 prefillMs=2491 generated=28 decodeMs=51780
+         1794218883.758 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=56859 reading=false promptRead=19 prefillMs=2491 generated=29 decodeMs=54174
+         1794218884.763 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=57864 reading=false promptRead=19 prefillMs=2491 generated=30 decodeMs=55360
+         1794218887.563 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=60664 reading=false promptRead=19 prefillMs=2491 generated=31 decodeMs=57959
+         1794218889.079 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=62179 reading=false promptRead=19 prefillMs=2491 generated=32 decodeMs=59511
+         1794218891.113 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=64214 reading=false promptRead=19 prefillMs=2491 generated=33 decodeMs=61629
+         1794218892.629 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=65730 reading=false promptRead=19 prefillMs=2491 generated=34 decodeMs=63088
+         1794218894.666 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=67767 reading=false promptRead=19 prefillMs=2491 generated=35 decodeMs=65246
+         1794218896.435 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=69535 reading=false promptRead=19 prefillMs=2491 generated=36 decodeMs=66860
+         1794218898.720 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=71821 reading=false promptRead=19 prefillMs=2491 generated=37 decodeMs=69075
+         1794218901.766 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=74867 reading=false promptRead=19 prefillMs=2491 generated=38 decodeMs=72162
+         1794218905.057 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=78158 reading=false promptRead=19 prefillMs=2491 generated=39 decodeMs=75514
+         1794218907.085 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=80186 reading=false promptRead=19 prefillMs=2491 generated=40 decodeMs=77596
+         1794218908.851 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=81952 reading=false promptRead=19 prefillMs=2491 generated=41 decodeMs=79262
+         1794218910.371 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=83472 reading=false promptRead=19 prefillMs=2491 generated=42 decodeMs=80956
+         1794218912.640 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=85741 reading=false promptRead=19 prefillMs=2491 generated=43 decodeMs=83031
+         1794218915.164 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=88265 reading=false promptRead=19 prefillMs=2491 generated=44 decodeMs=85622
+         1794218916.676 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=89777 reading=false promptRead=19 prefillMs=2491 generated=45 decodeMs=87177
+         1794218918.942 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=92043 reading=false promptRead=19 prefillMs=2491 generated=46 decodeMs=89521
+         1794218920.972 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=94073 reading=false promptRead=19 prefillMs=2491 generated=47 decodeMs=91360
+         1794218922.731 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=95831 reading=false promptRead=19 prefillMs=2491 generated=48 decodeMs=93215
+         1794218924.747 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=97847 reading=false promptRead=19 prefillMs=2491 generated=49 decodeMs=95323
+         1794218926.512 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=99612 reading=false promptRead=19 prefillMs=2491 generated=50 decodeMs=97044
+         1794218929.290 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=102391 reading=false promptRead=19 prefillMs=2491 generated=51 decodeMs=99851
+         1794218931.563 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=104664 reading=false promptRead=19 prefillMs=2491 generated=52 decodeMs=101936
+         1794218933.580 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=106681 reading=false promptRead=19 prefillMs=2491 generated=53 decodeMs=104124
+         1794218935.592 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=108693 reading=false promptRead=19 prefillMs=2491 generated=54 decodeMs=106136
+         1794218936.857 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=109958 reading=false promptRead=19 prefillMs=2491 generated=55 decodeMs=107427
+         1794218939.370 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=112471 reading=false promptRead=19 prefillMs=2491 generated=56 decodeMs=109792
+         1794218940.381 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=113482 reading=false promptRead=19 prefillMs=2491 generated=57 decodeMs=110929
+         1794218942.143 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=115244 reading=false promptRead=19 prefillMs=2491 generated=58 decodeMs=112640
+         1794218943.904 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=117004 reading=false promptRead=19 prefillMs=2491 generated=59 decodeMs=114472
+         1794218945.161 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=118261 reading=false promptRead=19 prefillMs=2491 generated=60 decodeMs=115544
+         1794218946.919 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=120019 reading=false promptRead=19 prefillMs=2491 generated=61 decodeMs=117488
+         1794218948.435 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=121536 reading=false promptRead=19 prefillMs=2491 generated=62 decodeMs=118803
+         1794218950.710 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=123811 reading=false promptRead=19 prefillMs=2491 generated=63 decodeMs=121145
+         1794218952.224 19591 19624 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=125325 reading=false promptRead=19 prefillMs=2491 generated=64 decodeMs=122597
+         1794218954.291 19591 19626 I OpenWeights: mem: after turn rss 3535 MB, pss 3423 MB, swap 0 MB, majflt 0, minflt 32790, cpu 217230 ms
+         1794218954.294 19591 19624 I OpenWeightsBench: BENCH threads=3 prefill=7.6 tok/s decode=0.5 tok/s ttft=2492 ms
+         1794219035.340 28242 28258 I OpenWeightsBench: device reports 8 cores
+         1794219035.354 28242 28261 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794219035.368 28242 28261 I OpenWeights: OpenCL backend registered
+         1794219035.430 28242 28261 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794219036.812 28242 28261 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794219036.941 28242 28261 I OpenWeights: threads: 3 workers kept alive across graphs
+         1794219036.948 28242 28261 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794219036.950 28242 28261 I OpenWeights: mem: after load rss 3534 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 25989, cpu 1970 ms
+         1794219036.953 28242 28261 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794219036.953 28242 28258 I OpenWeightsBench: START threads=3 maxTokens=64
+         1794219036.958 28242 28261 I OpenWeights: mem: before turn rss 3533 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 26147, cpu 2000 ms
+         1794219036.959 28242 28261 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794219037.208 28242 28258 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=255 reading=false promptRead=19 prefillMs=231 generated=1 decodeMs=null
+         1794219037.459 28242 28258 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=506 reading=false promptRead=19 prefillMs=231 generated=7 decodeMs=254
+         1794219037.711 28242 28258 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=757 reading=false promptRead=19 prefillMs=231 generated=13 decodeMs=509
+         1794219037.962 28242 28258 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=1008 reading=false promptRead=19 prefillMs=231 generated=19 decodeMs=768
+         1794219038.213 28242 28258 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=1260 reading=false promptRead=19 prefillMs=231 generated=24 decodeMs=988
+         1794219038.464 28242 28258 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=1511 reading=false promptRead=19 prefillMs=231 generated=30 decodeMs=1253
+         1794219038.715 28242 28258 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=1762 reading=false promptRead=19 prefillMs=231 generated=36 decodeMs=1523
+         1794219038.967 28242 28258 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=2014 reading=false promptRead=19 prefillMs=231 generated=41 decodeMs=1748
+         1794219039.218 28242 28258 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=2265 reading=false promptRead=19 prefillMs=231 generated=47 decodeMs=2023
+         1794219039.469 28242 28258 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=2516 reading=false promptRead=19 prefillMs=231 generated=52 decodeMs=2254
+         1794219039.720 28242 28258 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=2767 reading=false promptRead=19 prefillMs=231 generated=58 decodeMs=2523
+         1794219039.971 28242 28258 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=3018 reading=false promptRead=19 prefillMs=231 generated=63 decodeMs=2745
+         1794219040.027 28242 28261 I OpenWeights: mem: after turn rss 3530 MB, pss 3419 MB, swap 0 MB, majflt 0, minflt 27255, cpu 11200 ms
+         1794219040.029 28242 28258 I OpenWeightsBench: BENCH threads=3 prefill=82.3 tok/s decode=22.2 tok/s ttft=232 ms
+         1794219100.071 31052 31078 I OpenWeightsBench: device reports 8 cores
+         1794219100.087 31052 31087 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794219100.111 31052 31087 I OpenWeights: OpenCL backend registered
+         1794219100.204 31052 31087 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794219101.581 31052 31087 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794219101.724 31052 31087 I OpenWeights: threads: 3 workers kept alive across graphs
+         1794219101.732 31052 31087 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794219101.734 31052 31087 I OpenWeights: mem: after load rss 3534 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 27539, cpu 1890 ms
+         1794219101.737 31052 31087 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794219101.737 31052 31078 I OpenWeightsBench: START threads=3 maxTokens=64
+         1794219101.748 31052 31087 I OpenWeights: mem: before turn rss 3534 MB, pss 3423 MB, swap 0 MB, majflt 0, minflt 27733, cpu 1950 ms
+         1794219101.749 31052 31087 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794219101.998 31052 31078 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=260 reading=false promptRead=19 prefillMs=235 generated=1 decodeMs=null
+         1794219102.249 31052 31078 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=512 reading=false promptRead=19 prefillMs=235 generated=7 decodeMs=264
+         1794219102.500 31052 31078 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=763 reading=false promptRead=19 prefillMs=235 generated=12 decodeMs=482
+         1794219102.752 31052 31078 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=1014 reading=false promptRead=19 prefillMs=235 generated=18 decodeMs=753
+         1794219103.003 31052 31078 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=1266 reading=false promptRead=19 prefillMs=235 generated=23 decodeMs=980
+         1794219103.255 31052 31078 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=1517 reading=false promptRead=19 prefillMs=235 generated=29 decodeMs=1243
+         1794219103.506 31052 31078 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=1769 reading=false promptRead=19 prefillMs=235 generated=35 decodeMs=1507
+         1794219103.757 31052 31078 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=2020 reading=false promptRead=19 prefillMs=235 generated=40 decodeMs=1728
+         1794219104.009 31052 31078 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=2271 reading=false promptRead=19 prefillMs=235 generated=46 decodeMs=1998
+         1794219104.260 31052 31078 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=2522 reading=false promptRead=19 prefillMs=235 generated=52 decodeMs=2268
+         1794219104.511 31052 31078 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=2774 reading=false promptRead=19 prefillMs=235 generated=57 decodeMs=2491
+         1794219104.762 31052 31078 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=3025 reading=false promptRead=19 prefillMs=235 generated=63 decodeMs=2759
+         1794219104.836 31052 31087 I OpenWeights: mem: after turn rss 3538 MB, pss 3427 MB, swap 0 MB, majflt 0, minflt 28834, cpu 11210 ms
+         1794219104.838 31052 31078 I OpenWeightsBench: BENCH threads=3 prefill=80.9 tok/s decode=22.1 tok/s ttft=236 ms
+         1794219149.154   852   867 I OpenWeightsBench: device reports 8 cores
+         1794219149.174   852   869 I OpenWeights: using CPU backend libggml-cpu-android_armv9.2_2.so (score 127)
+         1794219149.190   852   869 I OpenWeights: OpenCL backend registered
+         1794219149.300   852   869 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+         1794219151.677   852   869 I OpenWeights: weights: 3 host ranges, 2701 MB
+         1794219151.928   852   869 I OpenWeights: threads: 3 workers kept alive across graphs
+         1794219151.942   852   869 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+         1794219151.947   852   869 I OpenWeights: mem: after load rss 3534 MB, pss 3424 MB, swap 0 MB, majflt 0, minflt 25940, cpu 2980 ms
+         1794219151.953   852   869 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=2048
+         1794219151.953   852   867 I OpenWeightsBench: START threads=3 maxTokens=64
+         1794219151.966   852   869 I OpenWeights: mem: before turn rss 3533 MB, pss 3422 MB, swap 0 MB, majflt 0, minflt 26167, cpu 3010 ms
+         1794219151.968   852   869 W OpenWeights: kleidiai: no kernel for tensor type q4_1, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+         1794219152.216   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=263 reading=true promptRead=0 prefillMs=null generated=0 decodeMs=null
+         1794219155.010   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=3057 reading=false promptRead=19 prefillMs=2997 generated=1 decodeMs=null
+         1794219157.019   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=5065 reading=false promptRead=19 prefillMs=2997 generated=2 decodeMs=2028
+         1794219159.322   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=7368 reading=false promptRead=19 prefillMs=2997 generated=3 decodeMs=4269
+         1794219161.830   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=9877 reading=false promptRead=19 prefillMs=2997 generated=4 decodeMs=6644
+         1794219163.339   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=11386 reading=false promptRead=19 prefillMs=2997 generated=5 decodeMs=8246
+         1794219165.851   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=13898 reading=false promptRead=19 prefillMs=2997 generated=6 decodeMs=10757
+         1794219167.365   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=15412 reading=false promptRead=19 prefillMs=2997 generated=7 decodeMs=12318
+         1794219169.640   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=17687 reading=false promptRead=19 prefillMs=2997 generated=8 decodeMs=14661
+         1794219176.717   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=24764 reading=false promptRead=19 prefillMs=2997 generated=11 decodeMs=21545
+         1794219178.739   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=26786 reading=false promptRead=19 prefillMs=2997 generated=12 decodeMs=23631
+         1794219180.498   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=28545 reading=false promptRead=19 prefillMs=2997 generated=13 decodeMs=25317
+         1794219183.269   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=31315 reading=false promptRead=19 prefillMs=2997 generated=14 decodeMs=28221
+         1794219185.032   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=33079 reading=false promptRead=19 prefillMs=2997 generated=15 decodeMs=30041
+         1794219187.811   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=35858 reading=false promptRead=19 prefillMs=2997 generated=16 decodeMs=32605
+         1794219189.826   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=37872 reading=false promptRead=19 prefillMs=2997 generated=17 decodeMs=34674
+         1794219191.342   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=39389 reading=false promptRead=19 prefillMs=2997 generated=18 decodeMs=36207
+         1794219193.114   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=41160 reading=false promptRead=19 prefillMs=2997 generated=19 decodeMs=38078
+         1794219194.874   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=42920 reading=false promptRead=19 prefillMs=2997 generated=20 decodeMs=39800
+         1794219196.885   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=44932 reading=false promptRead=19 prefillMs=2997 generated=21 decodeMs=41894
+         1794219198.649   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=46695 reading=false promptRead=19 prefillMs=2997 generated=22 decodeMs=43486
+         1794219202.418   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=50464 reading=false promptRead=19 prefillMs=2997 generated=24 decodeMs=47354
+         1794219204.935   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=52981 reading=false promptRead=19 prefillMs=2997 generated=25 decodeMs=49727
+         1794219206.452   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=54499 reading=false promptRead=19 prefillMs=2997 generated=26 decodeMs=51270
+         1794219208.972   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=57019 reading=false promptRead=19 prefillMs=2997 generated=27 decodeMs=53773
+         1794219211.502   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=59549 reading=false promptRead=19 prefillMs=2997 generated=28 decodeMs=56368
+         1794219213.530   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=61577 reading=false promptRead=19 prefillMs=2997 generated=29 decodeMs=58386
+         1794219216.046   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=64093 reading=false promptRead=19 prefillMs=2997 generated=30 decodeMs=61002
+         1794219218.836   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=66883 reading=false promptRead=19 prefillMs=2997 generated=31 decodeMs=63613
+         1794219220.341   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=68387 reading=false promptRead=19 prefillMs=2997 generated=32 decodeMs=65167
+         1794219222.638   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=70685 reading=false promptRead=19 prefillMs=2997 generated=33 decodeMs=67664
+         1794219224.899   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=72946 reading=false promptRead=19 prefillMs=2997 generated=34 decodeMs=69753
+         1794219226.164   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=74211 reading=false promptRead=19 prefillMs=2997 generated=35 decodeMs=71187
+         1794219228.174   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=76220 reading=false promptRead=19 prefillMs=2997 generated=36 decodeMs=73132
+         1794219229.682   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=77729 reading=false promptRead=19 prefillMs=2997 generated=37 decodeMs=74646
+         1794219231.945   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=79991 reading=false promptRead=19 prefillMs=2997 generated=38 decodeMs=76729
+         1794219233.202   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=81249 reading=false promptRead=19 prefillMs=2997 generated=39 decodeMs=78203
+         1794219235.215   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=83261 reading=false promptRead=19 prefillMs=2997 generated=40 decodeMs=80121
+         1794219236.725   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=84772 reading=false promptRead=19 prefillMs=2997 generated=41 decodeMs=81753
+         1794219239.237   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=87284 reading=false promptRead=19 prefillMs=2997 generated=42 decodeMs=84046
+         1794219240.745   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=88792 reading=false promptRead=19 prefillMs=2997 generated=43 decodeMs=85729
+         1794219243.007   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=91054 reading=false promptRead=19 prefillMs=2997 generated=44 decodeMs=87875
+         1794219244.516   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=92563 reading=false promptRead=19 prefillMs=2997 generated=45 decodeMs=89367
+         1794219246.783   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=94830 reading=false promptRead=19 prefillMs=2997 generated=46 decodeMs=91643
+         1794219247.794   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=95841 reading=false promptRead=19 prefillMs=2997 generated=47 decodeMs=92712
+         1794219249.821   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=97867 reading=false promptRead=19 prefillMs=2997 generated=48 decodeMs=94638
+         1794219251.839   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=99886 reading=false promptRead=19 prefillMs=2997 generated=49 decodeMs=96748
+         1794219254.370   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=102416 reading=false promptRead=19 prefillMs=2997 generated=50 decodeMs=99201
+         1794219256.384   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=104431 reading=false promptRead=19 prefillMs=2997 generated=51 decodeMs=101286
+         1794219258.396   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=106443 reading=false promptRead=19 prefillMs=2997 generated=52 decodeMs=103401
+         1794219261.171   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=109218 reading=false promptRead=19 prefillMs=2997 generated=53 decodeMs=105958
+         1794219262.434   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=110480 reading=false promptRead=19 prefillMs=2997 generated=54 decodeMs=107268
+         1794219264.695   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=112742 reading=false promptRead=19 prefillMs=2997 generated=55 decodeMs=109622
+         1794219266.201   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=114248 reading=false promptRead=19 prefillMs=2997 generated=56 decodeMs=111219
+         1794219268.467   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=116514 reading=false promptRead=19 prefillMs=2997 generated=57 decodeMs=113412
+         1794219270.224   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=118271 reading=false promptRead=19 prefillMs=2997 generated=58 decodeMs=115202
+         1794219271.980   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=120026 reading=false promptRead=19 prefillMs=2997 generated=59 decodeMs=116982
+         1794219274.237   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=122284 reading=false promptRead=19 prefillMs=2997 generated=60 decodeMs=119218
+         1794219275.742   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=123789 reading=false promptRead=19 prefillMs=2997 generated=61 decodeMs=120725
+         1794219277.999   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=126045 reading=false promptRead=19 prefillMs=2997 generated=62 decodeMs=122803
+         1794219279.254   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=127301 reading=false promptRead=19 prefillMs=2997 generated=63 decodeMs=124218
+         1794219281.260   852   867 I OpenWeightsBench: PROGRESS threads=3 elapsedMs=129307 reading=false promptRead=19 prefillMs=2997 generated=64 decodeMs=126291
+         1794219283.006   852   869 I OpenWeights: mem: after turn rss 3535 MB, pss 3423 MB, swap 0 MB, majflt 0, minflt 31820, cpu 223710 ms
+         1794219283.014   852   867 I OpenWeightsBench: BENCH threads=3 prefill=6.3 tok/s decode=0.5 tok/s ttft=3001 ms

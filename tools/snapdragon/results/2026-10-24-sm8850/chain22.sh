@@ -1,4 +1,5 @@
-# r22 on QDC sa962335 (unit c581fd31 = phone B): with both starting from the same heat, does CPU decode
+# r22 on QDC sa962766 (unit 5d3e8f0a; planned for sa962335 on phone B, where it did not fit), from
+# the same gate: with both starting there, does CPU decode
 # with 2 threads avoid the hard throttle that 6 threads trip, and what does it cost? r19's one pair could
 # not say: its 2-thread cell started cooler (CPU 70.2 against 78.3 C). Same build, model, conversations
 # and flags as r19 (Qwen3 4B gpu:cpu, --gen 2048 --gen-ref --ctx 8192 --max-turns 6, --cool 55

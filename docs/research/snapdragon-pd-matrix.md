@@ -1,7 +1,7 @@
 # Prefill and decode on CPU, GPU and NPU: every pairing on a Snapdragon 8 Elite Gen 5
 
 **Measured 2026-10-24 to 2026-11-09 on Qualcomm Device Cloud handsets, `canoe`: SM8850 (Snapdragon
-8 Elite Gen 5), Android 16, 23 GB, `adb` as root, on AC power in Qualcomm's rack, over twelve
+8 Elite Gen 5), Android 16, 23 GB, `adb` as root, on AC power in Qualcomm's rack, over thirteen
 reservations.** The first ran r1 to r4 and ended at about 16:55 phone time; the second (about
 20:30 to 04:20) ran the three models the first could not reach (r6), LFM2.5 2.6B (r7), the
 ExecuTorch NPU comparison (e1) and a second pass of five models in another cell order (r5). The
@@ -16,7 +16,10 @@ c581fd31, measured what the throttles cost on the same fixed work
 ([r20](#what-the-throttles-cost-on-fixed-work-r20)) and ran 2 CPU threads against 6 on the cell
 that stalled most ([r19](#six-threads-against-two-r19)). A twelfth, on 2026-11-09 on the same unit,
 set each throttle's state by hand on a cool phone, so that heat and state no longer arrived together
-([r21, r23 to r26](#the-throttles-states-set-by-hand-on-a-cool-phone-r21-r23-to-r26)).
+([r21, r23 to r27](#the-throttles-states-set-by-hand-on-a-cool-phone-r21-r23-to-r27)). A thirteenth,
+the same day on a fifth unit (5d3e8f0a), ran the counterbalanced thread test from a shared gate
+([r22](#from-a-shared-gate-on-a-fifth-unit-r22)) and the app's own engine in a pause set by hand
+([r27](#the-apps-own-engine-in-a-pause-r27)).
 
 | Processor | What it is, as read from the phone |
 |---|---|
@@ -610,8 +613,45 @@ cell inherited: both started with the XO thermistor at about 65 °C, but the 2-t
 hottest CPU zone read 70.2 °C at its gate against 78.3 °C for the 6-thread cell's. It is not the
 counterbalanced set that was planned, and it is one model on one unit. This cell never decoded
 inside a pause; 2 threads inside one, and a switch to 2 at the pause, were measured later with the
-pause set by hand ([r23](#the-pause-and-the-cpus-threads-r23)). Dropping to 2 threads after one slow
-token is still not measured.
+pause set by hand ([r23](#the-pause-and-the-cpus-threads-r23)), and the counterbalanced rerun
+from a shared gate ran on a fifth unit ([r22](#from-a-shared-gate-on-a-fifth-unit-r22)). Dropping to 2
+threads after one slow token is still not measured.
+
+#### From a shared gate, on a fifth unit (r22)
+
+On 2026-11-09, in a thirteenth reservation, on a fifth unit (5d3e8f0a), the counterbalanced rerun
+r19 lacked: the same cell, binary, model, conversations and flags, with a stricter gate before every
+cell (the XO thermistor and the hottest CPU, GPU and NPU zone at or under 45 °C, the GPU's thermal
+level 0 and every CPU ceiling at its top; a gate not passed in 1,800 s stops the chain) and the order
+6 2 2 6 fixed before any result (`chain22.sh`). A second block, 2 6 6 2, started after r27's first
+attempt stopped at its gate and was itself stopped during its third turn so that r27 could run; it is
+not counted. The gates waited 0, 1,040, 1,110 and 1,130 s. The 1 s logger (`trig22.sh`) and
+`place22.sh` ran beside it.
+
+| Cell | Threads | XO at the first turn | Peak XO | Pauses | Steps over 500 ms | Excess stall | Longest step | Decode, summed | Turns, summed |
+|---|---|---|---|---|---|---|---|---|---|
+| r22-1-t6 | 6 | 38.1 °C | 77.5 °C | none | 0 | 0 | 0.2 s | 967 s | 1,071 s |
+| r22-2-t2 | 2 | 48.6 °C | 76.7 °C | none | 0 | 0 | 0.2 s | 1,556 s | 1,667 s |
+| r22-3-t2 | 2 | 48.4 °C | 76.8 °C | none | 0 | 0 | 0.2 s | 1,558 s | 1,669 s |
+| r22-4-t6 | 6 | 48.0 °C | 78.3 °C | 3, 199 s | 20 | 189 s | 15.8 s | 1,254 s | 1,364 s |
+
+- **With a similar first-turn XO, 6 threads tripped and 2 did not.** The gate is read before the
+  model loads; cells 2 to 4 then began their first turns with the XO thermistor at 48.0 to 48.6 °C. The 6-thread cell crossed 78 °C and paused three times
+  (199 s); the 2-thread cells peaked at 76.7 and 76.8 °C. The first cell, the day's first and so
+  cooler (38.1 °C), peaked at 77.5 °C without a pause: from a cool enough start, 6 threads finished
+  a whole cell under the trip.
+- **The stalls were the pauses again.** Of the tripped cell's 189 s of excess, 129 s were in steps
+  wholly under a pause and 61 s in steps that straddled a switch or a gap in the log, none outside; 326 of the 331 busy
+  samples of a benchmark thread taken during a pause last ran on CPU 0 or 1, against 145 of 564
+  outside them.
+- **And 2 threads were slower anyway.** The two 2-thread cells decoded in 1,556 and 1,558 s: 24%
+  longer than the tripped 6-thread cell with its stalls, and 61% longer than the untripped one. These
+  are the totals observed; the stalls' own cost was not isolated, and switching only while paused was
+  measured with a toggle set by hand ([r23](#the-pause-and-the-cpus-threads-r23)), not here.
+- **What it does not show.** One block on one unit, so each count rests on two cells, one of which
+  started cooler as a run's first cell does, and whether a 6-thread cell trips looks to depend on how
+  near 78 °C a cell ends, which two cells cannot pin down. r19's cells on phone B do not compare with
+  these: a different unit and a different gate.
 
 ### Throttling and the GPU's rank
 
@@ -698,13 +738,13 @@ figures two or three turns from the first three.
   states the GPU retained 0.64 to 0.80 of its uncapped decode rate and the CPU retained 0.77 to 0.82.
   This comparison does not isolate individual caps.
 
-### The throttles' states set by hand on a cool phone (r21, r23 to r26)
+### The throttles' states set by hand on a cool phone (r21, r23 to r27)
 
 r20 measured the throttles where they fall, on a hot phone, so heat and each cap arrived together and
 its uncapped GPU figures rested on one probe. On 2026-11-09, in a twelfth reservation on the same
 unit (c581fd31), each state was set by hand instead, as root, with the phone brought back under one
 temperature threshold before every probe, so that the state set is the one deliberate difference
-between arms:
+between arms (r27 did the same on a fifth unit, in the next reservation):
 
 - the GPU's ceiling through kgsl's `max_pwrlevel` (0 is 1,200 MHz; 8 is 578 MHz, the level the
   thermal cap held in r20);
@@ -856,7 +896,7 @@ a model rather than observing a rate in each state.
   not a natural pattern. The app runs 4 threads by default, 3 or 2 as Android's thermal status rises
   (`ThermalPolicy`), and it attaches a persistent thread pool to each context
   (`engine_session.cpp`), which the benchmark does not, so the app's own behaviour in a pause was not
-  measured. A detector an app could use, such as a slow step, was not built or measured.
+  measured in r23; r27 measured it. A detector an app could use, such as a slow step, was not built or measured.
 
 #### The CPU's ceilings (r25)
 
@@ -903,9 +943,50 @@ ended.
 - **More threads than the two cores left stall, and the app's default is one of them.** 4 threads
   did not end the first turn in 600 s, 3 decoded at under 0.5 tok/s, 2 at 6.9. As in P6, every
   busy sample of P4 and P3 was on CPU 0 or 1.
-- **What it does not show.** One probe each, and the benchmark's thread handling: the app attaches a
-  persistent thread pool, so whether its 4 threads stall the same way in a pause was not measured.
-  Unpaused, 4 threads decoded 6 to 10% slower than 6 on this work.
+- **What it does not show.** One probe each, and the benchmark's thread handling; the app's own
+  engine, with its persistent pool, is r27 below. Unpaused, 4 threads decoded 6 to 10% slower than 6
+  on this work.
+
+#### The app's own engine in a pause (r27)
+
+r23 and r26 used the benchmark, which leaves ggml to make a new thread pool for every graph. The app
+attaches one persistent pool to each context and reads prompts with as many threads as it writes
+replies (`ThermalPolicy`). So on the fifth unit, after r22, the engine's own device test ran with
+the pause set by hand: `ThreadCountBenchmark` (`LlamaCppEngine`, the app's native session; its log
+confirmed "N workers kept alive across graphs" on every run), one thread count per run, a 19-token
+prompt and 64 tokens of reply, Qwen3 4B Q4_0 (the study's file). Arms: N<t> or P<t>, the pause off or
+on (both switches, found by type) for the whole run, t in 2, 3, 4 and 6, in the order N4 P4 P2 N2 P3
+N3 N6 P6, then the reverse (`chain27.sh`); in the reservation's last hour, P4 N4 N2 P2 P2 N2 N4 P4
+and then P3 N3 N3 P3 (`chain27c.sh`, `chain27d.sh`), each order fixed before its runs, so 2, 3 and 4
+threads ran four times in each state and 6 twice. r23's gate, a 420 s watchdog, and logcat kept for
+the test's and the engine's own tags only. The test logs every live progress event, so a run the
+watchdog stops keeps its last count. Every run held its arm's state in every logger sample inside
+it, a second in from each end (setup and cleanup excluded), with both written switches checked.
+
+| Threads | Not paused | Paused | Paused against not |
+|---|---|---|---|
+| 2 | 22.91 tok/s (22.84 to 22.97) | 10.57 (10.14 to 10.72) | 0.46 |
+| 3 | 22.53 (22.34 to 22.64) | 0.51 (0.50 to 0.53) | 0.023 |
+| 4, the app's default | 23.12 (23.09 to 23.17) | 0.24 (0.22 to 0.25) | 0.010 |
+| 6 | 23.25 (23.23, 23.27) | 0.083 (0.082, 0.084), both stopped at 420 s | 0.004 |
+
+Medians, with the range over the runs; decode rates from each run's last progress line, tokens after
+the first over the decode time to the latest one (the engine's own summary prints one decimal, too
+coarse in a pause). The analysis is `analyze_app.py`.
+
+- **The app's engine stalls in a pause as the benchmark did.** At its default of 4 threads it decoded
+  a token every 4.1 s against 43 ms, about a hundredth of its rate (0.0105); with 6 it wrote 34 tokens in
+  about 400 s. The persistent pool did not prevent it: the paused rates fall with every thread past
+  the two cores left, as in r26 (3 threads: 0.51 here, 0.46 to 0.48 there; the two differ in work and
+  unit, so this is agreement in kind, not a controlled comparison of the two pools).
+- **2 threads kept 46% of the unpaused decode rate.** And unpaused, on this short prompt, 2, 3, 4 and 6
+  threads decoded within 3.2% of one another (medians 22.53 to 23.25 tok/s), so 2 threads gave up almost
+  no decode rate outside a pause here; their first token came later (median 272 ms against 214 ms for
+  4 threads). That holds for a 19-token prompt and 64 tokens; at the dataset's
+  longer contexts the benchmark's 2 threads were slower than 6 unpaused (r23, r22).
+- **What it does not show.** Four runs per arm (two with 6 threads) on one unit, a short reply at a
+  short context, and the pause set by hand; the app's thermal policy, which picks the count from Android's status before
+  each reply, was not in the loop, and no slow-step detector was tried.
 
 ### Where the work ran
 
@@ -1153,10 +1234,30 @@ another seed.
   the rest did (it did: 121 s, 61.4 °C, GPU at power level 8, CPU ceilings lowered). The order is
   still one order. Then r12's. 297
   turns and the warm-up's 33, none failed, and every file matched the phone's by checksum.
+- **r22 and r27.** A thirteenth reservation, sa962766, on 2026-11-09, on a fifth unit, 5d3e8f0a,
+  five hours. The phone had been wiped: the benchmark package was pushed again (sha256 prefix
+  204879540c459b5e) and Qwen3 4B fetched on the phone (92f4a83cdfe691b2). This unit numbers its
+  cooling devices differently and has two `thermal-pause-3C` devices, so the scripts that write a
+  pause find the switches by type, and each r27 chain began by checking that the two it writes hold
+  six busy loops to CPU 0 and 1 (they did: 36 of 36 reads at the first start, 60 of 60 at the restart,
+  60 and 48 before the two extra chains). r22 ran `chain22.sh` with `trig22.sh` (its own
+  log, `trig-r22.txt`) and `place22.sh`. After r22's fourth cell `follow22.sh` stopped it between
+  cells, installed the engine's test APK (`engine-debug-androidTest.apk`, sha256 prefix
+  df83da502a55f485, built from this commit's `ThreadCountBenchmark`) and copied the model to the test's
+  path. r27's first start stopped at its first gate, whose 900 s limit, carried over from r23's short
+  probes, was shorter than a cool-down after a full cell (r22's gates took 1,040 to 1,130 s); the
+  follower then started r22's second block, which was stopped by hand about 85 s in, during its third
+  turn after two completed ones (`r22-5-t2`, not counted; its line in `chain22.log` says "72 s into its
+  first turn", which was wrong), and r27 was restarted with an 1,800 s limit. Two short chains used the
+  last hour (`chain27c.sh`, `chain27d.sh`). Of r27's 28 runs, 26 completed and the two with 6 threads
+  paused were stopped by the watchdog, as intended. Codex checked `chain27.sh`,
+  `guard27.sh` and the test change before they ran (the guard follows the chain's PID, the watchdog
+  stops the test package without blocking, every progress event is logged, a named model must exist).
+  Results were pulled every three minutes and checked by sha256.
 - **r21, r24, r23, r25 and r26.** A twelfth reservation, sa962335, on 2026-11-09, on unit c581fd31,
   about six hours. The phone had been wiped, so the benchmark package (`pkg-ref.tgz`, binary sha256
   prefix 204879540c459b5e) was pushed again and Qwen3 4B fetched on the phone (92f4a83cdfe691b2).
-  `pd_bench.cpp` gained `--paused-threads` in this commit; the second binary, `pd_bench_sw` (sha256
+  `pd_bench.cpp` gained `--paused-threads` in 9614430d; the second binary, `pd_bench_sw` (sha256
   prefix 3307ddc1e66ccddd), was built from it on the build box against the same `pkg-ref` libraries
   and used for every r23 and r26 arm, the reference binary for r21, r24 and r25. `chain21.sh` ran r21;
   `feas23.sh` and a hand check (`pausecheck23.txt`) tested the pause set by hand; `run21.sh` then ran
@@ -1214,10 +1315,10 @@ another seed.
   measured.
 - **Energy.** Nothing measured power or battery drain.
 - **Answer quality.** Outputs were compared token for token with the CPU, not graded.
-- **The thread test in natural heat.** r19 is one ordered pair on one model, and its 2-thread cell
-  started cooler; the counterbalanced rerun from a shared gate (`chain22.sh`) never ran. Inside a
-  pause set by hand, r23 and r26 measured 6, 4, 3 and 2 threads, but only on fixed work and with the
-  benchmark's thread handling, not the app's persistent pool.
+- **The thread test in natural heat, repeated.** r19 is one ordered pair on phone B; r22 is one
+  counterbalanced block (two cells of each count) on a fifth unit, its second block cut for r27.
+  Inside a pause set by hand, r23 and r26 (the benchmark) and r27 (the app's engine) measured 6, 4,
+  3 and 2 threads, on short fixed work, one model.
 - **A switch an app could make.** The switching arm read the pause switches as root. No detector
   an app can use (a slow step, Android's thermal status) was measured, nor switching through a
   natural pause.
@@ -1318,3 +1419,13 @@ A second pass, over r25, r26 and the corrections, found the comparisons with r20
 figures (now from its unrounded medians: 2.0% to 5.9% faster on the CPU, not "within 2%"), asked for
 each run's counting rule and the neighbour comparison to be stated as the code does them, and
 removed "heat held equal" from r24 and a claim that no natural pause's length was measured.
+
+For r22 and r27, Codex checked the r27 scripts and the test change before they ran, then this report
+and `analyze_app.py`. It reproduced both tables, r22's excess and pause figures and the placement
+counts, and corrected: the stopped `r22-5-t2` had finished two turns, not been stopped in its first;
+which placement check gave which count; 26 of r27's runs completed and two were stopped, not "none
+failed"; "from the same start" is a similar first-turn XO after a shared gate; r22 does not isolate
+the stalls' cost or test switching, so the trade it was said to support is left to r23; 2 threads gave
+up decode rate, not first-token time, which was later. It had the analysis tie each run's log lines to
+its own process and thread count, check both written switches and the logger's coverage, and take
+medians from unrounded rates.
