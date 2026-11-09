@@ -1,0 +1,5 @@
+# Started by run21.sh in place of the natural-heat thread chain, which cannot finish a cell before the
+# reservation ends: r26 first, then the natural chain if the phone is still there.
+cd /data/local/tmp/sd
+sh chain26.sh; echo "$(date +%s) chain26 exit $?" >> run21.log
+sh chain22n.sh

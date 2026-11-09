@@ -60,6 +60,28 @@ results folder: every cooling device's state every 10 s, with the hottest NSP zo
 finished turn), the CPU pause stretches, which turns held a paused sample, and NPU decode under
 the cDSP device against the same turn without it.
 
+### Throttle states, and setting them by hand
+
+`analyze_throttle.py` reads a run against the phone-side loggers (`trig20b.sh`, then `trig21.sh`:
+every second, the XO thermistor, the hottest GPU and CPU zones, the GPU's clock and its thermal
+and hand-set levels, each pause switch, `kgsl`, `cdsp` and each CPU policy's ceiling). Its modes:
+`ladder` (r20) and `threads` (r19) for natural heat; `clock` (r21), `gpupause` (r24), `cpuclock`
+(r25) and `pause` (r23, r26) for states set by hand as root. `place23.py` reads `place23.sh`'s
+thread placement. `pd_bench --paused-threads 2` reads the two CPU pause switches before every
+decode step and drops to 2 threads while either is on (the r23 and r26 binary, `pd_bench_sw`,
+built from this source like `pd_bench`). The writes the r21 to r26 chains make, as root:
+
+```sh
+echo 8 > /sys/class/kgsl/kgsl-3d0/max_pwrlevel                       # GPU ceiling 578 MHz (0 = 1.2 GHz)
+echo 1 > /sys/class/thermal/cooling_device24/cur_state               # thermal-pause-3C: cores 2 to 5
+echo 1 > /sys/class/thermal/cooling_device30/cur_state               # thermal-pause-C0: cores 6 and 7
+echo 1900800 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq   # the soft throttle's CPU ceilings
+echo 2227200 > /sys/devices/system/cpu/cpufreq/policy6/scaling_max_freq
+```
+
+The device numbers are this unit's; the chains check the types first. `guard.sh <chain>` puts
+everything back if a chain dies.
+
 ## Traps found on the QDC phone
 
 - **It throttles within a minute.** Thermal status 3 and the GPU capped at power level 8 of 17
@@ -94,6 +116,15 @@ the cDSP device against the same turn without it.
   script's shell only (a plain `kill` is held while it waits on its child) and check with `ps`.
 - **The reservation ends without warning**: adb reports "Connection reset by peer", then the
   reservation's key is refused. Copy results off often.
+- **`max_gpuclk` does not show a hand-set ceiling.** With `max_pwrlevel` at 8 every busy sample of
+  `gpuclk` stays at or below 578 MHz while `max_gpuclk` reads 1,200, and the benchmark's own
+  `gpu_mhz` with it; read the logger's `max_pwrlevel` column.
+- **Read a state set by hand inside the decode, not around it.** The chains undo it as a probe
+  ends, so a window reaching past the last step sees the undoing; and logger stamps are whole
+  seconds, so stop a second short (`States.inside`).
+- **"Uncapped" is not at the top.** From a cool start the CPU passes 103 °C in seconds and the
+  thermal engine moves its ceilings every second, while the benchmark's reads at each turn's ends
+  show them full; the uncapped GPU reaches about 104 °C in prefill and drops a level for a second.
 
 ## ExecuTorch's QNN runner
 

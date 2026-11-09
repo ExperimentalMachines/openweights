@@ -17,6 +17,10 @@
 //
 //   pd_bench -m model.gguf -c conversations.jsonl -o rows.jsonl --cells cpu:cpu,gpu:cpu,...
 //            [--gen 128] [--gen-ref] [--ctx 8192] [--threads 6] [--max-turns 8] [--npu-devices HTP0]
+//            [--paused-threads 2]
+//
+// --paused-threads N: a CPU decoder reads the CPU pause switches before every step and decodes
+// with N threads while either is on, --threads otherwise; each step's count goes in step_threads.
 #include "llama.h"
 #include "ggml-backend.h"
 
@@ -237,6 +241,28 @@ static Heat heat() {
     return h;
 }
 
+// The CPU pause switches, named by core mask (thermal-pause-3C pauses cores 2 to 5, thermal-pause-C0
+// cores 6 and 7 on SM8850): while they are on, six decode threads crowd onto the two cores left (r19).
+// Both or none: one found alone would let a pause on the other go unseen.
+static std::vector<std::string> pause_switches() {
+    std::vector<std::string> out;
+    for (int c = 0; c < 400; c++) {
+        std::string base = "/sys/class/thermal/cooling_device" + std::to_string(c);
+        std::ifstream ft(base + "/type");
+        if (!ft) continue;
+        std::string type; ft >> type;
+        if (type == "thermal-pause-C0" || type == "thermal-pause-3C") out.push_back(base + "/cur_state");
+    }
+    if (out.size() != 2) out.clear();
+    return out;
+}
+// 1 paused, 0 not, -1 a switch could not be read (never taken as "not paused").
+static int cpu_paused(const std::vector<std::string> & sw) {
+    int any = 0;
+    for (auto & s : sw) { long v = read_long(s); if (v < 0) return -1; if (v > 0) any = 1; }
+    return any;
+}
+
 // Waits until every zone is at or under the limit and the GPU is uncapped, or the time runs out.
 static double cool_down(double limit_c, int max_s, Heat & at_start) {
     auto t0 = clk::now();
@@ -293,7 +319,7 @@ int main(int argc, char ** argv) {
     std::string model_path, conv_path, out_path, cells_arg = "cpu:cpu", npu_devs = "HTP0", label;
     double cool_limit = 0; int cool_max_s = 900;
     bool gen_ref = false;
-    int gen = 128, n_ctx = 8192, threads = 6, max_turns = 8, max_convs = 1000;
+    int gen = 128, n_ctx = 8192, threads = 6, max_turns = 8, max_convs = 1000, paused_threads = 0;
     for (int i = 1; i < argc; i++) {
         std::string a = argv[i];
         auto next = [&]() { return std::string(argv[++i]); };
@@ -305,7 +331,12 @@ int main(int argc, char ** argv) {
         else if (a == "--label") label = next(); else if (a == "--gen-ref") gen_ref = true;
         else if (a == "--cool") cool_limit = std::stod(next());
         else if (a == "--cool-max") cool_max_s = std::stoi(next());
+        else if (a == "--paused-threads") paused_threads = std::stoi(next());
     }
+    // Read once: the switches' paths do not move while the phone is up.
+    if (paused_threads < 0 || paused_threads > threads) { fprintf(stderr, "--paused-threads must be 1 to --threads\n"); return 2; }
+    const std::vector<std::string> switches = paused_threads > 0 ? pause_switches() : std::vector<std::string>();
+    if (paused_threads > 0 && switches.empty()) { fprintf(stderr, "--paused-threads: the two CPU pause switches were not found\n"); return 2; }
     llama_backend_init();
     ggml_backend_load_all();
 
@@ -428,7 +459,12 @@ int main(int argc, char ** argv) {
 
                 std::vector<llama_token> out_toks;
                 std::vector<double> step_ms;
+                std::vector<int> step_threads;
                 double decode_ms = 0; int steps = 0;
+                // Only a CPU decoder has threads to change; the switch is read before each step and
+                // inside its timing, so a cell that switches pays for the reads it makes.
+                const bool switching = paused_threads > 0 && dn == "cpu";
+                int cur_threads = -1;
                 if (ok) {
                     out_toks.push_back(first);
                     llama_batch b = llama_batch_init(1, 0, 1);
@@ -436,15 +472,24 @@ int main(int argc, char ** argv) {
                     int p2 = pos + (int) toks.size();
                     for (int g = 1; g < turn_gen; g++) {
                         auto tstep = clk::now();
+                        if (switching) {
+                            int p = cpu_paused(switches);
+                            if (p < 0) { ok = false; err = "pause switch unreadable"; break; }
+                            int want = p ? paused_threads : threads;
+                            if (want != cur_threads) { llama_set_n_threads(dctx, want, want); cur_threads = want; }
+                        }
                         b.n_tokens = 1; b.token[0] = out_toks.back(); b.pos[0] = p2++;
                         b.n_seq_id[0] = 1; b.seq_id[0][0] = 0; b.logits[0] = 1;
                         if (llama_decode(dctx, b) != 0) { ok = false; err = "decode failed"; break; }
                         out_toks.push_back(argmax(dctx, n_vocab));
                         if (gen_ref) step_ms.push_back(ms_since(tstep));
+                        if (switching) step_threads.push_back(cur_threads);  // after success, so it lines up with step_ms
                         steps++;
                     }
                     decode_ms = ms_since(td);
                     llama_batch_free(b);
+                    // The next turn's prefill and warm-up use the cell's own count again.
+                    if (switching && cur_threads != threads) llama_set_n_threads(dctx, threads, threads);
                 }
                 double turn_ms = ms_since(t_turn);  // prefill, first token, handoff (with its clear) and decode
                 Heat ht = heat();  // at the end of the turn, outside its timing
@@ -466,6 +511,12 @@ int main(int argc, char ** argv) {
                 for (size_t k = 0; k < step_ms.size(); k++) {
                     char buf[32]; snprintf(buf, sizeof buf, "%s%.2f", k ? "," : "", step_ms[k]); step_list += buf;
                 }
+                std::string thr_list;
+                if (switching) {
+                    thr_list = "\"step_threads\":[";
+                    for (size_t k = 0; k < step_threads.size(); k++) thr_list += (k ? "," : "") + std::to_string(step_threads[k]);
+                    thr_list += "],";
+                }
                 std::string tok_list;
                 for (size_t k = 0; k < out_toks.size(); k++) tok_list += (k ? "," : "") + std::to_string(out_toks[k]);
                 int eog_at = -1;
@@ -478,10 +529,10 @@ int main(int argc, char ** argv) {
                 fprintf(out,
                         "{\"kind\":\"turn\",\"label\":\"%s\",\"model\":\"%s\",\"prefill\":\"%s\",\"decode\":\"%s\",\"conv\":\"%s\",\"source\":\"%s\","
                         "\"turn\":%d,\"pos\":%d,\"new_tokens\":%zu,\"prompt_ms\":%.2f,\"prefill_ms\":%.2f,\"xfer_get_ms\":%.2f,\"xfer_set_ms\":%.2f,\"xfer_bytes\":%zu,"
-                        "\"output_tokens\":%zu,\"decode_steps\":%d,\"decode_ms\":%.2f,\"turn_ms\":%.2f,\"wall_ms\":%ld,\"before_cpu_c\":%.1f,\"before_gpu_c\":%.1f,\"before_npu_c\":%.1f,\"before_gpu_cap\":%ld,\"before_cpu_capped\":%d,\"cpu_capped\":%d,\"before_cpu_max_mhz\":\"%s\",\"cpu_max_mhz\":\"%s\",\"cpu_c\":%.1f,\"gpu_c\":%.1f,\"npu_c\":%.1f,\"gpu_cap\":%ld,\"gpu_mhz\":%ld,\"eog_at\":%d,\"error\":\"%s\",\"turn_gen\":%d,\"ref_tokens\":%d,\"step_ms\":[%s],\"tokens\":[%s],\"text\":\"%s\"}\n",
+                        "\"output_tokens\":%zu,\"decode_steps\":%d,\"decode_ms\":%.2f,\"turn_ms\":%.2f,\"wall_ms\":%ld,\"before_cpu_c\":%.1f,\"before_gpu_c\":%.1f,\"before_npu_c\":%.1f,\"before_gpu_cap\":%ld,\"before_cpu_capped\":%d,\"cpu_capped\":%d,\"before_cpu_max_mhz\":\"%s\",\"cpu_max_mhz\":\"%s\",\"cpu_c\":%.1f,\"gpu_c\":%.1f,\"npu_c\":%.1f,\"gpu_cap\":%ld,\"gpu_mhz\":%ld,\"eog_at\":%d,\"error\":\"%s\",\"turn_gen\":%d,\"ref_tokens\":%d,%s\"step_ms\":[%s],\"tokens\":[%s],\"text\":\"%s\"}\n",
                         esc(label).c_str(), esc(model_path).c_str(), pn.c_str(), dn.c_str(), esc(conv.id).c_str(), esc(conv.source).c_str(),
                         turn, pos, toks.size(), prompt_ms, prefill_ms, get_ms, set_ms, xfer_bytes, out_toks.size(), steps, decode_ms, turn_ms, wall_ms, hb.cpu, hb.gpu, hb.npu, hb.gpu_cap, (int) hb.cpu_capped, (int) ht.cpu_capped, hb.cpu_max_mhz.c_str(), ht.cpu_max_mhz.c_str(), ht.cpu, ht.gpu, ht.npu, ht.gpu_cap, ht.gpu_mhz, eog_at,
-                        esc(err).c_str(), turn_gen, ref_tokens, step_list.c_str(), tok_list.c_str(), esc(text).c_str());
+                        esc(err).c_str(), turn_gen, ref_tokens, thr_list.c_str(), step_list.c_str(), tok_list.c_str(), esc(text).c_str());
                 fflush(out);
                 fprintf(stderr, "%s:%s %s t%d pos %d new %zu prompt %.0f ms xfer %.1f+%.1f ms decode %d steps in %.0f ms %s\n",
                         pn.c_str(), dn.c_str(), conv.id.c_str(), turn, pos, toks.size(), prompt_ms, get_ms, set_ms, steps, decode_ms, err.c_str());

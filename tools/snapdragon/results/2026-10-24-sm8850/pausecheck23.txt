@@ -1,0 +1,15 @@
+# 2026-11-09, sa962335, unit c581fd31, run by hand from adb (as root) after feas23.sh and before run21.sh.
+# With both CPU pause switches written to 1 (cooling_device24, thermal-pause-3C; cooling_device30,
+# thermal-pause-C0), then with both at 0: six shell busy loops of 6 s each, and after 3 s ten rounds,
+# 0.2 s apart, of reading each loop's last CPU (field 39 of /proc/<pid>/stat) when the read succeeded.
+# The command:
+#   for mode in on off; do [ $mode = on ] && { echo 1 > $a/cur_state; echo 1 > $b/cur_state; };
+#     start six (end=$(( $(date +%s) + 6 )); while [ $(date +%s) -lt $end ]; do :; done) loops;
+#     sleep 3; ten rounds of reading each loop's last CPU; print the count per CPU;
+#     wait; echo 0 > both; done
+# Its output, as printed:
+on switches 11 cpus seen: 24 0, 24 1,
+off switches 00 cpus seen: 9 0, 11 1, 12 2, 8 3, 10 4, 10 5,
+after 00
+# Read as: with the switches on, all 48 reads that succeeded found CPU 0 or 1 (24 each); with them
+# off, the 60 reads spread over CPU 0 to 5.
