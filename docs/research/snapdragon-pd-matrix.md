@@ -27,7 +27,8 @@ fourteenth, on 2026-11-09 and 10 on unit 4816891, tried that barrier with a late
 and more ([r33, r39](#ordinary-use-r33-r37-r39-r46)); the owner's POCO X8 Pro Max (MediaTek MT6991), not a QDC
 phone, ran two such sessions and 4 against 2 threads (r37, r41). A fifteenth, on 2026-11-10 on unit
 64a112da (phone A), chatted with no pause between turns for 97 minutes, three sessions back to back
-([r46](#ordinary-use-r33-r37-r39-r46)).
+([r46](#ordinary-use-r33-r37-r39-r46)), then heated the phone until the hard throttle came on by itself and
+decoded inside it, with the guard off and on ([r47, r48](#a-natural-hard-throttle-forced-r47-r48)).
 
 | Processor | What it is, as read from the phone |
 |---|---|
@@ -1232,6 +1233,60 @@ ended and S3 began counts in both columns.
   similar median decode rates, 12.9 and 12.7 tok/s, and sampled XO peaks of 75.4 and 76.4 °C. One run
   on each does not isolate differences between the units.
 
+### A natural hard throttle, forced (r47, r48)
+
+No chat session reached the trip, so r47 and r48 heated phone A until a pause device came on by itself
+and ran the same short work inside the pause: `ThreadCountBenchmark`, 4 threads, its built-in 19-token
+prompt, up to 256 tokens (temperature 0.2, seed 1), a 2,048-token window, the guard off (`stallGuard 0`) or
+on. No switch was written by hand. The heat was eight shell busy loops and the screen at full brightness.
+In r47 those alone took the XO, as the logger read it, from 54.4 to about 68 °C in 15 minutes and were
+slowing (about 0.5 °C a minute), so, decided while watching, four loops running `dd if=/dev/zero
+of=/dev/null` were added at 68.2 °C (`heat2.sh`) and four more at about 76 °C (`heat3.sh`); each helper
+stopped its loops in the second it found a device on. r48 ran all sixteen from the start. The chain
+stopped its heaters at the first poll with a device on (every 2 s in r47, 1 s in r48) and started the run
+at once. Figures from `analyze_trip.py`, from the chain's timestamps and the progress records, with the
+logger's first on and first off samples as approximate edges of the pause; the temperature and seed are
+the benchmark's own (`ThreadCountBenchmark.kt`).
+
+| | Cool, before heating (r47-B0, B1) | In the pause, guard off (r47-P0) | In the pause, guard on (r48-P1) |
+|---|---|---|---|
+| Heating to the trip | | 29.9 min, from an XO of 54.4 °C | 9.6 min, from 62.3 °C |
+| Pause, by the logger's samples | | on at 77.988 °C, off at 69.963, about 52 s | on at 78.016 °C, off at 69.930, about 67 s |
+| Run started | | 2 s after the first sample with a device on | the same second |
+| 19-token prompt | 213 and 229 ms | 7,807 ms | 5,603 ms |
+| Decode inside the pause | 21.6 and 21.3 tok/s, whole run | 0.24 tok/s (tokens 2 to 9 in 28.6 s) | 3.75 tok/s after the fallback (171 tokens in 45.6 s) |
+| Guard | off, then on | off | fell back 21.1 s after the trip, on a 3,870 ms step |
+| Whole run | | decode 4.9 tok/s, most of it after the pause | decode 4.3 tok/s |
+
+- **The trip and the release are where the earlier runs put them.** Both times the same three devices,
+  `thermal-pause-3C` and both `thermal-pause-C0` (CPUs 2 to 7), were first seen on at 77.988 and
+  78.016 °C, and all were first seen off below 70 °C. In every one of r48's samples with them on, CPUs
+  0 to 7 were online and the two clusters read 1,900 of 1,900 MHz and 883 of 2,227 MHz.
+- **Without the guard, decode fell to about a hundredth.** 0.24 tok/s against 21.3 to 21.6 cool: tokens
+  took 2.8 to 6.1 s each. About 2 s after the release it ran at about 16 tok/s again.
+- **With the guard, decode ran at about a sixth of its cool speed.** After the fallback, r48 decoded
+  3.75 tok/s in the pause, about 17% of the cool runs and about 15 times r47's guard-off rate; across all
+  of its decode inside the pause, slow first steps included, 3.48. These are single runs in separate
+  heating runs, so they show the difference observed, not a controlled measure of the guard's effect. The first decode steps took about 4 s each, and
+  the guard fell back after two steps in a row past 1.5 s, the rule it uses before it has normal steps to
+  compare ("against 0"). A 4.7 s gap at token 130, 35 s after the fallback, fits the guard's scheduled try at 4
+  threads failing inside the pause; tries are not logged, so that is inferred. Against a pause set by
+  hand (r34, r38, r39) the guard gave 3.2 to 3.4 tok/s on longer work.
+- **Neither arm protects the prompt.** 19 tokens took 5.6 to 7.8 s inside the pause against about 0.22 s
+  cool. The guard watches decode only; the app reads prompts with as many threads as performance cores.
+- **A stall with no pause device on.** r47-P1 (guard on) started 67 s after the trip, when the pause had
+  already released, at an XO of 71.2 °C. After token 178 progress was very slow: decode time rose 2,711 and 3,984 ms across the next two
+  progress lines, which ended at tokens 179 and 181, while all eleven devices read 0 in every sample; the hottest CPU zone fell from
+  104.6 to 92.3 °C over those seconds and came back. The guard fell back on a 3,919 ms step against a
+  60 ms median, and the run ended at 11.2 tok/s. The cause was not identified: r47's logger read neither
+  frequencies nor online CPUs, and r48's, which did, saw no such event.
+- **What it does not show.** Heat from busy loops and memory copies, not from a chat; one 19-token prompt
+  and 256 tokens; one run of each arm on one unit, in different heating runs; pauses that lasted about 52
+  and 67 s once the heaters stopped, which says nothing of how long one the model's own load kept up
+  would last. r48's
+  guard-off arm (r48-P0) did not run: r48-P1 outlasted the pause, and the chain ran P0 only if a device
+  was still on.
+
 ### What the model writes at each thread count
 
 Every turn record keeps its greedy tokens, decoded on the same teacher-forced context, so cells can
@@ -1539,6 +1594,15 @@ another seed.
   decode 6.6 tok/s, 3 turns, no fallback logged. A first check of the benchmark
   before r36 was killed by the system's backup agent, which backed up the newly installed test
   package and killed its process; the second check ran (12.1 tok/s, 8 tokens).
+- **r47 and r48.** On sa964425 after r46, the same unit and build. `chain47.sh` ran the two cool runs,
+  the heating and the two runs after the trip, `trig47.sh` its logger (`trig47.txt`); `heat2.sh` and
+  `heat3.sh` were started by hand during r47's heating. `chain48.sh` heated with all sixteen loops from the
+  start, and `trig48.sh` added the CPUs online and each cluster's frequency to each sample (`trig48.txt`;
+  the isolated-CPU field it also reads was empty, so those rows have one column fewer than the header).
+  `guard47.sh` and `guard48.sh` killed any loop left behind once the chain ended. r48's chain logged
+  `R47_DONE`, a label carried over from r47. `logcat-r47.txt` and `logcat-r48.txt` hold only the app's
+  own tags; logcat replays its buffer when it starts, so `logcat-r48.txt` also holds r47's lines, told
+  apart by process id. `inst-r47-*` and `inst-r48-P1.txt` are the instrumentation results.
 - **r46.** A fifteenth reservation, sa964425, on 2026-11-10, on unit 64a112da (phone A, r12's unit),
   reached through the tunnel on 127.0.0.1:5097. The engine test APK was built from 62439b56
   (`apk c5bda9fad2db4705` in `chain46.log`) and the model fetched on the phone (92f4a83cdfe691b2).
@@ -1663,7 +1727,8 @@ another seed.
 - **A fallback through a natural pause.** The engine's guard (r34, r38, r39) was measured against a
   pause set by hand; no natural pause was observed during its runs or the sampled chat sessions, the
   heaviest of which (r46, 97 minutes with no pause) reached a sampled 77.9 °C, about 0.1 °C under
-  the trip. Android's thermal status was not tried as a signal.
+  the trip. In a natural pause forced by busy loops and memory copies (r47, r48) it was measured once
+  each way, on 19 prompt tokens and up to 256 more; never in a pause the model's own heat brought on. Android's thermal status was not tried as a signal.
 - **Other chips.** The pause is a Qualcomm mechanism measured on the SM8850 only. On the MediaTek
   POCO, r41 measured what 2 threads cost against 4 at one length, and r37 and r41 that the guard stays
   quiet in chat; no pause or stall was produced there.
