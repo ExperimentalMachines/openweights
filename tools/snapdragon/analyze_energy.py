@@ -10,8 +10,8 @@ chain idles 60 s before it starts; the median current of that idle (its last 50 
 baseline, so what is reported is the energy the model added over the phone sitting there with its
 screen on. A window's energy is the trapezoid over the gauge's samples of each sample's current times
 the voltage logged nearest it; prompt reading runs from the START line to START + prefillMs; decode
-ends at the run's last progress line (START + elapsedMs) and began decodeMs before it, at the first
-token. Per token: prompt joules over the prompt tokens read, decode joules over the tokens after the
+runs from the first token (START + the BENCH line's ttft) for decodeMs, the time to the last token. A
+progress line's elapsedMs is when the line was logged, after its token, so it is not used as an end. Per token: prompt joules over the prompt tokens read, decode joules over the tokens after the
 first, since decodeMs times those. The gauge averages over about a second, so a window's edges blur by
 that much; prompt reading here takes tens of seconds, decode about a minute.
 """
@@ -88,8 +88,13 @@ def main(chain, bat, cat):
         last = prog[-1]
         pre_s = int(last["prefillMs"]) / 1000
         dec_s = int(last["decodeMs"]) / 1000
-        dec_end = t0 + int(last["elapsedMs"]) / 1000
-        dec_start = dec_end - dec_s
+        bench = [m for t, p, tag, m in mine if p == pid and m.startswith("BENCH")]
+        ttft = re.search(r"ttft=(\d+)", bench[0]) if bench else None
+        if ttft is None:
+            print(f"{r['label']}: no BENCH line, left out")
+            continue
+        dec_start = t0 + int(ttft.group(1)) / 1000
+        dec_end = dec_start + dec_s
         n_prompt, n_gen = int(last["promptRead"]), int(last["generated"]) - 1
         base_win = [i for t, i in cur if r["start"] - 55 <= t <= r["start"] - 5]
         base = statistics.median(base_win)

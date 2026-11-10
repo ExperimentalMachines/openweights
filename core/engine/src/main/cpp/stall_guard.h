@@ -40,6 +40,13 @@ class StallGuard {
      *  pause steps took 50 to 300 times longer (r27), so a factor of 8 leaves a wide margin. */
     static constexpr double STALL_FACTOR = 8.0;
     static constexpr double STALL_MIN_MS = 250.0;
+    /** A step this much longer than the normal one is slow as well. A pause adds seconds to each
+     *  step rather than multiplying it: 4 to 9 s where measured (r27, r34, r38, normal steps of 43 to
+     *  129 ms), so on a model whose normal step is already a second the pause is 4 to 6 times, under
+     *  the factor, and the added seconds give it away (seventh review). No normal step measured was
+     *  over 0.3 s. A try at the planned count is held to this too: there a stalled step is about
+     *  three times the fallback's, which PROBE_FACTOR alone would let through. */
+    static constexpr double STALL_EXCESS_MS = 2000.0;
     /** With no history yet, a step this long is slow on its own. */
     static constexpr double STALL_ABS_MS = 1500.0;
     /** Two slow steps in a row before falling back: a pause slows every step, one hiccup does not. */
@@ -60,7 +67,22 @@ class StallGuard {
      *  hides every later stall (second review). */
     static constexpr int32_t FALLBACK_SAMPLES = 8;
     static constexpr int32_t MIN_FALLBACK_SAMPLES = 4;
-    static constexpr double EMA_WEIGHT = 0.1;
+    /** The normal step is the median of the last NORMAL_SAMPLES steps at the planned count that were
+     *  not slow. A median, so that one odd step either way, a slow first step or an unusually fast
+     *  one, does not set the bar a stall must clear; an average let a slow first step hide a stall,
+     *  and the fastest early step let a fast one cause false fallbacks (fourth and fifth reviews). */
+    static constexpr int32_t NORMAL_SAMPLES = 8;
+    /** Until MIN_HISTORY such steps are in, a step past STALL_ABS_MS is slow as well: the median of
+     *  one or two steps may itself be a stalled step's (fourth review). And against fewer than two
+     *  the relative rule is not applied at all: one fast first step would make the next two ordinary
+     *  steps a stall (sixth review). */
+    static constexpr int32_t MIN_HISTORY = 4;
+    /** After that, a step joins the normal ones only within this many times their median. A step
+     *  between this and STALL_FACTOR is neither a stall nor the new normal: let in, a slowdown that
+     *  grows in such steps would raise the bar until a real stall passed under it (fourth review).
+     *  Context growth moves the normal step a little at a time and stays well inside it; a lasting
+     *  jump past it costs one fallback and a successful try, which starts the normal ones afresh. */
+    static constexpr double NORMAL_FACTOR = 3.0;
 
     explicit StallGuard(bool enabled = true) : enabled_(enabled) {}
 
@@ -79,23 +101,24 @@ class StallGuard {
 
     /** After a decode step that took step_ms, at now_ms. Returns the count for the next step. */
     int32_t step(double step_ms, int64_t now_ms) {
-        if (!enabled_) {
-            update(ema_, step_ms);
-            return planned_;
-        }
+        if (!enabled_) return planned_;
         if (planned_ <= FALLBACK_THREADS) {
-            if (fallen_) {
-                record_fallback(step_ms);
-            } else {
-                update(ema_, step_ms);
-            }
+            // Steps at a plan under the fallback count are slower than the fallback's, and a try is
+            // judged against the fallback's own steps; steps at any such plan are not the planned
+            // count's normal either (fourth review).
+            if (fallen_ && planned_ == FALLBACK_THREADS) record_fallback(step_ms);
             return planned_;
         }
         if (probing_) {
             probing_ = false;
-            if (step_ms <= PROBE_FACTOR * fallback_median()) {
+            const double fallback = fallback_median();
+            if (step_ms <= PROBE_FACTOR * fallback && step_ms <= fallback + STALL_EXCESS_MS) {
                 fallen_ = false;
-                ema_ = step_ms;  // a fresh baseline at the planned count, from now
+                // A fresh normal at the planned count, from now: the try showed this count runs.
+                normal_n_ = 0;
+                normal_at_ = 0;
+                record(normal_, normal_at_, normal_n_, step_ms);
+                seeded_ = true;
                 fallback_n_ = 0;
                 fallback_at_ = 0;
                 return planned_;
@@ -121,14 +144,18 @@ class StallGuard {
                 ++falls_;
                 return FALLBACK_THREADS;
             }
-            return planned_;  // a slow step is not averaged in: it would raise the bar for the next
+            return planned_;  // a slow step is not counted as normal: it would raise the bar for the next
         }
         slow_run_ = 0;
-        update(ema_, step_ms);
+        if (!seeded_ || step_ms <= NORMAL_FACTOR * normal_ms()) {
+            record(normal_, normal_at_, normal_n_, step_ms);
+            if (normal_n_ >= MIN_HISTORY) seeded_ = true;
+        }
         return planned_;
     }
 
-    /** A decode that failed or was stopped mid-step: a try in flight is abandoned, not judged. */
+    /** A decode that failed or was stopped mid-step, or a new reply starting: a try in flight or
+     *  scheduled is abandoned, not judged, and the next waits another interval. */
     void abandon(int64_t now_ms) {
         if (probing_) {
             probing_ = false;
@@ -139,28 +166,37 @@ class StallGuard {
     bool fallen() const { return fallen_; }
     bool probing() const { return probing_; }
     int32_t falls() const { return falls_; }
-    double normal_ms() const { return ema_; }
+    double normal_ms() const { return median(normal_, normal_n_); }
 
   private:
     bool slow(double ms) const {
-        return ema_ > 0 ? (ms > STALL_MIN_MS && ms > STALL_FACTOR * ema_) : ms > STALL_ABS_MS;
+        const double normal = normal_ms();
+        const bool against_normal =
+            ms > STALL_MIN_MS && (ms > STALL_FACTOR * normal || ms > normal + STALL_EXCESS_MS);
+        if (seeded_) return against_normal;  // a passed try leaves one normal step, and it is trusted
+        if (normal_n_ < 2) return ms > STALL_ABS_MS;
+        return against_normal || ms > STALL_ABS_MS;
     }
 
-    void record_fallback(double ms) {
-        fallback_[static_cast<size_t>(fallback_at_)] = ms;
-        fallback_at_ = (fallback_at_ + 1) % FALLBACK_SAMPLES;
-        fallback_n_ = std::min(fallback_n_ + 1, FALLBACK_SAMPLES);
+    void record_fallback(double ms) { record(fallback_, fallback_at_, fallback_n_, ms); }
+
+    double fallback_median() const { return median(fallback_, fallback_n_); }
+
+    /** Into a ring of the last N: `at` is where the next goes, `n` how many there are, up to N. */
+    template <size_t N>
+    static void record(std::array<double, N> & ring, int32_t & at, int32_t & n, double ms) {
+        ring[static_cast<size_t>(at)] = ms;
+        at = (at + 1) % static_cast<int32_t>(N);
+        n = std::min(n + 1, static_cast<int32_t>(N));
     }
 
-    double fallback_median() const {
-        if (fallback_n_ == 0) return 0.0;
-        std::array<double, FALLBACK_SAMPLES> v = fallback_;
-        std::nth_element(v.begin(), v.begin() + fallback_n_ / 2, v.begin() + fallback_n_);
-        return v[static_cast<size_t>(fallback_n_ / 2)];
-    }
-
-    static void update(double & ema, double ms) {
-        ema = ema > 0 ? (1.0 - EMA_WEIGHT) * ema + EMA_WEIGHT * ms : ms;
+    /** The upper median of the first n of a ring, 0 with none. */
+    template <size_t N>
+    static double median(const std::array<double, N> & ring, int32_t n) {
+        if (n == 0) return 0.0;
+        std::array<double, N> v = ring;
+        std::nth_element(v.begin(), v.begin() + n / 2, v.begin() + n);
+        return v[static_cast<size_t>(n / 2)];
     }
 
     bool enabled_;
@@ -170,7 +206,10 @@ class StallGuard {
     int32_t slow_run_ = 0;
     int64_t probe_at_ = 0;
     int32_t falls_ = 0;
-    double ema_ = 0.0;           // steps at the planned count, outside a fallback
+    std::array<double, NORMAL_SAMPLES> normal_{};  // the last normal steps at the planned count
+    int32_t normal_at_ = 0;
+    int32_t normal_n_ = 0;
+    bool seeded_ = false;  // MIN_HISTORY normal steps in, or a try passed, since the session began
     std::array<double, FALLBACK_SAMPLES> fallback_{};  // the last steps at the fallback count
     int32_t fallback_at_ = 0;  // where the next one goes
     int32_t fallback_n_ = 0;   // how many there are, up to FALLBACK_SAMPLES

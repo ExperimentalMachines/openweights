@@ -2772,6 +2772,12 @@ StopReason Session::generate(
         return StopReason::ERROR;
     }
 
+    // A try at the planned count scheduled by the last reply's final step has nothing to judge
+    // now; left in place it would open this reply, and read its prompt, at the stalled count, even
+    // after a thermal re-plan down and back up (fourth review). Drop it and wait an interval.
+    stall_guard_.abandon(now_ms());
+    if (stall_guard_.active() != threads_now_) apply_guarded_threads(stall_guard_.active());
+
     const int64_t prefill_start = now_ms();
     update_progress([&](Progress & p) {
         p = Progress{};

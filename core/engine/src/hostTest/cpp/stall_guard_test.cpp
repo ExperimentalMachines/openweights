@@ -219,6 +219,134 @@ static void an_abandoned_try_waits_another_interval() {
     EXPECT_EQ(run(g, 10, 95, t), 2);                // no new try at once
 }
 
+// Fourth review: a try scheduled by a reply's last step must not open the next reply at the planned
+// count inside the pause, even after a thermal re-plan down and back up. The engine calls abandon()
+// when a reply starts.
+static void a_try_left_by_the_last_reply_is_dropped_at_the_next() {
+    StallGuard g;
+    int64_t t = 0;
+    g.plan(4);
+    run(g, 50, 43, t);
+    run(g, 2, 4100, t);                             // falls back
+    run(g, StallGuard::MIN_FALLBACK_SAMPLES - 1, 95, t);
+    t += StallGuard::PROBE_EVERY_MS;
+    EXPECT_EQ(g.step(95, t), 4);                    // the reply's last step schedules a try
+    g.abandon(t);                                   // the next reply starts
+    EXPECT_EQ(g.plan(2), 2);                        // a hot re-plan
+    EXPECT_EQ(g.plan(4), 2);                        // and back: still the fallback
+    EXPECT_EQ(g.fallen(), true);
+}
+
+// Fourth review: a first step that is slow but under the absolute bar must not become the
+// baseline that a stall then hides under.
+static void a_slow_first_step_does_not_hide_a_stall() {
+    StallGuard g;
+    int64_t t = 0;
+    g.plan(4);
+    run(g, 1, 1000, t);                             // under 1.5 s, so not slow on its own
+    EXPECT_EQ(run(g, 1, 4100, t), 4);
+    EXPECT_EQ(run(g, 1, 4100, t), 2);               // the stall is still caught
+}
+
+// Fourth review: steps several times the normal one but under the stall factor must not be
+// averaged into the baseline, or a stall that grows in steps is never caught.
+static void a_moderate_slowdown_does_not_raise_the_bar() {
+    StallGuard g;
+    int64_t t = 0;
+    g.plan(4);
+    run(g, 50, 43, t);
+    EXPECT_EQ(run(g, 200, 300, t), 4);              // 7 times normal: not a stall, not the new normal
+    EXPECT_EQ(g.falls(), 0);
+    EXPECT_EQ(run(g, 2, 2000, t), 2);               // 46 times the normal: caught
+}
+
+// Fourth review: steps at a plan under the fallback count are not fallback samples.
+static void steps_at_one_thread_are_not_fallback_samples() {
+    StallGuard g;
+    int64_t t = 0;
+    g.plan(4);
+    run(g, 50, 43, t);
+    run(g, 2, 4100, t);                             // falls back
+    g.plan(1);
+    run(g, 20, 1000, t);                            // one thread, slow steps
+    g.plan(4);
+    run(g, StallGuard::MIN_FALLBACK_SAMPLES - 1, 95, t);
+    t += StallGuard::PROBE_EVERY_MS;
+    EXPECT_EQ(g.step(95, t), 4);                    // a try
+    t += 900;
+    EXPECT_EQ(g.step(900, t), 2);                   // 9 times the 2-thread steps: fails
+}
+
+// Fifth review: a stall inside the first steps is judged against the steps before it, not only
+// against the absolute bar.
+static void a_stall_while_learning_the_normal_step_is_caught() {
+    StallGuard g;
+    int64_t t = 0;
+    g.plan(4);
+    run(g, 2, 43, t);
+    EXPECT_EQ(run(g, 1, 1000, t), 4);
+    EXPECT_EQ(run(g, 1, 1000, t), 2);               // 23 times the steps before: falls back
+}
+
+// Fifth review: one unusually fast first step must not become the bar later steps are held to.
+static void a_fast_first_step_does_not_set_the_bar() {
+    StallGuard g;
+    int64_t t = 0;
+    g.plan(4);
+    run(g, 1, 10, t);
+    run(g, 3, 150, t);
+    EXPECT_EQ(run(g, 100, 300, t), 4);              // steady 300 ms steps are the normal ones
+    EXPECT_EQ(g.falls(), 0);
+}
+
+// Sixth review: one fast first step must not make the next two ordinary steps a stall either.
+static void a_fast_first_step_does_not_make_the_next_two_a_stall() {
+    StallGuard g;
+    int64_t t = 0;
+    g.plan(4);
+    run(g, 1, 10, t);
+    EXPECT_EQ(run(g, 3, 300, t), 4);
+    EXPECT_EQ(g.falls(), 0);
+}
+
+// Seventh review: a pause adds seconds to each step (4 to 9 s in r27, r34 and r38). A model whose
+// normal step is already a second shows the pause as 4 to 6 times slower, under the factor; the
+// added seconds give it away.
+static void a_pause_on_already_slow_steps_is_caught() {
+    StallGuard g;
+    int64_t t = 0;
+    g.plan(4);
+    run(g, 8, 1000, t);
+    EXPECT_EQ(run(g, 1, 4100, t), 4);
+    EXPECT_EQ(run(g, 1, 4100, t), 2);
+    EXPECT_EQ(g.fallen(), true);
+}
+
+static void slow_steps_that_wander_are_not_a_pause() {
+    StallGuard g;
+    int64_t t = 0;
+    g.plan(4);
+    run(g, 8, 1000, t);
+    EXPECT_EQ(run(g, 20, 1800, t), 4);
+    EXPECT_EQ(g.falls(), 0);
+}
+
+// Seventh review: on such a model a stalled try is only about three times the 2-thread step, so the
+// try is also held to the added seconds.
+static void a_try_in_a_pause_on_slow_steps_fails() {
+    StallGuard g;
+    int64_t t = 0;
+    g.plan(4);
+    run(g, 8, 1000, t);
+    run(g, 2, 5500, t);                             // falls back
+    run(g, StallGuard::MIN_FALLBACK_SAMPLES - 1, 2000, t);
+    t += StallGuard::PROBE_EVERY_MS;
+    EXPECT_EQ(g.step(2000, t), 4);                  // a try
+    t += 5500;
+    EXPECT_EQ(g.step(5500, t), 2);                  // under 3 times 2,000 but 3.5 s over: still paused
+    EXPECT_EQ(g.fallen(), true);
+}
+
 int main() {
     normal_steps_keep_the_plan();
     one_hiccup_is_not_a_pause();
@@ -234,6 +362,16 @@ int main() {
     one_slow_fallback_step_does_not_pass_a_stalled_try();
     a_try_waits_for_enough_fallback_steps();
     an_abandoned_try_waits_another_interval();
+    a_try_left_by_the_last_reply_is_dropped_at_the_next();
+    a_slow_first_step_does_not_hide_a_stall();
+    a_moderate_slowdown_does_not_raise_the_bar();
+    steps_at_one_thread_are_not_fallback_samples();
+    a_stall_while_learning_the_normal_step_is_caught();
+    a_fast_first_step_does_not_set_the_bar();
+    a_fast_first_step_does_not_make_the_next_two_a_stall();
+    a_pause_on_already_slow_steps_is_caught();
+    slow_steps_that_wander_are_not_a_pause();
+    a_try_in_a_pause_on_slow_steps_fails();
     if (failures) {
         std::fprintf(stderr, "%d failed\n", failures);
         return EXIT_FAILURE;

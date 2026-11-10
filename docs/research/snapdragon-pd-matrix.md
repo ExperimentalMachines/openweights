@@ -25,7 +25,7 @@ fourteenth, on 2026-11-09 and 10 on unit 4816891, tried that barrier with a late
 ([r31](#a-barrier-that-gives-up-its-core-r29-r31)), measured a fallback built into the app's engine
 ([r34, r38, r39](#a-fallback-in-the-apps-engine-r34-r38-r39)) and chatted at a person's pace for half an hour
 and more ([r33, r39](#ordinary-use-r33-r37-r39)); the owner's POCO X8 Pro Max (MediaTek MT6991), not a QDC
-phone, ran one such session (r37).
+phone, ran two such sessions and 4 against 2 threads (r37, r41).
 
 | Processor | What it is, as read from the phone |
 |---|---|
@@ -1063,14 +1063,25 @@ arm ran twice. The rate falls from turn to turn as the context grows.
 An app cannot count on reading the pause: on this QDC build the test process could read all eleven
 pause devices, but on the owner's retail POCO it could not even list `/sys/class/thermal` (r36's
 check). What every app has is how long each decode step took. So the engine now carries a guard
-(`stall_guard.h`, `StallGuard`) that watches its own steps: two steps in a row more than 8 times the
-recent normal step and over 250 ms (or over 1.5 s with no history yet) drop decode, and prompt
-reading with it, to 2 threads; every 30 s, once it has at least four steps at 2 threads, it tries
-one step at the planned count, and keeps it if that step took at most 3 times the median of its last
-eight steps at 2 threads. A thermal re-plan never ends a fallback, and a try whose decode fails is
-dropped, not judged. It does nothing to a plan of 2 or fewer threads, and
-`OPENWEIGHTS_STALL_GUARD=0` turns it off. Its host test (`stall_guard_test.cpp`, 14 cases on step
-times modelled on r27) runs in CI.
+(`stall_guard.h`, `StallGuard`) that watches its own steps: two steps in a row that are slow, more
+than 8 times the recent normal step or more than 2 s over it, and over 250 ms (or over 1.5 s with
+no history yet), drop decode, and prompt reading with it, to 2 threads; every 30 s, once it has at
+least four steps at 2 threads, it tries one step at the planned count, and keeps it if that step
+took at most 3 times the median of its last eight steps at 2 threads and at most 2 s over it. The
+2 s is from the pause itself, which added 4 to 9 s to each step where it was measured rather than
+multiplying it, so that a model whose normal step is already a second, where the pause is 4 to 6
+times, is caught too. A thermal re-plan never ends a fallback, and a try whose decode fails, or
+that is still pending when the next reply starts, is dropped, not judged. The normal step is the
+median of the last eight steps that were not slow; against fewer than two of them only a step past
+1.5 s is slow, until four are in a step past 1.5 s is slow as well, and after that a step joins them
+only within 3 times their median, so neither one odd early
+step nor a slowdown in smaller steps moves the bar a stall must clear. It does nothing to a plan of
+2 or fewer threads, and `OPENWEIGHTS_STALL_GUARD=0` turns it off. Its host test (`stall_guard_test.cpp`,
+24 cases on step times modelled on r27) runs in CI. The device runs below used `engine-test5`, built
+before a fourth and a fifth review changed how the normal step is kept and added the reply-start
+drop; in every run measured the normal step was steady and the stalled ones 37 to 127 times longer
+(the guard's own log lines), which every version judges alike. The final rules ran on the POCO
+(r43, r45) without a pause; none has run in one.
 
 r34 ran the engine's own `ThreadCountBenchmark` on phone D at a realistic length: a 1,751-token
 prompt (one user message, `prompt-r30.txt`), up to 1,024 tokens of reply, an 8,192-token window, 4 threads
@@ -1480,7 +1491,14 @@ another seed.
   plugged in, until r41 (`chain41.sh`) at 06:46 on 2026-11-10: the 4 against 2 thread runs and a
   session with no pause between turns, on USB power, a watcher stopping the chain if the phone was
   unplugged (it was not). The cooling gate (the thermal service's CPU at 42 °C) ran out at 300 s
-  before the fourth thread run and the session, which started at 43 to 45 °C. A first check of the benchmark
+  before the fourth thread run and the session, which started at 43 to 45 °C. r42 (`chain42.sh`) then
+  checked the guard as fixed after its fourth review (`engine-test6`, 62a7ff88b697a087) the same way:
+  one 4-thread run at r41's length (decode 6.7 tok/s by the engine's summary) and a 3-minute session
+  with no pause (3 turns), with no fallback logged; r43 (`chain43.sh`) the same for the guard after
+  its fifth review (`engine-test7`, 84e410f825442207): decode 7.1 tok/s, 3 turns, no fallback logged. r44
+  (the sixth review's build) was stopped in its gate when the seventh review's build was ready, and
+  r45 (`chain45.sh`, `engine-test9`, c5bda9fad2db4705, the rules as committed) ran the same check:
+  decode 6.6 tok/s, 3 turns, no fallback logged. A first check of the benchmark
   before r36 was killed by the system's backup agent, which backed up the newly installed test
   package and killed its process; the second check ran (12.1 tok/s, 8 tokens).
 - **r28, r29, r32, r31, r33, r34, r38 and r39.** r28 and r29 in the thirteenth reservation's extension, on
@@ -1599,8 +1617,9 @@ another seed.
 - **A fallback through a natural pause.** The engine's guard (r34, r38, r39) was measured against a
   pause set by hand; no natural pause came during its runs or the paced sessions, the heaviest of
   which peaked 1.6 °C under the trip when its conversations ran out. Android's thermal status was not tried as a signal.
-- **Other chips.** The pause is a Qualcomm mechanism measured on the SM8850 only; the POCO session
-  checked only that the guard stays quiet on a MediaTek phone in ordinary use.
+- **Other chips.** The pause is a Qualcomm mechanism measured on the SM8850 only. On the MediaTek
+  POCO, r41 measured what 2 threads cost against 4 at one length, and r37 and r41 that the guard stays
+  quiet in chat; no pause or stall was produced there.
 - **A CPU-only probe through a pause**, and the pause together with `kgsl` and `cdsp` at 5 as the
   natural hard throttle sets them.
 - **A second pass of Gemma 3 1B, Qwen3 1.7B Q8_0, LFM2.5 2.6B and Llama 3.2 3B at 64 tokens.**
@@ -1727,3 +1746,16 @@ shorter rounds checked those fixes (the slow turn's log does not say which of th
 the previous reply, and one run cannot bound the guard's cost) and r39 (the XO did not hold at 76.2
 to 76.4 °C over the session's last ten minutes, as first written: it first passed 76.2 at 24.7
 minutes, and its per-minute mean was 74.2 to 75.9).
+A full review of the six commits that followed, through r41, found two bugs in the guard and no wrong
+figure: a try scheduled by a reply's last step survived into the next reply, which then
+opened at the planned count inside a pause even after a thermal re-plan down and back; and a slow
+first step under 1.5 s, or a slowdown in steps under 8 times the normal one, was averaged into the
+normal step until a stall no longer cleared the bar. Both are fixed with host-test cases, as is a
+plan of 1 thread feeding the fallback's samples. The first fix for the second, the fastest of the
+first four steps as the normal one, was found by a fifth round to miss a stall inside those four
+steps and to fall back falsely after an unusually fast first step; the normal step is now the median
+of the last eight, with a case for each; a sixth found that one fast first step still made the next
+two ordinary steps a stall, so the relative rule now waits for two normal steps; a seventh that a model whose normal step is
+already a second would show the pause as 4 to 6 times, under the factor, so a step more than 2 s
+over the normal one is slow as well, and a try is held to the same excess; `analyze_energy.py` now starts decode at the first
+token from the BENCH line's time to first token, not from a progress line logged after it.
