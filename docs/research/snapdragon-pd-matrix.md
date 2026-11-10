@@ -28,7 +28,9 @@ and more ([r33, r39](#ordinary-use-r33-r37-r39-r46)); the owner's POCO X8 Pro Ma
 phone, ran two such sessions and 4 against 2 threads (r37, r41). A fifteenth, on 2026-11-10 on unit
 64a112da (phone A), chatted with no pause between turns for 97 minutes, three sessions back to back
 ([r46](#ordinary-use-r33-r37-r39-r46)), then heated the phone until the hard throttle came on by itself and
-decoded inside it, with the guard off and on ([r47, r48](#a-natural-hard-throttle-forced-r47-r48)).
+decoded inside it, with the guard off and on ([r47, r48](#a-natural-hard-throttle-forced-r47-r48)),
+and ran the app's engine at every thread count from 1 to 8 with the pause off and on, two runs traced by
+the kernel's scheduler ([r49](#every-thread-count-reading-and-writing-and-where-six-threads-ran-r49)).
 
 | Processor | What it is, as read from the phone |
 |---|---|
@@ -564,8 +566,10 @@ Unlike CPython's GIL, whose waiters sleep, these waiters keep their core. The st
 to 20 tokens in 44 to 71 s (single tokens 0.6 to 18.3 s), far below what fair sharing of two cores
 would give. The test of 6 threads against 2 is [below](#six-threads-against-two-r19). With the
 pause set by hand on a cool phone, 6 threads kept both remaining cores busy and made almost no
-progress while 2 did not stall ([r23](#the-pause-and-the-cpus-threads-r23)); no profile has traced
-the time to `ggml_barrier` itself.
+progress while 2 did not stall ([r23](#the-pause-and-the-cpus-threads-r23)). A later profile put
+about 70% of a paused run's CPU time in the function that holds `ggml_barrier`'s wait
+([r28](#where-a-paused-threads-time-goes-r28)), and the kernel's scheduler trace recorded all six
+threads on the two cores left ([r49](#every-thread-count-reading-and-writing-and-where-six-threads-ran-r49)).
 
 **The app.** `ThermalPolicy` sets the decode threads once per reply (`ModelRuntime.planThreads`) from
 Android's thermal status: half the cores (4 here), 3 at light or moderate, 2 at severe, and no reply
@@ -1287,6 +1291,78 @@ the benchmark's own (`ThreadCountBenchmark.kt`).
   guard-off arm (r48-P0) did not run: r48-P1 outlasted the pause, and the chain ran P0 only if a device
   was still on.
 
+### Every thread count, reading and writing, and where six threads ran (r49)
+
+r26 and r27 measured decode at 2, 3, 4 and 6 threads with the pause set by hand, on two other units,
+and none of their runs kept how fast the prompt was read. r49, on phone A after r48 on 2026-11-10, ran
+the app's engine at every count from 1 to 8, normally (N) and with the three devices the phone's own
+trip had set in r47 and r48 (`thermal-pause-3C` and both `thermal-pause-C0`) written 1 for the whole run
+(P). Before any run, a check started six busy loops and saw them run on CPUs 0 and 1 only with the
+switches on, and on CPUs 0 to 5 with them off. Then three rounds of the sixteen cells, each round in
+an order shuffled once before any run (`random.seed(49)`), with a gate before every run: the hottest CPU
+and GPU zone and the XO at or under 45 °C, the GPU uncapped, every CPU policy at its ceiling and all
+three switches 0 (passed in 5 to 135 s). `ThreadCountBenchmark` (build 62439b56), its built-in 19-token
+prompt, up to 32 tokens, a 2,048-token window, the guard off, a watchdog at 120 s normally and 300 s
+with the pause. The engine reads the prompt with as many threads as it writes the reply, as the app
+does. A logger read the three switches and each thread's last CPU and CPU time every second
+(`place-<label>.txt`); a paused run counts only if every sample with its threads busy had them on CPUs
+0 and 1. All 24 did, and all 2,948 of their samples read the three switches on. These are samples a
+second apart, not a continuous record; the traces below are one. Before the rounds, two 6-thread runs, one in
+each state, recorded the kernel's `sched_switch` and `sched_wakeup` events for 2 s of decode
+(`trace-r49-T-N6.txt`, `trace-r49-T-P6.txt`) with the process's thread list. The chain is `chain49.sh`,
+the analysis `analyze_threads49.py`; the whole chain took 1 hour 53 minutes.
+
+| Threads | Decode, normally | Decode, six cores out of use | Kept | Prefill, normally | Prefill, six cores out of use | Kept |
+|---|---|---|---|---|---|---|
+| 1 | 15.75 tok/s (15.70 to 15.82) | 7.28 (7.22 to 7.35) | 46% | 42.7 (42.6 to 42.7) | 17.3 (16.0 to 17.7) | 40% |
+| 2 | 23.65 (23.58 to 23.65) | 10.70 (10.40 to 10.71) | 45% | 71.7 (71.7 to 72.5) | 31.2 (30.8 to 32.9) | 44% |
+| 3 | 23.31 (23.29 to 23.33) | 0.80 (0.68 to 0.80) | 3.4% | 84.8 (77.9 to 86.0) | 8.7 (8.3 to 9.1) | 10% |
+| 4, the app's default | 23.29 (23.26 to 23.31) | 0.351 (0.348 to 0.361) | 1.5% | 89.6 (89.6 to 91.4) | 4.09 (3.48 to 4.62) | 4.6% |
+| 5 | 23.74 (23.61 to 23.77) | 0.206 (0.184 to 0.207) | 0.9% | 111.1 (108.6 to 111.8) | 3.33 (2.73 to 4.39) | 3.0% |
+| 6 | 23.85 (23.05 to 24.07) | 0.124 (0.122 to 0.136) | 0.5% | 125.8 (125.0 to 129.3) | 2.11 (2.05 to 2.32) | 1.7% |
+| 7 | 22.74 (21.48 to 23.49) | 0.087 (0.086 to 0.091), all three stopped at 300 s | 0.4% | 138.7 (125.0 to 139.7) | 1.66 (1.63 to 1.82) | 1.2% |
+| 8 | 19.78 (19.44 to 19.83) | 0.069 (0.062 to 0.070), all three stopped at 300 s | 0.3% | 126.7 (104.4 to 138.7) | 1.04 (1.00 to 1.38) | 0.8% |
+
+Medians of three runs, with the range over them. Prefill is the 19 prompt tokens over the reading time;
+decode, the tokens after the first over the decode time to the last progress line, as in r27, so a run
+the watchdog stopped counts up to its last one (the six stopped runs had written 18 to 26 tokens). For
+the runs that finished, the engine's own summary line, which also times the run's end, read prefill
+within 2% of these and decode 2% to 5% lower normally and from 27% lower to 9% higher with the pause,
+where its one decimal is coarse.
+
+- **Past two threads, six cores out of use cost nearly all of both jobs.** At 3 threads decode kept 3.4%
+  and prefill 10%; at the app's default of 4, 1.5% and 4.6%; at 8, 0.3% and 0.8%, so the 19-token prompt
+  took about 18 s against about 0.15 s. Every thread past two made both slower.
+- **1 and 2 threads kept 40 to 46%.** With six cores out of use, 2 threads were the fastest count at both
+  jobs: decode 10.70 tok/s and prefill 31.2, about 30 and 8 times what 4 threads managed. The paused
+  decode rates at 2, 3, 4 and 6 threads (10.70, 0.80, 0.351, 0.124) have the shape of r27's on another
+  unit with 64 tokens (10.57, 0.51, 0.24, 0.083), 1.0 to 1.6 times as fast.
+- **Normally, writing barely changes from 2 to 7 threads; reading does.** Decode ran 22.74 to 23.85
+  tok/s at 2 to 7 threads, 15.75 at 1 and 19.78 at 8. Prefill rose from 42.7 at 1 to 71.7 at 2, 89.6 at
+  4 and 125.8 at 6; from 6 to 8 the ranges overlap. So outside a pause 2 threads gave up no decode
+  against 4 and read this prompt 20% slower than 4 and 43% slower than 6 (265 ms against 151 ms at 6).
+  This is a 19-token prompt; on the guard tests' 1,751-token prompt on phone D, 2 threads wrote 11%
+  slower than 4 ([above](#a-fallback-in-the-apps-engine-r34-r38-r39)).
+- **Recorded: six threads on the two cores left.** In the normal trace each of the six engine threads
+  ran 99.6% to 99.8% of the 2 s; two stayed on one big core each (CPUs 6 and 7) and four ran 89% to 91%
+  of the time on one of CPUs 1, 3, 4 and 5, in 616 stretches with a median of 2.1 ms. In the paused
+  trace CPUs 2 to 7 logged no event at all, and all six threads ran on CPUs 0 and 1: two shared CPU 0
+  at 47.8% and 47.9% of the window each, four shared CPU 1 at 22.4% to 22.5% each, and other tasks took
+  4.3% and 10.1% of the two cores (most of it the lab's screen streaming, the graphics driver and USB).
+  The trace holds 6,362 stretches of an engine thread on the two cores, a median of 0.103 ms each,
+  against 616 of 2.1 ms normally. This records directly what r19 and r23 inferred from last-CPU
+  samples.
+- **The lost speed is far more than the lost cores.** Together the six threads ran 1.86 cores' worth of
+  the paused window against 5.98 normally, about a third, while decode fell to 0.5%. That fits r28's
+  profile, where most of a paused run's CPU time went to the function holding `ggml_barrier`'s spin: a
+  thread holding a core can be waiting for one that has none. The trace records where the threads ran,
+  not what they did there, so this part is inference.
+- **What it does not show.** One unit and the pause set by hand; a 19-token prompt, so normal prefill
+  took 140 to 450 ms and moved by up to a quarter between runs at 8 threads; 32 tokens of reply; three
+  runs per cell. The traces cover 2 s of decode at 6 threads in each state; a core's time before its
+  first switch in the window is credited to that switch's previous task. The app's heat policy was not
+  in the loop.
+
 ### What the model writes at each thread count
 
 Every turn record keeps its greedy tokens, decoded on the same teacher-forced context, so cells can
@@ -1594,6 +1670,12 @@ another seed.
   decode 6.6 tok/s, 3 turns, no fallback logged. A first check of the benchmark
   before r36 was killed by the system's backup agent, which backed up the newly installed test
   package and killed its process; the second check ran (12.1 tok/s, 8 tokens).
+- **r49.** On sa964425 after r48, the same unit and build. `chain49.sh` ran the pause check, the two
+  traced runs and the three rounds; `guard49.sh` stopped the test if the chain died (it logged "chain
+  gone" after R49_DONE). `logcat-r49.txt` holds only the app's own tags. `inst-r49-*` are the
+  instrumentation results, `place-r49-*` the logger's samples, `tasks-r49-T-*` the thread lists and
+  `trace-r49-T-*` the kernel's trace buffer for each traced run. All six paused 7 and 8 thread runs were
+  stopped by the 300 s watchdog.
 - **r47 and r48.** On sa964425 after r46, the same unit and build. `chain47.sh` ran the two cool runs,
   the heating and the two runs after the trip, `trig47.sh` its logger (`trig47.txt`); `heat2.sh` and
   `heat3.sh` were started by hand during r47's heating. `chain48.sh` heated with all sixteen loops from the
@@ -1723,7 +1805,8 @@ another seed.
 - **The thread test in natural heat, repeated.** r19 is one ordered pair on phone B; r22 is one
   counterbalanced block (two cells of each count) on a fifth unit, its second block cut for r27.
   Inside a pause set by hand, r23 and r26 (the benchmark) and r27 (the app's engine) measured 6, 4,
-  3 and 2 threads, on short fixed work, one model.
+  3 and 2 threads, and r49 (the app's engine) every count from 1 to 8 with prefill, on short fixed
+  work, one model.
 - **A fallback through a natural pause.** The engine's guard (r34, r38, r39) was measured against a
   pause set by hand; no natural pause was observed during its runs or the sampled chat sessions, the
   heaviest of which (r46, 97 minutes with no pause) reached a sampled 77.9 °C, about 0.1 °C under
