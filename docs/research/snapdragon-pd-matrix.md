@@ -1352,11 +1352,23 @@ where its one decimal is coarse.
   The trace holds 6,362 stretches of an engine thread on the two cores, a median of 0.103 ms each,
   against 616 of 2.1 ms normally. This records directly what r19 and r23 inferred from last-CPU
   samples.
+- **No engine thread left its core to sleep.** Each `sched_switch` records the state of the thread it
+  switches out. In the paused trace an engine thread was switched out 6,361 times, and every time it
+  was still runnable (`R` 6,190 times, `R+` 171); none left blocked (`S` or `D`), and in the 2 s the
+  kernel woke an engine thread 0 times, against 24 wake-ups of the process's other threads. Normally:
+  610 switch-outs, all runnable, 0 wake-ups. So in both windows none of the six threads left its
+  core to sleep or was woken. A thread that gave its core up with `sched_yield` would also leave runnable, so the trace
+  alone cannot tell a spin from a yield; r28's disassembly of the benchmark's wait shows the Arm `yield`
+  hint, which does not enter the kernel. The engine was writing about 23 tokens a second as the normal
+  trace ran (its progress went from 77 to 118 tokens in 1.8 s), so that 2 s window spanned about 45
+  tokens and the threads did not sleep between them either; the paused window lay between the engine's progress reports of 1 and 2
+  generated tokens, a few seconds either side, so it says nothing about the gap between tokens. Which threads had finished their slice when they were switched out is not in
+  the trace.
 - **The lost speed is far more than the lost cores.** Together the six threads ran 1.86 cores' worth of
   the paused window against 5.98 normally, about a third, while decode fell to 0.5%. That fits r28's
   profile, where most of a paused run's CPU time went to the function holding `ggml_barrier`'s spin: a
-  thread holding a core can be waiting for one that has none. The trace records where the threads ran,
-  not what they did there, so this part is inference.
+  thread holding a core can be waiting for one that has none. The trace shows no thread leaving its core
+  blocked; what each was doing while it held a core is not recorded, so this part is inference.
 - **What it does not show.** One unit and the pause set by hand; a 19-token prompt, so normal prefill
   took 140 to 450 ms and moved by up to a quarter between runs at 8 threads; 32 tokens of reply; three
   runs per cell. The traces cover 2 s of decode at 6 threads in each state; a core's time before its

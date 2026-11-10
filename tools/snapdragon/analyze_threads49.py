@@ -169,6 +169,17 @@ def trace(tracep, tasksp, a=None, b=None):
     lens = sorted(to - fr for c, tid, fr, to in stretches)
     if lens:
         print(f"  engine stretches: {len(lens)}, median {statistics.median(lens) * 1000:.3f} ms, longest {lens[-1] * 1000:.1f} ms")
+    # How an engine thread left its core: still runnable (R, R+: the scheduler took the core) or blocked (S, D: the
+    # thread gave it up), and how often one was woken. A thread that waited by sleeping would show S and wake-ups.
+    left, woken = {}, 0
+    for line in open(tracep):
+        m = re.search(r"sched_switch: prev_comm=.* prev_pid=(\d+) .*prev_state=(\S+) ==>", line)
+        if m and m.group(1) in eng:
+            left[m.group(2)] = left.get(m.group(2), 0) + 1
+        m = re.search(r"sched_wakeup: comm=.* pid=(\d+) ", line)
+        if m and m.group(1) in eng:
+            woken += 1
+    print(f"  engine threads left their core {sum(left.values())} times, by state {left}; woken {woken} times")
     if a is not None:
         a, b = float(a) / 1000, float(b) / 1000
         sel = [(c, names.get(tid, "other"), round((max(fr, a) - a) * 1000, 3), round((min(to, b) - a) * 1000, 3)) for c, tid, fr, to in every if to > a and fr < b]
