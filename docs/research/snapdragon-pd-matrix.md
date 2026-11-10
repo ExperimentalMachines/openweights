@@ -1105,7 +1105,12 @@ watchdog stopped a run 420 s after it started.
 - **Falling back costs a little where the pause never came.** N2-0 decoded 11% slower than N4-0
   here (medians 9.05 against 10.17 tok/s). The guard only falls back on a stall: the one guarded run
   with none, r34-11, decoded 10.18 tok/s, between the two unguarded runs (10.04 and 10.30); one run
-  cannot measure what its bookkeeping costs.
+  cannot measure what its bookkeeping costs. On the owner's MediaTek POCO (r41, on USB power, the
+  same prompt and length, the guard on, order 4 2 2 4) 2 threads cost far more: decode 4.86 and 5.07
+  tok/s against 6.77 and 7.22 with 4 (about 29% slower), prompt reading 6.29 and 7.03 against 12.54
+  and 13.65 (about 49% slower), the first token at 249 and 278 s against 128 and 140 s. At this
+  length, then, a fixed 2 threads costs the POCO far more than the SM8850, which is what falling back
+  only on a stall avoids; other lengths were not run there.
 - **One stall with no pause on the logged switches.** In r34-4 (N4-G) two steps took 3.9 and 4.8 s
   against a normal 129 ms, 105 s into decode, with no pause switch on, no major page fault and the
   CPU ceilings unchanged; the hottest CPU zone fell from 89 to 73 °C over those seconds, as it does
@@ -1140,17 +1145,21 @@ with no pause at all (an agent's loop, or a reader who sends at once), set for 4
 out of the conversations' 34 user turns at 30.6. On the owner's POCO (r37), on USB power and
 charging, screen on at a fixed brightness, 30 s for 30 minutes.
 
-| | r33-A, 30 s pause | r33-B, 5 s pause | r39-S, no pause | r37, POCO, 30 s pause |
-|---|---|---|---|---|
-| Turns | 29 in 40.7 min | 31 in 30.4 min | 34 in 30.6 min | 17 in 30.9 min |
-| Hottest reading | XO 64.2 °C | XO 73.7 °C | XO 76.4 °C | CPU 73.8 °C, skin 44.6 °C |
-| Hard throttle | none of 1,876 samples | none of 1,453 | none of 1,709, all eleven devices read | thermal status 0 throughout |
-| CPU ceilings below top | 98% of samples | 99% | 100% | not readable |
-| Decode, median (range) | 12.8 (5.6 to 20.1) tok/s | 13.3 (5.6 to 20.8) | 12.7 (5.9 to 20.5) | 8.2 (5.4 to 11.2) |
-| First token, median (max) | 4.8 s (119.3) | 4.8 s (119.4) | 4.9 s (119.4) | 3.2 s (108.4) |
-| Guard fallbacks | 0 | 0 | 0 | 0 |
+| | r33-A, 30 s pause | r33-B, 5 s pause | r39-S, no pause | r37, POCO, 30 s pause | r41-S, POCO, no pause |
+|---|---|---|---|---|---|
+| Turns | 29 in 40.7 min | 31 in 30.4 min | 34 in 30.6 min | 17 in 30.9 min | 34 in 42.8 min |
+| Hottest reading | XO 64.2 °C | XO 73.7 °C | XO 76.4 °C | CPU 73.8 °C, skin 44.6 °C | CPU 85.4 °C, skin 44.5 °C |
+| Hard throttle | none of 1,876 samples | none of 1,453 | none of 1,709, all eleven devices read | thermal status 0 throughout | thermal status 0 throughout |
+| CPU ceilings below top | 98% of samples | 99% | 100% | not readable | not readable |
+| Decode, median (range) | 12.8 (5.6 to 20.1) tok/s | 13.3 (5.6 to 20.8) | 12.7 (5.9 to 20.5) | 8.2 (5.4 to 11.2) | 8.1 (5.5 to 11.3) |
+| First token, median (max) | 4.8 s (119.3) | 4.8 s (119.4) | 4.9 s (119.4) | 3.2 s (108.4) | 6.4 s (138.2) |
+| Guard fallbacks | 0 | 0 | 0 | 0 | 0 |
 
-`analyze_session.py`. The SM8850's hard throttle switches on at 78 °C on the XO thermistor.
+`analyze_session.py`. The SM8850's hard throttle switches on at 78 °C on the XO thermistor. r41-S
+ran on USB power with the screen set to stay on while plugged in, but the power service read
+"Dozing" in the logger's samples from 8.6 to 32.4 minutes in and from 35.8 minutes to the end (why
+was not logged). Whether that slowed the session was not measured; it is not a session with the
+screen on throughout.
 
 - **No pace reached the hard throttle on the rack phone.** With no pause between turns the XO peaked
   at 76.4 °C, 1.6 °C under the trip, first passing 76.2 at 24.7 minutes; its per-minute mean ran 74.2
@@ -1168,7 +1177,9 @@ charging, screen on at a fixed brightness, 30 s for 30 minutes.
   conversation's first turn read 21 to 97 tok/s (15 to 265 tokens). The engine warns at load that
   this template drops past thinking; why the splice did not keep this prefix, and why reading at
   that depth was this slow, were not traced, and no cool run of the same turn separated heat.
-- **The guard never fell back** in 111 turns on two phones, one with no Snapdragon pause at all.
+- **The guard never fell back** in 145 turns on two phones, one with no Snapdragon pause at all.
+- **The POCO never reported a thermal state above 0**, even with its CPU at 85.4 °C in r41-S, so the
+  app's own thermal policy, which reads that status, would not have cut threads there.
 - **What it does not show.** A rack phone in open air and a phone on a desk, not in a hand or a
   pocket; one model; the POCO charging, which adds its own heat; one session of each kind.
 
@@ -1454,7 +1465,7 @@ another seed.
   the rest did (it did: 121 s, 61.4 °C, GPU at power level 8, CPU ceilings lowered). The order is
   still one order. Then r12's. 297
   turns and the warm-up's 33, none failed, and every file matched the phone's by checksum.
-- **r36 and r37.** On the owner's POCO X8 Pro Max (MediaTek MT6991, HyperOS OS3.0.304.0, Android
+- **r36, r37 and r41.** On the owner's POCO X8 Pro Max (MediaTek MT6991, HyperOS OS3.0.304.0, Android
   16), not a QDC phone, on 2026-11-09 and 10, over USB and then Wi-Fi debugging; the engine's test APK
   as on phone D (416d8c86b7f9aadf) and the study's Qwen3 4B (pushed from the Mac, 92f4a83cdfe691b2).
   The phone's shell cannot read its thermal zones, cooling devices or battery files; the thermal
@@ -1465,7 +1476,11 @@ another seed.
   stopped by hand in its first idle, before any run; the chain now wants ten unplugged reads in a
   row, and its second and third starts timed out after 30 minutes on USB power. Each start held the
   screen on at the brightness it found and put the timeout and automatic brightness back when it
-  ended. r37 (`chain37.sh`) ran the session on USB power instead. A first check of the benchmark
+  ended. r37 (`chain37.sh`) ran the session on USB power instead. The phone then sat idle, still
+  plugged in, until r41 (`chain41.sh`) at 06:46 on 2026-11-10: the 4 against 2 thread runs and a
+  session with no pause between turns, on USB power, a watcher stopping the chain if the phone was
+  unplugged (it was not). The cooling gate (the thermal service's CPU at 42 °C) ran out at 300 s
+  before the fourth thread run and the session, which started at 43 to 45 °C. A first check of the benchmark
   before r36 was killed by the system's backup agent, which backed up the newly installed test
   package and killed its process; the second check ran (12.1 tok/s, 8 tokens).
 - **r28, r29, r32, r31, r33, r34, r38 and r39.** r28 and r29 in the thirteenth reservation's extension, on

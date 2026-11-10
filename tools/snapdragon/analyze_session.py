@@ -22,7 +22,7 @@ import analyze_app as A  # noqa: E402
 def window(chain, which):
     a = b = None
     for line in open(chain):
-        m = re.match(r"(\d+) (?:session|run) (r3\d-\S+)", line)
+        m = re.match(r"(\d+) (?:session|run) (r\d\d-\S+)", line)
         if m and (which is None or m.group(2).endswith(which)):
             if " end " in line:
                 b = int(m.group(1))
