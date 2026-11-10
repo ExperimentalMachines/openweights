@@ -44,10 +44,20 @@ def turns(cat, a, b):
 
 def qdc(a, b, trig):
     rows = []
+    short = False
     for line in open(trig):
         p = line.split()
+        # r46's logger (trig46.sh) wrote the time, the XO, the hottest CPU zone and then every pause device,
+        # under a "time xo cpu" header, and no frequency ceilings.
+        short = short or line.startswith("time xo cpu")
         if p and p[0].isdigit() and a <= int(p[0]) <= b:
             rows.append(p)
+    if short:
+        xo = max(int(r[1]) for r in rows) / 1000
+        cpu = max(int(r[2]) for r in rows) / 1000
+        paused = sum(1 for r in rows if any(x != "0" for x in r[3:]))
+        return (f"XO max {xo:.1f} C, hottest CPU zone max {cpu:.1f} C; {paused} of {len(rows)} samples with a pause "
+                f"switch on ({len(rows[0]) - 3} devices); CPU ceilings not logged")
     xo = max(int(r[1]) for r in rows) / 1000
     cpu = max(int(r[3]) for r in rows) / 1000
     paused = sum(1 for r in rows if int(r[9]) + int(r[10]) + int(r[11]) > 0)

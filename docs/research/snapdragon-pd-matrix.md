@@ -24,8 +24,10 @@ the same day on a fifth unit (5d3e8f0a), ran the counterbalanced thread test fro
 fourteenth, on 2026-11-09 and 10 on unit 4816891, tried that barrier with a later yield
 ([r31](#a-barrier-that-gives-up-its-core-r29-r31)), measured a fallback built into the app's engine
 ([r34, r38, r39](#a-fallback-in-the-apps-engine-r34-r38-r39)) and chatted at a person's pace for half an hour
-and more ([r33, r39](#ordinary-use-r33-r37-r39)); the owner's POCO X8 Pro Max (MediaTek MT6991), not a QDC
-phone, ran two such sessions and 4 against 2 threads (r37, r41).
+and more ([r33, r39](#ordinary-use-r33-r37-r39-r46)); the owner's POCO X8 Pro Max (MediaTek MT6991), not a QDC
+phone, ran two such sessions and 4 against 2 threads (r37, r41). A fifteenth, on 2026-11-10 on unit
+64a112da (phone A), chatted with no pause between turns for 97 minutes, three sessions back to back
+([r46](#ordinary-use-r33-r37-r39-r46)).
 
 | Processor | What it is, as read from the phone |
 |---|---|
@@ -1144,7 +1146,7 @@ watchdog stopped a run 420 s after it started.
   A pause that starts while the prompt is being read is not watched: the guard reads decode steps,
   and r27's paused prompt reading at 4 threads ran at 2.8 tok/s against 27.7 with 2.
 
-### Ordinary use (r33, r37, r39)
+### Ordinary use (r33, r37, r39, r46)
 
 Does a person's chat reach the hard throttle? `SessionBenchmark` chats through the study's nine
 conversations turn by turn, each reply the model's own (greedy, up to 512 tokens) and kept in the
@@ -1172,7 +1174,8 @@ ran on USB power with the screen set to stay on while plugged in, but the power 
 was not logged). Whether that slowed the session was not measured; it is not a session with the
 screen on throughout.
 
-- **No pace reached the hard throttle on the rack phone.** With no pause between turns the XO peaked
+- **No pace reached the hard throttle on the rack phone** (and r46, below, kept it up for 97
+  minutes on another unit). With no pause between turns the XO peaked
   at 76.4 °C, 1.6 °C under the trip, first passing 76.2 at 24.7 minutes; its per-minute mean ran 74.2
   to 75.9 °C over the last ten minutes and was 75.9 when the turns ran out, so a longer session might
   have reached the trip. With 5 s it held 70 to 73 °C over its last five minutes. The soft throttle held almost throughout all three: the CPU ceilings sat at about half their top (1.90 GHz, and 1.98 to 2.23 against
@@ -1193,6 +1196,41 @@ screen on throughout.
   app's own thermal policy, which reads that status, would not have cut threads there.
 - **What it does not show.** A rack phone in open air and a phone on a desk, not in a hand or a
   pocket; one model; the POCO charging, which adds its own heat; one session of each kind.
+
+r39-S's XO was still near its peak when the turns ran out, so r46 ran the same session three times
+back to back on phone A (unit 64a112da), from the build with the guard's final rules (62439b56):
+r46-S1 after a cooling gate, r46-S2 and r46-S3 at once after it, each started the moment the one
+before ended. Same settings as r39-S (no pause, 4 threads, an 8,192-token window, up to 512 tokens,
+the guard on, screen on at a middle brightness, the rack's supply). `trig46.sh` logged the XO, the
+hottest CPU zone and all eleven pause devices about once a second (it sleeps 1 s after each reading,
+so 853 of the gaps are 2 s); it did not log the CPU frequency ceilings. The sample at the moment S2
+ended and S3 began counts in both columns.
+
+| | r46-S1, after a gate | r46-S2, straight after | r46-S3, straight after |
+|---|---|---|---|
+| Turns | 34 in 29.4 min | 34 in 33.5 min | 34 in 34.0 min |
+| XO at the start, highest | 30.5 °C, 75.4 °C | 75.2 °C, 77.6 °C | 76.9 °C, 77.9 °C |
+| Hard throttle | none of 1,512 samples | none of 1,710 | none of 1,737 |
+| Decode, median (range) | 12.9 (6.1 to 20.5) tok/s | 11.4 (5.2 to 14.3) | 11.2 (5.4 to 14.1) |
+| First token, median (max) | 4.9 s (99.9) | 5.3 s (119.8) | 5.3 s (119.8) |
+| Guard fallbacks | 0 | 0 | 0 |
+
+- **97 minutes of chat with no pause came within 0.1 °C of the trip, and no switch was seen on.**
+  The highest sampled XO reading was 77.9 °C (77.924), against the trip at 78. 74 samples were at or
+  above 77.5 °C, 9 in S2 and 65 in S3, and none of the eleven pause devices was on in the 4,958
+  distinct samples from S1's start to S3's end. Samples about a second apart cannot rule out a
+  crossing shorter than the gap. Whether a fourth session, a warmer room or a hand would cross it
+  was not measured.
+- **The later, hotter sessions decoded about an eighth slower.** The second and third sessions
+  decoded 12% and 13% slower by median than the first (one fixed order, so this does not isolate
+  the cause), and the conversations' first turns fell from 13.7 to 20.5 tok/s
+  in the first session to 12.5 to 14.3 in the next two; the slow re-read turn took 119.8 s hot against 99.9 s cool.
+- **The guard logged no fallback in 247 turns of chat on three phones** (phone D, phone A and the
+  POCO). No natural Snapdragon pause was observed in the sampled sessions, so these runs did not
+  show the guard acting through one; the POCO reports Android's thermal status, not these devices.
+- **Phone A against phone D.** In these single gated runs, phone A's r46-S1 and phone D's r39-S had
+  similar median decode rates, 12.9 and 12.7 tok/s, and sampled XO peaks of 75.4 and 76.4 °C. One run
+  on each does not isolate differences between the units.
 
 ### What the model writes at each thread count
 
@@ -1501,6 +1539,14 @@ another seed.
   decode 6.6 tok/s, 3 turns, no fallback logged. A first check of the benchmark
   before r36 was killed by the system's backup agent, which backed up the newly installed test
   package and killed its process; the second check ran (12.1 tok/s, 8 tokens).
+- **r46.** A fifteenth reservation, sa964425, on 2026-11-10, on unit 64a112da (phone A, r12's unit),
+  reached through the tunnel on 127.0.0.1:5097. The engine test APK was built from 62439b56
+  (`apk c5bda9fad2db4705` in `chain46.log`) and the model fetched on the phone (92f4a83cdfe691b2).
+  `chain46.sh` ran the gate and the three sessions, `trig46.sh` the logger (`trig46.txt`), and
+  `guard46.sh` stopped the test if the chain died (it logged "chain gone, test stopped" after
+  R46_DONE, when the test had already finished). Results were pulled every five minutes;
+  `logcat-r46.txt` holds only the app's own tags. `inst-r46-S*.txt` are the instrumentation results
+  (OK, 1 test each), `place-r46-S*.txt` where each thread ran.
 - **r28, r29, r32, r31, r33, r34, r38 and r39.** r28 and r29 in the thirteenth reservation's extension, on
   5d3e8f0a after r27; then a fourteenth reservation, sa963265, on 2026-11-09 and 10, on phone D
   (4816891), whose model was fetched on the phone (92f4a83cdfe691b2). r28 (`chain28.sh`) profiled
@@ -1615,8 +1661,9 @@ another seed.
   Inside a pause set by hand, r23 and r26 (the benchmark) and r27 (the app's engine) measured 6, 4,
   3 and 2 threads, on short fixed work, one model.
 - **A fallback through a natural pause.** The engine's guard (r34, r38, r39) was measured against a
-  pause set by hand; no natural pause came during its runs or the paced sessions, the heaviest of
-  which peaked 1.6 °C under the trip when its conversations ran out. Android's thermal status was not tried as a signal.
+  pause set by hand; no natural pause was observed during its runs or the sampled chat sessions, the
+  heaviest of which (r46, 97 minutes with no pause) reached a sampled 77.9 °C, about 0.1 °C under
+  the trip. Android's thermal status was not tried as a signal.
 - **Other chips.** The pause is a Qualcomm mechanism measured on the SM8850 only. On the MediaTek
   POCO, r41 measured what 2 threads cost against 4 at one length, and r37 and r41 that the guard stays
   quiet in chat; no pause or stall was produced there.
