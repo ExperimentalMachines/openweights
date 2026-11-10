@@ -83,8 +83,22 @@ class StallGuard {
      *  Context growth moves the normal step a little at a time and stays well inside it; a lasting
      *  jump past it costs one fallback and a successful try, which starts the normal ones afresh. */
     static constexpr double NORMAL_FACTOR = 3.0;
+    /** While fallen back, a step at the fallback count this many times faster than the fallback's
+     *  median, RETURN_CONFIRM times in a row, means the cores are back, and the planned count is
+     *  tried at once instead of at the next scheduled try, up to PROBE_EVERY_MS later. When the
+     *  pause ended, 2-thread steps got 2.2 to 3.5 times faster (r49 with a pause set by hand, r34
+     *  and r38 on phone D, r48 in one heat brought on); 1.6 stays under the smallest. Such a try is
+     *  judged against those fast steps, not the slower median: judged against the median, a step
+     *  still stalled at the planned count could pass and become the normal (review). And one that
+     *  fails turns early tries off until the fallback ends, so a pause whose 2-thread steps swing
+     *  past the factor again and again (0.7 to 2.1 s on an SM8550, r50) costs one stalled step,
+     *  not one every few steps; the scheduled tries carry on. */
+    static constexpr double RETURN_FACTOR = 1.6;
+    static constexpr int32_t RETURN_CONFIRM = 2;
 
-    explicit StallGuard(bool enabled = true) : enabled_(enabled) {}
+    /** `early_try` false keeps only the scheduled tries, the rule before the early one, for
+     *  comparing the two on a phone (OPENWEIGHTS_STALL_GUARD=timer). */
+    explicit StallGuard(bool enabled = true, bool early_try = true) : enabled_(enabled), early_try_(early_try) {}
 
     /** The count the app planned for what follows. Returns the count to run with now. A plan at
      *  or under the fallback is obeyed without ending a fallback: a thermal re-plan down and back
@@ -107,11 +121,15 @@ class StallGuard {
             // judged against the fallback's own steps; steps at any such plan are not the planned
             // count's normal either (fourth review).
             if (fallen_ && planned_ == FALLBACK_THREADS) record_fallback(step_ms);
+            fast_run_ = 0;  // the fast steps that start an early try are two in a row at the planned count's fallback
+            fast_max_ = 0.0;
             return planned_;
         }
         if (probing_) {
             probing_ = false;
-            const double fallback = fallback_median();
+            // An early try against the fast steps that started it; a scheduled one against the
+            // fallback's steps as they stand now, as the rule before did, re-plans and all (review).
+            const double fallback = judge_fast_ ? try_base_ : fallback_median();
             if (step_ms <= PROBE_FACTOR * fallback && step_ms <= fallback + STALL_EXCESS_MS) {
                 fallen_ = false;
                 // A fresh normal at the planned count, from now: the try showed this count runs.
@@ -123,12 +141,31 @@ class StallGuard {
                 fallback_at_ = 0;
                 return planned_;
             }
+            if (early_) early_spent_ = true;  // a false alarm: no more early tries this fallback
             probe_at_ = now_ms + PROBE_EVERY_MS;
             return FALLBACK_THREADS;
         }
         if (fallen_) {
+            // Judged against the median before this step joins it.
+            const bool fast = fallback_n_ >= MIN_FALLBACK_SAMPLES && step_ms * RETURN_FACTOR <= fallback_median();
+            if (fast) {
+                ++fast_run_;
+                fast_max_ = std::max(fast_max_, step_ms);
+            } else {
+                fast_run_ = 0;
+                fast_max_ = 0.0;
+            }
             record_fallback(step_ms);
-            if (now_ms >= probe_at_ && fallback_n_ >= MIN_FALLBACK_SAMPLES) {
+            const bool back = early_try_ && !early_spent_ && fast_run_ >= RETURN_CONFIRM;
+            const bool due = now_ms >= probe_at_ && fallback_n_ >= MIN_FALLBACK_SAMPLES;
+            if (back || due) {
+                // Fast steps make it an early try even when the schedule falls due at the same step:
+                // it is judged against them, and logged as what it is (review).
+                early_ = back;
+                judge_fast_ = back;
+                try_base_ = fast_max_;
+                fast_run_ = 0;
+                fast_max_ = 0.0;
                 probing_ = true;
                 return planned_;
             }
@@ -140,6 +177,9 @@ class StallGuard {
                 fallen_ = true;
                 fallback_n_ = 0;
                 fallback_at_ = 0;
+                fast_run_ = 0;
+                fast_max_ = 0.0;
+                early_spent_ = false;
                 probe_at_ = now_ms + PROBE_EVERY_MS;
                 ++falls_;
                 return FALLBACK_THREADS;
@@ -154,8 +194,9 @@ class StallGuard {
         return planned_;
     }
 
-    /** A decode that failed or was stopped mid-step, or a new reply starting: a try in flight or
-     *  scheduled is abandoned, not judged, and the next waits another interval. */
+    /** A decode that failed or was stopped mid-step, or a new reply starting: a try in flight is
+     *  abandoned, not judged, and the next scheduled one waits another interval. An early one can
+     *  come again as soon as the steps are fast again: the dropped try showed nothing. */
     void abandon(int64_t now_ms) {
         if (probing_) {
             probing_ = false;
@@ -165,6 +206,8 @@ class StallGuard {
 
     bool fallen() const { return fallen_; }
     bool probing() const { return probing_; }
+    /** Whether the try in flight came from the steps speeding up rather than the schedule. */
+    bool early() const { return probing_ && early_; }
     int32_t falls() const { return falls_; }
     double normal_ms() const { return median(normal_, normal_n_); }
 
@@ -200,6 +243,7 @@ class StallGuard {
     }
 
     bool enabled_;
+    bool early_try_;
     int32_t planned_ = 0;
     bool fallen_ = false;
     bool probing_ = false;
@@ -213,4 +257,10 @@ class StallGuard {
     std::array<double, FALLBACK_SAMPLES> fallback_{};  // the last steps at the fallback count
     int32_t fallback_at_ = 0;  // where the next one goes
     int32_t fallback_n_ = 0;   // how many there are, up to FALLBACK_SAMPLES
+    int32_t fast_run_ = 0;      // fallback steps in a row past RETURN_FACTOR
+    double fast_max_ = 0.0;     // the slowest of them
+    bool early_ = false;        // the try in flight was started by fast_run_
+    bool early_spent_ = false;  // an early try failed in this fallback
+    bool judge_fast_ = false;   // the try in flight is judged against try_base_, not the median
+    double try_base_ = 0.0;     // the slower of the fast steps that started an early try
 };

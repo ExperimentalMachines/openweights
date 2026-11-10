@@ -887,8 +887,11 @@ Session * Session::load(
     // longer than one graph. A thread re-plan later rebuilds them for its own counts.
     session->attach_threadpools(n_threads, n_threads_batch);
     {
+        // "0" turns the guard off; "timer" keeps only its scheduled tries, the rule before the
+        // early one, so the two can be compared on a phone (ThreadCountBenchmark's stallGuard).
         const char * guard = std::getenv("OPENWEIGHTS_STALL_GUARD");
-        session->stall_guard_ = StallGuard(guard == nullptr || std::string(guard) != "0");
+        const std::string mode = guard == nullptr ? "" : guard;
+        session->stall_guard_ = StallGuard(mode != "0", mode != "timer");
         session->planned_batch_ = n_threads_batch;
         session->threads_now_ = session->stall_guard_.plan(n_threads);
     }
@@ -2775,6 +2778,7 @@ StopReason Session::generate(
     // A try at the planned count scheduled by the last reply's final step has nothing to judge
     // now; left in place it would open this reply, and read its prompt, at the stalled count, even
     // after a thermal re-plan down and back up (fourth review). Drop it and wait an interval.
+    if (stall_guard_.probing()) LOGI("threads: the try at %d was dropped: a new reply began", threads_now_);
     stall_guard_.abandon(now_ms());
     if (stall_guard_.active() != threads_now_) apply_guarded_threads(stall_guard_.active());
 
@@ -3087,15 +3091,25 @@ StopReason Session::generate(
             // A try that succeeds keeps the decode count it already ran with but ends the fallback,
             // and the prompt count has to come back with it (review).
             if (want != threads_now_ || stall_guard_.fallen() != was_fallen) {
+                const int32_t had = threads_now_;
                 apply_guarded_threads(want);
+                const long long step = static_cast<long long>(step_ended - step_started);
+                // Every try and its outcome is logged: a failed try is one stalled step, and how
+                // often they come is what the early try changes.
                 if (stall_guard_.fallen() && !was_fallen) {
                     LOGI("threads: decode steps stalled (%lld ms against %.0f); %d until they recover",
-                         static_cast<long long>(step_ended - step_started), stall_guard_.normal_ms(), want);
+                         step, stall_guard_.normal_ms(), want);
                 } else if (!stall_guard_.fallen() && was_fallen) {
                     LOGI("threads: decode steps are fast again; back to %d", want);
+                } else if (stall_guard_.probing()) {
+                    LOGI("threads: trying %d again (%s, last step %lld ms)", want,
+                         stall_guard_.early() ? "steps sped up" : "scheduled", step);
+                } else {
+                    LOGI("threads: the try at %d stalled (%lld ms); %d until they recover", had, step, want);
                 }
             }
         } else {
+            if (stall_guard_.probing()) LOGI("threads: the try at %d was dropped: its step failed", threads_now_);
             stall_guard_.abandon(now_ms());
             // An abandoned try leaves llama.cpp on the planned count; the fallback's goes back now,
             // or the next reply's first steps would be timed as the fallback's (second review).

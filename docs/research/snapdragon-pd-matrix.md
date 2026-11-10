@@ -30,7 +30,9 @@ phone, ran two such sessions and 4 against 2 threads (r37, r41). A fifteenth, on
 ([r46](#ordinary-use-r33-r37-r39-r46)), then heated the phone until the hard throttle came on by itself and
 decoded inside it, with the guard off and on ([r47, r48](#a-natural-hard-throttle-forced-r47-r48)),
 and ran the app's engine at every thread count from 1 to 8 with the pause off and on, two runs traced by
-the kernel's scheduler ([r49](#every-thread-count-reading-and-writing-and-where-six-threads-ran-r49)).
+the kernel's scheduler ([r49](#every-thread-count-reading-and-writing-and-where-six-threads-ran-r49)). A
+sixteenth, the same day on a Snapdragon 8 Gen 2 (SM8550), measured the guard trying 4 threads again as
+soon as its steps speed up ([r50](#trying-again-as-soon-as-the-steps-speed-up-r50-a-snapdragon-8-gen-2)).
 
 | Processor | What it is, as read from the phone |
 |---|---|
@@ -1074,17 +1076,20 @@ check). What every app has is how long each decode step took. So the engine now 
 than 8 times the recent normal step or more than 2 s over it, and over 250 ms (or over 1.5 s with
 no history yet), drop decode, and prompt reading with it, to 2 threads; every 30 s, once it has at
 least four steps at 2 threads, it tries one step at the planned count, and keeps it if that step
-took at most 3 times the median of its last eight steps at 2 threads and at most 2 s over it. The
+took at most 3 times the median of its last eight steps at 2 threads and at most 2 s over it (since
+r50 it also tries at once when its 2-thread steps get much faster,
+[below](#trying-again-as-soon-as-the-steps-speed-up-r50-a-snapdragon-8-gen-2)). The
 2 s is from the pause itself, which added 4 to 9 s to each step where it was measured rather than
 multiplying it, so that a model whose normal step is already a second, where the pause is 4 to 6
-times, is caught too. A thermal re-plan never ends a fallback, and a try whose decode fails, or
+times, is caught too. The same 2 s bounds a try: a pause that added under 2 s to a step already near 2 s
+at 2 threads could pass one and become the normal; none measured added under 4 s. A thermal re-plan never ends a fallback, and a try whose decode fails, or
 that is still pending when the next reply starts, is dropped, not judged. The normal step is the
 median of the last eight steps that were not slow; against fewer than two of them only a step past
 1.5 s is slow, until four are in a step past 1.5 s is slow as well, and after that a step joins them
 only within 3 times their median, so neither one odd early
 step nor a slowdown in smaller steps moves the bar a stall must clear. It does nothing to a plan of
 2 or fewer threads, and `OPENWEIGHTS_STALL_GUARD=0` turns it off. Its host test (`stall_guard_test.cpp`,
-24 cases on step times modelled on r27) runs in CI. The device runs below used `engine-test5`, built
+24 cases on step times modelled on r27, 36 since r50) runs in CI. The device runs below used `engine-test5`, built
 before a fourth and a fifth review changed how the normal step is kept and added the reply-start
 drop; in every run measured the normal step was steady and the stalled ones 37 to 127 times longer
 (the guard's own log lines), which every version judges alike. The final rules ran on the POCO
@@ -1150,6 +1155,112 @@ watchdog stopped a run 420 s after it started.
   fell back and returned in r39.
   A pause that starts while the prompt is being read is not watched: the guard reads decode steps,
   and r27's paused prompt reading at 4 threads ran at 2.8 tok/s against 27.7 with 2.
+
+#### Trying again as soon as the steps speed up (r50, a Snapdragon 8 Gen 2)
+
+A scheduled try comes up to 30 s after the cores return, and r48's reply ended at 2 threads before
+its next one was due. So the guard now also tries the planned count at once when two steps in a row
+at 2 threads are each at least 1.6 times faster than the median of its last eight there
+(`RETURN_FACTOR`, `RETURN_CONFIRM`): when a pause ended, 2-thread steps had got 2.2 to 3.5 times
+faster (r49 with the pause set by hand, r34 and r38 on phone D, r48 in a heat brought on). Such a try
+is judged against the slower of the two fast steps, not against the fallback's median, which still
+holds the pause's slower steps: judged against that, a step still stalled at the planned count could
+pass and become the normal. An early try that fails turns early tries off until the fallback ends, so
+a pause whose 2-thread steps keep swinging past the factor costs one stalled step, not one every few
+steps; the scheduled try stays as the backstop throughout, and is still judged against the
+fallback's median as it stands when the try is judged. The two fast steps must be two in a row at
+the fallback count: a step at a lower plan between them breaks the run. Fast steps make an early try
+even at the step the schedule falls due. `OPENWEIGHTS_STALL_GUARD=timer`
+keeps only the scheduled tries, exactly the rule before, so one build runs both, and the engine now
+logs every try ("trying 4 again", scheduled or "steps sped up"), every failed one and every one
+dropped before it was judged. The host test has 36 cases; seven deliberate breaks of the new code
+each fail it: the early try judged against the median, a scheduled one against a median saved when
+it started, no limit on false early tries, the history cleared after a failed try, a fast run kept
+across a lower plan, one fast step enough, and the timer mode ignored.
+
+r50 ran a first version, which Codex then reviewed: it judged an early try against the fallback's
+median, and it cleared the fallback's history after any failed try instead of limiting early tries.
+In a host test of 2-thread steps swinging 2.7 times for nine minutes it made 50 false early tries
+where the final rules make one, and a slow try after an early trigger could pass. A second review
+added the two rules after it: a scheduled try judged on the median at judgement, and fast runs broken
+by a lower plan. None of these changes an
+outcome below: each W run's early try took about 85 and 104 ms, under the 116 and 123 ms 2-thread
+steps that started it, so it passes against either; no run re-planned its thread count; each M run
+made one early try and it failed, and with 2-thread steps under 2.1 s the
+four new steps a cleared history needed came well inside the next 30 s. The rules after the first
+review ran as r50b, below; the second review's two act only on a re-plan, which r50b made none of
+either.
+
+r50 ran on a sixteenth reservation, sa964839, on 2026-11-10, on unit 57fa7c29: an SM8550 (Snapdragon 8
+Gen 2, Android 14; cores 0 to 2 at up to 2.0 GHz, 3 to 6 at 2.8, 7 at 3.19). Its kernel binds
+`thermal-pause-F8` (cores 3 to 7) to `xo-therm` at 78 °C, the SM8850's XO trip, but it leaves the three
+little cores; that device written 1 by hand was the pause. With it on, every sampled busy loop ran on
+cores 0 to 2, and it read 1 in 45 of 45 reads over 90 s under load (`hold50.log`). With it on and the
+guard off, 4 threads decoded at about 0.15 tok/s, 5 to 7 s a token, against 15.5 tok/s with it off
+(`probe50.log`, the benchmark's 19-token prompt). Then `chain50.sh`, on the work of r34 and r39: Qwen3
+4B Q4_0, the 1,751-token `prompt-r30.txt`, up to 512 tokens, 4 threads, an 8,192-token window. Arms W
+(the pause on 10 s after decode starts, off 30 s later) and M (on from 10 s, held), each with the guard
+as built (E) or `timer` (T), in the order W-E W-T W-T W-E M-E M-T M-T M-E, then N-E with no pause,
+fixed before any run; a cooling gate before each run and a 600 s watchdog. A logger read the switch
+and each engine thread's last core about every 2 s; in every paused run the samples covered the pause
+(the first and last within 4 s of its ends, no gap over 3 s), every one read the switch on, and every
+busy engine thread was last on core 0, 1 or 2. The analysis is `analyze_guard50.py`; the files are in
+`tools/snapdragon/results/2026-11-10-sm8550/`. The chain logged the pause's on and off in whole
+seconds, read just after the switch was written, so a time measured from them can be up to a second
+long; r50b also wrote them into logcat, timed to the millisecond.
+
+| Arm | Fell back after the pause began | Tries | Back to 4 after the pause ended | Decode |
+|---|---|---|---|---|
+| W, early try (2 runs) | 17.2 and 15.5 s | 1 each, early, passed | 1.0 and 0.7 s | 5.70 and 5.46 tok/s |
+| W, scheduled only (2) | 15.3 and 21.6 s | 1 each, scheduled, passed | 15.5 and 21.8 s | 5.44 and 5.08 |
+| M, early try (2) | 14.1 and 14.5 s | 13 each, all failed: 12 scheduled, 1 early | never, the pause held | 0.89 and 0.90 |
+| M, scheduled only (2) | 14.8 and 20.0 s | 12 each, all scheduled, all failed | never | 0.90 and 0.91 |
+| N, early try (1) | no fallback | none | | 7.93 |
+
+Decode is the tokens after the first over the decode time to the last progress line; the M runs
+were stopped by the watchdog after 484 to 495 tokens, about 530 s into their pause.
+
+- **Back in about a second instead of 15 to 22.** In both W runs with the early try, the try came 0.6
+  and 0.9 s after the logged second of the switch's end, and passed: at most about a second after the
+  write. With the schedule alone it came 15.4 and 21.6 s after; that wait depends on where the 30 s
+  clock stood when the pause ended, so it can be anything up to 30 s plus a step.
+- **One false early try in each held pause.** Each M-E run made one early try that failed, 431 and
+  424 s into the pause, beside its 12 scheduled ones. The 2-thread steps in the pause wandered from
+  0.71 to 2.1 s (the last step before each try), and the two that fired were on steps of 743 and 832
+  ms. A failed try is one stalled step at 4 threads: 7.8 to 11.9 s here, medians 9.4 to 10.4 s by run.
+  The held-pause decode rates differ by at most 0.02 tok/s between the arms.
+- **Here the schedule is the costly part.** With three little cores left, a stalled 4-thread step took
+  about 10 s, against 2.6 to 8.7 s on phone D, so 12 failed scheduled tries took about a quarter of a
+  530 s pause. Now that a return is caught within about a second, a longer interval would cost less in
+  a held pause and little at a return; none was measured.
+- **Falling back took 14 to 22 s.** Two stalled steps of about 10 s each, against 7 to 19 s on phone D.
+- **What it does not show.** One unit of a chip the rest of this report did not use, the pause set by
+  hand, two runs per arm and one with no pause, one model and one prompt. A natural pause on this
+  phone, with its clocks lowered as well, was not tried, and the false-try rate rests on two runs.
+
+r50b ran the rules after the first review on the same phone, work and pause, from a new APK (`apk 72ae0c21110e24dc`
+in `chain50b.log`): W-E, W-T, W-E, then M-E, in that order. The chain also wrote the pause's on and
+off into logcat, so the return is timed to the millisecond. The reservation ended about 490 s into
+M-E's pause; its log to that point had been pulled, its placement samples and the four runs'
+instrumentation results had not. In the three W runs every placement sample from 1 s after the
+pause began to 2 s before it ended read the switch on with each busy engine thread on core 0, 1 or
+2. One sample taken in the last second read the switch before it was cleared and the threads after,
+which is why the analysis now leaves those out.
+
+| Run | Fell back after the pause began | Try after the pause ended | Back to 4 | Decode |
+|---|---|---|---|---|
+| W-E | 19.3 s | 0.2 s, early, passed | 0.3 s | 5.81 tok/s |
+| W-T | 13.7 s | 13.7 s, scheduled, passed | 13.8 s | 5.36 |
+| W-E | 13.0 s | 0.3 s, early, passed | 0.4 s | 5.53 |
+| M-E, to 490 s into the pause | 16.6 s | 12 tries, all failed (8.0 to 11.1 s each): 11 scheduled, 1 early | never | |
+
+- **With the reviewed rules, back within half a second.** Timed to the millisecond, both early tries came
+  0.2 and 0.3 s after the switch was written off, and passed.
+- **The limit on false early tries held.** In the held pause one early try fired, 150 s in on a 735 ms
+  step, and failed; none followed in the 340 s after it, while the 2-thread step before each
+  scheduled try ranged from 773 to 1,609 ms and the scheduled tries kept coming about every 40 s. One
+  run, and its placement samples were not pulled: that the pause held there rests on every try
+  stalling.
 
 ### Ordinary use (r33, r37, r39, r46)
 
@@ -1522,10 +1633,15 @@ unmeasured:
 
 ## What runs
 
-One llama.cpp build (`b2e5e9b`, the commit the app vendors) with all three of its Snapdragon
-backends: CPU (`ggml-cpu`), Adreno GPU (`ggml-opencl`) and Hexagon NPU (`ggml-hexagon`,
+One llama.cpp build (`b2e5e9b`, release b10549, the commit the app vendored until 2026-11-04) with
+all three of its Snapdragon backends: CPU (`ggml-cpu`), Adreno GPU (`ggml-opencl`) and Hexagon NPU (`ggml-hexagon`,
 `libggml-htp-v81.so`), built with Qualcomm's toolchain image
 `ghcr.io/snapdragon-toolchain/arm64-android:v0.7` as llama.cpp's Snapdragon guide does.
+
+The benchmark runs used that build: r1 to r26, r28, and r29 and r31 with a patched `libggml-cpu`
+built beside its stock one. The runs on the app's own engine (`ThreadCountBenchmark` and
+`SessionBenchmark`: r27, r32 to r34 and r37 to r49), all built from 2026-11-09 on, used the
+llama.cpp the app has vendored since 3611edfb: v0.8.0 (`8642541b`, 2026-10-28).
 
 `tools/snapdragon/pd_bench.cpp` loads a model three times, once per processor (`n_gpu_layers`
 -1 on the GPU and NPU instances, 0 and no op offload on the CPU one), each with its own context.
@@ -1682,6 +1798,17 @@ another seed.
   decode 6.6 tok/s, 3 turns, no fallback logged. A first check of the benchmark
   before r36 was killed by the system's backup agent, which backed up the newly installed test
   package and killed its process; the second check ran (12.1 tok/s, 8 tokens).
+- **r50.** A sixteenth reservation, sa964839, on 2026-11-10, on unit 57fa7c29 (SM8550), reached
+  through the tunnel on 127.0.0.1:5097. The engine test APK was built from this commit's engine
+  (`apk 4f9fea5ebc9d0a03` in `chain50.log`) and Qwen3 4B fetched on the phone (92f4a83cdfe691b2).
+  `probe50.sh` checked the pause with busy loops and ran 4 threads with and without it; its 2-thread
+  run never started, because the probe's watchdog only force-stopped the test and the waiting
+  instrumentation did not return, so it was stopped by hand. `hold50.sh` checked that the switch holds.
+  `chain50.sh` ran the nine runs with `guard50.sh` beside it; logcat holds only the app's own tags.
+- **r50b.** After r50 on the same reservation: the APK with the first review's rules (`72ae0c21110e24dc`), `chain50b.sh`
+  with `guard50b.sh`. The reservation ended during its fourth run, M-E ("Name does not resolve" in
+  the tunnel's log); `chain50b.log` and `logcat-r50b.txt` are as last pulled, 490 s into that run's
+  pause, and the place files of runs 1 to 3 are complete. No `inst-r50b-*` file was pulled.
 - **r49.** On sa964425 after r48, the same unit and build. `chain49.sh` ran the pause check, the two
   traced runs and the three rounds; `guard49.sh` stopped the test if the chain died (it logged "chain
   gone" after R49_DONE). `logcat-r49.txt` holds only the app's own tags. `inst-r49-*` are the
