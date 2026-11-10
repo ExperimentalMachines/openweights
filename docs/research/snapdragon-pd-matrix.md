@@ -1206,8 +1206,9 @@ and each engine thread's last core about every 2 s; in every paused run the samp
 (the first and last within 4 s of its ends, no gap over 3 s), every one read the switch on, and every
 busy engine thread was last on core 0, 1 or 2. The analysis is `analyze_guard50.py`; the files are in
 `tools/snapdragon/results/2026-11-10-sm8550/`. The chain logged the pause's on and off in whole
-seconds, read just after the switch was written, so a time measured from them can be up to a second
-long; r50b also wrote them into logcat, timed to the millisecond.
+seconds, read just after the switch was written and read back, so a time measured from them is an
+approximate one, from a whole-second timestamp logged after the write; r50b also logged a marker into
+logcat just after each write, so its times are measured to the millisecond from that marker.
 
 | Arm | Fell back after the pause began | Tries | Back to 4 after the pause ended | Decode |
 |---|---|---|---|---|
@@ -1221,8 +1222,8 @@ Decode is the tokens after the first over the decode time to the last progress l
 were stopped by the watchdog after 484 to 495 tokens, about 530 s into their pause.
 
 - **Back in about a second instead of 15 to 22.** In both W runs with the early try, the try came 0.6
-  and 0.9 s after the logged second of the switch's end, and passed: at most about a second after the
-  write. With the schedule alone it came 15.4 and 21.6 s after; that wait depends on where the 30 s
+  and 0.9 s after the logged second of the switch's end, and passed: about a second after the write
+  at most, from whole-second marks. With the schedule alone it came 15.4 and 21.6 s after; that wait depends on where the 30 s
   clock stood when the pause ended, so it can be anything up to 30 s plus a step.
 - **One false early try in each held pause.** Each M-E run made one early try that failed, 431 and
   424 s into the pause, beside its 12 scheduled ones. The 2-thread steps in the pause wandered from
@@ -1240,7 +1241,7 @@ were stopped by the watchdog after 484 to 495 tokens, about 530 s into their pau
 
 r50b ran the rules after the first review on the same phone, work and pause, from a new APK (`apk 72ae0c21110e24dc`
 in `chain50b.log`): W-E, W-T, W-E, then M-E, in that order. The chain also wrote the pause's on and
-off into logcat, so the return is timed to the millisecond. The reservation ended about 490 s into
+off into logcat right after each write, so the return is measured to the millisecond from that marker. The reservation ended about 490 s into
 M-E's pause; its log to that point had been pulled, its placement samples and the four runs'
 instrumentation results had not. In the three W runs every placement sample from 1 s after the
 pause began to 2 s before it ended read the switch on with each busy engine thread on core 0, 1 or
@@ -1254,8 +1255,8 @@ which is why the analysis now leaves those out.
 | W-E | 13.0 s | 0.3 s, early, passed | 0.4 s | 5.53 |
 | M-E, to 490 s into the pause | 16.6 s | 12 tries, all failed (8.0 to 11.1 s each): 11 scheduled, 1 early | never | |
 
-- **With the reviewed rules, back within half a second.** Timed to the millisecond, both early tries came
-  0.2 and 0.3 s after the switch was written off, and passed.
+- **With the reviewed rules, back within half a second.** Measured from the marker logged just after
+  the switch was written off, both early tries came 0.2 and 0.3 s after it, and passed.
 - **The limit on false early tries held.** In the held pause one early try fired, 150 s in on a 735 ms
   step, and failed; none followed in the 340 s after it, while the 2-thread step before each
   scheduled try ranged from 773 to 1,609 ms and the scheduled tries kept coming about every 40 s. One

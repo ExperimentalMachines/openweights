@@ -3,9 +3,40 @@
 > Living state file. Update at every milestone so no information is lost across sessions
 > or context compaction. Newest facts win; keep it accurate rather than exhaustive.
 
-Last updated: 2026-10-11. Older dated sections run from 2026-08-10; detailed findings are in
+Last updated: 2026-11-10. Older dated sections run from 2026-08-10; detailed findings are in
 the research notes under `research/`. The current capability summary is in the top-level
 `README.md` and `ARCHITECTURE.md`.
+
+## 2026-11-10: the stall guard, and trying again as soon as the cores return
+
+On a Snapdragon 8 Elite Gen 5 the hard throttle (the XO thermistor at 78 °C) takes six of eight cores
+out of use, and llama.cpp with more decode threads than the two left nearly stops: its barrier spins
+on cores the working threads need. The app's engine at its 4 threads ran at about a hundredth of its
+rate; at 2 it kept 45% (r27, r49). A kernel scheduler trace recorded all six threads of a 6-thread
+run on the two cores left, switched out 6,361 times in 2 s and never once leaving a core to sleep
+(r49). An app cannot rely on reading the pause, so the engine carries `StallGuard` (`stall_guard.h`):
+two slow decode steps in a row drop decode and prompt reading to 2 threads, and it tries the planned
+count again on a 30 s schedule.
+
+Since d8a4265d it also tries at once when two 2-thread steps in a row each come 1.6 times faster than
+the fallback's median, because the 30 s schedule left replies on 2 threads for up to 30 s after the
+cores came back. On a Snapdragon 8 Gen 2 (QDC, the phone's own `thermal-pause-F8` set by hand) it
+returned 0.3 and 0.4 s after a pause ended (from a log marker written just after the switch), against
+about 14 to 22 s on the schedule alone, at one false try (one stalled step, about 10 s) in each 9-minute held pause (r50,
+r50b). An early try is judged against its fast steps, one that fails ends early tries for that
+fallback, and `OPENWEIGHTS_STALL_GUARD=timer` keeps exactly the old rule. Codex reviewed the guard ten
+times in all. [`research/snapdragon-pd-matrix.md`](research/snapdragon-pd-matrix.md), sections r34
+to r50.
+
+Open:
+- Neither the guard nor the early try is in a Play release yet (the last release is vc732).
+- The `.pte` path has no guard. `ExecuTorchEngine.setThreads` is a no-op and XNNPACK opens as many
+  threads as the phone has cores; whether that stalls the same way in a pause is unmeasured. Measure
+  it on a Snapdragon before building anything for it here or in ExecuServe, which runs only `.pte`.
+- On that SM8550 the 30 s tries were the costly part, about a quarter of a held pause; with returns
+  caught early a longer backstop would cost less, unmeasured.
+- A try is bounded by "at most 2 s over the 2-thread step", so a pause adding under 2 s to a step
+  already near 2 s could pass one; every pause measured added at least 4 s.
 
 ## 2026-10-11: the NPU port from ExecuServe
 
