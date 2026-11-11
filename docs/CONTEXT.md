@@ -3,9 +3,25 @@
 > Living state file. Update at every milestone so no information is lost across sessions
 > or context compaction. Newest facts win; keep it accurate rather than exhaustive.
 
-Last updated: 2026-11-10. Older dated sections run from 2026-08-10; detailed findings are in
+Last updated: 2026-11-11. Older dated sections run from 2026-08-10; detailed findings are in
 the research notes under `research/`. The current capability summary is in the top-level
 `README.md` and `ARCHITECTURE.md`.
+
+## 2026-11-11: the thread test at a realistic length (r52)
+
+r27 and r49 timed the app's engine in a pause on a 19-token prompt and up to 64 tokens of reply. r52
+(QDC, an SM8850) ran it on the 1,751-token prompt with up to 400 tokens, at 1, 2, 3, 4, 6 and 8 threads,
+the pause set by hand. Writing behaves as on the short prompt: in the pause 2 threads kept 37% and 38% of
+their decode rate and 4 threads 2.8% (3.75 against 0.280 tok/s), 8 threads 0.5%. Reading a long prompt
+does not stall: in the pause the whole prompt took 265 to 417 s at every count against 65 to 268 s
+normally, and 285 s at 4 threads against 265 at 2 (one run each). The guard watches decode steps only
+and was off here, so what that costs when a pause comes during a long prompt is not measured. The
+normal runs ran soft-throttled (a CPU ceiling lowered in 75% to 99% of samples) and the paused prompt
+runs did not, so the reading ratios compare a warm phone with a cool one. In one run, samples showed
+two engine threads on CPUs 6 and 7 up to about 13 s after the pause marker while all three switches read
+on; its decode is left out, its prompt (read before the pause) kept.
+Reading slowed with every 512-token step, also paused with the ceilings at their maximum; the cause is
+not identified. [`research/snapdragon-pd-matrix.md`](research/snapdragon-pd-matrix.md), section r52.
 
 ## 2026-11-10: the stall guard, and trying again as soon as the cores return
 

@@ -1487,6 +1487,111 @@ where its one decimal is coarse.
   first switch in the window is credited to that switch's previous task. The app's heat policy was not
   in the loop.
 
+### Every thread count at a realistic length (r52)
+
+r27 and r49 read a 19-token prompt and wrote up to 64 tokens, far from the study's turns: replies of 401
+tokens median, up to 1,215 new prompt tokens in a turn and 3,303 tokens of context. r34 ran a realistic
+length but only 4 and 2 threads. So r52, a seventeenth reservation (sa966003, 2026-11-11, unit 45b9a8ad,
+SM8850), ran the app's engine at 1, 2, 3, 4, 6 and 8 threads on the 1,751-token `prompt-r30.txt` (one
+user message, uncached: a first turn, not a follow-up whose head is already in the cache), up to 400
+tokens of reply (temperature 0.2, a fixed seed), an 8,192-token window, the guard off. Three arms per
+count:
+
+- **N**, no pause: the prompt and the reply as normal.
+- **D**, the pause soon after decode began: the chain polled the run's progress lines once a second
+  and, after it saw one reading `reading=false`, wrote the three switches the trip sets (two
+  `thermal-pause-3C`, one `thermal-pause-C0`) one after another, then stopped the run 300 s later. The
+  marker came 0.2 to 1.1 s after the first decode line, with 3 to 14 tokens written. Its prompt is
+  read unpaused.
+- **R**, the pause before launch: the switches written and read back before the run started, up to 2
+  tokens, stopped at 600 s (none needed it).
+
+Before any run, six busy loops ran only on CPUs 0 and 1 with the switches on and on CPUs 0 to 5 with
+them off. Two rounds of the 18 cells, each in an order fixed before any run, with r49's gate before
+every run (passed in 5 to 500 s, most in 4 to 7 minutes); the chain stopped launching runs 4 h 30 min
+after it started, so round 2 ran 7 of its 18 cells, 1 to 4 threads first by design. The chain wrote
+"CHAIN pause on|off <label>" into logcat just after each switch write, and a logger sampled the three
+switches, the XO, the CPU frequency ceilings and each thread's last CPU and CPU time, sleeping 1 s
+between samples. A paused run counts only if its judged samples cover the pause with no gap over 5 s, from 1 s
+after the marker or the run's start, whichever was later, to 2 s before the pause went off; every judged
+sample read all three switches on with every thread busy since the sample before last on CPU 0 or 1,
+and at least one showed a busy thread. 17 of the 18 passed this sampled check (the one that did not is
+below). It is a check of samples, not a continuous record: a thread could run on
+another core between two samples and be back on CPU 0 or 1 by the second. Rates come from the engine's
+own clocks in its progress lines: the whole prompt from the start of reading to the end of its last
+batch (in every run that logged its first-token time, 0 to 3 ms later), and decode as tokens over
+`decodeMs` between two progress lines. A D run's decode starts at its first line at least 1 s after
+the marker, and its unpaused pair (the N run of the same round, else of round 1) is taken between the
+same generated-token counts, so both end points are at the same context length; the logs do not hold
+the tokens themselves, so that the two replies were identical is not shown. The engine test APK
+(`a1d73840d8dc5dc9`) was built three minutes before d8a4265d from a tree that differs from it only in
+the guard's header and host test; the guard was off in every run. The chain is `chain52.sh`, the
+analysis `analyze_threads52.py`.
+
+| Threads | Prompt, normally | Prompt, six cores out of use | Kept | Decode, normally | Decode, six cores out of use | Kept |
+|---|---|---|---|---|---|---|
+| 1 | 268 s (236 to 269, 3 runs) | 417 s (416, 417) | 64% | 6.53 tok/s (6.52, 6.54) | 3.15 (2.92, 3.38) | 45%, 52% |
+| 2 | 141 s (140.7 to 141.0, 4) | 265 s | 53% | 9.99 (9.93, 10.06) | 3.75 (3.74, 3.76) | 37%, 38% |
+| 3 | 147 s (146.8 to 148.4, 3) | 292 s (291, 292) | 50% | 13.08 (13.05, 13.11) | 0.547 (0.542, 0.552) | 4.1%, 4.2% |
+| 4, the app's default | 102 s (102.0 to 102.6, 3) | 285 s | 36% | 10.16 | 0.280 | 2.8% |
+| 6 | 84 s (84.3, 84.5) | 363 s | 23% | 15.78 | 0.111 | 0.7% |
+| 8 | 65 s (64.4, 64.7) | 362 s | 18% | 12.42 | 0.064 | 0.5% |
+
+The prompt is the engine's time to read the 1,751 tokens, median and range; the N and D runs read it
+unpaused, the R runs paused. Decode is a D run against an N run between the same generated-token
+counts, two pairs at 1 to 3 threads and one at 4, 6 and 8 (round 2's D runs at 1 and 3 threads against
+round 1's N, which round 2 did not reach); the windows ran from token 8 to 20 to the end at 1 and 2
+threads, and to token 172, 105, 37 and 30 at 3, 4, 6 and 8, where the paused runs stopped at 300 s. So
+the capped rows give the rate over an early part of the reply, not over a whole 400-token paused reply,
+and their windows differ in position and length. Kept is the paused rate over the normal one, for each
+pair; the paused and normal runs also ran in different heat (below).
+
+- **Writing stalls past two threads, as on the short prompt.** With six cores out of use, decode from
+  about 1,770 tokens of context kept 45% and 52% of its speed at 1 thread (two pairs), 37% and 38% at 2,
+  then 4.1% and 4.2% at 3, 2.8% at the app's default of 4, and 0.5% at 8. 2 threads wrote fastest, 3.75
+  tok/s against 0.280 at 4, about 13 times, over their own windows; at 8 the engine wrote 18 tokens in
+  280 s. The shape is r49's on another unit with 19 tokens of prompt (4 threads there kept 1.5%) and
+  r34's on phone D at this length (4 threads 0.57 to 0.61 tok/s without the guard, 3.21 to 3.37 with its
+  fallback).
+- **Reading does not stall; it slows.** The whole prompt took 265 to 417 s with six cores out of use at
+  every count, against 65 to 268 s normally. The paused 4-thread run read at 36% of the unpaused
+  4-thread rate, against 4.6% on r49's 19-token prompt; the paused prompt took 265, 292 and 285 s at 2,
+  3 and 4 threads, one or two runs each. The guard watches decode steps only, and it was off here, so
+  these runs do not show what that costs when a pause comes during a long prompt; and a short prompt
+  read in a pause (r49) is a different workload, not timed at this length.
+- **Normally, reading scales with threads and writing barely does.** The prompt took 268 s at 1 thread,
+  141 at 2, 102 at 4, 84 at 6 and 65 at 8 (3 threads, 147 s, read slower than 2), each within 0.3 s
+  run to run (1.6 s at 3) except at 1 thread (236 to 269 s). So a fixed 2 threads, outside any pause,
+  would have made this prompt take 38% longer than 4 did (141 s against 102). Decode rates moved with
+  heat (the whole replies ran 6.6 tok/s at 1 thread and 9.9 to 13.2 at 2 to 8, one or two runs each), so
+  they say little about which count writes fastest.
+- **The normal runs ran soft-throttled; the paused prompt runs did not.** Every N run warmed the XO
+  from about 42 °C to 58 to 61 °C, and in 75% (1 thread) to 99% of their samples Android had lowered a
+  CPU frequency ceiling, at times to 1.9 GHz on CPUs 0 to 5 and 2.2 GHz on 6 and 7 (a ceiling bounds
+  the frequency; the frequency itself was not logged). The R runs kept both ceilings at their maximum
+  in every sample (the XO reached at most 52 °C), and the D runs' pause windows in 27% to 100% of their
+  samples. So the normal figures are the speeds these runs saw at this length, soft throttle included,
+  and the reading ratios compare a cool paused phone with a warm unpaused one. A pause the trip sets
+  comes at 78 °C; its ceilings and reading rate were not measured here.
+- **Reading slows as the prompt grows, paused or not.** Each 512-token step took longer than the one
+  before: unpaused at 3 threads 15.5, 33.3 and 53.3 s; paused at 8 threads, with the sampled ceilings
+  at their maximum throughout, 56.5 and 94.0 s for the first two. The growth fits work that rises with
+  context length, attention among it, and it appeared with the ceilings at their maximum; these runs
+  do not identify the cause or rule out changes in the actual frequency or other runtime conditions.
+- **One pause showed threads past CPU 1 for about 13 s.** In round 2's 4-thread D run all three
+  switches read 1 from the write on, but samples up to about 13 s after the marker showed two engine
+  threads busy and last on CPUs 6 and 7, and the engine wrote tokens 17 to 97 at 5.9 tok/s; after that
+  no sample showed a busy thread past CPU 1. The analysis leaves the run out of the decode figures (its
+  prompt, read before the pause, stays in). Measured post hoc from 2 s after the last such sample, it
+  decoded 0.276 tok/s between tokens 102 and 179 against 9.89 for round 1's N run, 2.8%, as round 1's
+  D run did. The judged samples of the other eight D runs showed no busy thread past CPU 1. Whether the
+  trip's own switch writes can lag the same way is not known.
+- **What it does not show.** One unit, the pause set by hand, one or two runs per cell (decode one pair
+  at 4, 6 and 8 threads), a long uncached first prompt rather than a cached follow-up turn, and a 300 s
+  cap: the included paused runs at 3 threads and more last reported 31 to 174 generated tokens, counts
+  that include the 3 to 14 written before the pause (the excluded run, 180). The app's heat policy and
+  the guard were not in the loop.
+
 ### What the model writes at each thread count
 
 Every turn record keeps its greedy tokens, decoded on the same teacher-forced context, so cells can
@@ -1799,6 +1904,14 @@ another seed.
   decode 6.6 tok/s, 3 turns, no fallback logged. A first check of the benchmark
   before r36 was killed by the system's backup agent, which backed up the newly installed test
   package and killed its process; the second check ran (12.1 tok/s, 8 tokens).
+- **r52.** A seventeenth reservation, sa966003, on 2026-11-11, on unit 45b9a8ad (SM8850), reached
+  through the tunnel on 127.0.0.1:5098. The engine test APK (`apk a1d73840d8dc5dc9` in `chain52.log`)
+  and Qwen3 4B (92f4a83cdfe691b2) were pushed from the Mac. `chain52.sh` ran the pause check and the
+  rounds with `guard52.sh` beside it, which stops the test and clears the switches if the chain dies;
+  logcat holds only the test's and the engine's own tags. Codex reviewed the design before it ran, the
+  running chain twice and the analysis twice; the chain was not changed once started. The chain logged its
+  deadline before round 2's eighth cell. `inst-r52-*` are the instrumentation results (a run stopped at
+  its cap reports no passing test), `place-r52-*` the logger's samples.
 - **r50.** A sixteenth reservation, sa964839, on 2026-11-10, on unit 57fa7c29 (SM8550), reached
   through the tunnel on 127.0.0.1:5097. The engine test APK was built from this commit's engine
   (`apk 4f9fea5ebc9d0a03` in `chain50.log`) and Qwen3 4B fetched on the phone (92f4a83cdfe691b2).
