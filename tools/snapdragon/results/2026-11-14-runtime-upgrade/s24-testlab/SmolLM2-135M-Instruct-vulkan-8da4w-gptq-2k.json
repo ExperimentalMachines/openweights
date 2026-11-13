@@ -1,0 +1,82 @@
+{
+  "model": "SmolLM2-135M-Instruct-vulkan-8da4w-gptq-2k",
+  "engine": "ExecuTorchEngine",
+  "params": "greedy topK=1 seed=7 maxTokens=768",
+  "cases": [
+    {
+      "id": "trap-arithmetic",
+      "status": "fail",
+      "content": "17 sheep is the total number of sheep the farmer has left.",
+      "reasoning_chars": 0,
+      "raw": "17 sheep is the total number of sheep the farmer has left.",
+      "calls": [],
+      "prompt_tokens": 60,
+      "cached_tokens": 0,
+      "generated_tokens": 15,
+      "prefill_ms": 60,
+      "decode_ms": 295
+    },
+    {
+      "id": "multi-step-change",
+      "status": "fail",
+      "content": "Ana buys 7 pencils at 12 pesos each and pays with a 100-peso bill.\nShe has 7 pencils in total.\nShe pays with a 100-peso bill.\nShe receives 7 * 100 = 700 pesos of change.\n#### 700\nThe answer is 700.\n\nAna buys 7 pencils at 12 pesos each and pays with a 100-peso bill.\nShe has 7 pencils in total.\nShe pays with a 100-peso bill.\nShe receives 7 * 100 = 700 pesos of change.\n#### 700\nThe answer is 700.\n\nAna buys 7 pencils at 12 pesos each and pays with a 100-peso bill.\nShe has 7 pencils in total.\nShe pays with a 100-peso bill.\nShe receives 7 * 100 = 700 pesos of change.\n#### 700\nThe answer is 700.\n\nAna buys 7 pencils at 12 pesos each and pays with a 100-peso bill.\nShe has 7 pencils in total.\nShe pays with a 100-peso bill.\nShe receives 7 * 100 = 700 pesos of change.\n#### 700\nThe answer is 700.\n\nAna buys 7 pencils at 12 pesos each and pays with a 100-peso bill.\nShe has 7 pencils in total.\nShe pays with a 100-peso bill.\nShe receives 7 * 100 = 700 pesos of change.\n#### 700\nThe answer is 700.\n\nAna buys 7 pencils at 12 pesos each and pays with a 100-peso bill.\nShe has 7 pencils in total.\nShe pays with a 100-peso bill.\nShe receives 7 * 100 = 700 pesos of change.\n#### 700\nThe answer is 700.\n\nAna buys 7 pencils at 12 pesos each and pays with a 100-peso bill.\nShe has 7 pencils in total.\nShe pays with a 100-peso bill.\nShe receives 7 * 100 = 700 pesos of change.\n#### 700\nThe answer is 700.\n\nAna buys 7 pencils at 12 pesos each and pays with a 100-peso bill.\nShe has 7 pencils in total.\nShe pays with a 100-peso bill.\nShe receives 7 * 100 = 700 pesos of change.\n#### 700\nThe answer is 700.\n\nAna buys 7 pencils at 12 pesos each and pays with a 100-peso bill.\nShe has 7 pencils in total.\nShe pays with a 100-peso bill.\nShe receives 7 * 100 = 700 pesos of change.\n#### 700\nThe answer is ",
+      "reasoning_chars": 0,
+      "raw": "Ana buys 7 pencils at 12 pesos each and pays with a 100-peso bill.\nShe has 7 pencils in total.\nShe pays with a 100-peso bill.\nShe receives 7 * 100 = 700 pesos of change.\n#### 700\nThe answer is 700.\n\nAna buys 7 pencils at 12 pesos each and pays with a 100-peso bill.\nShe has 7 pencils in total.\nShe pays with a 100-peso bill.\nShe receives 7 * 100 = 700 pesos of change.\n#### 700\nThe answer is 700.\n\nAna buys 7 pencils at 12 pesos each and pays with a 100-peso bill.\nShe has 7 pencils in total.\nShe pays with a 100-peso bill.\nShe receives 7 * 100 = 700 pesos of change.\n#### 700\nThe answer is 700.\n\nAna buys 7 pencils at 12 pesos each and pays with a 100-peso bill.\nShe has 7 pencils in total.\nShe pays with a 100-peso bill.\nShe receives 7 * 100 = 700 pesos of change.\n#### 700\nThe answer is 700.\n\nAna buys 7 pencils at 12 pesos each and pays with a 100-peso bill.\nShe has 7 pencils in total.\nShe pays with a 100-peso bill.\nShe receives 7 * 100 = 700 pesos of change.\n#### 700\nThe answer is 700.\n\nAna buys 7 pencils at 12 pesos each and pays with a 100-peso bill.\nShe has 7 pencils in total.\nShe pays with a 100-peso bill.\nShe receives 7 * 100 = 700 pesos of change.\n#### 700\nThe answer is 700.\n\nAna buys 7 pencils at 12 pesos each and pays with a 100-peso bill.\nShe has 7 pencils in total.\nShe pays with a 100-peso bill.\nShe receives 7 * 100 = 700 pesos of change.\n#### 700\nThe answer is 700.\n\nAna buys 7 pencils at 12 pesos each and pays with a 100-peso bill.\nShe has 7 pencils in total.\nShe pays with a 100-peso bill.\nShe receives 7 * 100 = 700 pesos of change.\n#### 700\nThe answer is 700.\n\nAna buys 7 pencils at 12 pesos each and pays with a 100-peso bill.\nShe has 7 pencils in total.\nShe pays with a 100-peso bill.\nShe receives 7 * 100 = 700 pesos of change.\n#### 700\nThe answer is ",
+      "calls": [],
+      "prompt_tokens": 72,
+      "cached_tokens": 0,
+      "generated_tokens": 768,
+      "prefill_ms": 46,
+      "decode_ms": 6848
+    },
+    {
+      "id": "format-constraint",
+      "status": "fail",
+      "content": "Here is a simple function that converts a string to a JSON array:\n\n```python\nimport re\n\ndef convert_to_json(string):\n    return re.findall(r\"\\b\\w+\\s+(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\",
+      "reasoning_chars": 0,
+      "raw": "Here is a simple function that converts a string to a JSON array:\n\n```python\nimport re\n\ndef convert_to_json(string):\n    return re.findall(r\"\\b\\w+\\s+(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\d+)(\\",
+      "calls": [],
+      "prompt_tokens": 52,
+      "cached_tokens": 0,
+      "generated_tokens": 768,
+      "prefill_ms": 68,
+      "decode_ms": 6846
+    },
+    {
+      "id": "extraction",
+      "status": "pass",
+      "content": "The Barangay San Isidro council met on Tuesday. After reviewing the typhoon damage to the covered court, the members voted 6 to 1 to move the annual fiesta from January 21 to March 14, and asked the treasurer to release 45,000 pesos for repairs before the new date.",
+      "reasoning_chars": 0,
+      "raw": "The Barangay San Isidro council met on Tuesday. After reviewing the typhoon damage to the covered court, the members voted 6 to 1 to move the annual fiesta from January 21 to March 14, and asked the treasurer to release 45,000 pesos for repairs before the new date.",
+      "calls": [],
+      "prompt_tokens": 122,
+      "cached_tokens": 0,
+      "generated_tokens": 74,
+      "prefill_ms": 83,
+      "decode_ms": 594
+    },
+    {
+      "id": "memory-across-turns",
+      "status": "pass",
+      "content": "My cat's name is Bagwis.",
+      "reasoning_chars": 0,
+      "raw": "My cat's name is Bagwis.",
+      "calls": [],
+      "prompt_tokens": 24,
+      "cached_tokens": 86,
+      "generated_tokens": 10,
+      "prefill_ms": 32,
+      "decode_ms": 73
+    },
+    {
+      "id": "tool-call",
+      "status": "skipped",
+      "reason": "family has no tool syntax"
+    },
+    {
+      "id": "tool-result",
+      "status": "skipped",
+      "reason": "family has no tool syntax"
+    }
+  ]
+}

@@ -1,12 +1,14 @@
 # llama.cpp v0.8.0 to v1.0.0, and ExecuTorch 1.5.1 to 1.6.0
 
-2026-11-14. Both runtimes moved in one night: llama.cpp from v0.8.0 (8642541b, 2026-10-28) to v1.0.0
-(b1b770d9, 2026-11-13), and ExecuTorch from 1.5.1-openweights.4 to 1.6.0-openweights.2. No phone was
-available: the POCO was not on wireless debugging, Firebase Test Lab refused every signed-in account
-with 403 on the project, and QDC needs a reservation. Everything below was measured on a 16 KB-page
-arm64 emulator (6 GB, Vulkan 1.3 through the host GPU) and on the Mac (Apple M5, 4P+6E), both shared
-with other work. What only a phone can settle is listed at the end, and nothing here should be read
-as a phone figure.
+2026-11-14. ExecuTorch moved from 1.5.1-openweights.4 to 1.6.0-openweights.2 and ships. llama.cpp
+moved from v0.8.0 (8642541b, 2026-10-28) to v1.0.0 (b1b770d9, 2026-11-13) and was put back the same
+morning (079fa8c4), because on a Galaxy S24 v1.0.0 decoded 20% to 23% slower at the 1,500 to 6,000
+tokens of context a tool-using chat sits in (the section on the S24 below). Overnight no phone was
+reachable (the POCO was off wireless debugging, the usual Test Lab project refused every signed-in
+account, QDC needs a reservation), so most of what follows was measured on a 16 KB-page arm64
+emulator (6 GB, Vulkan 1.3 through the host GPU) and on the Mac (Apple M5, 4P+6E), both shared with
+other work; in the morning Test Lab ran under another project on Galaxy S24s, and those figures are
+the phone's.
 
 ## llama.cpp v1.0.0
 
@@ -104,9 +106,10 @@ running the app's Android variant, LFM2.5 1.2B QAD-Q4_0, six pairs, flash attent
 | 4,096 | 18.8 | 18.0 | 0.961 | 5 of 6 |
 
 So the app's own build loses about 4% at every depth there, not the Mac native build's 11% to 13% at
-depth for the same file. A phone is neither, and the same script on the POCO is the number that
-decides. Undoing either change locally would bring back an overflow upstream fixed on purpose or
-diverge from upstream's numerics, so nothing is patched.
+depth for the same file. A phone is neither: on the Galaxy S24 it lost 20% to 23% at 1,500 to 6,000
+tokens (below), and that took v1.0.0 out of the release. Undoing either change locally would bring
+back an overflow upstream fixed on purpose or diverge from upstream's numerics, so nothing is
+patched; v1.0.0 can come back when its ARM path is fast again.
 
 ### Older Gemma 4 templates
 
@@ -131,7 +134,8 @@ unchanged, so a Mali phone (the POCO) never reaches any of it. A load with no la
 GPU should compile nothing either, because a zero-sized buffer never reaches the backend's allocator
 (`ggml_backend_buft_alloc_buffer`); that is read from the source, not seen on a device. The new kernel cache stays off on Android: its default directory is
 the process's temporary directory, the app sets no `TMPDIR`, and the cache disables itself rather
-than fail. No Adreno device was available, so the Adreno path is untested on v1.0.0.
+than fail. Overnight no Adreno device was available; in the morning `GpuOffloadTest` ran it on a
+Galaxy S24's Adreno 750 (the section on the S24 below).
 
 ## ExecuTorch 1.6.0
 
@@ -224,9 +228,47 @@ Speed and memory, per question: on the default export (ABBA halves) decode ran a
 Mansion's (one run after the other) decode was 1.029 and prefill 0.964, slower on 64 of 90, which
 the ordered run cannot separate from drift.
 
+## On a real Snapdragon: Galaxy S24 in Test Lab
+
+Later the same morning Firebase Test Lab ran under another project: Galaxy S24 (SC-51E, Snapdragon
+8 Gen 3, Adreno 750, Android 16), whose CPU loads the app's `android_armv8.6_1` variant. Each Test
+Lab run lands on whichever unit is free, so a comparison is between units, and one unit of the
+first pair was throttled; three units per version were run for that reason.
+
+- **llama.cpp's OpenCL path on v1.0.0 works on the Adreno 750.** `GpuOffloadTest` loaded every
+  layer of LFM2.5 QAD-Q4_0 on the GPU and answered at 31.3 tok/s (v0.8.0: 32.8). The GPU load
+  took 29.4 s on v1.0.0 and 35.7 s on v0.8.0 and the seven-token GPU reply ran 4.6% slower on
+  v1.0.0, one unit each: no slower load, and too few tokens to say more about GPU decode.
+- **ExecuTorch 1.6.0's rewritten Vulkan backend works on a real Adreno driver.** SmolLM2-135M's
+  Vulkan export answered every case at about 112 tok/s decode; its replies differ from the
+  emulator's GPU, as a 135M model's do between GPUs. The default LFM2.5 download passed 4 of 7 on
+  the CPU, both tool cases among them.
+- **Decode at depth, the number that decided.** `ContextLengthBenchmark.measuresWhatAFullWindowCosts`
+  on the app's engine, one load, the context filled to each depth and 96 tokens decoded, two units
+  per version, the two test APKs differing only in llama.cpp:
+
+  | Context tokens | v0.8.0 tok/s | v1.0.0 tok/s | Decode ratio | Prefill ratio |
+  |---|---|---|---|---|
+  | 35 | 52.2, 53.0 | 48.6, 49.7 | 0.93 | 0.78 |
+  | 1,480 | 40.4, 50.1 | 39.2, 33.3 | 0.80 | 0.90 |
+  | 5,832 | 34.4, 35.1 | 24.8, 28.9 | 0.77 | 0.93 |
+  | 11,629 | 17.3, 18.1 | 14.8, 16.5 | 0.88 | 1.05 |
+  | 23,240 | 9.0, 8.6 | 7.9, 8.4 | 0.93 | 1.11 |
+
+  At all five depths every v1.0.0 unit decoded slower than every v0.8.0 unit. The app's
+  tool prompt alone is about 2,050 tokens, so this is the range every chat with tools is in, and a
+  fifth slower there is felt on every token; v1.0.0 was taken back out of the release for it. The
+  v1.0.0 units ran in another project about 40 minutes later; Test Lab draws both from the same pool.
+- **Speed, `SpeedProbe`, three units per version, medians:** reading a 404-token prompt, v1.0.0
+  ran at 1.05, 1.06, 1.07 and 1.18 times v0.8.0's rate at 2, 4, 6 and 8 threads; the 16 tokens
+  written after it at the app's 4 threads came out at 0.93, 0.90, 1.13 and 1.07, no change either
+  way. The 2-token rows swing from 0.5 to 2.8 between units and are not read.
+
 ## The release build
 
-The minified, signed release, installed beside the debug app under a temporary `.rc` suffix, on the
+What ships is ExecuTorch 1.6.0 with llama.cpp at v0.8.0, the pin the current production build
+already runs. The smoke test below was of the v1.0.0 build; the GGUF path it exercised is
+unchanged by going back. The minified, signed release, installed beside the debug app under a temporary `.rc` suffix, on the
 emulator: LFM2.5 QAD-Q4_0 on llama.cpp v1.0.0 answered with 91% of its prompt from the warm prefix;
 the default ExecuTorch download answered on the CPU with 92%; SmolLM2's Vulkan export passed its
 trial and answered on the GPU; a garbage `.pte` crashed only the probe process when the model
@@ -236,16 +278,13 @@ signs, every 64-bit library in the bundle is 16 KB aligned, and its ExecuTorch l
 
 ## Not measured
 
-No phone ran either runtime. These are open, in the order they matter:
+The S24 ran both runtimes; these are still open, in the order they matter:
 
-- **Decode speed on a phone, llama.cpp.** About 4% slower in the app's build on the emulator and
-  6% to 19% at depth in the Mac's native build. `llama_bench_ab.sh run <serial> <model>` on the
-  POCO takes about 15 minutes with six pairs.
-- **Adreno.** llama.cpp's OpenCL path (reached by Auto on prefill-heavy models) and ExecuTorch's
-  rewritten Vulkan backend on an Adreno GPU. Needs QDC or Test Lab.
-- **A real Mali or Adreno Vulkan driver.** The emulator's Vulkan is the host's GPU through a
-  translation layer. The probe trial now catches a first dispatch that crashes, but a GPU that
-  answers wrongly would still pass it.
+- **A MediaTek phone.** The S24 is a Snapdragon; the POCO's Dimensity and Mali GPU were not run.
+  `llama_bench_ab.sh run <serial> <model>` times llama.cpp there in about 15 minutes, should v1.0.0
+  come back.
+- **A real Mali Vulkan driver.** Adreno's is now covered (above); Mali's is not. The probe trial
+  catches a first dispatch that crashes, but a GPU that answers wrongly would still pass it.
 - **QNN and the MediaTek NPU.** Built and checked statically, with three QNN runner defects fixed
   from source; never run.
 - **Phone CPU speed for ExecuTorch.** Only the emulator's figures above.

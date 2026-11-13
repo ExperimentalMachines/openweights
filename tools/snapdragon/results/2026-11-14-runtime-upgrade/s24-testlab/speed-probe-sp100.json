@@ -1,0 +1,129 @@
+{
+  "model": "speed-probe",
+  "gguf": "LFM2.5-1.2B-Instruct-QAD-Q4_0.gguf",
+  "cores": 8,
+  "performance_cores": 6,
+  "max_khz": [
+    2265600,
+    2265600,
+    3148800,
+    3148800,
+    3148800,
+    2956800,
+    2956800,
+    3398400
+  ],
+  "system_info": "CPU : NEON = 1 | ARM_FMA = 1 | FP16_VA = 1 | MATMUL_INT8 = 1 | DOTPROD = 1 | KLEIDIAI = 1 | REPACK = 1 |  | backends: CPU OpenCL",
+  "runs": [
+    {
+      "axis": "prefill",
+      "gen_threads": 4,
+      "batch_threads": 2,
+      "prompt_tokens": 404,
+      "prefill_ms": 3270,
+      "generated_tokens": 16,
+      "decode_ms": 540,
+      "prefill_tok_s": 123.5474006116208,
+      "decode_tok_s": 27.777777777777775
+    },
+    {
+      "axis": "prefill",
+      "gen_threads": 4,
+      "batch_threads": 4,
+      "prompt_tokens": 404,
+      "prefill_ms": 1852,
+      "generated_tokens": 16,
+      "decode_ms": 373,
+      "prefill_tok_s": 218.1425485961123,
+      "decode_tok_s": 40.21447721179624
+    },
+    {
+      "axis": "prefill",
+      "gen_threads": 4,
+      "batch_threads": 6,
+      "prompt_tokens": 404,
+      "prefill_ms": 2041,
+      "generated_tokens": 16,
+      "decode_ms": 311,
+      "prefill_tok_s": 197.94218520333172,
+      "decode_tok_s": 48.23151125401929
+    },
+    {
+      "axis": "prefill",
+      "gen_threads": 4,
+      "batch_threads": 8,
+      "prompt_tokens": 404,
+      "prefill_ms": 2787,
+      "generated_tokens": 16,
+      "decode_ms": 456,
+      "prefill_tok_s": 144.9587369931826,
+      "decode_tok_s": 32.89473684210526
+    },
+    {
+      "axis": "decode",
+      "gen_threads": 2,
+      "batch_threads": 6,
+      "prompt_tokens": 21,
+      "prefill_ms": 269,
+      "generated_tokens": 2,
+      "decode_ms": 56,
+      "prefill_tok_s": 78.06691449814126,
+      "decode_tok_s": 17.857142857142858
+    },
+    {
+      "axis": "decode",
+      "gen_threads": 4,
+      "batch_threads": 6,
+      "prompt_tokens": 21,
+      "prefill_ms": 266,
+      "generated_tokens": 2,
+      "decode_ms": 68,
+      "prefill_tok_s": 78.94736842105263,
+      "decode_tok_s": 14.705882352941176
+    },
+    {
+      "axis": "decode",
+      "gen_threads": 6,
+      "batch_threads": 6,
+      "prompt_tokens": 21,
+      "prefill_ms": 209,
+      "generated_tokens": 2,
+      "decode_ms": 116,
+      "prefill_tok_s": 100.47846889952153,
+      "decode_tok_s": 8.620689655172413
+    },
+    {
+      "axis": "decode",
+      "gen_threads": 8,
+      "batch_threads": 6,
+      "prompt_tokens": 21,
+      "prefill_ms": 210,
+      "generated_tokens": 2,
+      "decode_ms": 52,
+      "prefill_tok_s": 100,
+      "decode_tok_s": 19.230769230769234
+    },
+    {
+      "axis": "short",
+      "gen_threads": 4,
+      "batch_threads": 6,
+      "prompt_tokens": 21,
+      "prefill_ms": 175,
+      "generated_tokens": 2,
+      "decode_ms": 37,
+      "prefill_tok_s": 120,
+      "decode_tok_s": 27.027027027027028
+    },
+    {
+      "axis": "short",
+      "gen_threads": 4,
+      "batch_threads": 6,
+      "prompt_tokens": 21,
+      "prefill_ms": 133,
+      "generated_tokens": 2,
+      "decode_ms": 38,
+      "prefill_tok_s": 157.89473684210526,
+      "decode_tok_s": 26.31578947368421
+    }
+  ]
+}
