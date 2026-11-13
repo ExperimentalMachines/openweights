@@ -1,0 +1,103 @@
+{
+  "model": "Qwen2.5-0.5B-Instruct-vulkan-8da4w-gptq-2k",
+  "engine": "ExecuTorchEngine",
+  "params": "greedy topK=1 seed=7 maxTokens=768",
+  "cases": [
+    {
+      "id": "trap-arithmetic",
+      "status": "pass",
+      "content": "17 - 9 = 8",
+      "reasoning_chars": 0,
+      "raw": "17 - 9 = 8",
+      "calls": [],
+      "prompt_tokens": 59,
+      "cached_tokens": 0,
+      "generated_tokens": 9,
+      "prefill_ms": 1768,
+      "decode_ms": 3332
+    },
+    {
+      "id": "multi-step-change",
+      "status": "fail",
+      "content": "5",
+      "reasoning_chars": 0,
+      "raw": "5",
+      "calls": [],
+      "prompt_tokens": 67,
+      "cached_tokens": 0,
+      "generated_tokens": 2,
+      "prefill_ms": 1765,
+      "decode_ms": 257
+    },
+    {
+      "id": "format-constraint",
+      "status": "pass",
+      "content": "```json\n[\n    \"Mercury\",\n    \"Venus\",\n    \"Earth\"\n]\n```",
+      "reasoning_chars": 0,
+      "raw": "```json\n[\n    \"Mercury\",\n    \"Venus\",\n    \"Earth\"\n]\n```",
+      "calls": [],
+      "prompt_tokens": 51,
+      "cached_tokens": 0,
+      "generated_tokens": 21,
+      "prefill_ms": 1249,
+      "decode_ms": 5019
+    },
+    {
+      "id": "extraction",
+      "status": "pass",
+      "content": "March 14",
+      "reasoning_chars": 0,
+      "raw": "March 14",
+      "calls": [],
+      "prompt_tokens": 114,
+      "cached_tokens": 0,
+      "generated_tokens": 5,
+      "prefill_ms": 3053,
+      "decode_ms": 1009
+    },
+    {
+      "id": "memory-across-turns",
+      "status": "pass",
+      "content": "Bagwis",
+      "reasoning_chars": 0,
+      "raw": "Bagwis",
+      "calls": [],
+      "prompt_tokens": 23,
+      "cached_tokens": 138,
+      "generated_tokens": 3,
+      "prefill_ms": 706,
+      "decode_ms": 543
+    },
+    {
+      "id": "tool-call",
+      "status": "pass",
+      "content": "",
+      "reasoning_chars": 0,
+      "raw": "<tool_call>\n{\"name\": \"get_weather\", \"arguments\": {\"city\": \"Manila\"}}\n<\/tool_call>",
+      "calls": [
+        {
+          "name": "get_weather",
+          "arguments": "{\"city\": \"Manila\"}"
+        }
+      ],
+      "prompt_tokens": 183,
+      "cached_tokens": 0,
+      "generated_tokens": 21,
+      "prefill_ms": 4436,
+      "decode_ms": 5205
+    },
+    {
+      "id": "tool-result",
+      "status": "pass",
+      "content": "The current temperature in Manila is 31 degrees Celsius, and the weather is humid.",
+      "reasoning_chars": 0,
+      "raw": "The current temperature in Manila is 31 degrees Celsius, and the weather is humid.",
+      "calls": [],
+      "prompt_tokens": 33,
+      "cached_tokens": 203,
+      "generated_tokens": 19,
+      "prefill_ms": 1415,
+      "decode_ms": 5009
+    }
+  ]
+}

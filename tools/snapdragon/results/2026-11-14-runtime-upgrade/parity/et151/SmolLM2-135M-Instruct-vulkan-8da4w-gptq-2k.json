@@ -1,0 +1,82 @@
+{
+  "model": "SmolLM2-135M-Instruct-vulkan-8da4w-gptq-2k",
+  "engine": "ExecuTorchEngine",
+  "params": "greedy topK=1 seed=7 maxTokens=768",
+  "cases": [
+    {
+      "id": "trap-arithmetic",
+      "status": "fail",
+      "content": "A farmer has 17 sheep.\n\nThe answer is 17.",
+      "reasoning_chars": 0,
+      "raw": "A farmer has 17 sheep.\n\nThe answer is 17.",
+      "calls": [],
+      "prompt_tokens": 60,
+      "cached_tokens": 0,
+      "generated_tokens": 18,
+      "prefill_ms": 1134,
+      "decode_ms": 3312
+    },
+    {
+      "id": "multi-step-change",
+      "status": "fail",
+      "content": "Ana buys 7 pencils and pays with a 100-peso bill.\n100 * 100 = 1000 pesos\nAna receives 1000 pesos of change.\n\nAna's answer is 1000.",
+      "reasoning_chars": 0,
+      "raw": "Ana buys 7 pencils and pays with a 100-peso bill.\n100 * 100 = 1000 pesos\nAna receives 1000 pesos of change.\n\nAna's answer is 1000.",
+      "calls": [],
+      "prompt_tokens": 72,
+      "cached_tokens": 0,
+      "generated_tokens": 64,
+      "prefill_ms": 660,
+      "decode_ms": 7702
+    },
+    {
+      "id": "format-constraint",
+      "status": "pass",
+      "content": "Here is a simple function that returns the first three planets from the Sun:\n\n```python\nimport re\n\ndef get_first_three_planets(planets):\n    return [re.findall(r\"\\b\\w+\\b\\w+\", planets).pop()]\n```\n\nYou can use this function like this:\n\n```python\nplanets = [\"Mercury\", \"Venus\", \"Earth\"]\nprint(get_first_three_planets(planets))\n```\n\nThis will output:\n\n```python\n['Mercury', 'Venus', 'Earth']\n```\n\nThis function uses the `re.findall` function to find all the regular expressions that match the pattern \"Mercury\", \"Venus\", and \"Earth\". The `pop()` method removes the first element from the list, which is the first three elements.",
+      "reasoning_chars": 0,
+      "raw": "Here is a simple function that returns the first three planets from the Sun:\n\n```python\nimport re\n\ndef get_first_three_planets(planets):\n    return [re.findall(r\"\\b\\w+\\b\\w+\", planets).pop()]\n```\n\nYou can use this function like this:\n\n```python\nplanets = [\"Mercury\", \"Venus\", \"Earth\"]\nprint(get_first_three_planets(planets))\n```\n\nThis will output:\n\n```python\n['Mercury', 'Venus', 'Earth']\n```\n\nThis function uses the `re.findall` function to find all the regular expressions that match the pattern \"Mercury\", \"Venus\", and \"Earth\". The `pop()` method removes the first element from the list, which is the first three elements.",
+      "calls": [],
+      "prompt_tokens": 52,
+      "cached_tokens": 0,
+      "generated_tokens": 187,
+      "prefill_ms": 466,
+      "decode_ms": 24836
+    },
+    {
+      "id": "extraction",
+      "status": "pass",
+      "content": "The Barangay San Isidro council met on Tuesday. After reviewing the typhoon damage to the covered court, the members voted 6 to 1 to move the annual fiesta from January 21 to March 14, and asked the treasurer to release 45,000 pesos for repairs before the new date.",
+      "reasoning_chars": 0,
+      "raw": "The Barangay San Isidro council met on Tuesday. After reviewing the typhoon damage to the covered court, the members voted 6 to 1 to move the annual fiesta from January 21 to March 14, and asked the treasurer to release 45,000 pesos for repairs before the new date.",
+      "calls": [],
+      "prompt_tokens": 122,
+      "cached_tokens": 0,
+      "generated_tokens": 74,
+      "prefill_ms": 1073,
+      "decode_ms": 9945
+    },
+    {
+      "id": "memory-across-turns",
+      "status": "pass",
+      "content": "My cat's name is Bagwis.",
+      "reasoning_chars": 0,
+      "raw": "My cat's name is Bagwis.",
+      "calls": [],
+      "prompt_tokens": 24,
+      "cached_tokens": 96,
+      "generated_tokens": 10,
+      "prefill_ms": 281,
+      "decode_ms": 1146
+    },
+    {
+      "id": "tool-call",
+      "status": "skipped",
+      "reason": "family has no tool syntax"
+    },
+    {
+      "id": "tool-result",
+      "status": "skipped",
+      "reason": "family has no tool syntax"
+    }
+  ]
+}

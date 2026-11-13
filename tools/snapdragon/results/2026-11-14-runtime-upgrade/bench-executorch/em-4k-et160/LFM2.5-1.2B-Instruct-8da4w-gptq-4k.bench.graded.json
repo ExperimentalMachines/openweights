@@ -1,0 +1,1537 @@
+{
+ "suite": "benchmark",
+ "model": "LFM2.5-1.2B-Instruct-8da4w-gptq-4k",
+ "engine": "ExecuTorchEngine",
+ "params": "greedy topK=1 seed=7 thinking=false repeatPenalty=default",
+ "prompts_seed": 7,
+ "context_size": 4096,
+ "rss_mb_after_load": 1091,
+ "rss_mb": 1211,
+ "completed": 90,
+ "ok": 45,
+ "errors": 0,
+ "skipped": 0,
+ "budget_exhausted": false,
+ "cases": [
+  {
+   "id": "gsm8k-76",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's break down the problem step by step.\n\nWe are given the following:\n\n- The puppy needs 1 cup of dog food per day for the first 180 days.\n- After those 180 days, it needs 2 cups per day for the rest of its life.\n- One bag of dog food contains 110 cups.\n- We are to find how many bags Cecilia will need in the first year.\n\n### Step 1: Calculate the amount of food needed in the first 180 days\nFor the first 180 days:\n- Daily amount = 1 cup\n- Total for 180 days = 1 cup/day × 180 days = 180 cups\n\n### Step 2: Calculate the amount of food needed after 180 days\nAfter 180 days, the puppy needs 2 cups per day.\n- Daily amount = 2 cups\n- Total for the remaining days = 2 cups/day × (365 days - 180 days)\n\nFirst, calculate the number of days remaining in the first year:\n- Total days in a year = 365\n- Days remaining after 180 days = 365 - 180 = 185 days\n\nNow calculate the food needed for these 185 days:\n- Daily amount = 2 cups\n- Total for 185 days = 2 cups/day × 185 days = 370 cups\n\n### Step 3: Total food needed in the first year\nTotal cups of food = 180 cups + 370 cups = 550 cups\n\n### Step 4: Determine how many bags are needed\nEach bag contains 110 cups:\n- Number of bags = Total cups ÷ Cups per bag = 550 ÷ 110 = 5\n\n### Final Answer:\n#### 5",
+   "reasoning_chars": 0,
+   "raw": "Let's break down the problem step by step.\n\nWe are given the following:\n\n- The puppy needs 1 cup of dog food per day for the first 180 days.\n- After those 180 days, it needs 2 cups per day for the rest of its life.\n- One bag of dog food contains 110 cups.\n- We are to find how many bags Cecilia will need in the first year.\n\n### Step 1: Calculate the amount of food needed in the first 180 days\nFor the first 180 days:\n- Daily amount = 1 cup\n- Total for 180 days = 1 cup/day × 180 days = 180 cups\n\n### Step 2: Calculate the amount of food needed after 180 days\nAfter 180 days, the puppy needs 2 cups per day.\n- Daily amount = 2 cups\n- Total for the remaining days = 2 cups/day × (365 days - 180 days)\n\nFirst, calculate the number of days remaining in the first year:\n- Total days in a year = 365\n- Days remaining after 180 days = 365 - 180 = 185 days\n\nNow calculate the food needed for these 185 days:\n- Daily amount = 2 cups\n- Total for 185 days = 2 cups/day × 185 days = 370 cups\n\n### Step 3: Total food needed in the first year\nTotal cups of food = 180 cups + 370 cups = 550 cups\n\n### Step 4: Determine how many bags are needed\nEach bag contains 110 cups:\n- Number of bags = Total cups ÷ Cups per bag = 550 ÷ 110 = 5\n\n### Final Answer:\n#### 5",
+   "calls": [],
+   "prompt_tokens": 115,
+   "generated_tokens": 362,
+   "prefill_ms": 868,
+   "decode_ms": 13779,
+   "wall_ms": 14678,
+   "grade": "pass"
+  },
+  {
+   "id": "gsm8k-98",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's break down the problem step by step.\n\nWe are given the following information:\n\n- There were originally **30 cars** on the motorway.\n- Some cars drove through in the **first 15 minutes**.\n- Then **20 more cars** drove through in the **remaining 15 minutes**.\n- **5 cars** exited the line and did not drive through the traffic jam.\n- We are to find how many cars drove through the traffic jam in the **first 15 minutes**.\n\nLet’s define:\n\n- Let $ x $ be the number of cars that drove through in the **first 15 minutes**.\n- Then the number of cars that drove through in the **remaining 15 minutes** is $ 30 - x - 5 $, because 5 cars exited.\n\nSo, the total number of cars that drove through the traffic jam is the sum of those in the first 15 minutes and the remaining 15 minutes:\n\n$$\nx + (30 - x - 5) = x + 25\n$$\n\nBut we know that the total number of cars that actually drove through the jam is the total number minus the 5 that exited:\n\n$$\n\\text{Total cars in jam} = 30 - 5 = 25\n$$\n\nSo we set up the equation:\n\n$$\nx + (30 - x - 5) = 25\n$$\n\nSimplify the equation:\n\n$$\nx + (25 - x) = 25\n$$\n\n$$\nx + 25 - x = 25\n$$\n\n$$\n25 = 25\n$$\n\nThis confirms our setup is correct. Now, we go back to find $ x $, the number of cars in the first 15 minutes.\n\nWe know that in the first 15 minutes, $ x $ cars drove, and in the remaining 15 minutes, 20 cars drove. So total cars in the jam during the second part is 20.\n\nBut we are told that 5 cars exited, so the number of cars that actually drove in the second part is:\n\n$$\n20 - 5 = 15\n$$\n\nSo the number of cars that drove in the first 15 minutes is:\n\n$$\nx = \\text{cars in first part} = \\text{part of total in first 15 minutes}\n$$\n\nBut we can also think differently: total cars that drove in the jam = 25 (since 5 exited).\n\nWe are told that 20 cars drove in the second 15 minutes. So:\n\n$$\n\\text{First 15 minutes} + \\text{Second 15 minutes} = 25\n$$\n\n$$\n\\text{First 15 minutes} + 15 = 25\n$$\n\n$$\n\\text{First 15 minutes} = 10\n$$\n\nWait — this contradicts our earlier logic. Let's recheck.\n\nWe are told:\n\n- First 15 minutes: $ x $ cars\n- Remaining 15 minutes: 20 cars\n- 5 cars exited\n\nSo total cars that drove in the",
+   "reasoning_chars": 0,
+   "raw": "Let's break down the problem step by step.\n\nWe are given the following information:\n\n- There were originally **30 cars** on the motorway.\n- Some cars drove through in the **first 15 minutes**.\n- Then **20 more cars** drove through in the **remaining 15 minutes**.\n- **5 cars** exited the line and did not drive through the traffic jam.\n- We are to find how many cars drove through the traffic jam in the **first 15 minutes**.\n\nLet’s define:\n\n- Let $ x $ be the number of cars that drove through in the **first 15 minutes**.\n- Then the number of cars that drove through in the **remaining 15 minutes** is $ 30 - x - 5 $, because 5 cars exited.\n\nSo, the total number of cars that drove through the traffic jam is the sum of those in the first 15 minutes and the remaining 15 minutes:\n\n$$\nx + (30 - x - 5) = x + 25\n$$\n\nBut we know that the total number of cars that actually drove through the jam is the total number minus the 5 that exited:\n\n$$\n\\text{Total cars in jam} = 30 - 5 = 25\n$$\n\nSo we set up the equation:\n\n$$\nx + (30 - x - 5) = 25\n$$\n\nSimplify the equation:\n\n$$\nx + (25 - x) = 25\n$$\n\n$$\nx + 25 - x = 25\n$$\n\n$$\n25 = 25\n$$\n\nThis confirms our setup is correct. Now, we go back to find $ x $, the number of cars in the first 15 minutes.\n\nWe know that in the first 15 minutes, $ x $ cars drove, and in the remaining 15 minutes, 20 cars drove. So total cars in the jam during the second part is 20.\n\nBut we are told that 5 cars exited, so the number of cars that actually drove in the second part is:\n\n$$\n20 - 5 = 15\n$$\n\nSo the number of cars that drove in the first 15 minutes is:\n\n$$\nx = \\text{cars in first part} = \\text{part of total in first 15 minutes}\n$$\n\nBut we can also think differently: total cars that drove in the jam = 25 (since 5 exited).\n\nWe are told that 20 cars drove in the second 15 minutes. So:\n\n$$\n\\text{First 15 minutes} + \\text{Second 15 minutes} = 25\n$$\n\n$$\n\\text{First 15 minutes} + 15 = 25\n$$\n\n$$\n\\text{First 15 minutes} = 10\n$$\n\nWait — this contradicts our earlier logic. Let's recheck.\n\nWe are told:\n\n- First 15 minutes: $ x $ cars\n- Remaining 15 minutes: 20 cars\n- 5 cars exited\n\nSo total cars that drove in the",
+   "calls": [],
+   "prompt_tokens": 124,
+   "generated_tokens": 640,
+   "prefill_ms": 983,
+   "decode_ms": 24473,
+   "wall_ms": 25470,
+   "grade": "pass"
+  },
+  {
+   "id": "gsm8k-118",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "We are given the following information:\n\n- On the first day, the customs officer counted **2 containers**, each containing **5 vehicles**.\n- So, the total number of vehicles on the first day is:\n  $$\n  2 \\text{ containers} \\times 5 \\text{ vehicles/container} \\times 1 \\text{ (assuming each container holds 5 vehicles)} = 10 \\text{ vehicles}\n  $$\nWait — actually, the problem states that each container has **5 vehicles**, and there are **2 containers**, so the total number of vehicles on the first day is:\n$$\n2 \\times 5 = 10 \\text{ vehicles}\n$$\n\nBut the problem says the **total number of vehicles became 30** on the second day.\n\nSo let's analyze the second day:\n\n- Total vehicles on the second day = 30\n- Each container still holds 5 vehicles.\n- Let the number of containers on the second day be $ x $.\n\nThen the total number of vehicles on the second day is:\n$$\nx \\times 5 = 30\n$$\n\nSolving for $ x $:\n$$\nx = \\frac{30}{5} = 6\n$$\n\nSo, the number of containers imported on the second day is **6**.\n\n### Final Answer:\n#### 6",
+   "reasoning_chars": 0,
+   "raw": "We are given the following information:\n\n- On the first day, the customs officer counted **2 containers**, each containing **5 vehicles**.\n- So, the total number of vehicles on the first day is:\n  $$\n  2 \\text{ containers} \\times 5 \\text{ vehicles/container} \\times 1 \\text{ (assuming each container holds 5 vehicles)} = 10 \\text{ vehicles}\n  $$\nWait — actually, the problem states that each container has **5 vehicles**, and there are **2 containers**, so the total number of vehicles on the first day is:\n$$\n2 \\times 5 = 10 \\text{ vehicles}\n$$\n\nBut the problem says the **total number of vehicles became 30** on the second day.\n\nSo let's analyze the second day:\n\n- Total vehicles on the second day = 30\n- Each container still holds 5 vehicles.\n- Let the number of containers on the second day be $ x $.\n\nThen the total number of vehicles on the second day is:\n$$\nx \\times 5 = 30\n$$\n\nSolving for $ x $:\n$$\nx = \\frac{30}{5} = 6\n$$\n\nSo, the number of containers imported on the second day is **6**.\n\n### Final Answer:\n#### 6",
+   "calls": [],
+   "prompt_tokens": 105,
+   "generated_tokens": 280,
+   "prefill_ms": 803,
+   "decode_ms": 10252,
+   "wall_ms": 11065,
+   "grade": "fail"
+  },
+  {
+   "id": "gsm8k-121",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's break down the problem step by step.\n\nWe are given the following information:\n\n- **Morisette** brought:\n  - 5 apples\n  - 8 oranges\n\n- **Kael** brought:\n  - Twice the number of apples Morisette brought.\n  - Half the number of oranges Morisette brought.\n\nNow, let's calculate the number of fruits each person brought:\n\n**Morisette's fruits:**\n- Apples: 5\n- Oranges: 8\n\n**Kael's fruits:**\n- Apples: Twice Morisette's apples → 2 × 5 = 10 apples\n- Oranges: Half of Morisette's oranges → (1/2) × 8 = 4 oranges\n\nNow, let's sum up all the fruits:\n\n- Morisette: 5 apples + 8 oranges = 13 fruits\n- Kael: 10 apples + 4 oranges = 14 fruits\n\nTotal fruits = Morisette's fruits + Kael's fruits  \n= 13 + 14 = 27\n\nTherefore, the total number of fruits they have is:\n\n#### 27",
+   "reasoning_chars": 0,
+   "raw": "Let's break down the problem step by step.\n\nWe are given the following information:\n\n- **Morisette** brought:\n  - 5 apples\n  - 8 oranges\n\n- **Kael** brought:\n  - Twice the number of apples Morisette brought.\n  - Half the number of oranges Morisette brought.\n\nNow, let's calculate the number of fruits each person brought:\n\n**Morisette's fruits:**\n- Apples: 5\n- Oranges: 8\n\n**Kael's fruits:**\n- Apples: Twice Morisette's apples → 2 × 5 = 10 apples\n- Oranges: Half of Morisette's oranges → (1/2) × 8 = 4 oranges\n\nNow, let's sum up all the fruits:\n\n- Morisette: 5 apples + 8 oranges = 13 fruits\n- Kael: 10 apples + 4 oranges = 14 fruits\n\nTotal fruits = Morisette's fruits + Kael's fruits  \n= 13 + 14 = 27\n\nTherefore, the total number of fruits they have is:\n\n#### 27",
+   "calls": [],
+   "prompt_tokens": 85,
+   "generated_tokens": 246,
+   "prefill_ms": 2278,
+   "decode_ms": 10734,
+   "wall_ms": 13023,
+   "grade": "pass"
+  },
+  {
+   "id": "gsm8k-126",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's break down the problem step by step.\n\nWe are given:\n- Dylan bought **38 chicken sausages**.\n- He bought **6 more fish sausages than chicken sausages**.\n\nWe need to find the total number of sausages he bought.\n\nFirst, calculate the number of fish sausages:\n- Fish sausages = Chicken sausages + 6\n- So, fish sausages = 38 + 6 = 44\n\nNow, add the two types together:\n- Total sausages = Chicken sausages + Fish sausages\n- Total sausages = 38 + 44 = 82\n\nTherefore, the total number of sausages Dylan bought is:\n#### 82",
+   "reasoning_chars": 0,
+   "raw": "Let's break down the problem step by step.\n\nWe are given:\n- Dylan bought **38 chicken sausages**.\n- He bought **6 more fish sausages than chicken sausages**.\n\nWe need to find the total number of sausages he bought.\n\nFirst, calculate the number of fish sausages:\n- Fish sausages = Chicken sausages + 6\n- So, fish sausages = 38 + 6 = 44\n\nNow, add the two types together:\n- Total sausages = Chicken sausages + Fish sausages\n- Total sausages = 38 + 44 = 82\n\nTherefore, the total number of sausages Dylan bought is:\n#### 82",
+   "calls": [],
+   "prompt_tokens": 81,
+   "generated_tokens": 144,
+   "prefill_ms": 728,
+   "decode_ms": 5301,
+   "wall_ms": 6036,
+   "grade": "pass"
+  },
+  {
+   "id": "gsm8k-143",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's break down the costs step by step.\n\nFirst, list the items John bought and their prices:\n\n- Milk: $2.00  \n- Eggs: $3.00  \n- Light bulbs: $3.00  \n- Cups: $3.00  \n- Roach traps: $4.00  \n\nNow, identify the nonfood items. The nonfood items are: milk, eggs, light bulbs, cups, and roach traps.\n\nTotal cost of nonfood items:\n$2.00 + $3.00 + $3.00 + $3.00 + $4.00 =  \n$2 + 3 + 3 + 3 + 4 = 15.00 dollars\n\nNext, calculate the tax. The tax is 10% on the total cost of nonfood items:\n\nTax = 10% of $15.00 = 0.10 × 15.00 = $1.50\n\nNow add the tax to the total cost of nonfood items:\n\nTotal cost = $15.00 + $1.50 = $16.50\n\nNow add the cost of the food items (which are not taxed):\n\nFood items: milk ($2.00), eggs ($3.00), cups ($3.00), roach traps ($4.00)\n\nTotal food cost = $2.00 + $3.00 + $3.00 + $4.00 = $12.00\n\nNow add the food cost to the total cost:\n\nTotal cost = $12.00 + $16.50 = $28.50\n\nTherefore, the final amount John paid is #### 28.50",
+   "reasoning_chars": 0,
+   "raw": "Let's break down the costs step by step.\n\nFirst, list the items John bought and their prices:\n\n- Milk: $2.00  \n- Eggs: $3.00  \n- Light bulbs: $3.00  \n- Cups: $3.00  \n- Roach traps: $4.00  \n\nNow, identify the nonfood items. The nonfood items are: milk, eggs, light bulbs, cups, and roach traps.\n\nTotal cost of nonfood items:\n$2.00 + $3.00 + $3.00 + $3.00 + $4.00 =  \n$2 + 3 + 3 + 3 + 4 = 15.00 dollars\n\nNext, calculate the tax. The tax is 10% on the total cost of nonfood items:\n\nTax = 10% of $15.00 = 0.10 × 15.00 = $1.50\n\nNow add the tax to the total cost of nonfood items:\n\nTotal cost = $15.00 + $1.50 = $16.50\n\nNow add the cost of the food items (which are not taxed):\n\nFood items: milk ($2.00), eggs ($3.00), cups ($3.00), roach traps ($4.00)\n\nTotal food cost = $2.00 + $3.00 + $3.00 + $4.00 = $12.00\n\nNow add the food cost to the total cost:\n\nTotal cost = $12.00 + $16.50 = $28.50\n\nTherefore, the final amount John paid is #### 28.50",
+   "calls": [],
+   "prompt_tokens": 89,
+   "generated_tokens": 351,
+   "prefill_ms": 748,
+   "decode_ms": 12996,
+   "wall_ms": 13753,
+   "grade": "fail"
+  },
+  {
+   "id": "gsm8k-148",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's break down the problem step by step.\n\nWe are given the following information:\n\n- Cost of admission: $12 for adults, $10 for children.\n- Brittany's mom buys:\n  - 1 child ticket\n  - 1 adult ticket\n- She received $8 in change.\n- We are to find out how much money she gave the cashier.\n\nLet’s define the variables:\n\nLet:\n- $ x $ = cost of 1 child ticket\n- $ y $ = cost of 1 adult ticket\n\nFrom the problem:\n\n- The cost of 1 child ticket = $10\n- The cost of 1 adult ticket = $12\n- The total cost for the tickets is: $ x + y $\n- The cost for 1 child and 1 adult ticket is: $10 + $12 = $22\n- She gave the cashier $8 in change, which means she paid $22 - $8 = $14\n\nSo, the total amount she gave the cashier is $14.\n\nWe are told that the amount she gave is $14.\n\nBut let's verify using the given values:\n\nWe know:\n- She bought 1 child ticket and 1 adult ticket.\n- So total cost = $10 + $12 = $22\n- She received $8 in change → paid = $22 - $8 = $14\n\nTherefore, the amount she gave the cashier is $14.\n\n#### 14",
+   "reasoning_chars": 0,
+   "raw": "Let's break down the problem step by step.\n\nWe are given the following information:\n\n- Cost of admission: $12 for adults, $10 for children.\n- Brittany's mom buys:\n  - 1 child ticket\n  - 1 adult ticket\n- She received $8 in change.\n- We are to find out how much money she gave the cashier.\n\nLet’s define the variables:\n\nLet:\n- $ x $ = cost of 1 child ticket\n- $ y $ = cost of 1 adult ticket\n\nFrom the problem:\n\n- The cost of 1 child ticket = $10\n- The cost of 1 adult ticket = $12\n- The total cost for the tickets is: $ x + y $\n- The cost for 1 child and 1 adult ticket is: $10 + $12 = $22\n- She gave the cashier $8 in change, which means she paid $22 - $8 = $14\n\nSo, the total amount she gave the cashier is $14.\n\nWe are told that the amount she gave is $14.\n\nBut let's verify using the given values:\n\nWe know:\n- She bought 1 child ticket and 1 adult ticket.\n- So total cost = $10 + $12 = $22\n- She received $8 in change → paid = $22 - $8 = $14\n\nTherefore, the amount she gave the cashier is $14.\n\n#### 14",
+   "calls": [],
+   "prompt_tokens": 100,
+   "generated_tokens": 309,
+   "prefill_ms": 749,
+   "decode_ms": 11453,
+   "wall_ms": 12217,
+   "grade": "fail"
+  },
+  {
+   "id": "gsm8k-176",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "We are given the following information:\n\n- Total number of Asians = 240  \n- Number of Japanese Asians = 80  \n- Number of Chinese Asians = Total Asians - Japanese Asians = 240 - 80 = 160  \n- Number of boys on the Chinese team = 60  \n- We are to find the number of girls on the Chinese team.\n\nFirst, let's find the number of Chinese Asians:\n\nTotal Asians = 240  \nJapanese Asians = 80  \nChinese Asians = 240 - 80 = 160\n\nWe are told that the number of boys on the Chinese team is 60. Therefore, the number of girls on the Chinese team is:\n\nChinese girls = Chinese Asians - Boys = 160 - 60 = 100\n\nSo, the number of girls on the Chinese team is:\n\n#### 100",
+   "reasoning_chars": 0,
+   "raw": "We are given the following information:\n\n- Total number of Asians = 240  \n- Number of Japanese Asians = 80  \n- Number of Chinese Asians = Total Asians - Japanese Asians = 240 - 80 = 160  \n- Number of boys on the Chinese team = 60  \n- We are to find the number of girls on the Chinese team.\n\nFirst, let's find the number of Chinese Asians:\n\nTotal Asians = 240  \nJapanese Asians = 80  \nChinese Asians = 240 - 80 = 160\n\nWe are told that the number of boys on the Chinese team is 60. Therefore, the number of girls on the Chinese team is:\n\nChinese girls = Chinese Asians - Boys = 160 - 60 = 100\n\nSo, the number of girls on the Chinese team is:\n\n#### 100",
+   "calls": [],
+   "prompt_tokens": 74,
+   "generated_tokens": 183,
+   "prefill_ms": 664,
+   "decode_ms": 6620,
+   "wall_ms": 7291,
+   "grade": "pass"
+  },
+  {
+   "id": "gsm8k-185",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's break down the problem step by step.\n\nWe know:\n- Jenna picked half as many apples as her mom.\n- Her mom picked 20 apples.\n\nFirst, calculate how many apples Jenna picked:\nSince Jenna picked half as many as her mom:\nJenna's apples = (1/2) × Mom's apples = (1/2) × 20 = 10 apples\n\nNow, add the number of apples picked by both:\nJenna's apples + Mom's apples = 10 + 20 = 30 apples\n\nSo, the total number of apples they picked together is:\n#### 30",
+   "reasoning_chars": 0,
+   "raw": "Let's break down the problem step by step.\n\nWe know:\n- Jenna picked half as many apples as her mom.\n- Her mom picked 20 apples.\n\nFirst, calculate how many apples Jenna picked:\nSince Jenna picked half as many as her mom:\nJenna's apples = (1/2) × Mom's apples = (1/2) × 20 = 10 apples\n\nNow, add the number of apples picked by both:\nJenna's apples + Mom's apples = 10 + 20 = 30 apples\n\nSo, the total number of apples they picked together is:\n#### 30",
+   "calls": [],
+   "prompt_tokens": 72,
+   "generated_tokens": 130,
+   "prefill_ms": 644,
+   "decode_ms": 4657,
+   "wall_ms": 5307,
+   "grade": "pass"
+  },
+  {
+   "id": "gsm8k-192",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's break down the problem step by step.\n\nWe are given the following information:\n\n- Tom starts with **50 trees**.\n- Each year:\n  - He **plants 10 trees**.\n  - He **chops down 2 trees**.\n- After **10 years**, **30% of the trees die**.\n- We are to find how many trees he has left.\n\nLet’s calculate the net change in the number of trees each year:\n\nEach year:\n- Net change = Trees planted - Trees chopped down = 10 - 2 = **8 trees per year**\n\nOver 10 years:\n- Total trees added = 8 trees/year × 10 years = **80 trees**\n- Total trees chopped down = 2 trees/year × 10 years = **20 trees**\n- Net change over 10 years = 80 - 20 = **60 trees**\n\nSo, the total number of trees at the end of 10 years is:\nInitial trees + Net change = 50 + 60 = **110 trees**\n\nNow, we are told that **30% of the trees die** after 10 years.\n\nNumber of trees that die = 30% of 110 = 0.30 × 110 = **33 trees**\n\nTherefore, trees remaining = 110 - 33 = **77 trees**\n\nWait — let's double-check the calculation carefully:\n\n- Starting with 50 trees.\n- Each year: +10 planted, -2 chopped → net +8 per year.\n- After 10 years: +80 trees added, -20 chopped → +60 net gain.\n- Total trees after 10 years: 50 + 60 = 110.\n- Trees that die: 30% of 110 = 33.\n- Remaining trees: 110 - 33 = 77.\n\nSo, the final number of trees is:\n\n#### 77",
+   "reasoning_chars": 0,
+   "raw": "Let's break down the problem step by step.\n\nWe are given the following information:\n\n- Tom starts with **50 trees**.\n- Each year:\n  - He **plants 10 trees**.\n  - He **chops down 2 trees**.\n- After **10 years**, **30% of the trees die**.\n- We are to find how many trees he has left.\n\nLet’s calculate the net change in the number of trees each year:\n\nEach year:\n- Net change = Trees planted - Trees chopped down = 10 - 2 = **8 trees per year**\n\nOver 10 years:\n- Total trees added = 8 trees/year × 10 years = **80 trees**\n- Total trees chopped down = 2 trees/year × 10 years = **20 trees**\n- Net change over 10 years = 80 - 20 = **60 trees**\n\nSo, the total number of trees at the end of 10 years is:\nInitial trees + Net change = 50 + 60 = **110 trees**\n\nNow, we are told that **30% of the trees die** after 10 years.\n\nNumber of trees that die = 30% of 110 = 0.30 × 110 = **33 trees**\n\nTherefore, trees remaining = 110 - 33 = **77 trees**\n\nWait — let's double-check the calculation carefully:\n\n- Starting with 50 trees.\n- Each year: +10 planted, -2 chopped → net +8 per year.\n- After 10 years: +80 trees added, -20 chopped → +60 net gain.\n- Total trees after 10 years: 50 + 60 = 110.\n- Trees that die: 30% of 110 = 33.\n- Remaining trees: 110 - 33 = 77.\n\nSo, the final number of trees is:\n\n#### 77",
+   "calls": [],
+   "prompt_tokens": 84,
+   "generated_tokens": 401,
+   "prefill_ms": 767,
+   "decode_ms": 15189,
+   "wall_ms": 15963,
+   "grade": "fail"
+  },
+  {
+   "id": "gsm8k-253",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's break down the problem step by step.\n\nWe are told:\n- Bill starts on the 3rd floor.\n- He rides the elevator to a floor that is equal to 4 times his starting floor plus 6.\n\nFirst, calculate the target floor:\n4 × 3 + 6 = 12 + 6 = 18\n\nSo Bill is now on the 18th floor.\n\n### Final answer:\n#### 18",
+   "reasoning_chars": 0,
+   "raw": "Let's break down the problem step by step.\n\nWe are told:\n- Bill starts on the 3rd floor.\n- He rides the elevator to a floor that is equal to 4 times his starting floor plus 6.\n\nFirst, calculate the target floor:\n4 × 3 + 6 = 12 + 6 = 18\n\nSo Bill is now on the 18th floor.\n\n### Final answer:\n#### 18",
+   "calls": [],
+   "prompt_tokens": 70,
+   "generated_tokens": 92,
+   "prefill_ms": 643,
+   "decode_ms": 3204,
+   "wall_ms": 3854,
+   "grade": "pass"
+  },
+  {
+   "id": "gsm8k-308",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's break down the problem step by step.\n\nWe are given the following information:\n\n- Original price of a tub of ice cream: $13  \n- New price of a tub of ice cream: $11  \n- Discount on a packet of milk: $0.5  \n- Number of items to buy:  \n  - 2 tubs of ice cream  \n  - 4 packets of milk  \n\nWe are to calculate the total savings from buying these items at the discounted prices.\n\n---\n\n**Step 1: Calculate the original cost of 2 tubs of ice cream**\n\nOriginal price per tub = $13  \nNumber of tubs = 2  \nOriginal total cost = 2 × $13 = $26\n\nDiscounted price per tub = $11  \nTotal cost for 2 tubs = 2 × $11 = $22\n\n**Savings from ice cream:**  \n$26 (original) - $22 (discounted) = $4\n\n---\n\n**Step 2: Calculate the cost of 4 packets of milk at the discounted price**\n\nDiscounted price per packet = $0.5  \nNumber of packets = 4  \nTotal cost = 4 × $0.5 = $2\n\n---\n\n**Step 3: Total savings**\n\nSavings from ice cream = $4  \nSavings from milk = $2  \nTotal savings = $4 + $2 = $6\n\nWait — actually, let's double-check the interpretation. The question asks how much you will save if you buy 2 tubs of ice cream and 4 packets of milk. That means we compare the original vs discounted prices.\n\nOriginal total cost for 2 ice cream tubs:  \n2 × $13 = $26  \nDiscounted total cost for 2 ice cream tubs:  \n2 × $11 = $22  \nSavings on ice cream = $26 - $22 = $4\n\nOriginal total cost for 4 packets of milk:  \n4 × $0.5 = $2  \nDiscounted total cost for 4 packets:  \n4 × $0.5 = $2  \nWait — this contradicts the earlier calculation. Let's clarify:\n\nOriginal price of milk = $0.5 per packet  \nOriginal cost for 4 packets = 4 × $0.5 = $2  \nDiscounted price per packet = $0.5  \nDiscounted total cost for 4 packets = 4 × $0.5 = $2\n\nSo savings from milk = $2 - $2 = $0? That can't be right.\n\nWait — the discount is $0.5 per packet, so each packet is now $0.5 instead of $0.50? Wait, the wording says \"a packet of milk was sold at a discount of $0.5\".\n\nThis means the discount is $0.5 per packet, so:\n\nOriginal price per packet = $0.50  \nDiscounted price per packet = $0.50 - $0.50 = $0",
+   "reasoning_chars": 0,
+   "raw": "Let's break down the problem step by step.\n\nWe are given the following information:\n\n- Original price of a tub of ice cream: $13  \n- New price of a tub of ice cream: $11  \n- Discount on a packet of milk: $0.5  \n- Number of items to buy:  \n  - 2 tubs of ice cream  \n  - 4 packets of milk  \n\nWe are to calculate the total savings from buying these items at the discounted prices.\n\n---\n\n**Step 1: Calculate the original cost of 2 tubs of ice cream**\n\nOriginal price per tub = $13  \nNumber of tubs = 2  \nOriginal total cost = 2 × $13 = $26\n\nDiscounted price per tub = $11  \nTotal cost for 2 tubs = 2 × $11 = $22\n\n**Savings from ice cream:**  \n$26 (original) - $22 (discounted) = $4\n\n---\n\n**Step 2: Calculate the cost of 4 packets of milk at the discounted price**\n\nDiscounted price per packet = $0.5  \nNumber of packets = 4  \nTotal cost = 4 × $0.5 = $2\n\n---\n\n**Step 3: Total savings**\n\nSavings from ice cream = $4  \nSavings from milk = $2  \nTotal savings = $4 + $2 = $6\n\nWait — actually, let's double-check the interpretation. The question asks how much you will save if you buy 2 tubs of ice cream and 4 packets of milk. That means we compare the original vs discounted prices.\n\nOriginal total cost for 2 ice cream tubs:  \n2 × $13 = $26  \nDiscounted total cost for 2 ice cream tubs:  \n2 × $11 = $22  \nSavings on ice cream = $26 - $22 = $4\n\nOriginal total cost for 4 packets of milk:  \n4 × $0.5 = $2  \nDiscounted total cost for 4 packets:  \n4 × $0.5 = $2  \nWait — this contradicts the earlier calculation. Let's clarify:\n\nOriginal price of milk = $0.5 per packet  \nOriginal cost for 4 packets = 4 × $0.5 = $2  \nDiscounted price per packet = $0.5  \nDiscounted total cost for 4 packets = 4 × $0.5 = $2\n\nSo savings from milk = $2 - $2 = $0? That can't be right.\n\nWait — the discount is $0.5 per packet, so each packet is now $0.5 instead of $0.50? Wait, the wording says \"a packet of milk was sold at a discount of $0.5\".\n\nThis means the discount is $0.5 per packet, so:\n\nOriginal price per packet = $0.50  \nDiscounted price per packet = $0.50 - $0.50 = $0",
+   "calls": [],
+   "prompt_tokens": 85,
+   "generated_tokens": 640,
+   "prefill_ms": 740,
+   "decode_ms": 24378,
+   "wall_ms": 25125,
+   "grade": "fail"
+  },
+  {
+   "id": "gsm8k-439",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "We are given a scenario involving two characters, Wayne and Bernadette, who are arriving at a premiere theater. We need to determine how much earlier Bernadette should leave compared to Wayne to arrive first.\n\nLet's break down the information step by step.\n\n1. **Time taken by Wayne to drive to the theater:**\n   - It takes Wayne 4 minutes to be driven to the theater.\n\n2. **Time taken by the drive from Bernadette’s apartment to the theater:**\n   - The drive from Bernadette’s apartment takes **four times** as long as Wayne's drive.\n   - So, Bernadette's drive takes $ 4 \\times 4 = 16 $ minutes.\n\n3. **Wayne's total time to reach the theater:**\n   - Since it takes Wayne 4 minutes to drive, and the drive from Bernadette takes 16 minutes, we need to consider the total time including departure times.\n\n   However, the key is that Bernadette wants to arrive **5 minutes before Wayne**.\n\n4. **Determine how much earlier Bernadette should leave:**\n   - Wayne arrives in 4 minutes.\n   - Bernadette wants to arrive 5 minutes before Wayne, so she needs to arrive in $ 4 - 5 = -1 $? Wait — that doesn't make sense. Let's reinterpret.\n\nLet’s define the departure times:\n\n- Let the departure time of Wayne be $ D_W $.\n- Then Bernadette needs to depart **5 minutes earlier than Wayne** to arrive first. So her departure time should be $ D_B = D_W - 5 $.\n\nBut we are told the drive from Bernadette takes 16 minutes. So:\n\n- Time for Wayne to reach the theater: 4 minutes.\n- Time for Bernadette to reach the theater: 16 minutes.\n\nWe want Bernadette to arrive 5 minutes before Wayne. That means:\n\n$$\n\\text{Arrival time of Bernadette} = \\text{Arrival time of Wayne} - 5\n$$\n\nBut arrival time of Wayne is when he arrives at the theater, which is when he departs. So:\n\n- Wayne departs at time $ D_W $\n- Bernadette departs at time $ D_B $\n\nWe want:\n$$\nD_B = D_W - 5\n$$\n\nBut Bernadette's travel time is 16 minutes, so:\n$$\nD_B = D_W - 5 \\Rightarrow D_W - 5 = D_B\n$$\n\nBut the drive from Bernadette takes 16 minutes, so:\n$$\nD_B = 16\n$$\n\nWait — this contradicts unless we reconcile the times.\n\nLet’s clarify with variables:\n\nLet:\n- Time for Wayne to drive: $ t_W = 4 $ minutes\n- Time for Bernadette to drive: $ t_B = 16 $ minutes\n\nBernadette wants to arrive 5 minutes before Wayne.\n\nSo her departure time should be:\n$$\nD_B = D",
+   "reasoning_chars": 0,
+   "raw": "We are given a scenario involving two characters, Wayne and Bernadette, who are arriving at a premiere theater. We need to determine how much earlier Bernadette should leave compared to Wayne to arrive first.\n\nLet's break down the information step by step.\n\n1. **Time taken by Wayne to drive to the theater:**\n   - It takes Wayne 4 minutes to be driven to the theater.\n\n2. **Time taken by the drive from Bernadette’s apartment to the theater:**\n   - The drive from Bernadette’s apartment takes **four times** as long as Wayne's drive.\n   - So, Bernadette's drive takes $ 4 \\times 4 = 16 $ minutes.\n\n3. **Wayne's total time to reach the theater:**\n   - Since it takes Wayne 4 minutes to drive, and the drive from Bernadette takes 16 minutes, we need to consider the total time including departure times.\n\n   However, the key is that Bernadette wants to arrive **5 minutes before Wayne**.\n\n4. **Determine how much earlier Bernadette should leave:**\n   - Wayne arrives in 4 minutes.\n   - Bernadette wants to arrive 5 minutes before Wayne, so she needs to arrive in $ 4 - 5 = -1 $? Wait — that doesn't make sense. Let's reinterpret.\n\nLet’s define the departure times:\n\n- Let the departure time of Wayne be $ D_W $.\n- Then Bernadette needs to depart **5 minutes earlier than Wayne** to arrive first. So her departure time should be $ D_B = D_W - 5 $.\n\nBut we are told the drive from Bernadette takes 16 minutes. So:\n\n- Time for Wayne to reach the theater: 4 minutes.\n- Time for Bernadette to reach the theater: 16 minutes.\n\nWe want Bernadette to arrive 5 minutes before Wayne. That means:\n\n$$\n\\text{Arrival time of Bernadette} = \\text{Arrival time of Wayne} - 5\n$$\n\nBut arrival time of Wayne is when he arrives at the theater, which is when he departs. So:\n\n- Wayne departs at time $ D_W $\n- Bernadette departs at time $ D_B $\n\nWe want:\n$$\nD_B = D_W - 5\n$$\n\nBut Bernadette's travel time is 16 minutes, so:\n$$\nD_B = D_W - 5 \\Rightarrow D_W - 5 = D_B\n$$\n\nBut the drive from Bernadette takes 16 minutes, so:\n$$\nD_B = 16\n$$\n\nWait — this contradicts unless we reconcile the times.\n\nLet’s clarify with variables:\n\nLet:\n- Time for Wayne to drive: $ t_W = 4 $ minutes\n- Time for Bernadette to drive: $ t_B = 16 $ minutes\n\nBernadette wants to arrive 5 minutes before Wayne.\n\nSo her departure time should be:\n$$\nD_B = D",
+   "calls": [],
+   "prompt_tokens": 143,
+   "generated_tokens": 640,
+   "prefill_ms": 1120,
+   "decode_ms": 24753,
+   "wall_ms": 25882,
+   "grade": "fail"
+  },
+  {
+   "id": "gsm8k-457",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's break down the problem step by step.\n\nWe are told:\n\n- Initially, Katelyn sees **50 fairies** flying above the forest.\n- Then, **one of her friends sees half as many fairies as Katelyn** and joins them. So, the number of fairies that joined is:\n  $$\n  \\frac{50}{2} = 25\n  $$\n  So now, the total number of fairies becomes:\n  $$\n  50 + 25 = 75\n  $$\n\n- Then, **ten minutes later**, **30 fairies fly away**.\n\nSo, the number of fairies remaining is:\n$$\n75 - 30 = 45\n$$\n\n### Final Answer:\n#### 45",
+   "reasoning_chars": 0,
+   "raw": "Let's break down the problem step by step.\n\nWe are told:\n\n- Initially, Katelyn sees **50 fairies** flying above the forest.\n- Then, **one of her friends sees half as many fairies as Katelyn** and joins them. So, the number of fairies that joined is:\n  $$\n  \\frac{50}{2} = 25\n  $$\n  So now, the total number of fairies becomes:\n  $$\n  50 + 25 = 75\n  $$\n\n- Then, **ten minutes later**, **30 fairies fly away**.\n\nSo, the number of fairies remaining is:\n$$\n75 - 30 = 45\n$$\n\n### Final Answer:\n#### 45",
+   "calls": [],
+   "prompt_tokens": 107,
+   "generated_tokens": 157,
+   "prefill_ms": 968,
+   "decode_ms": 5791,
+   "wall_ms": 6765,
+   "grade": "pass"
+  },
+  {
+   "id": "gsm8k-492",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's break down the problem step by step.\n\n1. The cost of the small pizza is $8.\n2. The family-size pizza costs 3 times as much as the small pizza. So, the cost of the family-size pizza is:\n   $$\n   3 \\times 8 = 24\n   $$\n3. Sally buys one small pizza and one family-size pizza. So, the total cost is:\n   $$\n   8 + 24 = 32\n   $$\n\nTherefore, the total amount Sally spends is #### 32",
+   "reasoning_chars": 0,
+   "raw": "Let's break down the problem step by step.\n\n1. The cost of the small pizza is $8.\n2. The family-size pizza costs 3 times as much as the small pizza. So, the cost of the family-size pizza is:\n   $$\n   3 \\times 8 = 24\n   $$\n3. Sally buys one small pizza and one family-size pizza. So, the total cost is:\n   $$\n   8 + 24 = 32\n   $$\n\nTherefore, the total amount Sally spends is #### 32",
+   "calls": [],
+   "prompt_tokens": 67,
+   "generated_tokens": 115,
+   "prefill_ms": 544,
+   "decode_ms": 4017,
+   "wall_ms": 4569,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-179",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "Certainly! Here’s a 50+ sentence essay tailored for a proposal to potential investors, focusing on the filmmaker’s vision and the significance of the Internet’s history:\n\n---\n\nThe story of the Internet is one of the most transformative chapters in human history. It began not as a single invention, but as a gradual evolution of interconnected ideas, technologies, and human collaboration. Today, the Internet is an integral part of our daily lives, shaping how we communicate, work, learn, and even dream. As a filmmaker, I am passionate about bringing this story to life, not just as a documentary, but as an engaging narrative that captures the imagination and inspires curiosity.\n\nThe Internet’s origins trace back to the late 1960s and early 1970s, when scientists and engineers began building networks that allowed computers to communicate across distances. These early networks were limited, but they laid the foundation for what would become a global system. The development of the Internet as we know it today is a testament to human ingenuity, perseverance, and the desire to connect.\n\nWhat makes this project so compelling is the sheer scale of its impact. The Internet has revolutionized communication, commerce, education, and entertainment. It has connected billions of people across the globe, breaking down geographical barriers and fostering unprecedented collaboration. This transformation is not just technological—it is cultural, social, and economic.\n\nThe film will explore the journey of the Internet from its humble beginnings to its current status as a global phenomenon. It will highlight key milestones, such as the creation of the World Wide Web by Tim Berners-Lee, the rise of social media platforms, and the rapid expansion of digital services. Each chapter of this story will reveal how the Internet has shaped modern society and continues to influence the future.\n\nWhat sets this project apart is its ability to make complex technology accessible to a broad audience. The film will blend historical facts with engaging storytelling, making it both informative and entertaining. It will feature interviews with experts, historians, and everyday users who have experienced the Internet firsthand. This approach will not only educate viewers but also inspire them to think about the future of technology.\n\nThe filmmaker is deeply committed to authenticity and accuracy. Every detail will be researched thoroughly, ensuring that the narrative reflects the true evolution of the Internet. We will present not just the technological advancements, but also the human stories behind them—how people connected, how challenges were overcome, and how the Internet has changed lives.\n\nInvestors are not just funding a film; they are investing in a vision that can inspire change. This project has the potential to spark conversations about digital literacy, privacy, cybersecurity, and the ethical implications of technology. It will challenge viewers to consider their role in shaping the digital world.\n\nThe film will also explore the cultural impact of the Internet. From the rise of online communities to the influence of social media on politics and art, this project will highlight the diverse ways the Internet has reshaped society. It will showcase both the benefits and the challenges, offering a balanced perspective that is essential for informed decision-making.\n\nOne of the most exciting aspects of this",
+   "reasoning_chars": 0,
+   "raw": "Certainly! Here’s a 50+ sentence essay tailored for a proposal to potential investors, focusing on the filmmaker’s vision and the significance of the Internet’s history:\n\n---\n\nThe story of the Internet is one of the most transformative chapters in human history. It began not as a single invention, but as a gradual evolution of interconnected ideas, technologies, and human collaboration. Today, the Internet is an integral part of our daily lives, shaping how we communicate, work, learn, and even dream. As a filmmaker, I am passionate about bringing this story to life, not just as a documentary, but as an engaging narrative that captures the imagination and inspires curiosity.\n\nThe Internet’s origins trace back to the late 1960s and early 1970s, when scientists and engineers began building networks that allowed computers to communicate across distances. These early networks were limited, but they laid the foundation for what would become a global system. The development of the Internet as we know it today is a testament to human ingenuity, perseverance, and the desire to connect.\n\nWhat makes this project so compelling is the sheer scale of its impact. The Internet has revolutionized communication, commerce, education, and entertainment. It has connected billions of people across the globe, breaking down geographical barriers and fostering unprecedented collaboration. This transformation is not just technological—it is cultural, social, and economic.\n\nThe film will explore the journey of the Internet from its humble beginnings to its current status as a global phenomenon. It will highlight key milestones, such as the creation of the World Wide Web by Tim Berners-Lee, the rise of social media platforms, and the rapid expansion of digital services. Each chapter of this story will reveal how the Internet has shaped modern society and continues to influence the future.\n\nWhat sets this project apart is its ability to make complex technology accessible to a broad audience. The film will blend historical facts with engaging storytelling, making it both informative and entertaining. It will feature interviews with experts, historians, and everyday users who have experienced the Internet firsthand. This approach will not only educate viewers but also inspire them to think about the future of technology.\n\nThe filmmaker is deeply committed to authenticity and accuracy. Every detail will be researched thoroughly, ensuring that the narrative reflects the true evolution of the Internet. We will present not just the technological advancements, but also the human stories behind them—how people connected, how challenges were overcome, and how the Internet has changed lives.\n\nInvestors are not just funding a film; they are investing in a vision that can inspire change. This project has the potential to spark conversations about digital literacy, privacy, cybersecurity, and the ethical implications of technology. It will challenge viewers to consider their role in shaping the digital world.\n\nThe film will also explore the cultural impact of the Internet. From the rise of online communities to the influence of social media on politics and art, this project will highlight the diverse ways the Internet has reshaped society. It will showcase both the benefits and the challenges, offering a balanced perspective that is essential for informed decision-making.\n\nOne of the most exciting aspects of this",
+   "calls": [],
+   "prompt_tokens": 51,
+   "generated_tokens": 640,
+   "prefill_ms": 426,
+   "decode_ms": 23989,
+   "wall_ms": 24427,
+   "grade": "fail"
+  },
+  {
+   "id": "ifeval-201",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "I watched the sun rise. Conversation flowed softly.  \n\n\"Did you see that?\" asked one.  \n\"Yes,\" replied another.  \nWe shared a moment, simple and clear.",
+   "reasoning_chars": 0,
+   "raw": "I watched the sun rise. Conversation flowed softly.  \n\n\"Did you see that?\" asked one.  \n\"Yes,\" replied another.  \nWe shared a moment, simple and clear.",
+   "calls": [],
+   "prompt_tokens": 35,
+   "generated_tokens": 41,
+   "prefill_ms": 357,
+   "decode_ms": 1368,
+   "wall_ms": 1736,
+   "grade": "fail"
+  },
+  {
+   "id": "ifeval-260",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "Experienced refinery operator with 5 years in chemical industry. Valued friends and connected with Hanson. Committed to excellence.",
+   "reasoning_chars": 0,
+   "raw": "Experienced refinery operator with 5 years in chemical industry. Valued friends and connected with Hanson. Committed to excellence.",
+   "calls": [],
+   "prompt_tokens": 59,
+   "generated_tokens": 28,
+   "prefill_ms": 487,
+   "decode_ms": 922,
+   "wall_ms": 1416,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-331",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "I LIVED IN A ROOM THAT FELT LIKE A PRISON I HATED EVERY DAY THE NOISE WAS TOO LOUD THE PEOPLE WERE CONSTANTLY RUINING MY PEACE I NEEDED A PLACE THAT WAS REAL I WAS NOT SOMEONE TO BE FORGOTTEN",
+   "reasoning_chars": 0,
+   "raw": "I LIVED IN A ROOM THAT FELT LIKE A PRISON I HATED EVERY DAY THE NOISE WAS TOO LOUD THE PEOPLE WERE CONSTANTLY RUINING MY PEACE I NEEDED A PLACE THAT WAS REAL I WAS NOT SOMEONE TO BE FORGOTTEN",
+   "calls": [],
+   "prompt_tokens": 65,
+   "generated_tokens": 81,
+   "prefill_ms": 577,
+   "decode_ms": 2759,
+   "wall_ms": 3344,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-1248",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "***The scene hits hard, man, it’s a mess!*  \nThey caught him for that steal, a car, no way!  \nBut the bail? That’s just a joke, a lie!  \nThey’re playing the game, but it’s not fair!  \n\n***The anger’s in my veins, this is a fight!*  \nHe was caught, but they tried to play it tight.  \nNow he’s in the system, but it’s not right,  \nI’m tired of hearing “just a little mistake.”  \n\n***The system’s broken, it’s a mess, you see!*  \nHe’s got to stand up, not just play the game.  \nThis isn’t about the car, it’s about the pain,  \nLet’s make sure justice gets its due!  \n\n***Let’s not forget the cost, it’s too late!*  \nThis anger’s burning, I can’t let it fade.  \nWe need change, not just a story told,  \nFor the man who’s fighting, it’s never too late!**",
+   "reasoning_chars": 0,
+   "raw": "***The scene hits hard, man, it’s a mess!*  \nThey caught him for that steal, a car, no way!  \nBut the bail? That’s just a joke, a lie!  \nThey’re playing the game, but it’s not fair!  \n\n***The anger’s in my veins, this is a fight!*  \nHe was caught, but they tried to play it tight.  \nNow he’s in the system, but it’s not right,  \nI’m tired of hearing “just a little mistake.”  \n\n***The system’s broken, it’s a mess, you see!*  \nHe’s got to stand up, not just play the game.  \nThis isn’t about the car, it’s about the pain,  \nLet’s make sure justice gets its due!  \n\n***Let’s not forget the cost, it’s too late!*  \nThis anger’s burning, I can’t let it fade.  \nWe need change, not just a story told,  \nFor the man who’s fighting, it’s never too late!**",
+   "calls": [],
+   "prompt_tokens": 59,
+   "generated_tokens": 221,
+   "prefill_ms": 463,
+   "decode_ms": 7880,
+   "wall_ms": 8354,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-1259",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "गांची गांची गांची  \nसंपर्क सांसांची हां  \nकांप गांची सांसां",
+   "reasoning_chars": 0,
+   "raw": "गांची गांची गांची  \nसंपर्क सांसांची हां  \nकांप गांची सांसां",
+   "calls": [],
+   "prompt_tokens": 30,
+   "generated_tokens": 69,
+   "prefill_ms": 314,
+   "decode_ms": 2408,
+   "wall_ms": 2733,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-1307",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "Here’s an outline for a paper on the history of Yemeni coffee, structured with key sections and highlighted points:\n\n---\n\n### **Outline: The History of Yemeni Coffee**\n\n1. **Introduction to Yemeni Coffee**  \n   *Highlight the significance of Yemen as a key player in the global coffee trade.*\n\n2. *Early Origins of Coffee in Yemen*  \n   *Discuss the introduction of coffee to Yemen in the 15th century and its cultural impact.*\n\n3. *The Role of the Qishmi and Sufi Traditions*  \n   *Explore how Sufi orders and local communities embraced coffee as a spiritual ritual.*\n\n4. *The Rise of Coffee Culture in Yemen*  \n   *Detail the emergence of coffee shops (*qahwa houses*) and their role in social life.*\n\n5. *The Coffee Trade in the 17th and 18th Centuries*  \n   *Analyze Yemen’s position in the global trade network and its economic importance.*\n\n6. *The Impact of the Ottoman Empire on Yemeni Coffee*  \n   *Examine how Ottoman influence shaped production and distribution.*\n\n7. *The 19th Century: Challenges and Adaptations*  \n   *Discuss the challenges faced by Yemeni coffee producers during this period.*\n\n8. *The Decline of Yemeni Coffee Production*  \n   *Highlight factors such as climate change, competition, and market shifts.*\n\n9. *Yemeni Coffee in the 20th Century*  \n   *Explore the modern challenges and efforts to revive the industry.*\n\n10. *Cultural Significance of Yemeni Coffee*  \n    *Discuss its role in Yemeni traditions, rituals, and identity.*\n\n11. *Yemeni Coffee in the Global Market*  \n    *Analyze Yemen’s contributions to international coffee trade today.*\n\n12. *Modern Revival Efforts in Yemen*  \n    *Present current initiatives to preserve and promote Yemeni coffee.*\n\n13. *Comparative Analysis with Other Coffee Regions*  \n    *Compare Yemen’s history with other major coffee-producing countries.*\n\n14. *Environmental Challenges Facing Yemeni Coffee*  \n    *Address issues like climate change and sustainability.*\n\n15. *Conclusion: The Future of Yemeni Coffee*  \n    *Summarize key points and emphasize its importance for Yemen’s heritage.*\n\n16. *References and Further Reading*  \n    *Provide a list of sources and recommendations for deeper exploration.*\n\n---\n\nThis outline ensures a comprehensive exploration of Yemeni coffee’s historical, cultural, and economic dimensions, with *highlighted sections* emphasizing critical themes.",
+   "reasoning_chars": 0,
+   "raw": "Here’s an outline for a paper on the history of Yemeni coffee, structured with key sections and highlighted points:\n\n---\n\n### **Outline: The History of Yemeni Coffee**\n\n1. **Introduction to Yemeni Coffee**  \n   *Highlight the significance of Yemen as a key player in the global coffee trade.*\n\n2. *Early Origins of Coffee in Yemen*  \n   *Discuss the introduction of coffee to Yemen in the 15th century and its cultural impact.*\n\n3. *The Role of the Qishmi and Sufi Traditions*  \n   *Explore how Sufi orders and local communities embraced coffee as a spiritual ritual.*\n\n4. *The Rise of Coffee Culture in Yemen*  \n   *Detail the emergence of coffee shops (*qahwa houses*) and their role in social life.*\n\n5. *The Coffee Trade in the 17th and 18th Centuries*  \n   *Analyze Yemen’s position in the global trade network and its economic importance.*\n\n6. *The Impact of the Ottoman Empire on Yemeni Coffee*  \n   *Examine how Ottoman influence shaped production and distribution.*\n\n7. *The 19th Century: Challenges and Adaptations*  \n   *Discuss the challenges faced by Yemeni coffee producers during this period.*\n\n8. *The Decline of Yemeni Coffee Production*  \n   *Highlight factors such as climate change, competition, and market shifts.*\n\n9. *Yemeni Coffee in the 20th Century*  \n   *Explore the modern challenges and efforts to revive the industry.*\n\n10. *Cultural Significance of Yemeni Coffee*  \n    *Discuss its role in Yemeni traditions, rituals, and identity.*\n\n11. *Yemeni Coffee in the Global Market*  \n    *Analyze Yemen’s contributions to international coffee trade today.*\n\n12. *Modern Revival Efforts in Yemen*  \n    *Present current initiatives to preserve and promote Yemeni coffee.*\n\n13. *Comparative Analysis with Other Coffee Regions*  \n    *Compare Yemen’s history with other major coffee-producing countries.*\n\n14. *Environmental Challenges Facing Yemeni Coffee*  \n    *Address issues like climate change and sustainability.*\n\n15. *Conclusion: The Future of Yemeni Coffee*  \n    *Summarize key points and emphasize its importance for Yemen’s heritage.*\n\n16. *References and Further Reading*  \n    *Provide a list of sources and recommendations for deeper exploration.*\n\n---\n\nThis outline ensures a comprehensive exploration of Yemeni coffee’s historical, cultural, and economic dimensions, with *highlighted sections* emphasizing critical themes.",
+   "calls": [],
+   "prompt_tokens": 53,
+   "generated_tokens": 546,
+   "prefill_ms": 418,
+   "decode_ms": 20522,
+   "wall_ms": 20952,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-1325",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "* The dinosaurs' demise was probably due to a sudden and dramatic shift in the climate—because who wouldn't want to lose their favorite warm-weather snacks?\n* Perhaps it was a cosmic \"oops\" moment, like when you forget your keys and end up in a zoo instead.\n* Some scientists believe a massive asteroid hit was the final punchline to their long reign—because who likes a surprise ending?\n* Dinosaurs might have been too busy trying to eat all the T-Rex meat to notice the planet's warning signs.\n* It's possible that a giant \"boom\" from a volcano was the real villain, not a meteor—because who needs a superhero when you have a volcano?\n* The dinosaurs may have simply run out of fun and decided to take a vacation to the \"Aftermath\" zone.\n* Remember, if you ever see a dinosaur fossil, it's probably just a reminder that they weren't ready for this!\n\n\"Dinosaurs went extinct because they forgot their sunscreen!\"",
+   "reasoning_chars": 0,
+   "raw": "* The dinosaurs' demise was probably due to a sudden and dramatic shift in the climate—because who wouldn't want to lose their favorite warm-weather snacks?\n* Perhaps it was a cosmic \"oops\" moment, like when you forget your keys and end up in a zoo instead.\n* Some scientists believe a massive asteroid hit was the final punchline to their long reign—because who likes a surprise ending?\n* Dinosaurs might have been too busy trying to eat all the T-Rex meat to notice the planet's warning signs.\n* It's possible that a giant \"boom\" from a volcano was the real villain, not a meteor—because who needs a superhero when you have a volcano?\n* The dinosaurs may have simply run out of fun and decided to take a vacation to the \"Aftermath\" zone.\n* Remember, if you ever see a dinosaur fossil, it's probably just a reminder that they weren't ready for this!\n\n\"Dinosaurs went extinct because they forgot their sunscreen!\"",
+   "calls": [],
+   "prompt_tokens": 65,
+   "generated_tokens": 207,
+   "prefill_ms": 542,
+   "decode_ms": 7419,
+   "wall_ms": 7968,
+   "grade": "fail"
+  },
+  {
+   "id": "ifeval-1436",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "the team moved quietly through the shadows, their footsteps barely audible. they had been stationed in this area for weeks, waiting for the right moment to act. the air was thick with the scent of distant rain, and the silence was almost comforting. \n\na radio crackled to life, sending a brief alert about a movement in the vicinity. the commander gave a nod, signaling the team to proceed. they navigated through narrow corridors, their eyes scanning for any signs of trouble. \n\nafter what felt like hours, they reached the designated point. there, a small group was gathered, exchanging glances. the commander stepped forward, voice steady. “We need to assess the situation. stay alert.” \n\nthe team worked together, sharing what little they had. it was a delicate balance between caution and action. as they prepared to move, the tension in the room was palpable, but so was their determination.",
+   "reasoning_chars": 0,
+   "raw": "the team moved quietly through the shadows, their footsteps barely audible. they had been stationed in this area for weeks, waiting for the right moment to act. the air was thick with the scent of distant rain, and the silence was almost comforting. \n\na radio crackled to life, sending a brief alert about a movement in the vicinity. the commander gave a nod, signaling the team to proceed. they navigated through narrow corridors, their eyes scanning for any signs of trouble. \n\nafter what felt like hours, they reached the designated point. there, a small group was gathered, exchanging glances. the commander stepped forward, voice steady. “We need to assess the situation. stay alert.” \n\nthe team worked together, sharing what little they had. it was a delicate balance between caution and action. as they prepared to move, the tension in the room was palpable, but so was their determination.",
+   "calls": [],
+   "prompt_tokens": 61,
+   "generated_tokens": 192,
+   "prefill_ms": 438,
+   "decode_ms": 6935,
+   "wall_ms": 7383,
+   "grade": "fail"
+  },
+  {
+   "id": "ifeval-1546",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "Write an acoustic song about the Korean peninsula without using any comma",
+   "reasoning_chars": 0,
+   "raw": "Write an acoustic song about the Korean peninsula without using any comma",
+   "calls": [],
+   "prompt_tokens": 51,
+   "generated_tokens": 14,
+   "prefill_ms": 406,
+   "decode_ms": 448,
+   "wall_ms": 867,
+   "grade": "fail"
+  },
+  {
+   "id": "ifeval-1580",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "Once upon a time, there was a little boy who wanted to explore the world on two wheels. He practiced every day, feeling the excitement build up inside him. One sunny afternoon, he took a deep breath and set off on his journey. He started with small steps, balancing on the ground, then gradually moved to a stationary position. With each attempt, he learned a little more about stability and control. As he gained confidence, he took a few tentative steps, feeling the wind beneath his hair. Soon, he felt ready to take the first leap. With a smile, he pedaled forward, discovering the thrill of moving smoothly. Each day brought new lessons, and soon he was riding with ease, exploring new paths and making wonderful memories.",
+   "reasoning_chars": 0,
+   "raw": "Once upon a time, there was a little boy who wanted to explore the world on two wheels. He practiced every day, feeling the excitement build up inside him. One sunny afternoon, he took a deep breath and set off on his journey. He started with small steps, balancing on the ground, then gradually moved to a stationary position. With each attempt, he learned a little more about stability and control. As he gained confidence, he took a few tentative steps, feeling the wind beneath his hair. Soon, he felt ready to take the first leap. With a smile, he pedaled forward, discovering the thrill of moving smoothly. Each day brought new lessons, and soon he was riding with ease, exploring new paths and making wonderful memories.",
+   "calls": [],
+   "prompt_tokens": 38,
+   "generated_tokens": 152,
+   "prefill_ms": 262,
+   "decode_ms": 5429,
+   "wall_ms": 5697,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-1643",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "The quote \"Coincidence is God's way of remaining anonymous\" invites us to reflect deeply on the nature of chance and the human experience. At first glance it seems to suggest that random events are not mere accidents but deliberate signs meant to preserve mystery. This idea resonates with many people who have encountered unexpected moments in their lives that feel significant yet unconnected to any clear purpose. When we consider the weight of this statement we must explore what it means to accept uncertainty and the role of coincidence in shaping our understanding of the world. \n\nCoincidence often arises in our daily lives—like finding a book you love on a shelf or meeting someone you’ve never met before. These instances can feel serendipitous yet oddly meaningful. The quote implies that such occurrences are not random but part of a larger design. It challenges us to think about whether we are truly seeing patterns or merely interpreting randomness. This line of thinking leads us to question the nature of fate and the extent to which we can control our experiences. If every event is a chance occurrence then perhaps the universe is working through a system that values unpredictability. \n\nOne way to interpret this is that coincidence serves as a protective mechanism. Imagine a person facing a difficult decision and then stumbling upon a solution that changes their path. The coincidence becomes a hidden guide rather than a mere accident. This perspective shifts our mindset from frustration to appreciation. It encourages us to embrace uncertainty as part of life rather than dismissing it as meaningless. By recognizing that even the most unlikely events can hold value we open ourselves to possibilities we might otherwise overlook. \n\nHowever this idea also raises questions about the reliability of such interpretations. What if the coincidence was simply a coincidence and we are just seeing patterns? The quote acknowledges this by suggesting that God uses these moments to remain anonymous. If we accept that we are not the ones in control but part of a greater plan then we might feel a sense of humility. This humility can foster gratitude for the small things in life and remind us that we are not the sole architects of our experiences. It also brings us closer to understanding that meaning is not always found in grand gestures but in the subtle connections we make. \n\nThe concept of anonymity here is crucial. When we say God is anonymous we might mean that we are not the ones making the choices but rather part of a process beyond our comprehension. This can be comforting in moments of doubt or confusion. It suggests that there is a deeper order at play that we cannot fully grasp. This idea can be comforting but it also demands patience. Accepting that some events are beyond our control can be challenging especially when we seek clarity or purpose. Yet it also teaches us to trust in a system that operates with a purpose even if we cannot see it. \n\nThis quote also touches on the theme of human perception. Our brains are wired to seek patterns and meaning. When we encounter a coincidence we often try to assign significance to it. This tendency can lead to overinterpretation but it also highlights our desire for connection. The quote reminds us that our brains are not always accurate in interpreting randomness",
+   "reasoning_chars": 0,
+   "raw": "The quote \"Coincidence is God's way of remaining anonymous\" invites us to reflect deeply on the nature of chance and the human experience. At first glance it seems to suggest that random events are not mere accidents but deliberate signs meant to preserve mystery. This idea resonates with many people who have encountered unexpected moments in their lives that feel significant yet unconnected to any clear purpose. When we consider the weight of this statement we must explore what it means to accept uncertainty and the role of coincidence in shaping our understanding of the world. \n\nCoincidence often arises in our daily lives—like finding a book you love on a shelf or meeting someone you’ve never met before. These instances can feel serendipitous yet oddly meaningful. The quote implies that such occurrences are not random but part of a larger design. It challenges us to think about whether we are truly seeing patterns or merely interpreting randomness. This line of thinking leads us to question the nature of fate and the extent to which we can control our experiences. If every event is a chance occurrence then perhaps the universe is working through a system that values unpredictability. \n\nOne way to interpret this is that coincidence serves as a protective mechanism. Imagine a person facing a difficult decision and then stumbling upon a solution that changes their path. The coincidence becomes a hidden guide rather than a mere accident. This perspective shifts our mindset from frustration to appreciation. It encourages us to embrace uncertainty as part of life rather than dismissing it as meaningless. By recognizing that even the most unlikely events can hold value we open ourselves to possibilities we might otherwise overlook. \n\nHowever this idea also raises questions about the reliability of such interpretations. What if the coincidence was simply a coincidence and we are just seeing patterns? The quote acknowledges this by suggesting that God uses these moments to remain anonymous. If we accept that we are not the ones in control but part of a greater plan then we might feel a sense of humility. This humility can foster gratitude for the small things in life and remind us that we are not the sole architects of our experiences. It also brings us closer to understanding that meaning is not always found in grand gestures but in the subtle connections we make. \n\nThe concept of anonymity here is crucial. When we say God is anonymous we might mean that we are not the ones making the choices but rather part of a process beyond our comprehension. This can be comforting in moments of doubt or confusion. It suggests that there is a deeper order at play that we cannot fully grasp. This idea can be comforting but it also demands patience. Accepting that some events are beyond our control can be challenging especially when we seek clarity or purpose. Yet it also teaches us to trust in a system that operates with a purpose even if we cannot see it. \n\nThis quote also touches on the theme of human perception. Our brains are wired to seek patterns and meaning. When we encounter a coincidence we often try to assign significance to it. This tendency can lead to overinterpretation but it also highlights our desire for connection. The quote reminds us that our brains are not always accurate in interpreting randomness",
+   "calls": [],
+   "prompt_tokens": 47,
+   "generated_tokens": 640,
+   "prefill_ms": 433,
+   "decode_ms": 23941,
+   "wall_ms": 24381,
+   "grade": "fail"
+  },
+  {
+   "id": "ifeval-1713",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "**The *Disappointed* Journey of a Banana Peel: A Biological Adventure**  \n\nIf you’ve ever wondered why your banana peel seems to vanish into the earth after a single step, you’re not alone. The *disappointed* scientists and curious minds alike have been puzzling over this *banana peel* phenomenon. Let’s dive into the fascinating biology behind this everyday object!  \n\n### *The Science of the Banana Peel*  \nFirst, let’s talk about the *biology* of the banana peel. When you step on a banana peel, it’s not just a simple surface—it’s a living, breathing part of the fruit. The peel contains *specialized cells* that react to pressure, moisture, and even the slightest touch. This is why it’s so *disappointed* when it slips underfoot!  \n\n### *Why Does It Slip?*  \nThe *disappointed* truth here is that the banana peel’s structure is designed for grip, but it’s not built for long-term contact. The *banana peel* has a unique texture—smooth on the outside, but slightly rough inside. This inconsistency makes it prone to slipping, especially when wet. It’s a bit of a *disappointment* for those who expect it to stay put!  \n\n### *The Role of Moisture*  \nAnother key factor is *moisture*. When the peel is dry, it’s firm and grippy. But when it gets wet, it becomes slippery. This is why *disappointed* gardeners often find their prized *banana peel* slipping after a rain. It’s a reminder that nature is always in motion!  \n\n### *How It Adapts to the Environment*  \nWhat’s even more interesting is how the *banana peel* adapts. Some varieties have a natural tendency to curl or wrinkle, which can make them more likely to slip. This adaptation is a clever survival tactic, but it’s also a *disappointment* for those who prefer stability.  \n\n### *The Humor in the Situation*  \nLet’s not forget the *humorous* side of it. Imagine walking through a park and suddenly realizing your *banana peel* is a slippery hazard. It’s a *disappointed* moment for many, but it’s also a reminder of the fragility of nature.  \n\n### *Final Thoughts*  \nThe *disappointed* journey of the banana peel is a testament to the complexity of biology. While it may seem simple, it’s a story of adaptation, texture, and the occasional slip. Remember, every *disappointed* moment is just part of the process.  \n\nSo next time you step on a banana peel, don’t be *disappointed*—just embrace the science! And if you’re ever in doubt, just remember: the *banana peel* is more than just a fruit—it’s a biology lesson in disguise.  \n\n*Don’t forget to share this *disappoint",
+   "reasoning_chars": 0,
+   "raw": "**The *Disappointed* Journey of a Banana Peel: A Biological Adventure**  \n\nIf you’ve ever wondered why your banana peel seems to vanish into the earth after a single step, you’re not alone. The *disappointed* scientists and curious minds alike have been puzzling over this *banana peel* phenomenon. Let’s dive into the fascinating biology behind this everyday object!  \n\n### *The Science of the Banana Peel*  \nFirst, let’s talk about the *biology* of the banana peel. When you step on a banana peel, it’s not just a simple surface—it’s a living, breathing part of the fruit. The peel contains *specialized cells* that react to pressure, moisture, and even the slightest touch. This is why it’s so *disappointed* when it slips underfoot!  \n\n### *Why Does It Slip?*  \nThe *disappointed* truth here is that the banana peel’s structure is designed for grip, but it’s not built for long-term contact. The *banana peel* has a unique texture—smooth on the outside, but slightly rough inside. This inconsistency makes it prone to slipping, especially when wet. It’s a bit of a *disappointment* for those who expect it to stay put!  \n\n### *The Role of Moisture*  \nAnother key factor is *moisture*. When the peel is dry, it’s firm and grippy. But when it gets wet, it becomes slippery. This is why *disappointed* gardeners often find their prized *banana peel* slipping after a rain. It’s a reminder that nature is always in motion!  \n\n### *How It Adapts to the Environment*  \nWhat’s even more interesting is how the *banana peel* adapts. Some varieties have a natural tendency to curl or wrinkle, which can make them more likely to slip. This adaptation is a clever survival tactic, but it’s also a *disappointment* for those who prefer stability.  \n\n### *The Humor in the Situation*  \nLet’s not forget the *humorous* side of it. Imagine walking through a park and suddenly realizing your *banana peel* is a slippery hazard. It’s a *disappointed* moment for many, but it’s also a reminder of the fragility of nature.  \n\n### *Final Thoughts*  \nThe *disappointed* journey of the banana peel is a testament to the complexity of biology. While it may seem simple, it’s a story of adaptation, texture, and the occasional slip. Remember, every *disappointed* moment is just part of the process.  \n\nSo next time you step on a banana peel, don’t be *disappointed*—just embrace the science! And if you’re ever in doubt, just remember: the *banana peel* is more than just a fruit—it’s a biology lesson in disguise.  \n\n*Don’t forget to share this *disappoint",
+   "calls": [],
+   "prompt_tokens": 58,
+   "generated_tokens": 640,
+   "prefill_ms": 393,
+   "decode_ms": 24472,
+   "wall_ms": 24872,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-1999",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "THIS IS A SUMMARY OF THE PASSAGE IN ALL CAPITAL LETTERS! WORLD WAR II WAS A GLOBAL CONFLICT FROM 1939 TO 1945, INVOLVING ALL MAJOR POWERS AND DIVIDED INTO ALLIED AND AXIS ALLIANCES. IT WAS THE DEADLIEST CONFLICT IN HISTORY, CAUSING MILLIONS OF DEATHS, INCLUDING THE HOLOCAUST, AND LEADING TO SIGNIFICANT OVERTHROUGHS AND TRIALS.",
+   "reasoning_chars": 0,
+   "raw": "THIS IS A SUMMARY OF THE PASSAGE IN ALL CAPITAL LETTERS! WORLD WAR II WAS A GLOBAL CONFLICT FROM 1939 TO 1945, INVOLVING ALL MAJOR POWERS AND DIVIDED INTO ALLIED AND AXIS ALLIANCES. IT WAS THE DEADLIEST CONFLICT IN HISTORY, CAUSING MILLIONS OF DEATHS, INCLUDING THE HOLOCAUST, AND LEADING TO SIGNIFICANT OVERTHROUGHS AND TRIALS.",
+   "calls": [],
+   "prompt_tokens": 221,
+   "generated_tokens": 134,
+   "prefill_ms": 1856,
+   "decode_ms": 4904,
+   "wall_ms": 6767,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-2035",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "\"Let’s dive into a joke that’s sure to make you laugh! This one is designed to be a little *funny* while still being thoughtful. First, imagine a scenario where someone tries to explain the concept of *time* to a robot. The robot might respond with a series of calculations, but it’s clear it’s still confused. Then, there’s this *hilarious* twist: a cat trying to teach a dog about *punishment*. The cat says, “Why do you do that?!” and the dog replies, “Because I’m *training*!” \n\nThis joke has multiple layers, so it’s not just a simple punchline. It’s all about *how* we think about humor. The *italic text* here emphasizes the key parts, making sure they stand out. Remember, laughter is the best way to connect with others, even when we’re trying to be clever. So, let’s keep the smiles coming!\"\n\n\"Note that this joke not only entertains but also encourages us to think about the *power* of words. It’s a reminder that even simple ideas can become *amazing* when told with flair.\"\"",
+   "reasoning_chars": 0,
+   "raw": "\"Let’s dive into a joke that’s sure to make you laugh! This one is designed to be a little *funny* while still being thoughtful. First, imagine a scenario where someone tries to explain the concept of *time* to a robot. The robot might respond with a series of calculations, but it’s clear it’s still confused. Then, there’s this *hilarious* twist: a cat trying to teach a dog about *punishment*. The cat says, “Why do you do that?!” and the dog replies, “Because I’m *training*!” \n\nThis joke has multiple layers, so it’s not just a simple punchline. It’s all about *how* we think about humor. The *italic text* here emphasizes the key parts, making sure they stand out. Remember, laughter is the best way to connect with others, even when we’re trying to be clever. So, let’s keep the smiles coming!\"\n\n\"Note that this joke not only entertains but also encourages us to think about the *power* of words. It’s a reminder that even simple ideas can become *amazing* when told with flair.\"\"",
+   "calls": [],
+   "prompt_tokens": 51,
+   "generated_tokens": 248,
+   "prefill_ms": 471,
+   "decode_ms": 8899,
+   "wall_ms": 9376,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-simple_34",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[travel_itinerary_generator(days=7, destination=\"Tokyo\", daily_budget=100, exploration_type=\"nature\")]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "travel_itinerary_generator",
+     "arguments": "{\"days\": 7, \"destination\": \"Tokyo\", \"daily_budget\": 100, \"exploration_type\": \"nature\"}"
+    }
+   ],
+   "prompt_tokens": 233,
+   "generated_tokens": 36,
+   "prefill_ms": 1903,
+   "decode_ms": 1260,
+   "wall_ms": 3167,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-simple_47",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[get_boiling_melting_points(substance=\"water\", sea_level=5000)]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "get_boiling_melting_points",
+     "arguments": "{\"substance\": \"water\", \"sea_level\": 5000}"
+    }
+   ],
+   "prompt_tokens": 153,
+   "generated_tokens": 25,
+   "prefill_ms": 1225,
+   "decode_ms": 839,
+   "wall_ms": 2072,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-simple_75",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[elephant_population_estimate(current_population=35000, growth_rate=0.015, years=5)]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "elephant_population_estimate",
+     "arguments": "{\"current_population\": 35000, \"growth_rate\": 0.015, \"years\": 5}"
+    }
+   ],
+   "prompt_tokens": 187,
+   "generated_tokens": 32,
+   "prefill_ms": 1574,
+   "decode_ms": 1139,
+   "wall_ms": 2727,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-simple_88",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[calculate_BMI(weight_kg=70, height_m=1.75)]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "calculate_BMI",
+     "arguments": "{\"weight_kg\": 70, \"height_m\": 1.75}"
+    }
+   ],
+   "prompt_tokens": 158,
+   "generated_tokens": 22,
+   "prefill_ms": 1278,
+   "decode_ms": 772,
+   "wall_ms": 2062,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-simple_91",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[get_restaurant(cuisine=\"sushi\", location=\"Boston\", condition=\"opens on Sundays\")]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "get_restaurant",
+     "arguments": "{\"cuisine\": \"sushi\", \"location\": \"Boston\", \"condition\": \"opens on Sundays\"}"
+    }
+   ],
+   "prompt_tokens": 178,
+   "generated_tokens": 30,
+   "prefill_ms": 1514,
+   "decode_ms": 1061,
+   "wall_ms": 2586,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-simple_116",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[probabilities.calculate_single(total_outcomes=52, event_outcomes=4, round=2)]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "probabilities.calculate_single",
+     "arguments": "{\"total_outcomes\": 52, \"event_outcomes\": 4, \"round\": 2}"
+    }
+   ],
+   "prompt_tokens": 178,
+   "generated_tokens": 28,
+   "prefill_ms": 1544,
+   "decode_ms": 1000,
+   "wall_ms": 2555,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-simple_131",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[calculate_compound_interest(principal=10000, rate=0.05, time=10, n=4)]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "calculate_compound_interest",
+     "arguments": "{\"principal\": 10000, \"rate\": 0.05, \"time\": 10, \"n\": 4}"
+    }
+   ],
+   "prompt_tokens": 247,
+   "generated_tokens": 32,
+   "prefill_ms": 1917,
+   "decode_ms": 1168,
+   "wall_ms": 3098,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-simple_133",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[finance.predict_future_value(present_value=5000, annual_interest_rate=5, compounding_periods_per_year=12, time_years=3)]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "finance.predict_future_value",
+     "arguments": "{\"present_value\": 5000, \"annual_interest_rate\": 5, \"compounding_periods_per_year\": 12, \"time_years\": 3}"
+    }
+   ],
+   "prompt_tokens": 251,
+   "generated_tokens": 44,
+   "prefill_ms": 2054,
+   "decode_ms": 1641,
+   "wall_ms": 3704,
+   "grade": "fail"
+  },
+  {
+   "id": "bfcl-simple_152",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[calculate_mutual_fund_balance(investment_amount=50000, annual_yield=5, years=3)]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "calculate_mutual_fund_balance",
+     "arguments": "{\"investment_amount\": 50000, \"annual_yield\": 5, \"years\": 3}"
+    }
+   ],
+   "prompt_tokens": 208,
+   "generated_tokens": 32,
+   "prefill_ms": 1500,
+   "decode_ms": 1113,
+   "wall_ms": 2622,
+   "grade": "fail"
+  },
+  {
+   "id": "bfcl-simple_168",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[lawsuit_search(company=\"Google\", start_date=\"01-01-2021\", location=\"California\", status=\"ongoing\")]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "lawsuit_search",
+     "arguments": "{\"company\": \"Google\", \"start_date\": \"01-01-2021\", \"location\": \"California\", \"status\": \"ongoing\"}"
+    }
+   ],
+   "prompt_tokens": 240,
+   "generated_tokens": 34,
+   "prefill_ms": 1986,
+   "decode_ms": 1203,
+   "wall_ms": 3203,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-simple_174",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[get_top_cases(field_of_law=\"constitutional law\", top_number=10, country=\"China\")]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "get_top_cases",
+     "arguments": "{\"field_of_law\": \"constitutional law\", \"top_number\": 10, \"country\": \"China\"}"
+    }
+   ],
+   "prompt_tokens": 189,
+   "generated_tokens": 27,
+   "prefill_ms": 1534,
+   "decode_ms": 920,
+   "wall_ms": 2461,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-simple_230",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[historic_leader_search(location=\"France\", date=1510, title=\"King\")]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "historic_leader_search",
+     "arguments": "{\"location\": \"France\", \"date\": 1510, \"title\": \"King\"}"
+    }
+   ],
+   "prompt_tokens": 159,
+   "generated_tokens": 25,
+   "prefill_ms": 1105,
+   "decode_ms": 852,
+   "wall_ms": 1968,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-simple_256",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[generate_circle_image(radius=50, color=\"Red\")]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "generate_circle_image",
+     "arguments": "{\"radius\": 50, \"color\": \"Red\"}"
+    }
+   ],
+   "prompt_tokens": 163,
+   "generated_tokens": 18,
+   "prefill_ms": 1388,
+   "decode_ms": 579,
+   "wall_ms": 1981,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-simple_291",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[music_generator.generate_melody(key=\"C\", start_note=\"C4\", length=16, tempo=120)]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "music_generator.generate_melody",
+     "arguments": "{\"key\": \"C\", \"start_note\": \"C4\", \"length\": 16, \"tempo\": 120}"
+    }
+   ],
+   "prompt_tokens": 236,
+   "generated_tokens": 31,
+   "prefill_ms": 1990,
+   "decode_ms": 1105,
+   "wall_ms": 3106,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-simple_292",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[compose_melody(progression=[\"C\", \"F\", \"G\"], measures=4, instrument=\"Piano\")]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "compose_melody",
+     "arguments": "{\"progression\": [\"C\", \"F\", \"G\"], \"measures\": 4, \"instrument\": \"Piano\"}"
+    }
+   ],
+   "prompt_tokens": 187,
+   "generated_tokens": 32,
+   "prefill_ms": 1342,
+   "decode_ms": 1116,
+   "wall_ms": 2467,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-simple_304",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[player_stats.getLastGame(player_name=\"LeBron James\", team=\"Lakers\", metrics=[\"Points\", \"Rebounds\"])]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "player_stats.getLastGame",
+     "arguments": "{\"player_name\": \"LeBron James\", \"team\": \"Lakers\", \"metrics\": [\"Points\", \"Rebounds\"]}"
+    }
+   ],
+   "prompt_tokens": 203,
+   "generated_tokens": 34,
+   "prefill_ms": 1748,
+   "decode_ms": 1215,
+   "wall_ms": 2996,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-simple_323",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[sports_ranking.get_top_player(sport=\"tennis\", gender=\"women\")]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "sports_ranking.get_top_player",
+     "arguments": "{\"sport\": \"tennis\", \"gender\": \"women\"}"
+    }
+   ],
+   "prompt_tokens": 136,
+   "generated_tokens": 24,
+   "prefill_ms": 1187,
+   "decode_ms": 824,
+   "wall_ms": 2023,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-simple_326",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[get_team_score(team_name=\"Los Angeles Lakers\", league=\"NBA\")]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "get_team_score",
+     "arguments": "{\"team_name\": \"Los Angeles Lakers\", \"league\": \"NBA\"}"
+    }
+   ],
+   "prompt_tokens": 189,
+   "generated_tokens": 23,
+   "prefill_ms": 1687,
+   "decode_ms": 814,
+   "wall_ms": 2508,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-simple_334",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[blackjack.check_winner(player_cards=[\"A\", \"10\"], dealer_cards=[\"10\", \"9\"], ace_value=1)]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "blackjack.check_winner",
+     "arguments": "{\"player_cards\": [\"A\", \"10\"], \"dealer_cards\": [\"10\", \"9\"], \"ace_value\": 1}"
+    }
+   ],
+   "prompt_tokens": 221,
+   "generated_tokens": 35,
+   "prefill_ms": 1803,
+   "decode_ms": 1238,
+   "wall_ms": 3052,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-simple_379",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[get_current_time(location=\"Sydney\", country=\"Australia\")]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "get_current_time",
+     "arguments": "{\"location\": \"Sydney\", \"country\": \"Australia\"}"
+    }
+   ],
+   "prompt_tokens": 151,
+   "generated_tokens": 20,
+   "prefill_ms": 1162,
+   "decode_ms": 654,
+   "wall_ms": 1828,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-multiple_23",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[basketball.player_stats.get(player_name=\"LeBron James\", stats_fields=[\"points\", \"assists\", \"minutes\"])]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "basketball.player_stats.get",
+     "arguments": "{\"player_name\": \"LeBron James\", \"stats_fields\": [\"points\", \"assists\", \"minutes\"]}"
+    }
+   ],
+   "prompt_tokens": 488,
+   "generated_tokens": 35,
+   "prefill_ms": 4164,
+   "decode_ms": 1341,
+   "wall_ms": 5516,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-multiple_33",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[calculate_integral(func=\"3*x^2\", a=1, b=2)]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "calculate_integral",
+     "arguments": "{\"func\": \"3*x^2\", \"a\": 1, \"b\": 2}"
+    }
+   ],
+   "prompt_tokens": 303,
+   "generated_tokens": 26,
+   "prefill_ms": 2614,
+   "decode_ms": 929,
+   "wall_ms": 3550,
+   "grade": "fail"
+  },
+  {
+   "id": "bfcl-multiple_47",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[cosine_similarity.calculate(vector1=[3, 2, 1], vector2=[1, 2, 3])]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "cosine_similarity.calculate",
+     "arguments": "{\"vector1\": [3, 2, 1], \"vector2\": [1, 2, 3]}"
+    }
+   ],
+   "prompt_tokens": 374,
+   "generated_tokens": 36,
+   "prefill_ms": 2909,
+   "decode_ms": 1370,
+   "wall_ms": 4284,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-multiple_50",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[house_price_forecast(location=\"New York\", months=1)]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "house_price_forecast",
+     "arguments": "{\"location\": \"New York\", \"months\": 1}"
+    }
+   ],
+   "prompt_tokens": 410,
+   "generated_tokens": 20,
+   "prefill_ms": 3518,
+   "decode_ms": 711,
+   "wall_ms": 4235,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-multiple_52",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[currency_conversion(amount=100, from_currency=\"EUR\", to_currency=\"USD\")]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "currency_conversion",
+     "arguments": "{\"amount\": 100, \"from_currency\": \"EUR\", \"to_currency\": \"USD\"}"
+    }
+   ],
+   "prompt_tokens": 280,
+   "generated_tokens": 27,
+   "prefill_ms": 2293,
+   "decode_ms": 959,
+   "wall_ms": 3262,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-multiple_56",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[avg_closing_price(company=\"Apple\", days=60)]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "avg_closing_price",
+     "arguments": "{\"company\": \"Apple\", \"days\": 60}"
+    }
+   ],
+   "prompt_tokens": 440,
+   "generated_tokens": 19,
+   "prefill_ms": 3632,
+   "decode_ms": 680,
+   "wall_ms": 4324,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-multiple_79",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[exhibition_info(museum_name=\"Museum of Modern Art\", month=4)]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "exhibition_info",
+     "arguments": "{\"museum_name\": \"Museum of Modern Art\", \"month\": 4}"
+    }
+   ],
+   "prompt_tokens": 256,
+   "generated_tokens": 21,
+   "prefill_ms": 2004,
+   "decode_ms": 709,
+   "wall_ms": 2722,
+   "grade": "fail"
+  },
+  {
+   "id": "bfcl-multiple_170",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[soccer_stat.get_player_stats(player_name=\"Cristiano Ronaldo\", season=\"2019-2020\")]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "soccer_stat.get_player_stats",
+     "arguments": "{\"player_name\": \"Cristiano Ronaldo\", \"season\": \"2019-2020\"}"
+    }
+   ],
+   "prompt_tokens": 584,
+   "generated_tokens": 34,
+   "prefill_ms": 4692,
+   "decode_ms": 1279,
+   "wall_ms": 5982,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-multiple_177",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[board_game.chess.get_top_players(location=\"New York\", minimum_rating=2300, number_of_players=10)]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "board_game.chess.get_top_players",
+     "arguments": "{\"location\": \"New York\", \"minimum_rating\": 2300, \"number_of_players\": 10}"
+    }
+   ],
+   "prompt_tokens": 471,
+   "generated_tokens": 35,
+   "prefill_ms": 3870,
+   "decode_ms": 1371,
+   "wall_ms": 5251,
+   "grade": "pass"
+  },
+  {
+   "id": "bfcl-multiple_179",
+   "set": "bfcl",
+   "status": "ok",
+   "content": "",
+   "reasoning_chars": 0,
+   "raw": "<|tool_call_start|>[poker_probability.full_house(deck_size=52, hand_size=5)]<|tool_call_end|>",
+   "calls": [
+    {
+     "name": "poker_probability.full_house",
+     "arguments": "{\"deck_size\": 52, \"hand_size\": 5}"
+    }
+   ],
+   "prompt_tokens": 479,
+   "generated_tokens": 24,
+   "prefill_ms": 3940,
+   "decode_ms": 875,
+   "wall_ms": 4825,
+   "grade": "pass"
+  },
+  {
+   "id": "gsm8k-663",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "We are given the total number of newspapers James delivers in a day: 600.\n\nWe are told:\n- 198 newspapers to District A\n- 209 newspapers to District C\n- The remaining newspapers are delivered to District B.\n\nLet’s calculate the total number of newspapers delivered to District A and District C:\n\n198 (District A) + 209 (District C) = 397 newspapers\n\nNow, subtract this from the total to find the number delivered to District B:\n\n600 (total) - 397 = 203\n\nSo, James delivers 203 newspapers to District B.\n\n#### #### 203",
+   "reasoning_chars": 0,
+   "raw": "We are given the total number of newspapers James delivers in a day: 600.\n\nWe are told:\n- 198 newspapers to District A\n- 209 newspapers to District C\n- The remaining newspapers are delivered to District B.\n\nLet’s calculate the total number of newspapers delivered to District A and District C:\n\n198 (District A) + 209 (District C) = 397 newspapers\n\nNow, subtract this from the total to find the number delivered to District B:\n\n600 (total) - 397 = 203\n\nSo, James delivers 203 newspapers to District B.\n\n#### #### 203",
+   "calls": [],
+   "prompt_tokens": 72,
+   "generated_tokens": 132,
+   "prefill_ms": 635,
+   "decode_ms": 4816,
+   "wall_ms": 5480,
+   "grade": "fail"
+  },
+  {
+   "id": "gsm8k-748",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "We are given a problem with relationships between the number of marbles each person has. Let's break it down step by step.\n\nWe are told:\n\n- Sean has 56 marbles.\n- Sean has half as many marbles as Cal.\n- Carl has four times as many marbles as Sean.\n- We are to find the combined number of marbles Carl and Cal have.\n\nLet's define the variables:\n\nLet:\n- Sean's marbles = S = 56\n- Cal's marbles = C\n- Carl's marbles = C_cal\n\nFrom the problem:\n\n1. Sean has half as many marbles as Cal:\n   $$\n   S = \\frac{1}{2} C\n   $$\n   Substituting S = 56:\n   $$\n   56 = \\frac{1}{2} C \\Rightarrow C = 56 \\times 2 = 112\n   $$\n\nSo, Cal has 112 marbles.\n\n2. Carl has four times as many marbles as Sean:\n   $$\n   C_{\\text{Carl}} = 4 \\times S = 4 \\times 56 = 224\n   $$\n\nNow, combine Carl and Cal's marbles:\n$$\n\\text{Total} = C_{\\text{Carl}} + C_{\\text{Sean}} = 224 + 56 = 280\n$$\n\nWait — let's double-check the relationships carefully:\n\n- Sean has 56 marbles.\n- Sean has half as many as Cal → So Cal = 2 × Sean = 2 × 56 = 112\n- Carl has four times as many as Sean → Carl = 4 × 56 = 224\n\nSo Carl has 224, Sean has 56, and Cal has 112.\n\nCombined total: 224 + 112 = 336\n\nWait — let's recheck the first relationship carefully:\n\n\"Sean has half as many marbles as Cal\" → S = (1/2)C → C = 2S = 2 × 56 = 112 ✅\n\n\"Carl has four times as many marbles as Sean\" → C = 4 × S = 4 × 56 = 224 ✅\n\nNow sum Carl and Cal: 224 + 112 = 336\n\nTherefore, the final answer is:\n#### 336",
+   "reasoning_chars": 0,
+   "raw": "We are given a problem with relationships between the number of marbles each person has. Let's break it down step by step.\n\nWe are told:\n\n- Sean has 56 marbles.\n- Sean has half as many marbles as Cal.\n- Carl has four times as many marbles as Sean.\n- We are to find the combined number of marbles Carl and Cal have.\n\nLet's define the variables:\n\nLet:\n- Sean's marbles = S = 56\n- Cal's marbles = C\n- Carl's marbles = C_cal\n\nFrom the problem:\n\n1. Sean has half as many marbles as Cal:\n   $$\n   S = \\frac{1}{2} C\n   $$\n   Substituting S = 56:\n   $$\n   56 = \\frac{1}{2} C \\Rightarrow C = 56 \\times 2 = 112\n   $$\n\nSo, Cal has 112 marbles.\n\n2. Carl has four times as many marbles as Sean:\n   $$\n   C_{\\text{Carl}} = 4 \\times S = 4 \\times 56 = 224\n   $$\n\nNow, combine Carl and Cal's marbles:\n$$\n\\text{Total} = C_{\\text{Carl}} + C_{\\text{Sean}} = 224 + 56 = 280\n$$\n\nWait — let's double-check the relationships carefully:\n\n- Sean has 56 marbles.\n- Sean has half as many as Cal → So Cal = 2 × Sean = 2 × 56 = 112\n- Carl has four times as many as Sean → Carl = 4 × 56 = 224\n\nSo Carl has 224, Sean has 56, and Cal has 112.\n\nCombined total: 224 + 112 = 336\n\nWait — let's recheck the first relationship carefully:\n\n\"Sean has half as many marbles as Cal\" → S = (1/2)C → C = 2S = 2 × 56 = 112 ✅\n\n\"Carl has four times as many marbles as Sean\" → C = 4 × S = 4 × 56 = 224 ✅\n\nNow sum Carl and Cal: 224 + 112 = 336\n\nTherefore, the final answer is:\n#### 336",
+   "calls": [],
+   "prompt_tokens": 72,
+   "generated_tokens": 491,
+   "prefill_ms": 514,
+   "decode_ms": 18370,
+   "wall_ms": 18897,
+   "grade": "pass"
+  },
+  {
+   "id": "gsm8k-808",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "We are given a problem involving the total amount of tea consumed during a party. Let's break it down step by step.\n\nWe are told:\n\n- There are **10 quarts** of tea left at the end.\n- **Four students each drank 1.5 quarts** of tea.\n- **16 students each drank 2 quarts** of tea.\n- We are to find the **total amount of tea at the beginning**.\n\n---\n\n### Step 1: Calculate the total amount of tea consumed\n\nFirst, let's compute how much tea was consumed:\n\n- **Four students drank 1.5 quarts each:**\n  $$\n  4 \\times 1.5 = 6 \\text{ quarts}\n  $$\n\n- **16 students drank 2 quarts each:**\n  $$\n  16 \\times 2 = 32 \\text{ quarts}\n  $$\n\nNow, total tea consumed:\n$$\n6 + 32 = 38 \\text{ quarts}\n$$\n\n---\n\n### Step 2: Total tea consumed equals what was left plus what was started\n\nWe are told that **10 quarts** were left at the end. So the total amount of tea at the beginning must be the sum of what was consumed and what was left:\n\n$$\n\\text{Initial amount} = \\text{Tea consumed} + \\text{Tea left}\n$$\n$$\n\\text{Initial amount} = 38 + 10 = 48 \\text{ quarts}\n$$\n\nWait — this contradicts our earlier interpretation. Let's double-check.\n\nAct actually, the **tea left** is 10 quarts, and the **tea consumed** is 38 quarts. So the total amount at the beginning is:\n\n$$\n\\text{Initial amount} = \\text{Tea consumed} + \\text{Tea left} = 38 + 10 = 48 \\text{ quarts}\n$$\n\n---\n\n### Final Answer:\n#### 48",
+   "reasoning_chars": 0,
+   "raw": "We are given a problem involving the total amount of tea consumed during a party. Let's break it down step by step.\n\nWe are told:\n\n- There are **10 quarts** of tea left at the end.\n- **Four students each drank 1.5 quarts** of tea.\n- **16 students each drank 2 quarts** of tea.\n- We are to find the **total amount of tea at the beginning**.\n\n---\n\n### Step 1: Calculate the total amount of tea consumed\n\nFirst, let's compute how much tea was consumed:\n\n- **Four students drank 1.5 quarts each:**\n  $$\n  4 \\times 1.5 = 6 \\text{ quarts}\n  $$\n\n- **16 students drank 2 quarts each:**\n  $$\n  16 \\times 2 = 32 \\text{ quarts}\n  $$\n\nNow, total tea consumed:\n$$\n6 + 32 = 38 \\text{ quarts}\n$$\n\n---\n\n### Step 2: Total tea consumed equals what was left plus what was started\n\nWe are told that **10 quarts** were left at the end. So the total amount of tea at the beginning must be the sum of what was consumed and what was left:\n\n$$\n\\text{Initial amount} = \\text{Tea consumed} + \\text{Tea left}\n$$\n$$\n\\text{Initial amount} = 38 + 10 = 48 \\text{ quarts}\n$$\n\nWait — this contradicts our earlier interpretation. Let's double-check.\n\nAct actually, the **tea left** is 10 quarts, and the **tea consumed** is 38 quarts. So the total amount at the beginning is:\n\n$$\n\\text{Initial amount} = \\text{Tea consumed} + \\text{Tea left} = 38 + 10 = 48 \\text{ quarts}\n$$\n\n---\n\n### Final Answer:\n#### 48",
+   "calls": [],
+   "prompt_tokens": 83,
+   "generated_tokens": 416,
+   "prefill_ms": 736,
+   "decode_ms": 15257,
+   "wall_ms": 16002,
+   "grade": "fail"
+  },
+  {
+   "id": "gsm8k-856",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "We are given the following:\n\n- Number of students: 27  \n- Glue sticks per student: 2  \n- Glue sticks are sold in packs of 8  \n- We need to find the number of packs required so that each student gets 2 glue sticks, and we allow for some extra.\n\n**Step 1: Calculate total number of glue sticks needed.**\n\nEach student gets 2 glue sticks:\n$$\n27 \\text{ students} \\times 2 \\text{ glue sticks} = 54 \\text{ glue sticks}\n$$\n\n**Step 2: Determine how many packs are needed.**\n\nEach pack contains 8 glue sticks:\n$$\n\\frac{54}{8} = 6.75\n$$\n\nSince Mr. Jackson can only buy whole packs, he needs to round up to the next whole number:\n$$\n\\lceil 6.75 \\rceil = 7\n$$\n\nSo, he needs 7 packs.\n\n**Step 3: Verify the calculation.**\n\n- 7 packs × 8 glue sticks per pack = 56 glue sticks\n- 56 is more than the required 54, so there will be extra.\n\n### Final Answer:\n#### 7",
+   "reasoning_chars": 0,
+   "raw": "We are given the following:\n\n- Number of students: 27  \n- Glue sticks per student: 2  \n- Glue sticks are sold in packs of 8  \n- We need to find the number of packs required so that each student gets 2 glue sticks, and we allow for some extra.\n\n**Step 1: Calculate total number of glue sticks needed.**\n\nEach student gets 2 glue sticks:\n$$\n27 \\text{ students} \\times 2 \\text{ glue sticks} = 54 \\text{ glue sticks}\n$$\n\n**Step 2: Determine how many packs are needed.**\n\nEach pack contains 8 glue sticks:\n$$\n\\frac{54}{8} = 6.75\n$$\n\nSince Mr. Jackson can only buy whole packs, he needs to round up to the next whole number:\n$$\n\\lceil 6.75 \\rceil = 7\n$$\n\nSo, he needs 7 packs.\n\n**Step 3: Verify the calculation.**\n\n- 7 packs × 8 glue sticks per pack = 56 glue sticks\n- 56 is more than the required 54, so there will be extra.\n\n### Final Answer:\n#### 7",
+   "calls": [],
+   "prompt_tokens": 104,
+   "generated_tokens": 253,
+   "prefill_ms": 840,
+   "decode_ms": 9135,
+   "wall_ms": 9983,
+   "grade": "pass"
+  },
+  {
+   "id": "gsm8k-869",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's break down the problem step by step.\n\n1. The electronics seller bought 5 phones, each costing $700.\n   - Total cost of phones = 5 × $700 = $3500\n\n2. The seller gave the customer $4000 in dollar bills.\n   - So, the amount given back is $4000.\n\n3. To find the change, subtract the total cost from the amount given back:\n   - Change = $4000 - $3500 = $500\n\nTherefore, the seller will give back $500 in change.\n\n#### 500",
+   "reasoning_chars": 0,
+   "raw": "Let's break down the problem step by step.\n\n1. The electronics seller bought 5 phones, each costing $700.\n   - Total cost of phones = 5 × $700 = $3500\n\n2. The seller gave the customer $4000 in dollar bills.\n   - So, the amount given back is $4000.\n\n3. To find the change, subtract the total cost from the amount given back:\n   - Change = $4000 - $3500 = $500\n\nTherefore, the seller will give back $500 in change.\n\n#### 500",
+   "calls": [],
+   "prompt_tokens": 64,
+   "generated_tokens": 123,
+   "prefill_ms": 504,
+   "decode_ms": 4343,
+   "wall_ms": 4852,
+   "grade": "pass"
+  },
+  {
+   "id": "gsm8k-888",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's break down the problem step by step.\n\n1. Lani baked a total of 55 cookies.\n2. She ate 5 five-cookie servings. Since each serving has 5 cookies, she ate:\n   $$\n   5 \\times 5 = 25 \\text{ cookies}\n   $$\n3. The number of cookies left to place is:\n   $$\n   55 - 25 = 30 \\text{ cookies}\n   $$\n4. These 30 cookies are placed equally into 5 jars. So, the number of cookies per jar is:\n   $$\n   \\frac{30}{5} = 6\n   $$\n\nTherefore, each jar contains 6 cookies.\n\n##### 6",
+   "reasoning_chars": 0,
+   "raw": "Let's break down the problem step by step.\n\n1. Lani baked a total of 55 cookies.\n2. She ate 5 five-cookie servings. Since each serving has 5 cookies, she ate:\n   $$\n   5 \\times 5 = 25 \\text{ cookies}\n   $$\n3. The number of cookies left to place is:\n   $$\n   55 - 25 = 30 \\text{ cookies}\n   $$\n4. These 30 cookies are placed equally into 5 jars. So, the number of cookies per jar is:\n   $$\n   \\frac{30}{5} = 6\n   $$\n\nTherefore, each jar contains 6 cookies.\n\n##### 6",
+   "calls": [],
+   "prompt_tokens": 62,
+   "generated_tokens": 149,
+   "prefill_ms": 497,
+   "decode_ms": 5440,
+   "wall_ms": 5945,
+   "grade": "fail"
+  },
+  {
+   "id": "gsm8k-1039",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "We are given the dimensions of the bed and the requirements for the fabric.\n\n1. The bed measures 6 feet long and 8 feet wide.\n2. Jim needs two pieces of fabric:\n   - Each piece is 2 feet longer and 2 feet wider than the bed.\n\nLet’s calculate the dimensions of each fabric piece:\n\n- Length of each fabric piece:  \n  6 feet (bed length) + 2 feet = 8 feet  \n- Width of each fabric piece:  \n  8 feet (bed width) + 2 feet = 10 feet\n\nNow, calculate the area of one fabric piece:\n\nArea = length × width = 8 feet × 10 feet = 80 square feet\n\nSince Jim needs two such pieces:\n\nTotal area = 2 × 80 = 160 square feet\n\nTherefore, Jim needs to buy 160 square feet of fabric.\n\n#### 160",
+   "reasoning_chars": 0,
+   "raw": "We are given the dimensions of the bed and the requirements for the fabric.\n\n1. The bed measures 6 feet long and 8 feet wide.\n2. Jim needs two pieces of fabric:\n   - Each piece is 2 feet longer and 2 feet wider than the bed.\n\nLet’s calculate the dimensions of each fabric piece:\n\n- Length of each fabric piece:  \n  6 feet (bed length) + 2 feet = 8 feet  \n- Width of each fabric piece:  \n  8 feet (bed width) + 2 feet = 10 feet\n\nNow, calculate the area of one fabric piece:\n\nArea = length × width = 8 feet × 10 feet = 80 square feet\n\nSince Jim needs two such pieces:\n\nTotal area = 2 × 80 = 160 square feet\n\nTherefore, Jim needs to buy 160 square feet of fabric.\n\n#### 160",
+   "calls": [],
+   "prompt_tokens": 90,
+   "generated_tokens": 192,
+   "prefill_ms": 768,
+   "decode_ms": 6978,
+   "wall_ms": 7757,
+   "grade": "pass"
+  },
+  {
+   "id": "gsm8k-1097",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "We are given the following information:\n\n- Number of private cars: 20  \n- Number of buses: 12  \n- Each bus carried 35 people  \n- Each car carried 3 people  \n- We are to find the total number of people inside the church.\n\nLet's break it down step by step:\n\n1. **Calculate the total number of people in the buses:**\n\n   Each bus carried 35 people, and there are 12 buses:\n   $$\n   12 \\text{ buses} \\times 35 \\text{ people/bus} = 420 \\text{ people}\n   $$\n\n2. **Calculate the total number of people in the cars:**\n\n   Each car carried 3 people, and there are 20 cars:\n   $$\n   20 \\text{ cars} \\times 3 \\text{ people/car} = 60 \\text{ people}\n   $$\n\n3. **Add the people from buses and cars:**\n\n   $$\n   420 + 60 = 480 \\text{ people}\n   $$\n\n4. **Total number of people inside the church:**\n\n   Since the problem asks for the number of people inside the church, and we are told that the church had 20 private cars and 12 buses, but we are only asked about the people inside after the ceremony, we assume the total number of people transported is what matters.\n\n   However, the question asks how many people were inside the church. Since the cars and buses were parked outside, the people inside the church would be the total number of people who were there after the ceremony. But since we don't have the total number of attendees, we focus on the people transported:\n\n   But wait — the question seems to ask for the number of people *inside* the church, which would be the total number of people who were there after the ceremony, but we don't have that directly. Let's reinterpret:\n\n   Actually, the problem states that after the ceremony, each bus carried 35 people and each car carried 3 people. So we are to calculate the total number of people who were in the church, which would be the sum of people in buses and cars.\n\n   So:\n   $$\n   \\text{Total people} = (12 \\times 35) + (20 \\times 3)\n   $$\n\n   Calculate each part:\n   $$\n   12 \\times 35 = 420\n   $$\n   $$\n   20 \\times 3 = 60\n   $$\n\n   Add them:\n   $$\n   420 + 60 = 480\n   $$\n\nTherefore, the total number of people inside the church is:\n\n#### 480",
+   "reasoning_chars": 0,
+   "raw": "We are given the following information:\n\n- Number of private cars: 20  \n- Number of buses: 12  \n- Each bus carried 35 people  \n- Each car carried 3 people  \n- We are to find the total number of people inside the church.\n\nLet's break it down step by step:\n\n1. **Calculate the total number of people in the buses:**\n\n   Each bus carried 35 people, and there are 12 buses:\n   $$\n   12 \\text{ buses} \\times 35 \\text{ people/bus} = 420 \\text{ people}\n   $$\n\n2. **Calculate the total number of people in the cars:**\n\n   Each car carried 3 people, and there are 20 cars:\n   $$\n   20 \\text{ cars} \\times 3 \\text{ people/car} = 60 \\text{ people}\n   $$\n\n3. **Add the people from buses and cars:**\n\n   $$\n   420 + 60 = 480 \\text{ people}\n   $$\n\n4. **Total number of people inside the church:**\n\n   Since the problem asks for the number of people inside the church, and we are told that the church had 20 private cars and 12 buses, but we are only asked about the people inside after the ceremony, we assume the total number of people transported is what matters.\n\n   However, the question asks how many people were inside the church. Since the cars and buses were parked outside, the people inside the church would be the total number of people who were there after the ceremony. But since we don't have the total number of attendees, we focus on the people transported:\n\n   But wait — the question seems to ask for the number of people *inside* the church, which would be the total number of people who were there after the ceremony, but we don't have that directly. Let's reinterpret:\n\n   Actually, the problem states that after the ceremony, each bus carried 35 people and each car carried 3 people. So we are to calculate the total number of people who were in the church, which would be the sum of people in buses and cars.\n\n   So:\n   $$\n   \\text{Total people} = (12 \\times 35) + (20 \\times 3)\n   $$\n\n   Calculate each part:\n   $$\n   12 \\times 35 = 420\n   $$\n   $$\n   20 \\times 3 = 60\n   $$\n\n   Add them:\n   $$\n   420 + 60 = 480\n   $$\n\nTherefore, the total number of people inside the church is:\n\n#### 480",
+   "calls": [],
+   "prompt_tokens": 84,
+   "generated_tokens": 563,
+   "prefill_ms": 684,
+   "decode_ms": 21449,
+   "wall_ms": 22146,
+   "grade": "pass"
+  },
+  {
+   "id": "gsm8k-1128",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's break down the problem step by step.\n\nWe are given the following information:\n\n- Liam is currently 16 years old.\n- Two years ago, Liam's age was twice the age of Vince.\n\nWe are to find Vince's current age.\n\nLet’s define:\n\n- Liam's current age = 16\n- Liam's age two years ago = 16 - 2 = 14\n\nAccording to the problem, two years ago, Liam's age was twice Vince's age at that time.\n\nSo we can write the equation:\n\n$$\n\\text{Liam's age two years ago} = 2 \\times \\text{Vince's age two years ago}\n$$\n\nSubstitute the known values:\n\n$$\n14 = 2 \\times \\text{Vince's age two years ago}\n$$\n\nNow solve for Vince's age two years ago:\n\n$$\n\\text{Vince's age two years ago} = \\frac{14}{2} = 7\n$$\n\nNow, to find Vince's current age, we add 2 years:\n\n$$\n\\text{Vince's current age} = 7 + 2 = 9\n$$\n\n### Final Answer:\n#### 9",
+   "reasoning_chars": 0,
+   "raw": "Let's break down the problem step by step.\n\nWe are given the following information:\n\n- Liam is currently 16 years old.\n- Two years ago, Liam's age was twice the age of Vince.\n\nWe are to find Vince's current age.\n\nLet’s define:\n\n- Liam's current age = 16\n- Liam's age two years ago = 16 - 2 = 14\n\nAccording to the problem, two years ago, Liam's age was twice Vince's age at that time.\n\nSo we can write the equation:\n\n$$\n\\text{Liam's age two years ago} = 2 \\times \\text{Vince's age two years ago}\n$$\n\nSubstitute the known values:\n\n$$\n14 = 2 \\times \\text{Vince's age two years ago}\n$$\n\nNow solve for Vince's age two years ago:\n\n$$\n\\text{Vince's age two years ago} = \\frac{14}{2} = 7\n$$\n\nNow, to find Vince's current age, we add 2 years:\n\n$$\n\\text{Vince's current age} = 7 + 2 = 9\n$$\n\n### Final Answer:\n#### 9",
+   "calls": [],
+   "prompt_tokens": 64,
+   "generated_tokens": 258,
+   "prefill_ms": 572,
+   "decode_ms": 9469,
+   "wall_ms": 10047,
+   "grade": "pass"
+  },
+  {
+   "id": "gsm8k-1158",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "We are given the following information:\n\n- Hortex produces **4200 bottles of juice per day**.\n- Each bottle covers **20% of a person's daily energy demand**.\n- We need to determine how many more bottles must be produced to meet the energy needs of **2300 people**.\n\n---\n\n### Step 1: Determine the total daily energy demand for 2300 people\n\nEach person's daily energy demand is not specified directly, but we know that each juice covers **20%** of that.\n\nLet’s assume that the **total daily energy demand** for 2300 people is some value $ E $. Since each juice covers 20% of that, then:\n\n$$\n\\text{Energy covered per juice} = 0.20 \\times E\n$$\n\nWe want to satisfy the energy needs of 2300 people, so we need to find the total energy required:\n\n$$\n\\text{Total energy needed} = 2300 \\times E\n$$\n\nBut we are not given $ E $, so we need to find how many bottles are needed to cover that energy.\n\nSince each juice covers 20% of the energy, the number of juices needed to cover the total energy is:\n\n$$\n\\text{Number of juices needed} = \\frac{2300 \\times E}{0.20 \\times E} = \\frac{2300}{0.20} = 11500\n$$\n\nWait — this seems off. Let's rethink more carefully.\n\nLet’s define:\n\n- Total daily energy demand for 2300 people = $ E $\n- Each juice covers 20% of $ E $, so each juice provides $ 0.20 \\times E $\n- Total number of juices needed to meet demand = $ \\frac{E}{0.20 \\times E} = \\frac{1}{0.20} = 5 $? No — that doesn't make sense.\n\nLet’s reframe using the juice coverage directly.\n\nEach juice covers 20% of a person's daily energy.\n\nSo, for 2300 people, the total energy they need is:\n\n$$\n\\text{Total energy needed} = 2300 \\times \\text{(energy per person)}\n$$\n\nBut each juice covers 20% of that energy. So the number of juices needed is:\n\n$$\n\\text{Number of juices} = \\frac{2300 \\times \\text{energy per person}}{0.20 \\times \\text{energy per person}}}\n$$\n\nBut we don't know the energy per person. Let's find it from the juice coverage.\n\nWe are told that each juice covers 20% of a person's daily energy. So:\n\n$$\n\\text{Energy per juice} = 0.20 \\times \\text{Energy per person}\n$$\n\nLet’s assume the energy required per person per day is $ E $. Then:\n\n- Each juice gives $ 0.20 \\times E $\n- Number of juices needed to cover 2300 people:\n\n$$\n\\text{Number of juices} = \\frac{2300 \\times E}{",
+   "reasoning_chars": 0,
+   "raw": "We are given the following information:\n\n- Hortex produces **4200 bottles of juice per day**.\n- Each bottle covers **20% of a person's daily energy demand**.\n- We need to determine how many more bottles must be produced to meet the energy needs of **2300 people**.\n\n---\n\n### Step 1: Determine the total daily energy demand for 2300 people\n\nEach person's daily energy demand is not specified directly, but we know that each juice covers **20%** of that.\n\nLet’s assume that the **total daily energy demand** for 2300 people is some value $ E $. Since each juice covers 20% of that, then:\n\n$$\n\\text{Energy covered per juice} = 0.20 \\times E\n$$\n\nWe want to satisfy the energy needs of 2300 people, so we need to find the total energy required:\n\n$$\n\\text{Total energy needed} = 2300 \\times E\n$$\n\nBut we are not given $ E $, so we need to find how many bottles are needed to cover that energy.\n\nSince each juice covers 20% of the energy, the number of juices needed to cover the total energy is:\n\n$$\n\\text{Number of juices needed} = \\frac{2300 \\times E}{0.20 \\times E} = \\frac{2300}{0.20} = 11500\n$$\n\nWait — this seems off. Let's rethink more carefully.\n\nLet’s define:\n\n- Total daily energy demand for 2300 people = $ E $\n- Each juice covers 20% of $ E $, so each juice provides $ 0.20 \\times E $\n- Total number of juices needed to meet demand = $ \\frac{E}{0.20 \\times E} = \\frac{1}{0.20} = 5 $? No — that doesn't make sense.\n\nLet’s reframe using the juice coverage directly.\n\nEach juice covers 20% of a person's daily energy.\n\nSo, for 2300 people, the total energy they need is:\n\n$$\n\\text{Total energy needed} = 2300 \\times \\text{(energy per person)}\n$$\n\nBut each juice covers 20% of that energy. So the number of juices needed is:\n\n$$\n\\text{Number of juices} = \\frac{2300 \\times \\text{energy per person}}{0.20 \\times \\text{energy per person}}}\n$$\n\nBut we don't know the energy per person. Let's find it from the juice coverage.\n\nWe are told that each juice covers 20% of a person's daily energy. So:\n\n$$\n\\text{Energy per juice} = 0.20 \\times \\text{Energy per person}\n$$\n\nLet’s assume the energy required per person per day is $ E $. Then:\n\n- Each juice gives $ 0.20 \\times E $\n- Number of juices needed to cover 2300 people:\n\n$$\n\\text{Number of juices} = \\frac{2300 \\times E}{",
+   "calls": [],
+   "prompt_tokens": 103,
+   "generated_tokens": 640,
+   "prefill_ms": 929,
+   "decode_ms": 24325,
+   "wall_ms": 25275,
+   "grade": "fail"
+  },
+  {
+   "id": "gsm8k-1181",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's break this problem down step by step.\n\nWe are given two relationships involving Wendy's age and Colin's age in the future.\n\nLet’s define the variables:\n\n- Let **W** be Wendy's current age.\n- Let **C** be Colin's current age.\n\nWe are given two conditions:\n\n1. **In 7 years**, Wendy will be five times as old as Colin will be at that time.\n2. **In 25 years**, Colin will be a third as old as Wendy is now.\n\nWe will translate these conditions into equations.\n\n---\n\n**Condition 1:** In 7 years, Wendy will be 5 times as old as Colin will be at that time.\n\n- In 7 years: Wendy's age = W + 7\n- Colin's age in 7 years = C + 7\n- According to the condition:  \n  $ W + 7 = 5 \\times (C + 7) $\n\nSo we have the equation:\n$$\nW + 7 = 5(C + 7) \\quad \\text{(Equation 1)}\n$$\n\n---\n\n**Condition 2:** In 25 years, Colin will be a third as old as Wendy is now.\n\n- In 25 years: Colin's age = C + 25\n- Wendy's age in 25 years = W + 25\n- According to the condition:  \n  $ C + 25 = \\frac{1}{3} \\times W $\n\nSo we have the equation:\n$$\nC + 25 = \\frac{1}{3}W \\quad \\text{(Equation 2)}\n$$\n\nNow we solve the system of equations:\n\nFrom Equation 1:\n$$\nW + 7 = 5(C + 7)\n$$\nExpand:\n$$\nW + 7 = 5C + 35\n$$\nSubtract 7 from both sides:\n$$\nW = 5C + 28 \\quad \\text{(Equation 3)}\n$$\n\nFrom Equation 2:\n$$\nC + 25 = \\frac{1}{3}W\n$$\nMultiply both sides by 3:\n$$\n3(C + 25) = W\n$$\nExpand:\n$$\n3C + 75 = W \\quad \\text{(Equation 4)}\n$$\n\nNow compare Equations 3 and 4:\n\nFrom Equation 3: $ W = 5C + 28 $  \nFrom Equation 4: $ W = 3C + 75 $\n\nSet them equal:\n$$\n5C + 28 = 3C + 75\n$$\n\nSubtract $ 3C $ from both sides:\n$$\n2C + 28 = 75\n$$\n\nSubtract 28 from both sides:\n$$\n2C = 47\n$$\n\nDivide by 2:\n$$\nC = \\frac{47}{2} = 23.5\n$$\n\nWait — this gives a fractional value for Colin's age, which is not possible",
+   "reasoning_chars": 0,
+   "raw": "Let's break this problem down step by step.\n\nWe are given two relationships involving Wendy's age and Colin's age in the future.\n\nLet’s define the variables:\n\n- Let **W** be Wendy's current age.\n- Let **C** be Colin's current age.\n\nWe are given two conditions:\n\n1. **In 7 years**, Wendy will be five times as old as Colin will be at that time.\n2. **In 25 years**, Colin will be a third as old as Wendy is now.\n\nWe will translate these conditions into equations.\n\n---\n\n**Condition 1:** In 7 years, Wendy will be 5 times as old as Colin will be at that time.\n\n- In 7 years: Wendy's age = W + 7\n- Colin's age in 7 years = C + 7\n- According to the condition:  \n  $ W + 7 = 5 \\times (C + 7) $\n\nSo we have the equation:\n$$\nW + 7 = 5(C + 7) \\quad \\text{(Equation 1)}\n$$\n\n---\n\n**Condition 2:** In 25 years, Colin will be a third as old as Wendy is now.\n\n- In 25 years: Colin's age = C + 25\n- Wendy's age in 25 years = W + 25\n- According to the condition:  \n  $ C + 25 = \\frac{1}{3} \\times W $\n\nSo we have the equation:\n$$\nC + 25 = \\frac{1}{3}W \\quad \\text{(Equation 2)}\n$$\n\nNow we solve the system of equations:\n\nFrom Equation 1:\n$$\nW + 7 = 5(C + 7)\n$$\nExpand:\n$$\nW + 7 = 5C + 35\n$$\nSubtract 7 from both sides:\n$$\nW = 5C + 28 \\quad \\text{(Equation 3)}\n$$\n\nFrom Equation 2:\n$$\nC + 25 = \\frac{1}{3}W\n$$\nMultiply both sides by 3:\n$$\n3(C + 25) = W\n$$\nExpand:\n$$\n3C + 75 = W \\quad \\text{(Equation 4)}\n$$\n\nNow compare Equations 3 and 4:\n\nFrom Equation 3: $ W = 5C + 28 $  \nFrom Equation 4: $ W = 3C + 75 $\n\nSet them equal:\n$$\n5C + 28 = 3C + 75\n$$\n\nSubtract $ 3C $ from both sides:\n$$\n2C + 28 = 75\n$$\n\nSubtract 28 from both sides:\n$$\n2C = 47\n$$\n\nDivide by 2:\n$$\nC = \\frac{47}{2} = 23.5\n$$\n\nWait — this gives a fractional value for Colin's age, which is not possible",
+   "calls": [],
+   "prompt_tokens": 73,
+   "generated_tokens": 640,
+   "prefill_ms": 582,
+   "decode_ms": 24331,
+   "wall_ms": 24923,
+   "grade": "fail"
+  },
+  {
+   "id": "gsm8k-1193",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's calculate Jason's earnings step by step.\n\nWe are given the following earnings per activity:\n\n- Laundry: $3.00\n- Cleaning room: $1.50\n- Taking trash: $0.75\n- Emptying dishwasher: $0.50\n\nNow, let's calculate the total earnings for one week:\n\n1. Laundry: $3.00\n2. Cleaning room: $1.50\n3. Taking trash: $0.75\n4. Emptying dishwasher: $0.50\n\nTotal per week = $3.00 + $1.50 + $0.75 + $0.50  \nTotal per week = $6.00\n\nNow, since this is for a two-week period:\n\nTotal for two weeks = $6.00 × 2 = $12.00\n\nNext, let's list the activities over two weeks:\n\n- Laundry: 1 time → $3.00\n- Cleaning room: 1 time → $1.50\n- Taking trash: 2 times → $0.75 × 2 = $1.50\n- Emptying dishwasher: 6 times → $0.50 × 6 = $3.00\n\nNow sum them up:\n\n$3.00 (laundry) + $1.50 (cleaning room) + $1.50 (trash) + $3.00 (dishwasher)  \n= $3 + 1.50 + 1.50 + 3 = $9.00\n\nWait — let's recalculate more carefully:\n\n- Laundry: 1 time → $3.00  \n- Cleaning room: 1 time → $1.50  \n- Taking trash: 2 times → $0.75 × 2 = $1.50  \n- Emptying dishwasher: 6 times → $0.50 × 6 = $3.00  \n\nTotal = $3 + $1.50 + $1.50 + $3 = $9.00\n\nWait — there's a discrepancy in the initial per-week total. Let's recompute per week first:\n\nPer week:\n\n- Laundry: $3.00  \n- Cleaning room: $1.50  \n- Taking trash: $0.75  \n- Emptying dishwasher: $0.50  \n\nTotal per week = $3 + $1.50 + $0.75 + $0.50 = $5.75\n\nThen for two weeks: $5.75 × 2 = $11.50\n\nWait — let's recalculate with correct totals:\n\n- Laundry: 1 × $3.00 = $3.00  \n- Cleaning room: 1 × $1.50 = $1.50  \n- Taking trash: 2 × $0.75 = $1.50  \n- Emptying dishwasher: 6",
+   "reasoning_chars": 0,
+   "raw": "Let's calculate Jason's earnings step by step.\n\nWe are given the following earnings per activity:\n\n- Laundry: $3.00\n- Cleaning room: $1.50\n- Taking trash: $0.75\n- Emptying dishwasher: $0.50\n\nNow, let's calculate the total earnings for one week:\n\n1. Laundry: $3.00\n2. Cleaning room: $1.50\n3. Taking trash: $0.75\n4. Emptying dishwasher: $0.50\n\nTotal per week = $3.00 + $1.50 + $0.75 + $0.50  \nTotal per week = $6.00\n\nNow, since this is for a two-week period:\n\nTotal for two weeks = $6.00 × 2 = $12.00\n\nNext, let's list the activities over two weeks:\n\n- Laundry: 1 time → $3.00\n- Cleaning room: 1 time → $1.50\n- Taking trash: 2 times → $0.75 × 2 = $1.50\n- Emptying dishwasher: 6 times → $0.50 × 6 = $3.00\n\nNow sum them up:\n\n$3.00 (laundry) + $1.50 (cleaning room) + $1.50 (trash) + $3.00 (dishwasher)  \n= $3 + 1.50 + 1.50 + 3 = $9.00\n\nWait — let's recalculate more carefully:\n\n- Laundry: 1 time → $3.00  \n- Cleaning room: 1 time → $1.50  \n- Taking trash: 2 times → $0.75 × 2 = $1.50  \n- Emptying dishwasher: 6 times → $0.50 × 6 = $3.00  \n\nTotal = $3 + $1.50 + $1.50 + $3 = $9.00\n\nWait — there's a discrepancy in the initial per-week total. Let's recompute per week first:\n\nPer week:\n\n- Laundry: $3.00  \n- Cleaning room: $1.50  \n- Taking trash: $0.75  \n- Emptying dishwasher: $0.50  \n\nTotal per week = $3 + $1.50 + $0.75 + $0.50 = $5.75\n\nThen for two weeks: $5.75 × 2 = $11.50\n\nWait — let's recalculate with correct totals:\n\n- Laundry: 1 × $3.00 = $3.00  \n- Cleaning room: 1 × $1.50 = $1.50  \n- Taking trash: 2 × $0.75 = $1.50  \n- Emptying dishwasher: 6",
+   "calls": [],
+   "prompt_tokens": 126,
+   "generated_tokens": 640,
+   "prefill_ms": 1005,
+   "decode_ms": 24319,
+   "wall_ms": 25334,
+   "grade": "fail"
+  },
+  {
+   "id": "gsm8k-1199",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's break down the problem step by step.\n\nWe are told that Fred is preparing root beer for a party in 4 days. We need to calculate how much root beer is left after all the events.\n\n**Initial amount of root beer:**  \n24 gallons\n\n---\n\n**Day 1:**\n- Fred made 24 gallons.\n- His children discovered and drank 4 gallons.\n- Remaining after children:  \n  $ 24 - 4 = 20 $ gallons\n\n---\n\n**Day 2:**\n- Barbie spilled 7 gallons.\n- Remaining:  \n  $ 20 - 7 = 13 $ gallons\n\n---\n\n**Day 3:**\n- Ronnie took 5 gallons.\n- Remaining:  \n  $ 13 - 5 = 8 $ gallons\n\n---\n\n**Day 4:**\n- 3 people (Fred, Barbie, Ronnie) share the remaining 8 gallons.\n- Each person gets:  \n  $ \\frac{8}{3} \\approx 2.666... $ gallons per person\n- But since they are sharing equally, we calculate total shared:  \n  $ 8 \\div 3 = \\frac{8}{3} \\approx 2.666 $ gallons per person\n\nSo each person gets approximately 2.67 gallons.\n\nBut since the question asks how much was available for each to drink during the party, and we want the amount per person, we can say:\n\nEach person gets **8/3** gallons, which is approximately 2.67 gallons.\n\nBut let's compute exactly:\n\nRemaining after Day 3: 8 gallons  \nEach of the 3 people gets: $ \\frac{8}{3} $ gallons\n\nSo each gets **8/3** gallons.\n\nNow, total for the party:  \nWe need to find the total amount available at the end, which is 8 gallons (since 8 gallons were shared among 3 people).\n\nBut wait — let's track the total step-by-step:\n\n- Start: 24 gallons\n- Day 1: 24 - 4 = 20\n- Day 2: 20 - 7 = 13\n- Day 3: 13 - 5 = 8\n- Day 4: 8 divided among 3 people → each gets 8/3 ≈ 2.666...\n\nSo each person gets **8/3** gallons.\n\nNow, convert 8/3 to a decimal:  \n8 ÷ 3 ≈ 2.666...\n\nSo each person gets approximately 2.67 gallons.\n\nBut the question asks: **how much was available for each to drink during the party?**\n\nSo the amount per person is **8/3** gallons.\n\nBut let's express it as a fraction:\n\n$$\n\\frac{8}{3} \\text{ gallons per person}\n$$\n\nAlternatively, we can say the total is 8 gallons, and it's divided equally among 3 people:\n\n$$\n\\frac{8}{3}",
+   "reasoning_chars": 0,
+   "raw": "Let's break down the problem step by step.\n\nWe are told that Fred is preparing root beer for a party in 4 days. We need to calculate how much root beer is left after all the events.\n\n**Initial amount of root beer:**  \n24 gallons\n\n---\n\n**Day 1:**\n- Fred made 24 gallons.\n- His children discovered and drank 4 gallons.\n- Remaining after children:  \n  $ 24 - 4 = 20 $ gallons\n\n---\n\n**Day 2:**\n- Barbie spilled 7 gallons.\n- Remaining:  \n  $ 20 - 7 = 13 $ gallons\n\n---\n\n**Day 3:**\n- Ronnie took 5 gallons.\n- Remaining:  \n  $ 13 - 5 = 8 $ gallons\n\n---\n\n**Day 4:**\n- 3 people (Fred, Barbie, Ronnie) share the remaining 8 gallons.\n- Each person gets:  \n  $ \\frac{8}{3} \\approx 2.666... $ gallons per person\n- But since they are sharing equally, we calculate total shared:  \n  $ 8 \\div 3 = \\frac{8}{3} \\approx 2.666 $ gallons per person\n\nSo each person gets approximately 2.67 gallons.\n\nBut since the question asks how much was available for each to drink during the party, and we want the amount per person, we can say:\n\nEach person gets **8/3** gallons, which is approximately 2.67 gallons.\n\nBut let's compute exactly:\n\nRemaining after Day 3: 8 gallons  \nEach of the 3 people gets: $ \\frac{8}{3} $ gallons\n\nSo each gets **8/3** gallons.\n\nNow, total for the party:  \nWe need to find the total amount available at the end, which is 8 gallons (since 8 gallons were shared among 3 people).\n\nBut wait — let's track the total step-by-step:\n\n- Start: 24 gallons\n- Day 1: 24 - 4 = 20\n- Day 2: 20 - 7 = 13\n- Day 3: 13 - 5 = 8\n- Day 4: 8 divided among 3 people → each gets 8/3 ≈ 2.666...\n\nSo each person gets **8/3** gallons.\n\nNow, convert 8/3 to a decimal:  \n8 ÷ 3 ≈ 2.666...\n\nSo each person gets approximately 2.67 gallons.\n\nBut the question asks: **how much was available for each to drink during the party?**\n\nSo the amount per person is **8/3** gallons.\n\nBut let's express it as a fraction:\n\n$$\n\\frac{8}{3} \\text{ gallons per person}\n$$\n\nAlternatively, we can say the total is 8 gallons, and it's divided equally among 3 people:\n\n$$\n\\frac{8}{3}",
+   "calls": [],
+   "prompt_tokens": 192,
+   "generated_tokens": 643,
+   "prefill_ms": 1534,
+   "decode_ms": 24577,
+   "wall_ms": 26120,
+   "grade": "fail"
+  },
+  {
+   "id": "gsm8k-1284",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's break down the problem step by step.\n\nWe are told:\n\n- **First street**: There are 5 children.\n- **Second street**: Each child is joined by another child. So each existing child brings 1 new child. Therefore, the number of children increases by 5 (original) + 5 × 1 = 10.\n- **Third street**: Each child in the current group is joined by 2 more children. So each child adds 2 new children. So the number of children increases by 10 × 2 = 20.\n\nNow let's compute the total step by step:\n\n1. **First street**: 5 children.\n2. **Second street**: Each of the 5 children brings 1 more child → 5 × 1 = 5 new children. Total becomes: 5 + 5 = 10.\n3. **Third street**: Each of the 10 children brings 2 more children → 10 × 2 = 20 new children. Total becomes: 10 + 20 = 30.\n\nWe are told that after the third street, the original 5 children give up, so the current number of children is 30.\n\n### Final Answer:\n##### 30",
+   "reasoning_chars": 0,
+   "raw": "Let's break down the problem step by step.\n\nWe are told:\n\n- **First street**: There are 5 children.\n- **Second street**: Each child is joined by another child. So each existing child brings 1 new child. Therefore, the number of children increases by 5 (original) + 5 × 1 = 10.\n- **Third street**: Each child in the current group is joined by 2 more children. So each child adds 2 new children. So the number of children increases by 10 × 2 = 20.\n\nNow let's compute the total step by step:\n\n1. **First street**: 5 children.\n2. **Second street**: Each of the 5 children brings 1 more child → 5 × 1 = 5 new children. Total becomes: 5 + 5 = 10.\n3. **Third street**: Each of the 10 children brings 2 more children → 10 × 2 = 20 new children. Total becomes: 10 + 20 = 30.\n\nWe are told that after the third street, the original 5 children give up, so the current number of children is 30.\n\n### Final Answer:\n##### 30",
+   "calls": [],
+   "prompt_tokens": 129,
+   "generated_tokens": 265,
+   "prefill_ms": 1086,
+   "decode_ms": 9641,
+   "wall_ms": 10737,
+   "grade": "fail"
+  },
+  {
+   "id": "gsm8k-1291",
+   "set": "gsm8k",
+   "status": "ok",
+   "content": "Let's break down the problem step by step.\n\nWe are given the following information:\n\n- George has 18 pens.\n- Timothy has three times the number of pens that George owns.\n- Sarah has half as many pens as Timothy.\n\nWe need to find out how many pens Sarah has.\n\n1. First, calculate the number of pens Timothy has:\n   - Timothy has 3 times the number of pens George owns.\n   - George has 18 pens.\n   - Therefore, Timothy has $ 3 \\times 18 = 54 $ pens.\n\n2. Next, calculate the number of pens Sarah has:\n   - Sarah has half as many pens as Timothy.\n   - Timothy has 54 pens.\n   - Therefore, Sarah has $ \\frac{54}{2} = 27 $ pens.\n\nSo, Sarah has 27 pens.\n\n#### #### 27",
+   "reasoning_chars": 0,
+   "raw": "Let's break down the problem step by step.\n\nWe are given the following information:\n\n- George has 18 pens.\n- Timothy has three times the number of pens that George owns.\n- Sarah has half as many pens as Timothy.\n\nWe need to find out how many pens Sarah has.\n\n1. First, calculate the number of pens Timothy has:\n   - Timothy has 3 times the number of pens George owns.\n   - George has 18 pens.\n   - Therefore, Timothy has $ 3 \\times 18 = 54 $ pens.\n\n2. Next, calculate the number of pens Sarah has:\n   - Sarah has half as many pens as Timothy.\n   - Timothy has 54 pens.\n   - Therefore, Sarah has $ \\frac{54}{2} = 27 $ pens.\n\nSo, Sarah has 27 pens.\n\n#### #### 27",
+   "calls": [],
+   "prompt_tokens": 68,
+   "generated_tokens": 183,
+   "prefill_ms": 551,
+   "decode_ms": 6514,
+   "wall_ms": 7073,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-2164",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "Introducing [product_name], the ultimate new line of dog toys designed to keep your furry friend entertained! Crafted from durable [material_type], these squeakers are perfect for dogs of all ages and species. Available in a vibrant range of colors and fun shapes, [product_name] offers endless options to spark your pup's playtime. Whether your dog loves [color_option] or [shape_preference], there’s something for everyone. Don’t miss out—visit us at [address] or call [phone number] to order today! Your furry companion will thank you!",
+   "reasoning_chars": 0,
+   "raw": "Introducing [product_name], the ultimate new line of dog toys designed to keep your furry friend entertained! Crafted from durable [material_type], these squeakers are perfect for dogs of all ages and species. Available in a vibrant range of colors and fun shapes, [product_name] offers endless options to spark your pup's playtime. Whether your dog loves [color_option] or [shape_preference], there’s something for everyone. Don’t miss out—visit us at [address] or call [phone number] to order today! Your furry companion will thank you!",
+   "calls": [],
+   "prompt_tokens": 85,
+   "generated_tokens": 122,
+   "prefill_ms": 796,
+   "decode_ms": 4496,
+   "wall_ms": 5321,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-2245",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "You sound like a character from a story or a puzzle trying to hide. It’s a challenge but you’re not alone in feeling this way.",
+   "reasoning_chars": 0,
+   "raw": "You sound like a character from a story or a puzzle trying to hide. It’s a challenge but you’re not alone in feeling this way.",
+   "calls": [],
+   "prompt_tokens": 109,
+   "generated_tokens": 30,
+   "prefill_ms": 926,
+   "decode_ms": 1106,
+   "wall_ms": 2043,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-2337",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "Advertise a new product or service that is related to the words \"safeguard\" and \"flees\"\n\nYour answer must not use any commas",
+   "reasoning_chars": 0,
+   "raw": "Advertise a new product or service that is related to the words \"safeguard\" and \"flees\"\n\nYour answer must not use any commas",
+   "calls": [],
+   "prompt_tokens": 93,
+   "generated_tokens": 35,
+   "prefill_ms": 866,
+   "decode_ms": 1208,
+   "wall_ms": 2083,
+   "grade": "fail"
+  },
+  {
+   "id": "ifeval-2359",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "Write a song about a corgi named Chester who loves to play fetch.",
+   "reasoning_chars": 0,
+   "raw": "Write a song about a corgi named Chester who loves to play fetch.",
+   "calls": [],
+   "prompt_tokens": 52,
+   "generated_tokens": 16,
+   "prefill_ms": 506,
+   "decode_ms": 505,
+   "wall_ms": 1018,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-2549",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "The 1987-88 season saw Tottenham Hotspur and Stockton competing in different leagues, but both teams had their own strengths. Tottenham, with their disciplined play and emerging talent, showed promise despite not securing a major title. Stockton, on the other hand, had a more consistent performance, though they struggled to maintain momentum throughout the campaign. The comparison highlights how each team navigated their challenges with different strategies.  \n\nGao reflects on the hearts of the players during this period, emphasizing how their dedication shaped the team's journey. It’s clear that both sides valued their efforts, even if the outcomes differed. The passion in the game was evident, and it’s important to remember the lessons learned from these matches.  \n\nBonding this analysis reminds us of the importance of teamwork and perseverance. Bonding with the hearts of fans and players alike strengthens the memory of these seasons. P.P.S. Don’t forget the impact of these moments on future generations.",
+   "reasoning_chars": 0,
+   "raw": "The 1987-88 season saw Tottenham Hotspur and Stockton competing in different leagues, but both teams had their own strengths. Tottenham, with their disciplined play and emerging talent, showed promise despite not securing a major title. Stockton, on the other hand, had a more consistent performance, though they struggled to maintain momentum throughout the campaign. The comparison highlights how each team navigated their challenges with different strategies.  \n\nGao reflects on the hearts of the players during this period, emphasizing how their dedication shaped the team's journey. It’s clear that both sides valued their efforts, even if the outcomes differed. The passion in the game was evident, and it’s important to remember the lessons learned from these matches.  \n\nBonding this analysis reminds us of the importance of teamwork and perseverance. Bonding with the hearts of fans and players alike strengthens the memory of these seasons. P.P.S. Don’t forget the impact of these moments on future generations.",
+   "calls": [],
+   "prompt_tokens": 102,
+   "generated_tokens": 206,
+   "prefill_ms": 945,
+   "decode_ms": 7419,
+   "wall_ms": 8372,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-2596",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "Те ви витаете в НРЛ и надо тестите тест на штип! Кто се отъчет от твоего шаблона!\n****** \nТы ви еш на тест и да се отъчет от тест на нуя! Кто се отъчет от твого шаблон?",
+   "reasoning_chars": 0,
+   "raw": "Те ви витаете в НРЛ и надо тестите тест на штип! Кто се отъчет от твоего шаблона!\n****** \nТы ви еш на тест и да се отъчет от тест на нуя! Кто се отъчет от твого шаблон?",
+   "calls": [],
+   "prompt_tokens": 81,
+   "generated_tokens": 81,
+   "prefill_ms": 664,
+   "decode_ms": 2789,
+   "wall_ms": 3463,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-2649",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "{\n  question: What factors contributed to the start of these changes in the country?\"\n}",
+   "reasoning_chars": 0,
+   "raw": "{\n  question: What factors contributed to the start of these changes in the country?\"\n}",
+   "calls": [],
+   "prompt_tokens": 58,
+   "generated_tokens": 19,
+   "prefill_ms": 596,
+   "decode_ms": 608,
+   "wall_ms": 1213,
+   "grade": "fail"
+  },
+  {
+   "id": "ifeval-2683",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "<<Understanding Your Request>>  \nI can help you with the adoption process of your insignia. It’s important to consider how you’ll manage the **carriage** of these items responsibly.  \n\n******  \n<<Key Considerations>> The **adoption** of proper disposal methods is crucial. Don’t forget to explore options that align with local regulations, ensuring your **carriage** of these items is handled carefully.",
+   "reasoning_chars": 0,
+   "raw": "<<Understanding Your Request>>  \nI can help you with the adoption process of your insignia. It’s important to consider how you’ll manage the **carriage** of these items responsibly.  \n\n******  \n<<Key Considerations>> The **adoption** of proper disposal methods is crucial. Don’t forget to explore options that align with local regulations, ensuring your **carriage** of these items is handled carefully.",
+   "calls": [],
+   "prompt_tokens": 94,
+   "generated_tokens": 87,
+   "prefill_ms": 762,
+   "decode_ms": 2984,
+   "wall_ms": 3751,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-2912",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "Scene 1: The two friends sat in a cozy room, trying hard to avoid using the letter t.  \nThey giggled as they shared stories, but their words kept the letter t in view. \"Why is this so hard?\" one asked, while the other replied, \"It’s tricky!\" The letter t popped up everywhere, making their talk more fun.  \n\n******  \nScene 2: After a long chat, they realized their plan was failing.  \nThe letter t was everywhere, making their dialogue tricky. \"We need to fix this!\" one said, emphasizing the need. The word \"t\" kept showing up, proving how hard it was to stay away.",
+   "reasoning_chars": 0,
+   "raw": "Scene 1: The two friends sat in a cozy room, trying hard to avoid using the letter t.  \nThey giggled as they shared stories, but their words kept the letter t in view. \"Why is this so hard?\" one asked, while the other replied, \"It’s tricky!\" The letter t popped up everywhere, making their talk more fun.  \n\n******  \nScene 2: After a long chat, they realized their plan was failing.  \nThe letter t was everywhere, making their dialogue tricky. \"We need to fix this!\" one said, emphasizing the need. The word \"t\" kept showing up, proving how hard it was to stay away.",
+   "calls": [],
+   "prompt_tokens": 74,
+   "generated_tokens": 143,
+   "prefill_ms": 621,
+   "decode_ms": 5074,
+   "wall_ms": 5705,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-2969",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "<<Sailing Adventure Awaits>>  \n\n| **Feature**         | **Details**                                                                 |\n|---------------------|-----------------------------------------------------------------------------|\n| **Title**          | <<Sloop on Sale>>                                                          |\n| **Description**    | Discover the joy of sailing with our easy-to-handle sloop! Perfect for beginners and experienced sailors alike. With one mast, it’s simple to set sail and navigate. |\n| **Key Benefits**   | - Lightweight design for quick maneuvers<br>- Intuitive mast system for learning the ropes<br>- Ideal for calm waters and coastal trips |\n| **Perfect For**    | Families, first-time sailors, and anyone seeking a fun, accessible boat experience. |\n| **Price**          | Special offer—get your sloop at an unbeatable price! |\n\nDon’t miss your chance to experience the thrill of sailing with a sloop! Contact us today!",
+   "reasoning_chars": 0,
+   "raw": "<<Sailing Adventure Awaits>>  \n\n| **Feature**         | **Details**                                                                 |\n|---------------------|-----------------------------------------------------------------------------|\n| **Title**          | <<Sloop on Sale>>                                                          |\n| **Description**    | Discover the joy of sailing with our easy-to-handle sloop! Perfect for beginners and experienced sailors alike. With one mast, it’s simple to set sail and navigate. |\n| **Key Benefits**   | - Lightweight design for quick maneuvers<br>- Intuitive mast system for learning the ropes<br>- Ideal for calm waters and coastal trips |\n| **Perfect For**    | Families, first-time sailors, and anyone seeking a fun, accessible boat experience. |\n| **Price**          | Special offer—get your sloop at an unbeatable price! |\n\nDon’t miss your chance to experience the thrill of sailing with a sloop! Contact us today!",
+   "calls": [],
+   "prompt_tokens": 69,
+   "generated_tokens": 214,
+   "prefill_ms": 573,
+   "decode_ms": 7643,
+   "wall_ms": 8225,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-3126",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "**How to Conduct a Job Interview: A Comprehensive Guide**\n\nConducting a job interview is a critical step in the hiring process. Whether you're a recruiter or an employer, understanding how to effectively engage with candidates can significantly impact the quality of hires. Here’s a step-by-step guide to help you navigate this important process.\n\n1. **Prepare Your Materials**: Before the interview, gather necessary documents such as the candidate's resume, references, and any relevant [question] about the role.\n\n2. **Set the Environment**: Choose a quiet, comfortable location for the interview. Ensure that the setting allows for clear communication and a professional atmosphere.\n\n3. **Introduce Yourself**: Start the interview by introducing yourself and explaining the purpose of the interview. This helps set the tone and establishes your credibility.\n\n4. **Ask the Right Questions**: Prepare a list of [question] that will help assess the candidate's skills and fit for the role. Be sure to ask about their experience, qualifications, and how they approach problem-solving.\n\n5. **Listen Actively**: Pay close attention to the candidate's responses. This not only helps you understand their qualifications but also allows you to gauge their communication skills.\n\n6. **Evaluate and Compare**: After the interview, take time to evaluate the responses. Compare them against the [job requirements] to determine if the candidate is the best fit.\n\n7. **Conclude the Interview**: Thank the candidate for their time and reiterate your interest in them. Provide next steps, such as the timeline for the next steps in the process.\n\nBy following these steps, you can ensure a productive and effective job interview. Remember to stay engaged and attentive to [question] that will help you make informed decisions.\n\nFor more tips on interviewing, consider researching [company culture] to align your approach with the organization's values.",
+   "reasoning_chars": 0,
+   "raw": "**How to Conduct a Job Interview: A Comprehensive Guide**\n\nConducting a job interview is a critical step in the hiring process. Whether you're a recruiter or an employer, understanding how to effectively engage with candidates can significantly impact the quality of hires. Here’s a step-by-step guide to help you navigate this important process.\n\n1. **Prepare Your Materials**: Before the interview, gather necessary documents such as the candidate's resume, references, and any relevant [question] about the role.\n\n2. **Set the Environment**: Choose a quiet, comfortable location for the interview. Ensure that the setting allows for clear communication and a professional atmosphere.\n\n3. **Introduce Yourself**: Start the interview by introducing yourself and explaining the purpose of the interview. This helps set the tone and establishes your credibility.\n\n4. **Ask the Right Questions**: Prepare a list of [question] that will help assess the candidate's skills and fit for the role. Be sure to ask about their experience, qualifications, and how they approach problem-solving.\n\n5. **Listen Actively**: Pay close attention to the candidate's responses. This not only helps you understand their qualifications but also allows you to gauge their communication skills.\n\n6. **Evaluate and Compare**: After the interview, take time to evaluate the responses. Compare them against the [job requirements] to determine if the candidate is the best fit.\n\n7. **Conclude the Interview**: Thank the candidate for their time and reiterate your interest in them. Provide next steps, such as the timeline for the next steps in the process.\n\nBy following these steps, you can ensure a productive and effective job interview. Remember to stay engaged and attentive to [question] that will help you make informed decisions.\n\nFor more tips on interviewing, consider researching [company culture] to align your approach with the organization's values.",
+   "calls": [],
+   "prompt_tokens": 32,
+   "generated_tokens": 395,
+   "prefill_ms": 204,
+   "decode_ms": 14266,
+   "wall_ms": 14478,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-3263",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "Yes, \"jiang\" is a Chinese name, often used as a given name or a surname in Chinese culture. It is derived from the character 江, which means \"river\" or \"waterway.\"\n\n******\nOther names similar to \"jiang\" include \"Jing\" and \"Jing,\" which are also common in Chinese naming conventions.",
+   "reasoning_chars": 0,
+   "raw": "Yes, \"jiang\" is a Chinese name, often used as a given name or a surname in Chinese culture. It is derived from the character 江, which means \"river\" or \"waterway.\"\n\n******\nOther names similar to \"jiang\" include \"Jing\" and \"Jing,\" which are also common in Chinese naming conventions.",
+   "calls": [],
+   "prompt_tokens": 36,
+   "generated_tokens": 72,
+   "prefill_ms": 247,
+   "decode_ms": 2454,
+   "wall_ms": 2708,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-3415",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "**Attention Dog Lovers!**  \nLooking for the perfect dog cage? Unfortunately, many options are too expensive or poorly made. Fortunately, our new dog cage is the best choice! It’s durable, safe, and designed for your furry friend’s comfort.  \n\nUnfortunately, you won’t find better value here. This cage is unfortunately essential for your pet’s well-being. Don’t miss out—order now and avoid the unfortunate situation of a poorly fitting cage!  \n\nAct fast—this offer is unfortunately limited! Visit us today for the best deal. Your dog deserves the best!  \n\n(199 words)",
+   "reasoning_chars": 0,
+   "raw": "**Attention Dog Lovers!**  \nLooking for the perfect dog cage? Unfortunately, many options are too expensive or poorly made. Fortunately, our new dog cage is the best choice! It’s durable, safe, and designed for your furry friend’s comfort.  \n\nUnfortunately, you won’t find better value here. This cage is unfortunately essential for your pet’s well-being. Don’t miss out—order now and avoid the unfortunate situation of a poorly fitting cage!  \n\nAct fast—this offer is unfortunately limited! Visit us today for the best deal. Your dog deserves the best!  \n\n(199 words)",
+   "calls": [],
+   "prompt_tokens": 43,
+   "generated_tokens": 128,
+   "prefill_ms": 351,
+   "decode_ms": 4446,
+   "wall_ms": 4805,
+   "grade": "pass"
+  },
+  {
+   "id": "ifeval-3456",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "*THE WORLD OF CREATIVE IDEAS* IS HERE WITH THIS LIST OF 100 UNIQUE NAMES. ALL LETTERS ARE CAPITALIZED AND *FIVE* OF THEM STAND OUT. READ THROUGH WITH CARE!",
+   "reasoning_chars": 0,
+   "raw": "*THE WORLD OF CREATIVE IDEAS* IS HERE WITH THIS LIST OF 100 UNIQUE NAMES. ALL LETTERS ARE CAPITALIZED AND *FIVE* OF THEM STAND OUT. READ THROUGH WITH CARE!",
+   "calls": [],
+   "prompt_tokens": 80,
+   "generated_tokens": 61,
+   "prefill_ms": 727,
+   "decode_ms": 2084,
+   "wall_ms": 2821,
+   "grade": "fail"
+  },
+  {
+   "id": "ifeval-3631",
+   "set": "ifeval",
+   "status": "ok",
+   "content": "I love making a peanut butter and jelly sandwich  \nFirst grab your bread and spread a layer  \nAdd peanut butter on one side  \nThen spread jelly on the other  \nClose the sandwich and take a bite  \nIt’s simple and tasty and fun  \nEnjoy every moment of this sweet fun",
+   "reasoning_chars": 0,
+   "raw": "I love making a peanut butter and jelly sandwich  \nFirst grab your bread and spread a layer  \nAdd peanut butter on one side  \nThen spread jelly on the other  \nClose the sandwich and take a bite  \nIt’s simple and tasty and fun  \nEnjoy every moment of this sweet fun",
+   "calls": [],
+   "prompt_tokens": 32,
+   "generated_tokens": 58,
+   "prefill_ms": 294,
+   "decode_ms": 2055,
+   "wall_ms": 2354,
+   "grade": "pass"
+  }
+ ],
+ "tally": {
+  "gsm8k": {
+   "pass": 16,
+   "fail": 14,
+   "skipped": 0,
+   "error": 0
+  },
+  "ifeval": {
+   "pass": 21,
+   "fail": 9,
+   "skipped": 0,
+   "error": 0
+  },
+  "bfcl": {
+   "pass": 26,
+   "fail": 4,
+   "skipped": 0,
+   "error": 0
+  }
+ }
+}

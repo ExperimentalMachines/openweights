@@ -3,9 +3,33 @@
 > Living state file. Update at every milestone so no information is lost across sessions
 > or context compaction. Newest facts win; keep it accurate rather than exhaustive.
 
-Last updated: 2026-11-11. Older dated sections run from 2026-08-10; detailed findings are in
+Last updated: 2026-11-14. Older dated sections run from 2026-08-10; detailed findings are in
 the research notes under `research/`. The current capability summary is in the top-level
 `README.md` and `ARCHITECTURE.md`.
+
+## 2026-11-14: llama.cpp v1.0.0 and ExecuTorch 1.6.0, without a phone
+
+Both runtimes moved: llama.cpp v0.8.0 to v1.0.0 (b1b770d9) and ExecuTorch 1.5.1-openweights.4 to
+1.6.0-openweights.2. No phone was reachable (POCO off wireless debugging, Test Lab 403, no QDC
+reservation), so everything was measured on the 16 KB arm64 emulator and the Mac.
+
+llama.cpp: the engine compiles unchanged; the cache contract (prompt bytes, token counts, cache splits,
+rollback points, warm snapshots) is identical on seven models; engine device tests 18 passed and 2
+skipped on both pins; parity 20 of 26 against 21 of 26 and GSM8K/IFEval/BFCL on LFM2.5 QAD-Q4_0 18,
+20, 25 against 19, 21, 26, with nothing lost. Decode is slower: about 4% at every depth in the app's
+Android build on the emulator (`tools/snapdragon/llama_bench_ab.sh`), and 6% to 19% at 2,048 to 4,096
+tokens of context in a Mac native build, from upstream widening the F16 KV cache to F32 in attention
+(#31854, #29810, the second fixing a flash-attention overflow to NaN). Not patched; the phone A/B
+decides. v1.0.0 also drops the rewrite for outdated Gemma 4 templates (#31915) and changes the
+OpenCL backend by 18k lines, which Auto reaches on Adreno and nothing here tested.
+
+ExecuTorch: three QNN runner defects fixed in `patch_qnn.py` (a static logits buffer a larger
+vocabulary overran, ignored prefill errors, a stop lost before the token loop). The probe process now
+writes a few tokens with every off-CPU text export before passing it, bounded by its own count and a
+30 s deadline, and a refusal from that trial (no readable text, decode never reached, a native crash
+in the dispatch) is shown but not remembered. Vulkan exports answered word for word as on 1.5.1;
+XNNPACK replies change (1.5.1 is deterministic run to run, so the runtime moves them) at the same
+grades. [`research/llama-cpp-v100-executorch-160.md`](research/llama-cpp-v100-executorch-160.md).
 
 ## 2026-11-11: the thread test at a realistic length (r52)
 
