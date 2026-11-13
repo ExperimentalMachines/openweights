@@ -1,15 +1,23 @@
 #!/usr/bin/env bash
-# Packages the ExecuTorch runtime the app links: ExecuTorch 1.5.1's Android library with QNN
+# Packages the ExecuTorch runtime the app links: ExecuTorch 1.6.0's Android library with QNN
 # (Qualcomm NPU) beside XNNPACK and Vulkan, and MediaTek's NPU runtime built for this app.
 #
 #   tools/npu/assemble_runtime.sh <dir holding arm64-v8a/libexecutorch.so, libqnn_executorch_backend.so>
 #       <dir holding arm64-v8a/libexecutorch_pd_jni.so, libneuron_backend.so, libneuron_buffer_allocator.so>
 #
 # The first directory is build_executorch_android_linux.sh's output, the second
-# build_mediatek_linux.sh's. The Java and Kotlin API is unchanged by the patches, so the classes,
-# the x86_64 libraries (the emulator: CPU and GPU only) and the POM's dependencies come from
-# ExecuTorch's published executorch-android-vulkan AAR at the same release; arm64-v8a's
-# libexecutorch.so is replaced and the QNN and MediaTek libraries are added.
+# build_mediatek_linux.sh's. The Java and Kotlin API is unchanged by the patches, so the classes
+# and the x86_64 libraries (the emulator: CPU and GPU only) come from ExecuTorch's own Vulkan AAR
+# at the same release; arm64-v8a's libexecutorch.so is replaced and the QNN and MediaTek
+# libraries are added.
+#
+# Maven Central had no 1.6.0 Android artifact when this was built (2026-11-13; 1.5.1 appeared
+# there eight days after its tag), so the AAR comes from ExecuTorch's release bucket, the
+# download its Android docs give, and is checked against the digest pinned here. That file is
+# Gradle's debug variant of the library: its public classes, native method signatures and
+# consumer ProGuard rules are identical to Maven's 1.5.1 release build, and only internal
+# Kotlin names differ. Its POM is not published, so the dependencies are 1.5.1's, which v1.6.0
+# leaves unchanged (only the publishing plugin moved in executorch_android/build.gradle).
 #
 # Every arm64 library must be linked for 16 KB pages: Google Play refuses one that is not, and
 # a 4 KB build once passed every check here and on the phone (2026-10-11), so this refuses it.
@@ -18,17 +26,22 @@
 set -euo pipefail
 LIBS="${1:?directory with the ExecuTorch arm64-v8a libraries}"
 MTK="${2:?directory with the MediaTek arm64-v8a libraries}"
-RELEASE=1.5.1
+RELEASE=1.6.0
 # A rebuilt binary is a new version: Gradle and anyone holding the old file must not mistake one for the other.
-VERSION="$RELEASE-openweights.4"
+VERSION="$RELEASE-openweights.2"
+AAR_URL="https://ossci-android.s3.amazonaws.com/executorch/release/$RELEASE-vulkan/executorch.aar"
+AAR_SHA256=c2c15d39d6f33f01444671c1bfcec55b2c88b1f93de0c11f11b46ffece610d9f
+POM_RELEASE=1.5.1
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 DEST="$ROOT/core/engine/maven/org/experimentalmachines/executorch/executorch-android/$VERSION"
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 
-base="https://repo1.maven.org/maven2/org/pytorch/executorch-android-vulkan/$RELEASE/executorch-android-vulkan-$RELEASE"
-curl -fsSL "$base.aar" -o "$WORK/upstream.aar"
-curl -fsSL "$base.pom" -o "$WORK/upstream.pom"
+curl -fsSL "$AAR_URL" -o "$WORK/upstream.aar"
+echo "$AAR_SHA256  $WORK/upstream.aar" | shasum -a 256 -c - >/dev/null ||
+  { echo "the upstream AAR does not match its pinned digest" >&2; exit 1; }
+curl -fsSL "https://repo1.maven.org/maven2/org/pytorch/executorch-android-vulkan/$POM_RELEASE/executorch-android-vulkan-$POM_RELEASE.pom" \
+  -o "$WORK/upstream.pom"
 mkdir -p "$WORK/aar" && (cd "$WORK/aar" && unzip -q ../upstream.aar)
 for lib in libexecutorch.so libqnn_executorch_backend.so; do
   [ -f "$LIBS/arm64-v8a/$lib" ] || { echo "missing $LIBS/arm64-v8a/$lib" >&2; exit 1; }
@@ -75,7 +88,7 @@ mkdir -p "$DEST"
 mv "$WORK/out.aar" "$DEST/executorch-android-$VERSION.aar"
 # Our coordinates, upstream's dependencies. The Gradle-metadata marker goes: this artifact
 # publishes no .module file, and Gradle would otherwise look for one.
-python3 - "$WORK/upstream.pom" "$DEST/executorch-android-$VERSION.pom" "$RELEASE" "$VERSION" <<'PY'
+python3 - "$WORK/upstream.pom" "$DEST/executorch-android-$VERSION.pom" "$POM_RELEASE" "$VERSION" <<'PY'
 import sys
 src, dst, release, version = sys.argv[1:5]
 pom = open(src).read()

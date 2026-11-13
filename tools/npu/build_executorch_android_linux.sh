@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds ExecuTorch v1.5.1's Android runtime for the app on a Linux x86_64 host:
+# Builds ExecuTorch v1.6.0's Android runtime for the app on a Linux x86_64 host:
 # libexecutorch.so (XNNPACK, Vulkan, QNN and the LLM JNI layer) and libqnn_executorch_backend.so,
 # with patch_qnn.py applied and every library linked for 16 KB pages.
 #
@@ -17,11 +17,12 @@ WORK="${1:?work directory}"
 OUT="${2:?output directory}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
-TAG=v1.5.1
+TAG=v1.6.0
 NDK_VERSION=r26c
 QAIRT=2.37.0.250724
 VULKAN_SDK=1.4.341.1
-# XNNPACK's KleidiAI pin at the v1.5.1 tag (backends/xnnpack/third-party/XNNPACK/cmake/DownloadKleidiAI.cmake).
+# XNNPACK's KleidiAI pin (backends/xnnpack/third-party/XNNPACK/cmake/DownloadKleidiAI.cmake); v1.6.0
+# keeps v1.5.1's XNNPACK commit, 92a7ad50, so the pin is unchanged.
 KLEIDIAI=b87ef9c94f45f11c81a6b1fdaed1b2b45ea58c0c
 PAGE_FLAGS="-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
 JOBS="$(nproc)"
@@ -35,7 +36,7 @@ fi
 # shellcheck disable=SC1091
 . venv/bin/activate
 pip install --quiet --upgrade pip
-pip install --quiet torch==2.14.0 --index-url https://download.pytorch.org/whl/cpu
+pip install --quiet torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu
 pip install --quiet pyyaml ruamel.yaml zstd certifi tomli setuptools wheel requests tqdm 'cmake>=3.29,<4' ninja
 
 NDK="$WORK/android-ndk-$NDK_VERSION"
@@ -60,7 +61,9 @@ if [ ! -x "$VK/glslc" ]; then
   mkdir -p vulkansdk && tar -C vulkansdk -xJf vk.tar.xz && rm vk.tar.xz
 fi
 export PATH="$VK:$PATH"
-glslc --version | head -n1
+# sed, not head: head closes the pipe after one line, glslc dies of SIGPIPE, and pipefail then
+# ends the script with no message (it did, 2026-11-13).
+glslc --version | sed -n 1p
 
 KAI="$WORK/kleidiai"
 if [ ! -d "$KAI" ]; then

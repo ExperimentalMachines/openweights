@@ -1,4 +1,7 @@
-"""ExecuTorch v1.5.1: make Qualcomm's LLM runner servable through the Android LlmModule.
+"""ExecuTorch v1.6.0: make Qualcomm's LLM runner servable through the Android LlmModule.
+
+Written against v1.5.1; v1.6.0 leaves the runner and the LLM JNI layer byte for byte as they
+were, so every replacement below still matches exactly once.
 
     python patch_qnn.py <executorch-checkout>
 
@@ -22,6 +25,16 @@ building something that only looks patched.
 5. The JNI layer hard-codes decoder_model "llama3", which picks Llama 3's stop tokens for every
    model. It now reads EXECUTORCH_QNN_DECODER_MODEL (qwen3, gemma3, ...), set by the app before
    it constructs the module, and keeps "llama3" when unset.
+6. logits_to_token kept its float copy of the logits in a function-static vector sized on first
+   use, so after a model switch to a larger vocabulary (Qwen3 151,936 to Gemma 3 262,144) it
+   wrote past the allocation. It now grows to the current model's vocabulary; the sampler reads
+   only that many.
+7. The prompt processor dropped the result of each block's forward and went on to update the
+   cache and sample, so a delegate failure mid-prefill became an answer from stale logits. The
+   error now returns.
+8. The stop request was cleared at the decode loop's entry, so a stop asked for on the first
+   token (sampled by the prefill) was forgotten and that token entered the cache, while the app
+   records a stopped reply's last token as never fed. It is now cleared when generate() starts.
 """
 
 import pathlib
@@ -46,7 +59,9 @@ edit(R / "token_generator.h", [(
     "class TokenGenerator {\n public:\n",
     "class TokenGenerator {\n public:\n"
     "  // Ends the running generate() after the token in progress (execuserve patch).\n"
-    "  void request_stop() {\n    stop_requested_.store(true);\n  }\n",
+    "  void request_stop() {\n    stop_requested_.store(true);\n  }\n"
+    "  // Cleared when a generation starts, not when its decode loop does (openweights patch).\n"
+    "  void clear_stop() {\n    stop_requested_.store(false);\n  }\n",
 ), (
     " protected:\n",
     " protected:\n  std::atomic<bool> stop_requested_{false};\n",
@@ -58,7 +73,7 @@ if "#include <atomic>" not in th:
 for name in ("token_generator.cpp", "lhd_token_generator.cpp"):
     edit(R / name, [(
         "  while (pos < seq_len - 1) {\n",
-        "  stop_requested_.store(false);\n  while (pos < seq_len - 1) {\n"
+        "  while (pos < seq_len - 1) {\n"
         "    if (stop_requested_.load()) {\n      break;\n    }\n",
     )])
 
@@ -103,6 +118,10 @@ edit(R / "runner.cpp", [(
     "  max_ar_len = std::max(token_generator_ar_len, prompt_processor_ar_len);\n",
     "  max_ar_len = std::max(token_generator_ar_len, prompt_processor_ar_len);\n"
     "  prompt_ar_len_ = prompt_processor_ar_len;\n",
+), (
+    "  stats_.inference_start_ms = time_in_ms();\n",
+    "  stats_.inference_start_ms = time_in_ms();\n"
+    "  if (token_generator_) {\n    token_generator_->clear_stop();\n  }\n",
 ), (
     "Error Runner::generate(\n",
     """void Runner::stop() {
@@ -157,6 +176,22 @@ Result<uint64_t> Runner::prefill(
 
 Error Runner::generate(
 """,
+)])
+
+edit(R / "decoder_runner.h", [(
+    "    static std::vector<float> logits_f(vocab_size);\n",
+    "    // Grown to this model's vocabulary on every call: sized once, it overran after a switch\n"
+    "    // to a model with a larger one (openweights patch).\n"
+    "    static thread_local std::vector<float> logits_f;\n"
+    "    if (logits_f.size() < static_cast<size_t>(vocab_size)) {\n"
+    "      logits_f.resize(vocab_size);\n"
+    "    }\n",
+)])
+
+edit(R / "prompt_processor.cpp", [(
+    "    // Run inference\n    decoder_runner_->step(method_name_, inputs_);\n",
+    "    // Run inference; a failed block must not go on to update the cache (openweights patch).\n"
+    "    ET_CHECK_OK_OR_RETURN_ERROR(decoder_runner_->step(method_name_, inputs_).error());\n",
 )])
 
 edit(root / "extension/android/jni/jni_layer_llama.cpp", [(

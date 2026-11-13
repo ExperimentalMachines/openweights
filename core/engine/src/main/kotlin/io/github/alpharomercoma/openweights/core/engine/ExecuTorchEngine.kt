@@ -273,7 +273,7 @@ class ExecuTorchEngine(
         // The runner opens the file once where a crash cannot reach the app, before it opens
         // it here: a damaged program or an unreadable tokenizer ends that process instead.
         bridge.verify(modelFile.absolutePath, tokenizer.absolutePath, multimodal)
-            ?.let { refuse("${modelFile.name} cannot be opened: $it.") }
+            ?.let { refuse(refusalFor(modelFile, it)) }
         open(modelFile, tokenizer, facts.stateResetAtZero)
 
         // Publish the fixed export window, not a smaller preference the runner ignores.
@@ -329,10 +329,7 @@ class ExecuTorchEngine(
         call()
     } catch (failure: Throwable) {
         val reason = VulkanSupport.recordIfIncompatible(failure) ?: throw failure
-        throw LlamaException(
-            "This phone's GPU cannot run this Vulkan build ($reason). GPU builds will not be " +
-                "offered on this phone again; the same model's CPU build runs anywhere.",
-        )
+        throw LlamaException(gpuRefusal(reason))
     }
 
     override suspend fun unload() = turns.withLock { withContext(Dispatchers.IO) { closeModel() } }
@@ -1281,3 +1278,22 @@ private const val WARM_CHARS_PER_TOKEN = 4
 private const val WARM_PROBE = "x"
 
 private const val TAG = "OpenWeights"
+
+/**
+ * Why [model] cannot be opened, given the isolated trial's answer [why]. The probe runs a GPU
+ * file's first tokens, so a device that cannot run its shaders says so there rather than on the
+ * first turn, and that is learned for the whole phone the same way the first turn learned it.
+ */
+private fun refusalFor(model: File, why: String): String {
+    val gpu = if (CompiledBackend.of(model.name) == CompiledBackend.VULKAN) {
+        VulkanSupport.recordIfIncompatible(LlamaException(why))
+    } else {
+        null
+    }
+    return gpu?.let(::gpuRefusal) ?: "${model.name} cannot be opened: $why."
+}
+
+/** What the user is told when this phone's GPU cannot run Vulkan builds at all. */
+private fun gpuRefusal(reason: String): String =
+    "This phone's GPU cannot run this Vulkan build ($reason). GPU builds will not be " +
+        "offered on this phone again; the same model's CPU build runs anywhere."

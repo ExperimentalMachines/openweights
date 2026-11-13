@@ -108,6 +108,8 @@ class PteProbe(context: Context) {
             putString(PteProbeService.KEY_TOKENIZER, tokenizer)
             putBoolean(PteProbeService.KEY_MULTIMODAL, multimodal)
         }
+        val marker = PteProbeService.trialMarker(app)
+        marker.delete()
         val started = System.nanoTime()
         val answer = askTwice(PteProbeService.VERIFY, data, VERIFY_TIMEOUT_MS)
         Log.i(
@@ -129,10 +131,13 @@ class PteProbe(context: Context) {
             // The trial opened the pair, and either half can be what crashed it: a garbage
             // tokenizer beside a sound model ends the process the same way (on the Poco). The
             // NPU half opens in the same trial and a bad chunk crashes it the same way.
-            is Answer.Crashed -> if (npuUsable(file)) {
-                again("it crashed the trial open")
-            } else {
-                remember(key, PAIR_CRASHED)
+            // A crash while the trial wrote its first tokens on a GPU or an NPU is shown and not
+            // remembered: the file opened, and a driver that failed once may not fail again,
+            // where a remembered verdict would keep the file out for good (codex QA).
+            is Answer.Crashed -> when {
+                marker.delete() -> TRIAL_CRASHED
+                npuUsable(file) -> again("it crashed the trial open")
+                else -> remember(key, PAIR_CRASHED)
             }
             is Answer.Inconclusive -> answer.why
         }
@@ -390,6 +395,8 @@ class PteProbe(context: Context) {
         const val PAIR_CRASHED = "the ExecuTorch runtime crashed opening it with its tokenizer, " +
             "so one of the two is damaged or was made for a different runtime"
         const val NOT_CHECKED = "it could not be checked just now; try again"
+        const val TRIAL_CRASHED = "the ExecuTorch runtime crashed writing its first words on " +
+            "this phone's GPU or NPU; try again, or use the same model's CPU build"
         const val TOO_SLOW = "checking it took too long; try again, with fewer apps open"
         const val PROBE_KEY = "probe"
         const val VERIFY_KEY = "verify"

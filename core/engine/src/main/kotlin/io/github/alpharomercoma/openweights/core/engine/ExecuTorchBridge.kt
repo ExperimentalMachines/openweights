@@ -61,6 +61,9 @@ data class ExecuTorchOutcome(
  * the message 'ptr' (measured 2026-10-09 on vc615, vc650 and a debug build alike, with a
  * MediaTek NPU chunk that lacks `get_max_seq_len`). A refusal from here is a message; the
  * same refusal from the runner is a crash.
+ * @property offCpu whether a method a runner loads is delegated to anything but XNNPACK (a GPU
+ * or an NPU), read from the file's own delegate list rather than from its name, which a user
+ * can change.
  */
 data class ExportFacts(
     val contextLength: Int?,
@@ -68,6 +71,7 @@ data class ExportFacts(
     val prefillLength: Int? = null,
     val stateResetAtZero: Boolean? = null,
     val unopenable: String? = null,
+    val offCpu: Boolean = false,
 )
 
 // One function per thing a runtime does, as InferenceEngine and LlamaBridge.

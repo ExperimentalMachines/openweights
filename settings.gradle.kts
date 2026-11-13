@@ -18,7 +18,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // ExecuTorch 1.5.1 with QNN and MediaTek's NPU runtime, which no published artifact
+        // ExecuTorch 1.6.0 with QNN and MediaTek's NPU runtime, which no published artifact
         // carries: assembled by tools/npu/assemble_runtime.sh. Exclusive, so the group resolves
         // from this folder and nowhere else: listed after Maven Central with only a content
         // filter, anyone who published these coordinates there would be built in instead.

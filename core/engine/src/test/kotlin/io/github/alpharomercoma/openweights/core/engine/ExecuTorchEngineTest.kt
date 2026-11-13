@@ -736,6 +736,62 @@ class ExecuTorchEngineTest {
     }
 
     @Test
+    fun `a GPU build the trial run says this GPU cannot run is refused for the whole phone`() =
+        runTest {
+            // The probe runs a Vulkan file's first tokens (ExecuTorch 1.6.0's rewritten Vulkan
+            // backend), so a shader the driver cannot run fails there, not on the first turn.
+            val shaders = object : ExecuTorchBridge by bridge {
+                override fun verify(modelPath: String, tokenizerPath: String, multimodal: Boolean) =
+                    "ExecuTorch could not open this model: Error 0x1\nE vk_api: Shader " +
+                        "q_8w_linear not compatible with device. Missing support for extension " +
+                        "or physical device feature: VK_KHR_8bit_storage"
+            }
+            val engine = ExecuTorchEngine(shaders)
+
+            val refused = runCatching {
+                engine.load(installed("Qwen3-1.7B-vulkan-8da4w-2k.pte"), PARAMS)
+            }.exceptionOrNull()
+
+            assertThat(refused).hasMessageThat().contains("GPU cannot run this Vulkan build")
+            assertThat(bridge.loads).isEqualTo(0)
+        }
+
+    @Test
+    fun `a GPU build refused for its own reasons is refused as a file, not for the GPU`() =
+        runTest {
+            val crashes = object : ExecuTorchBridge by bridge {
+                override fun verify(modelPath: String, tokenizerPath: String, multimodal: Boolean) =
+                    "the ExecuTorch runtime crashed reading it"
+            }
+            val engine = ExecuTorchEngine(crashes)
+
+            val refused = runCatching {
+                engine.load(installed("Qwen3-1.7B-vulkan-8da4w-2k.pte"), PARAMS)
+            }.exceptionOrNull()
+
+            assertThat(refused).hasMessageThat()
+                .isEqualTo(
+                    "Qwen3-1.7B-vulkan-8da4w-2k.pte cannot be opened: " +
+                        "the ExecuTorch runtime crashed reading it.",
+                )
+            assertThat(bridge.loads).isEqualTo(0)
+        }
+
+    @Test
+    fun `a CPU build is never taken for a GPU the phone cannot run`() = runTest {
+        val shaders = object : ExecuTorchBridge by bridge {
+            override fun verify(modelPath: String, tokenizerPath: String, multimodal: Boolean) =
+                "Shader q_8w_linear not compatible with device"
+        }
+        val engine = ExecuTorchEngine(shaders)
+
+        val refused = runCatching { engine.load(installed(MODEL), PARAMS) }.exceptionOrNull()
+
+        assertThat(refused).hasMessageThat().contains("cannot be opened")
+        assertThat(refused).hasMessageThat().doesNotContain("GPU cannot run")
+    }
+
+    @Test
     fun `an empty tokenizer is refused before the model opens`() = runTest {
         // The runtime opens it as an empty TikToken and then fails every prompt.
         val model = installed(MODEL)

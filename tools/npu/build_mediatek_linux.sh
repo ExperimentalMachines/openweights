@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds MediaTek's NPU runtime for the app on a Linux x86_64 host: libexecutorch_pd_jni.so (the
 # NPU-prefill, CPU-decode runner), libneuron_backend.so, and libneuron_buffer_allocator.so
-# (built from neuron_buffer_allocator.cpp), against ExecuTorch v1.5.1, the release the app links.
+# (built from neuron_buffer_allocator.cpp), against ExecuTorch v1.6.0, the release the app links.
 # Every library is linked for 16 KB pages, which Google Play requires of an arm64 library.
 #
 #   tools/npu/build_mediatek_linux.sh <work dir> <output dir>
@@ -18,7 +18,7 @@ WORK="${1:?work directory}"
 OUT="${2:?output directory}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
-TAG=v1.5.1
+TAG=v1.6.0
 NDK_VERSION=r26c
 # NeuroPilot Express SDK 8.0.8, checked against this digest (ExecuServe's pin).
 SDK_URL="https://s3.ap-southeast-1.amazonaws.com/mediatek.neuropilot.com/b1c485de-fca8-4b20-836a-8b33152a3609.gz"
@@ -36,7 +36,7 @@ fi
 # shellcheck disable=SC1091
 . venv/bin/activate
 pip install --quiet --upgrade pip
-pip install --quiet torch==2.14.0 --index-url https://download.pytorch.org/whl/cpu
+pip install --quiet torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu
 pip install --quiet pyyaml ruamel.yaml zstd certifi tomli setuptools wheel requests tqdm 'cmake>=3.29,<4' ninja
 
 NDK="$WORK/android-ndk-$NDK_VERSION"
@@ -59,7 +59,7 @@ if [ ! -d "$KAI" ]; then
 fi
 
 SRC="$WORK/executorch"
-PATCH="$HERE/patches/executorch-pd-1.5.1.patch"
+PATCH="$HERE/patches/executorch-pd-1.6.0.patch"
 STAMP="$TAG $(sha256sum "$PATCH" | cut -d' ' -f1)"
 if [ ! -d "$SRC" ]; then
   git clone --depth 1 --branch "$TAG" --recurse-submodules --shallow-submodules \
@@ -130,7 +130,7 @@ CXX="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++"
 "$STRIP" --strip-unneeded -o "$OUT/arm64-v8a/libneuron_buffer_allocator.so" \
   "$OUT/arm64-v8a/libneuron_buffer_allocator.unstripped.so"
 rm "$OUT/arm64-v8a/libneuron_buffer_allocator.unstripped.so"
-echo "pytorch/executorch $TAG + patches/executorch-pd-1.5.1.patch; NDK $NDK_VERSION; NeuroPilot SDK ${SDK_SHA256:0:12} headers; 16 KB pages" \
+echo "pytorch/executorch $TAG + patches/executorch-pd-1.6.0.patch; NDK $NDK_VERSION; NeuroPilot SDK ${SDK_SHA256:0:12} headers; 16 KB pages" \
   > "$OUT/SOURCE.txt"
 ls -la "$OUT/arm64-v8a"
 echo "==> done"

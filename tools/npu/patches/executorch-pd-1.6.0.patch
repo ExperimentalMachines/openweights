@@ -44,7 +44,7 @@ index 1d2e856..ec983c0 100644
    neuron::NeuronExecutor mExecutor;
  
 diff --git a/backends/mediatek/runtime/include/api/APUWareUtilsLib.h b/backends/mediatek/runtime/include/api/APUWareUtilsLib.h
-index 8ade536..db60a50 100644
+index 8ade536..5c20b59 100644
 --- a/backends/mediatek/runtime/include/api/APUWareUtilsLib.h
 +++ b/backends/mediatek/runtime/include/api/APUWareUtilsLib.h
 @@ -25,6 +25,10 @@
@@ -653,10 +653,10 @@ index fc2fca2..7026a7d 100644
    LlamaModelOptions mModelOptions;
    std::vector<std::unique_ptr<ModelChunk>> mLlamaModelChunks;
 diff --git a/runtime/executor/method.h b/runtime/executor/method.h
-index 834325f..26b15d8 100644
+index 9432e2c..1cf4b18 100644
 --- a/runtime/executor/method.h
 +++ b/runtime/executor/method.h
-@@ -304,6 +304,10 @@ class Method final {
+@@ -305,6 +305,10 @@ class Method final {
    /// retrieve Method outputs.
    ET_DEPRECATED EValue& mutable_output(size_t i);
  
@@ -667,7 +667,7 @@ index 834325f..26b15d8 100644
    ~Method();
  
   private:
-@@ -379,8 +383,6 @@ class Method final {
+@@ -380,8 +384,6 @@ class Method final {
      return init_state_ == InitializationState::Initialized;
    }
  

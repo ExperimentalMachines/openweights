@@ -114,6 +114,9 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
             }?.takeIf { it > 0 }
             val window = WINDOW_METHODS.firstNotNullOfOrNull(::read)
             val prefill = read(PREFILL_METHOD)
+            val delegates = runnerMethods(methods).associateWith { method ->
+                program.getMethodMetadata(method).backends.toList()
+            }
             return ExportFacts(
                 contextLength = window,
                 hasVision = VISION_ENCODER_METHOD in methods,
@@ -121,11 +124,10 @@ class NativeExecuTorchBridge : ExecuTorchBridge {
                 stateResetAtZero = read("get_state_reset_at_zero")?.let { it != 0 },
                 unopenable = unopenable(
                     statesPrefill = PREFILL_METHOD in methods,
-                    backends = runnerMethods(methods).associateWith { method ->
-                        program.getMethodMetadata(method).backends.toList()
-                    },
+                    backends = delegates,
                     registered = registeredBackends,
                 ),
+                offCpu = delegates.values.flatten().any { it != CPU_DELEGATE },
             )
         } finally {
             program.destroy()
@@ -366,6 +368,9 @@ internal fun runnerMethods(methods: Set<String>): Set<String> = when {
 }
 
 private const val TEXT_METHOD = "forward"
+
+/** The delegate an export names when it runs on the CPU; anything else is a GPU or an NPU. */
+private const val CPU_DELEGATE = "XnnpackBackend"
 private val MULTIMODAL_METHODS =
     setOf("text_decoder", "token_embedding", "vision_encoder", "audio_encoder")
 
