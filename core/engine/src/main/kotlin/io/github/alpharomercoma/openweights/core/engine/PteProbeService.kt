@@ -123,15 +123,7 @@ class PteProbeService : Service() {
                 // this one (codex QA of ExecuTorch 1.6.0, whose Vulkan backend was rewritten).
                 // The file's own delegates decide, and its name too, so a renamed export is
                 // still tried. A failure the runtime raises in Java comes back as the refusal.
-                // The marker outlives a native crash here, so the app can tell a dispatch that
-                // crashed, which may not happen again, from a file the loader cannot read.
-                val marker = trialMarker(this)
-                runCatching { marker.writeText(path) }
-                try {
-                    trialFailed = runTrial(bridge).refusal
-                } finally {
-                    marker.delete()
-                }
+                trialFailed = markedTrial(bridge, path)
             }
         } finally {
             bridge.close()
@@ -141,6 +133,24 @@ class PteProbeService : Service() {
             // Shown and not remembered, so the next open tries again: one trial is not proof
             // that the file is at fault rather than a passing GPU fault (codex QA).
             trialFailed?.let { putString(KEY_FAILED, it) }
+        }
+    }
+
+    /**
+     * [runTrial] with the marker that outlives a native crash, so the app can tell a dispatch
+     * that crashed, which may not happen again, from a file the loader cannot read. Without the
+     * marker such a crash would be remembered against the file, so a trial that cannot leave
+     * one is not run, and the open goes ahead as it did before the trial existed (codex QA).
+     *
+     * @return why the trial refuses the file, or null.
+     */
+    private fun markedTrial(bridge: ExecuTorchBridge, path: String): String? {
+        val marker = trialMarker(this)
+        if (runCatching { marker.writeText(path) }.isFailure) return null
+        return try {
+            runTrial(bridge).refusal
+        } finally {
+            marker.delete()
         }
     }
 

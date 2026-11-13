@@ -108,8 +108,6 @@ class PteProbe(context: Context) {
             putString(PteProbeService.KEY_TOKENIZER, tokenizer)
             putBoolean(PteProbeService.KEY_MULTIMODAL, multimodal)
         }
-        val marker = PteProbeService.trialMarker(app)
-        marker.delete()
         val started = System.nanoTime()
         val answer = askTwice(PteProbeService.VERIFY, data, VERIFY_TIMEOUT_MS)
         Log.i(
@@ -135,7 +133,7 @@ class PteProbe(context: Context) {
             // remembered: the file opened, and a driver that failed once may not fail again,
             // where a remembered verdict would keep the file out for good (codex QA).
             is Answer.Crashed -> when {
-                marker.delete() -> TRIAL_CRASHED
+                answer.duringTrial -> TRIAL_CRASHED
                 npuUsable(file) -> again("it crashed the trial open")
                 else -> remember(key, PAIR_CRASHED)
             }
@@ -213,13 +211,18 @@ class PteProbe(context: Context) {
 
     private sealed interface Answer {
         data class Read(val bundle: Bundle) : Answer
-        data class Crashed(val why: String) : Answer
+
+        /** [duringTrial]: the probe process died while the trial was generating. */
+        data class Crashed(val why: String, val duringTrial: Boolean = false) : Answer
 
         /** [retry]: worth asking once more; not after a timeout or a cancel (codex QA). */
         data class Inconclusive(val why: String, val retry: Boolean = true) : Answer
     }
 
     private fun ask(what: Int, data: Bundle, timeoutMs: Long, ticket: Long): Answer {
+        // Cleared per attempt, under the one-at-a-time lock, so a crash is read against this
+        // attempt's trial and no other request's (codex QA).
+        trialMarker().delete()
         check(Looper.myLooper() != Looper.getMainLooper()) {
             "PteProbe blocks; call it off the main thread"
         }
@@ -265,7 +268,7 @@ class PteProbe(context: Context) {
             )
             when (val event = awaitAnswer(events, timeoutMs, ticket)) {
                 is Bundle -> Answer.Read(event)
-                DIED -> crashSince(since)?.let(Answer::Crashed) ?: Answer.Inconclusive(NOT_CHECKED)
+                DIED -> crashSince(since)?.let(::crashed) ?: Answer.Inconclusive(NOT_CHECKED)
                 ABANDONED -> {
                     killProbe()
                     Answer.Inconclusive(CANCELLED, retry = false)
@@ -279,7 +282,7 @@ class PteProbe(context: Context) {
             }
         } catch (gone: RemoteException) {
             Log.w(PteProbeService.TAG, "the probe went away mid-request", gone)
-            crashSince(since)?.let(Answer::Crashed) ?: Answer.Inconclusive(NOT_CHECKED)
+            crashSince(since)?.let(::crashed) ?: Answer.Inconclusive(NOT_CHECKED)
         } finally {
             runCatching { app.unbindService(connection) }
             replies.quitSafely()
@@ -330,6 +333,11 @@ class PteProbe(context: Context) {
         }
         return null
     }
+
+    private fun trialMarker(): File = PteProbeService.trialMarker(app)
+
+    /** A crash, and whether the probe was generating when it died: it left the marker. */
+    private fun crashed(why: String) = Answer.Crashed(why, duringTrial = trialMarker().delete())
 
     private fun killProbe() {
         val manager = app.getSystemService(ActivityManager::class.java) ?: return
