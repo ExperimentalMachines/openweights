@@ -264,6 +264,22 @@ first pair was throttled; three units per version were run for that reason.
   written after it at the app's 4 threads came out at 0.93, 0.90, 1.13 and 1.07, no change either
   way. The 2-token rows swing from 0.5 to 2.8 between units and are not read.
 
+## The shipping build on three real phones
+
+The engine test APK from main at 25708b1a (llama.cpp v0.8.0, ExecuTorch 1.6.0-openweights.2, the
+final probe code) and the minified release of the same commit, in Test Lab under the second project:
+
+- **Galaxy S24** (Snapdragon 8 Gen 3, Adreno 750): `GpuOffloadTest` put every layer on the Adreno
+  and answered at 35.1 tok/s; `LlamaCppEngineTest` passed what it could (the two cache tests need a
+  Qwen file that was not pushed); `ExecuTorchParityEval` ran the default download on the CPU (4 of 7)
+  and SmolLM2's Vulkan export on the Adreno (2 of 5), no errors.
+- **Pixel 9 Pro** (Tensor G4, Mali-G715, the same `android_armv9.0_1` CPU variant the POCO loads):
+  the same, with OpenCL correctly dropping the Mali GPU and the GPU test skipping; ExecuTorch 1.6.0's
+  rewritten Vulkan backend ran on a real Mali driver, with the same grades as on the S24.
+- **OPPO A79 5G** (MediaTek Dimensity, Mali-G57), the minified release under Robo: it opened LFM2.5
+  QAD-Q4_0 from its models folder, warmed and saved the 789-token prefix, restored it from disk in
+  60 ms on later loads, re-read the prompt correctly after Robo changed a setting, and did not crash.
+
 ## The release build
 
 What ships is ExecuTorch 1.6.0 with llama.cpp at v0.8.0, the pin the current production build
@@ -280,13 +296,14 @@ signs, every 64-bit library in the bundle is 16 KB aligned, and its ExecuTorch l
 
 The S24 ran both runtimes; these are still open, in the order they matter:
 
-- **A MediaTek phone.** The S24 is a Snapdragon; the POCO's Dimensity and Mali GPU were not run.
-  `llama_bench_ab.sh run <serial> <model>` times llama.cpp there in about 15 minutes, should v1.0.0
-  come back.
-- **A real Mali Vulkan driver.** Adreno's is now covered (above); Mali's is not. The probe trial
-  catches a first dispatch that crashes, but a GPU that answers wrongly would still pass it.
+- **The POCO itself** (Dimensity 9500s, Mali-G925). The Pixel 9 Pro covered its CPU variant and a
+  Mali Vulkan driver, and the OPPO a MediaTek phone, but not this one. `llama_bench_ab.sh run
+  <serial> <model>` times llama.cpp there in about 15 minutes, should v1.0.0 come back.
 - **QNN and the MediaTek NPU.** Built and checked statically, with three QNN runner defects fixed
-  from source; never run.
+  from source; never run on hardware. Both now pass through the probe process before the app opens
+  them (the trial for QNN, the NPU-half check for MediaTek), so a first dispatch that crashes ends
+  the probe process, not the app: a QNN file is refused with a message, a MediaTek NPU half is
+  refused and the file's CPU build used.
 - **Phone CPU speed for ExecuTorch.** Only the emulator's figures above.
 - **The probe trial's normal length on a phone.** Its 30 s deadline ends any trial still running;
   a sound trial took 3.3 s on the emulator's Vulkan and was not timed on phone hardware.

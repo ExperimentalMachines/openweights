@@ -33,7 +33,10 @@ writes a few tokens with every off-CPU text export before passing it, bounded by
 30 s deadline, and a refusal from that trial (no readable text, decode never reached, a native crash
 in the dispatch) is shown but not remembered. Vulkan exports answered word for word as on 1.5.1;
 XNNPACK replies change (1.5.1 is deterministic run to run, so the runtime moves them) at the same
-grades. [`research/llama-cpp-v100-executorch-160.md`](research/llama-cpp-v100-executorch-160.md).
+grades. The shipping build then passed on a Galaxy S24 (Adreno OpenCL and Vulkan), a Pixel 9 Pro
+(Mali-G715 Vulkan, the POCO's CPU variant) and, as the minified release under Robo, an OPPO A79 5G
+(MediaTek). QNN and the MediaTek NPU were not run on hardware.
+[`research/llama-cpp-v100-executorch-160.md`](research/llama-cpp-v100-executorch-160.md).
 
 ## 2026-11-11: the thread test at a realistic length (r52)
 

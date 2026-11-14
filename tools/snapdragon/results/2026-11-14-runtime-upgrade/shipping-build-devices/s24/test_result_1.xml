@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name='' hostname='localhost' tests='7' failures='0' skipped='2' errors='0' time='53.734' timestamp='2026-11-13T16:57:07'>
+    <properties />
+    <testcase name='generatesAReplyWithEveryLayerOnTheGpu' classname='io.github.alpharomercoma.openweights.core.engine.GpuOffloadTest' time='26.102' />
+    <testcase name='reusesCachedPrefixOnFollowUpTurns' classname='io.github.alpharomercoma.openweights.core.engine.LlamaCppEngineTest' time='1.0'>
+      <skipped>org.junit.AssumptionViolatedException: no rolling-back model at /data/local/tmp/openweights/bench/qwen.gguf
+	at org.junit.Assume.assumeTrue(Assume.java:68)
+	at io.github.alpharomercoma.openweights.core.engine.LlamaCppEngineTest$reusesCachedPrefixOnFollowUpTurns$1.invokeSuspend(LlamaCppEngineTest.kt:153)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:256)
+	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:54)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlockingImpl(Builders.kt:30)
+	at kotlinx.coroutines.BuildersKt.runBlockingImpl(Unknown Source:1)
+	at kotlinx.coroutines.BuildersKt__Builders_concurrentKt.runBlockingK(Builders.concurrent.kt:172)
+	at kotlinx.coroutines.BuildersKt.runBlockingK(Unknown Source:1)
+	at kotlinx.coroutines.BuildersKt__Builders_concurrentKt.runBlockingK$default(Builders.concurrent.kt:157)
+	at kotlinx.coroutines.BuildersKt.runBlockingK$default(Unknown Source:1)
+	at io.github.alpharomercoma.openweights.core.engine.LlamaCppEngineTest.reusesCachedPrefixOnFollowUpTurns(LlamaCppEngineTest.kt:152)
+
+      </skipped>
+    </testcase>
+    <testcase name='generatesAReplyAndMeasuresThroughput' classname='io.github.alpharomercoma.openweights.core.engine.LlamaCppEngineTest' time='4.627' />
+    <testcase name='reportsBackendsAndCpuFeatures' classname='io.github.alpharomercoma.openweights.core.engine.LlamaCppEngineTest' time='0.0' />
+    <testcase name='reusesCachedPrefixWhenThePromptRepeats' classname='io.github.alpharomercoma.openweights.core.engine.LlamaCppEngineTest' time='0.003'>
+      <skipped>org.junit.AssumptionViolatedException: no rolling-back model at /data/local/tmp/openweights/bench/qwen.gguf
+	at org.junit.Assume.assumeTrue(Assume.java:68)
+	at io.github.alpharomercoma.openweights.core.engine.LlamaCppEngineTest$reusesCachedPrefixWhenThePromptRepeats$1.invokeSuspend(LlamaCppEngineTest.kt:129)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+	at kotlinx.coroutines.EventLoopImplBase.processNextEvent(EventLoop.common.kt:256)
+	at kotlinx.coroutines.BlockingCoroutine.joinBlocking(Builders.kt:54)
+	at kotlinx.coroutines.BuildersKt__BuildersKt.runBlockingImpl(Builders.kt:30)
+	at kotlinx.coroutines.BuildersKt.runBlockingImpl(Unknown Source:1)
+	at kotlinx.coroutines.BuildersKt__Builders_concurrentKt.runBlockingK(Builders.concurrent.kt:172)
+	at kotlinx.coroutines.BuildersKt.runBlockingK(Unknown Source:1)
+	at kotlinx.coroutines.BuildersKt__Builders_concurrentKt.runBlockingK$default(Builders.concurrent.kt:157)
+	at kotlinx.coroutines.BuildersKt.runBlockingK$default(Unknown Source:1)
+	at io.github.alpharomercoma.openweights.core.engine.LlamaCppEngineTest.reusesCachedPrefixWhenThePromptRepeats(LlamaCppEngineTest.kt:128)
+
+      </skipped>
+    </testcase>
+    <testcase name='loadsModelAndReportsItsShape' classname='io.github.alpharomercoma.openweights.core.engine.LlamaCppEngineTest' time='1.0' />
+    <testcase name='evaluateEveryPushedPte' classname='io.github.alpharomercoma.openweights.core.engine.eval.ExecuTorchParityEval' time='21.002' />
+  </testsuite>
+</testsuites>
