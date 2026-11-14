@@ -111,6 +111,17 @@ tokens (below), and that took v1.0.0 out of the release. Undoing either change l
 back an overflow upstream fixed on purpose or diverge from upstream's numerics, so nothing is
 patched; v1.0.0 can come back when its ARM path is fast again.
 
+### A partial fix, not shipped
+
+Restoring v0.8.0's F16 key dot inside flash attention's per-query kernel, on CPUs with native F16
+arithmetic, while V keeps accumulating in F32, passes upstream's `test-backend-ops -o
+FLASH_ATTN_EXT` against Metal (5,353 of 5,353, as stock v1.0.0 does) and on the Mac recovers a
+quarter to a half of the loss: LFM2.5 QAD-Q4_0 decodes at 0.956 and 0.942 of v0.8.0's rate at
+2,048 and 4,096 tokens (stock 0.914 and 0.904), Qwen3 Q8_0 at 0.873 and 0.842 (stock 0.824 and
+0.780). The rest is V's F32 accumulator, read and written for every key. With the patch v1.0.0 would
+still be slower, so it is kept as a lead, with the measurements, under
+`tools/snapdragon/results/2026-11-14-runtime-upgrade/fa-f16-kq-lead/`.
+
 ### Older Gemma 4 templates
 
 v0.8.0 rewrote tool results into the form an outdated Gemma 4 chat template expects, when the

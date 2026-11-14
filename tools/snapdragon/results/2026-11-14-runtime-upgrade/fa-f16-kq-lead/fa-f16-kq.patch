@@ -1,0 +1,24 @@
+diff --git a/ggml/src/ggml-cpu/ops.cpp b/ggml/src/ggml-cpu/ops.cpp
+index eed5d69e..be898322 100644
+--- a/ggml/src/ggml-cpu/ops.cpp
++++ b/ggml/src/ggml-cpu/ops.cpp
+@@ -8799,9 +8799,17 @@ static void ggml_compute_forward_flash_attn_ext_f16_one_chunk(
+     const float m0 = powf(2.0f, -(max_bias       ) / n_head_log2);
+     const float m1 = powf(2.0f, -(max_bias / 2.0f) / n_head_log2);
+ 
+-    ggml_type         const k_vec_dot_type = ggml_get_type_traits_cpu(k->type)->vec_dot_type;
++#if defined(__ARM_FEATURE_FP16_VECTOR_ARITHMETIC)
++    // OpenWeights: on a CPU with native F16 arithmetic, read each F16 key with an F16 dot, as
++    // v0.8.0 did. v1.0.0's F32 inputs (#31854) cost decode about a fifth at 1.5k to 6k tokens
++    // of context on a Snapdragon 8 Gen 3. V still accumulates in F32 (#29810).
++    const bool kq_f16 = k->type == GGML_TYPE_F16;
++#else
++    const bool kq_f16 = false;
++#endif
++    ggml_type         const k_vec_dot_type = kq_f16 ? GGML_TYPE_F16 : ggml_get_type_traits_cpu(k->type)->vec_dot_type;
+     ggml_from_float_t const q_to_vec_dot   = ggml_get_type_traits_cpu(k_vec_dot_type)->from_float;
+-    ggml_vec_dot_t    const kq_vec_dot     = ggml_get_type_traits_cpu(k->type)->vec_dot;
++    ggml_vec_dot_t    const kq_vec_dot     = kq_f16 ? (ggml_vec_dot_t) ggml_vec_dot_f16 : ggml_get_type_traits_cpu(k->type)->vec_dot;
+     ggml_to_float_t   const v_to_float     = ggml_get_type_traits(v->type)->to_float;
+ 
+     GGML_ASSERT((                            q_to_vec_dot) && "fattn: unsupported K-type");
