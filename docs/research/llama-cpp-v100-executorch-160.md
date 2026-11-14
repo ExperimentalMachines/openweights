@@ -122,6 +122,21 @@ quarter to a half of the loss: LFM2.5 QAD-Q4_0 decodes at 0.956 and 0.942 of v0.
 still be slower, so it is kept as a lead, with the measurements, under
 `tools/snapdragon/results/2026-11-14-runtime-upgrade/fa-f16-kq-lead/`.
 
+The same three builds then ran on two phones at once, the POCO over USB and a QDC Snapdragon 8 Gen 2,
+four rounds in rotating order behind a cooling gate (`phones-3way/`). Decode relative to v0.8.0, v1.0.0
+slower than v0.8.0 in every round at every depth listed:
+
+| Phone | Model | 2,048: v1.0.0 | 4,096: v1.0.0 | 2,048: patched | 4,096: patched |
+|---|---|---|---|---|---|
+| POCO (MT6991) | LFM2.5 QAD-Q4_0 | 0.833 | 0.789 | 0.920 | 0.913 |
+| POCO (MT6991) | Qwen3 Q8_0 | 0.747 | 0.752 | 0.978 | 1.038 |
+| SM8550 | LFM2.5 QAD-Q4_0 | 0.898 | 0.854 | 0.937 | 0.913 |
+| SM8550 | Qwen3 Q8_0 | 0.975 | 0.930 | 1.044 | 1.045 |
+
+On phones the patch recovers more than on the Mac: Qwen3 fully, LFM2.5, the default, to 0.91 to
+0.94. The upstream issue with all of it is `fa-f16-kq-lead/upstream-issue.md`, for the owner to file
+under llama.cpp's AI contribution policy.
+
 ### Older Gemma 4 templates
 
 v0.8.0 rewrote tool results into the form an outdated Gemma 4 chat template expects, when the
@@ -307,9 +322,8 @@ signs, every 64-bit library in the bundle is 16 KB aligned, and its ExecuTorch l
 
 The S24 ran both runtimes; these are still open, in the order they matter:
 
-- **The POCO itself** (Dimensity 9500s, Mali-G925). The Pixel 9 Pro covered its CPU variant and a
-  Mali Vulkan driver, and the OPPO a MediaTek phone, but not this one. `llama_bench_ab.sh run
-  <serial> <model>` times llama.cpp there in about 15 minutes, should v1.0.0 come back.
+- **The POCO itself** (Dimensity 9500s, Mali-G925) ran llama.cpp's three-way decode test above, but
+  not the app or ExecuTorch; the Pixel 9 Pro covered its CPU variant and a Mali Vulkan driver.
 - **QNN and the MediaTek NPU.** Built and checked statically, with three QNN runner defects fixed
   from source; never run on hardware. Both now pass through the probe process before the app opens
   them (the trial for QNN, the NPU-half check for MediaTek), so a first dispatch that crashes ends
