@@ -52,6 +52,7 @@ import java.io.File
 class ExecuTorchOnDeviceTest {
 
     private lateinit var engine: ExecuTorchEngine
+    private lateinit var bridge: RecordingBridge
 
     @Before
     fun setUp() {
@@ -59,8 +60,14 @@ class ExecuTorchOnDeviceTest {
         assumeTrue("no tokenizer beside ${MODEL.name}", TOKENIZER.isFile)
         // This engine samples at the temperature it was built with, for every turn; a
         // SamplerParams temperature does not reach it. `-e temperature 0` makes it greedy.
-        engine = TEMPERATURE?.let { ExecuTorchEngine(NativeExecuTorchBridge(), temperature = it) }
-            ?: ExecuTorchEngine(NativeExecuTorchBridge())
+        // What the application does at start-up: a Qualcomm NPU file needs its driver path and
+        // decoder family set before it opens, and both read what these record.
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        QnnSupport.init(context)
+        VulkanSupport.init(context)
+        bridge = RecordingBridge(NativeExecuTorchBridge())
+        engine = TEMPERATURE?.let { ExecuTorchEngine(bridge, temperature = it) }
+            ?: ExecuTorchEngine(bridge)
     }
 
     @After
@@ -195,10 +202,13 @@ class ExecuTorchOnDeviceTest {
         repeat(pairs) { pair ->
             engine.resetContext()
             val one = turn(first, opening)
+            // The raw fragments turn one ended on, as the runtime's callback received them.
+            val tail = bridge.lastFragments().joinToString(", ", "[", "]") { jsonString(it) }
             Log.i(
                 TAG,
                 "coldwarm pair=$pair turn one: generated=${one.stats.generatedTokens} " +
-                    "reason=${one.done.reason} held=${one.stats.contextUsed}",
+                    "reason=${one.done.reason} held=${one.stats.contextUsed} " +
+                    "fragments=${bridge.fragments} tail=$tail",
             )
             // A turn one that filled the window leaves no room for turn two, which the
             // runtime then refuses outright. Not a reuse result either way.
@@ -235,6 +245,7 @@ class ExecuTorchOnDeviceTest {
                     """"turn_one_tokens": ${one.stats.generatedTokens}, """ +
                         """"turn_one_reason": "${one.done.reason}", """ +
                         """"turn_one": ${jsonString(one.raw)}, """ +
+                        """"turn_one_tail": $tail, """ +
                         """"record": ${jsonString(match)}, """
                 } else {
                     ""
@@ -268,6 +279,49 @@ class ExecuTorchOnDeviceTest {
         // A cold-first pair whose turn one came out different did not compare one prompt.
         // Judged after every row is written, so the rows that say which pair survive.
         assertThat(rewrittenDifferently).isEqualTo(0)
+    }
+
+    /**
+     * What a cold read costs as the prompt grows: one user turn of 10, 21, 42 and 84 of
+     * [LONG_PROMPT]'s sentences (about 250, 500, 1,000 and 2,000 tokens on LFM2.5), each from
+     * a reset cache after the cooling gate, the order reversed every other round. The
+     * runtime's own position line in the log gives the exact token count; the row's is the
+     * engine's estimate. `-e sentences 10,21` and `-e repeats <n>` narrow it; rows go to
+     * `eval-results/<stem>.prefill.jsonl`.
+     */
+    @Test
+    fun coldPrefillByLength(): Unit = runBlocking {
+        engine.load(MODEL, PARAMS)
+        val counts = (arguments.getString("sentences") ?: "10,21,42,84")
+            .split(',').map { it.trim().toInt() }
+        val repeats = arguments.getString("repeats")?.toIntOrNull() ?: REPEATS
+        val out = InstrumentationRegistry.getInstrumentation().targetContext
+            .getExternalFilesDir("eval-results")!!.apply { mkdirs() }
+        val sink = File(out, MODEL.nameWithoutExtension + ".prefill.jsonl")
+            .apply { writeText("") }
+        repeat(repeats) { round ->
+            for (count in if (round % 2 == 0) counts else counts.reversed()) {
+                engine.resetContext()
+                val before = DeviceState.read(coolFirst = true)
+                val stats = turn(
+                    listOf(ChatMessage.text(ChatRole.USER, describing(count))),
+                    SamplerParams(maxTokens = BUDGET, thinking = false),
+                ).stats
+                sink.appendText(
+                    """{"round": $round, "sentences": $count, """ +
+                        """"prompt_tokens": ${stats.promptTokens}, """ +
+                        """"prefill_ms": ${stats.prefillMs}, """ +
+                        """"ttft_ms": ${stats.timeToFirstTokenMs}, """ +
+                        """"cpu_c_before": ${before.cpuC}, "screen_on": ${before.screenOn}, """ +
+                        """"cooled_s": ${before.waitedS}}""" + "\n",
+                )
+                Log.i(
+                    TAG,
+                    "prefill round=$round sentences=$count fed=${stats.promptTokens} " +
+                        "prefill=${stats.prefillMs}ms cpu=${before.cpuC}C",
+                )
+            }
+        }
     }
 
     /**
@@ -595,9 +649,12 @@ class ExecuTorchOnDeviceTest {
         const val PIECE_TAIL_FLOOR = 1600
 
         /** Long enough that re-reading it is visibly different from not re-reading it. */
-        val LONG_PROMPT = buildString {
+        val LONG_PROMPT = describing(sentences = 40)
+
+        /** [LONG_PROMPT] at another length: the same sentence, [sentences] times. */
+        fun describing(sentences: Int) = buildString {
             append("Here is a description of a system I am building. ")
-            repeat(40) {
+            repeat(sentences) {
                 append(
                     "It runs language models on a phone, entirely on device, with no " +
                         "network involved at any point in generation. ",

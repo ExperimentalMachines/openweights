@@ -173,11 +173,20 @@ class WarmPrefixEval {
             val sink = File(out, model.nameWithoutExtension + ".restore.jsonl").apply {
                 writeText("")
             }
+            var unwarmable = false
             repeat(pairs) { pair ->
+                if (unwarmable) return@repeat
                 val order = if (pair % 2 == 0) listOf(RESTORED, COLD) else listOf(COLD, RESTORED)
                 val replies = mutableMapOf<String, String>()
                 for (arm in order) {
                     val row = timedFreshChat(model, arm)
+                    if (row == null) {
+                        // Gemma folds the system text into the first user turn, so there is
+                        // no head to warm or restore: nothing to compare, not a failure.
+                        Log.i(TAG, "restore ${model.name}: no warmable prefix, skipped")
+                        unwarmable = true
+                        return@repeat
+                    }
                     replies[arm] = row.reply.text
                     val s = row.reply.stats
                     sink.appendText(rowJson(pair, arm, order, row) + "\n")
@@ -204,6 +213,60 @@ class WarmPrefixEval {
         }
     }
 
+    /**
+     * What a cold read costs as the prompt grows, on this runtime: a system text of 5, 10, 20
+     * and 40 of [system]'s rules (about 130 to 1,000 tokens) and one question, each from a
+     * reset cache after the cooling gate, the order reversed every other round. One engine,
+     * with an unrelated turn first so mapping the weights in is not counted. `-e gguf <path>`
+     * picks the model; rows go to `eval-results/<stem>.prefill.jsonl`.
+     */
+    @Test
+    fun coldPrefillByLength(): Unit = runBlocking {
+        val arguments = InstrumentationRegistry.getArguments()
+        val model = File(arguments.getString("gguf") ?: "$EVAL_DIR/none.gguf")
+        assumeTrue("no .gguf at $model", model.isFile)
+        val counts = (arguments.getString("rules") ?: "5,10,20,40,80")
+            .split(',').map { it.trim().toInt() }
+        val repeats = arguments.getString("repeats")?.toIntOrNull() ?: 3
+        val out = InstrumentationRegistry.getInstrumentation().targetContext
+            .getExternalFilesDir("eval-results")!!.apply { mkdirs() }
+        val sink = File(out, model.nameWithoutExtension + ".prefill.jsonl").apply { writeText("") }
+        val engine = LlamaCppEngine()
+        try {
+            engine.load(model, ModelLoadParams(contextLength = CONTEXT))
+            val short = PARAMS.copy(maxTokens = 4)
+            engine.chat(listOf(ChatMessage.text(ChatRole.USER, "Say OK.")), short).toList()
+            repeat(repeats) { round ->
+                for (count in if (round % 2 == 0) counts else counts.reversed()) {
+                    engine.resetContext()
+                    val before = DeviceState.read(coolFirst = true)
+                    val messages = listOf(system(count), ChatMessage.text(ChatRole.USER, QUESTION))
+                    val stats = engine.chat(messages, short).toList()
+                        .filterIsInstance<GenerationEvent.Completed>().single().stats
+                    sink.appendText(
+                        """{"round": $round, "rules": $count, """ +
+                            """"prompt_tokens": ${stats.promptTokens}, """ +
+                            """"cached_tokens": ${stats.cachedTokens}, """ +
+                            """"prefill_ms": ${stats.prefillMs}, """ +
+                            """"ttft_ms": ${stats.timeToFirstTokenMs}, """ +
+                            """"cpu_c_before": ${before.cpuC}, """ +
+                            """"screen_on": ${before.screenOn}, """ +
+                            """"cooled_s": ${before.waitedS}}""" + "\n",
+                    )
+                    Log.i(
+                        TAG,
+                        "prefill ${model.name} round=$round rules=$count " +
+                            "prompt=${stats.promptTokens} cached=${stats.cachedTokens} " +
+                            "prefill=${stats.prefillMs}ms cpu=${before.cpuC}C",
+                    )
+                }
+            }
+        } finally {
+            engine.unload()
+            engine.close()
+        }
+    }
+
     private fun rowJson(pair: Int, arm: String, order: List<String>, row: TimedRow): String {
         val s = row.reply.stats
         val fields = listOf(
@@ -227,14 +290,22 @@ class WarmPrefixEval {
         return fields.joinToString(", ", "{", "}") { (key, value) -> "\"$key\": $value" }
     }
 
-    /** One arm of [aFreshChatReadColdAndRestored], on an engine of its own. */
-    private suspend fun timedFreshChat(model: File, arm: String): TimedRow {
+    /**
+     * One arm of [aFreshChatReadColdAndRestored], on an engine of its own; null when the
+     * model's template leaves no head to warm.
+     */
+    private suspend fun timedFreshChat(model: File, arm: String): TimedRow? {
         val engine = LlamaCppEngine()
         try {
             engine.load(model, ModelLoadParams(contextLength = CONTEXT))
             var snapshotBytes = 0L
             if (arm == RESTORED) {
-                snapshotBytes = engine.warm(listOf(system()), params = PARAMS)?.snapshotBytes ?: 0L
+                // A null warm is a failure (the engine returns null after a native error); only a
+                // warm that succeeded and found almost nothing to read is a template with no head.
+                val warm = engine.warm(listOf(system()), params = PARAMS)
+                assertWithMessage("${model.name}: the warm failed").that(warm).isNotNull()
+                if (warm!!.warmedTokens + warm.reusedTokens < MIN_RESTORED) return null
+                snapshotBytes = warm.snapshotBytes
                 val first = engine.ask(QUESTION)
                 engine.ask(
                     QUESTION,
@@ -418,10 +489,10 @@ class WarmPrefixEval {
          * policy. Size matters more than content here — the reuse arithmetic only shows up
          * when the prefix dwarfs the question.
          */
-        fun system(): ChatMessage {
+        fun system(rules: Int = 40): ChatMessage {
             val policy = buildString {
                 append("You are a careful assistant on a phone. Answer briefly.\n")
-                repeat(40) { index ->
+                repeat(rules) { index ->
                     append("Rule ").append(index)
                         .append(": prefer the shortest correct answer, cite nothing, ")
                         .append("never invent a tool, and keep lists to three items.\n")

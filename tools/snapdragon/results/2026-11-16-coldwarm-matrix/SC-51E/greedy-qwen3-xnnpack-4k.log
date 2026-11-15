@@ -1,0 +1,528 @@
+11-15 11:36:22.208 10693 10713 I ExecuTorch: Reading file /sys/devices/soc0/image_version
+11-15 11:36:22.208 10693 10713 I ExecuTorch: Failed to open midr file /sys/devices/soc0/image_version
+11-15 11:36:22.208 10693 10713 I ExecuTorch: Number of efficient cores 2
+11-15 11:36:22.209 10693 10713 I ExecuTorch: Resetting threadpool to 4 threads.
+11-15 11:36:22.222 10693 10713 I ExecuTorch: Reading file /sys/devices/soc0/image_version
+11-15 11:36:22.222 10693 10713 I ExecuTorch: Failed to open midr file /sys/devices/soc0/image_version
+11-15 11:36:22.222 10693 10713 I ExecuTorch: Number of efficient cores 2
+11-15 11:36:22.222 10693 10713 I ExecuTorch: Resetting threadpool to 5 threads
+11-15 11:36:22.222 10693 10713 I ExecuTorch: Resetting threadpool to 5 threads.
+11-15 11:36:22.693 10693 10713 I ExecuTorch: Loaded json tokenizer
+11-15 11:36:22.693 10693 10713 I ExecuTorch: Reading metadata from model
+11-15 11:36:22.694 10693 10713 I ExecuTorch: Metadata: use_sdpa_with_kv_cache = 1
+11-15 11:36:22.694 10693 10713 I ExecuTorch: Metadata: use_kv_cache = 1
+11-15 11:36:22.694 10693 10713 I ExecuTorch: Metadata: get_max_context_len = 4096
+11-15 11:36:22.694 10693 10713 I ExecuTorch: Metadata: get_max_seq_len = 2048
+11-15 11:36:22.694 10693 10713 I ExecuTorch: Metadata: enable_dynamic_shape = 1
+11-15 11:36:22.694 10693 10713 I ExecuTorch: eos_id = 151645
+11-15 11:36:22.694 10693 10713 I ExecuTorch: eos_id = 151643
+11-15 11:36:22.694 10693 10713 I ExecuTorch: Using method: forward
+11-15 11:36:26.222 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:36:27.168 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:36:28.030 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:36:28.839 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:36:29.802 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:36:29.804 10693 10713 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:36:31.303 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:36:31.303 10693 10713 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 903, num_prompt_tokens 255, max_context_len 4096
+11-15 11:36:31.307 10693 10713 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:37:05.286 10693 10713 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:37:05.290 10693 10713 I ExecuTorch: 	Prompt Tokens: 255    Generated Tokens: 578
+11-15 11:37:05.290 10693 10713 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:37:05.290 10693 10713 I ExecuTorch: 	Total inference time:		35.482000 (seconds)		 Rate: 	16.289950 (tokens/second)
+11-15 11:37:05.290 10693 10713 I ExecuTorch: 		Prompt evaluation:	1.499000 (seconds)		 Rate: 	170.113409 (tokens/second)
+11-15 11:37:05.290 10693 10713 I ExecuTorch: 		Generated 578 tokens:	33.983000 (seconds)		 Rate: 	17.008504 (tokens/second)
+11-15 11:37:05.290 10693 10713 I ExecuTorch: 	Time to first generated token:	1.499000 (seconds)
+11-15 11:37:05.290 10693 10713 I ExecuTorch: 	Sampling time over 833 tokens:	0.128000 (seconds)
+11-15 11:37:05.305 10693 10708 I ExecuTorchOnDevice: coldwarm pair=0 turn one: generated=579 reason=END_OF_TURN held=1474 fragments=579 tail=[" you", " need", " further", " details", "!", "<|im_end|>"]
+11-15 11:37:05.307 10693 10708 I ExecuTorchOnDevice: coldwarm pair=0 record: extends, record 7498 of 7597 chars sameTurnOne=true
+11-15 11:37:15.483 10693 10713 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:37:15.750 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:37:15.750 10693 10713 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 1501, num_prompt_tokens 20, max_context_len 4096
+11-15 11:37:15.751 10693 10713 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:37:18.957 10693 10713 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:37:18.957 10693 10713 I ExecuTorch: 	Prompt Tokens: 20    Generated Tokens: 47
+11-15 11:37:18.957 10693 10713 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:37:18.957 10693 10713 I ExecuTorch: 	Total inference time:		3.474000 (seconds)		 Rate: 	13.529073 (tokens/second)
+11-15 11:37:18.957 10693 10713 I ExecuTorch: 		Prompt evaluation:	0.267000 (seconds)		 Rate: 	74.906367 (tokens/second)
+11-15 11:37:18.957 10693 10713 I ExecuTorch: 		Generated 47 tokens:	3.207000 (seconds)		 Rate: 	14.655441 (tokens/second)
+11-15 11:37:18.957 10693 10713 I ExecuTorch: 	Time to first generated token:	0.267000 (seconds)
+11-15 11:37:18.957 10693 10713 I ExecuTorch: 	Sampling time over 67 tokens:	0.141000 (seconds)
+11-15 11:37:19.014 10693 10708 I ExecuTorchOnDevice: coldwarm pair=0 arm=warm fed=20 cached=1474 prefill=267ms ttft=269ms cpu=44.9C screen=true
+11-15 11:37:19.080 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:37:19.874 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:37:20.678 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:37:21.562 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:37:22.467 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:37:23.400 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:37:24.292 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:37:25.178 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:37:26.168 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:37:26.169 10693 10713 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:37:27.915 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:37:27.915 10693 10713 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 1501, num_prompt_tokens 257, max_context_len 4096
+11-15 11:37:27.916 10693 10713 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:37:28.613 10693 10713 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:37:28.613 10693 10713 I ExecuTorch: 	Prompt Tokens: 257    Generated Tokens: 11
+11-15 11:37:28.613 10693 10713 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:37:28.613 10693 10713 I ExecuTorch: 	Total inference time:		2.444000 (seconds)		 Rate: 	4.500818 (tokens/second)
+11-15 11:37:28.613 10693 10713 I ExecuTorch: 		Prompt evaluation:	1.746000 (seconds)		 Rate: 	147.193585 (tokens/second)
+11-15 11:37:28.613 10693 10713 I ExecuTorch: 		Generated 11 tokens:	0.698000 (seconds)		 Rate: 	15.759312 (tokens/second)
+11-15 11:37:28.613 10693 10713 I ExecuTorch: 	Time to first generated token:	1.746000 (seconds)
+11-15 11:37:28.613 10693 10713 I ExecuTorch: 	Sampling time over 268 tokens:	0.002000 (seconds)
+11-15 11:37:28.672 10693 10708 I ExecuTorchOnDevice: coldwarm pair=0 arm=cold fed=1443 cached=0 prefill=8870ms ttft=8872ms cpu=44.9C screen=true
+11-15 11:37:28.672 10693 10708 I ExecuTorchOnDevice: coldwarm pair=0 replies identical=false
+11-15 11:37:28.731 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:37:29.478 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:37:30.236 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:37:31.058 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:37:31.911 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:37:31.912 10693 10714 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:37:33.381 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:37:33.382 10693 10714 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 903, num_prompt_tokens 255, max_context_len 4096
+11-15 11:37:33.382 10693 10714 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:38:08.942 10693 10714 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:38:08.943 10693 10714 I ExecuTorch: 	Prompt Tokens: 255    Generated Tokens: 578
+11-15 11:38:08.943 10693 10714 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:38:08.943 10693 10714 I ExecuTorch: 	Total inference time:		37.030000 (seconds)		 Rate: 	15.608966 (tokens/second)
+11-15 11:38:08.943 10693 10714 I ExecuTorch: 		Prompt evaluation:	1.470000 (seconds)		 Rate: 	173.469388 (tokens/second)
+11-15 11:38:08.943 10693 10714 I ExecuTorch: 		Generated 578 tokens:	35.560000 (seconds)		 Rate: 	16.254218 (tokens/second)
+11-15 11:38:08.943 10693 10714 I ExecuTorch: 	Time to first generated token:	1.470000 (seconds)
+11-15 11:38:08.943 10693 10714 I ExecuTorch: 	Sampling time over 833 tokens:	0.186000 (seconds)
+11-15 11:38:08.956 10693 10708 I ExecuTorchOnDevice: coldwarm pair=1 turn one: generated=579 reason=END_OF_TURN held=1474 fragments=579 tail=[" you", " need", " further", " details", "!", "<|im_end|>"]
+11-15 11:38:24.200 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:38:24.998 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:38:25.822 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:38:26.740 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:38:27.655 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:38:28.625 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:38:29.595 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:38:30.532 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:38:31.591 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:38:31.592 10693 10713 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:38:33.475 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:38:33.476 10693 10713 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 1501, num_prompt_tokens 257, max_context_len 4096
+11-15 11:38:33.476 10693 10713 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:38:34.219 10693 10713 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:38:34.219 10693 10713 I ExecuTorch: 	Prompt Tokens: 257    Generated Tokens: 11
+11-15 11:38:34.219 10693 10713 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:38:34.220 10693 10713 I ExecuTorch: 	Total inference time:		2.627000 (seconds)		 Rate: 	4.187286 (tokens/second)
+11-15 11:38:34.220 10693 10713 I ExecuTorch: 		Prompt evaluation:	1.884000 (seconds)		 Rate: 	136.411890 (tokens/second)
+11-15 11:38:34.220 10693 10713 I ExecuTorch: 		Generated 11 tokens:	0.743000 (seconds)		 Rate: 	14.804845 (tokens/second)
+11-15 11:38:34.220 10693 10713 I ExecuTorch: 	Time to first generated token:	1.884000 (seconds)
+11-15 11:38:34.220 10693 10713 I ExecuTorch: 	Sampling time over 268 tokens:	0.004000 (seconds)
+11-15 11:38:34.276 10693 10708 I ExecuTorchOnDevice: coldwarm pair=1 arm=cold fed=1443 cached=0 prefill=9328ms ttft=9330ms cpu=42.5C screen=true
+11-15 11:38:34.343 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:38:35.204 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:38:36.097 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:38:37.077 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:38:38.068 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:38:38.068 10693 10714 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:38:39.783 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:38:39.784 10693 10714 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 903, num_prompt_tokens 255, max_context_len 4096
+11-15 11:38:39.784 10693 10714 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:39:17.473 10693 10714 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:39:17.474 10693 10714 I ExecuTorch: 	Prompt Tokens: 255    Generated Tokens: 578
+11-15 11:39:17.474 10693 10714 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:39:17.474 10693 10714 I ExecuTorch: 	Total inference time:		39.405000 (seconds)		 Rate: 	14.668189 (tokens/second)
+11-15 11:39:17.474 10693 10714 I ExecuTorch: 		Prompt evaluation:	1.716000 (seconds)		 Rate: 	148.601399 (tokens/second)
+11-15 11:39:17.474 10693 10714 I ExecuTorch: 		Generated 578 tokens:	37.689000 (seconds)		 Rate: 	15.336040 (tokens/second)
+11-15 11:39:17.474 10693 10714 I ExecuTorch: 	Time to first generated token:	1.716000 (seconds)
+11-15 11:39:17.474 10693 10714 I ExecuTorch: 	Sampling time over 833 tokens:	0.190000 (seconds)
+11-15 11:39:17.498 10693 10708 I ExecuTorchOnDevice: coldwarm pair=1 record: extends, record 7498 of 7597 chars sameTurnOne=true
+11-15 11:39:37.767 10693 10713 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:39:38.117 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:39:38.118 10693 10713 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 1501, num_prompt_tokens 20, max_context_len 4096
+11-15 11:39:38.118 10693 10713 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:39:41.402 10693 10713 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:39:41.402 10693 10713 I ExecuTorch: 	Prompt Tokens: 20    Generated Tokens: 47
+11-15 11:39:41.402 10693 10713 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:39:41.402 10693 10713 I ExecuTorch: 	Total inference time:		3.635000 (seconds)		 Rate: 	12.929849 (tokens/second)
+11-15 11:39:41.402 10693 10713 I ExecuTorch: 		Prompt evaluation:	0.351000 (seconds)		 Rate: 	56.980057 (tokens/second)
+11-15 11:39:41.402 10693 10713 I ExecuTorch: 		Generated 47 tokens:	3.284000 (seconds)		 Rate: 	14.311815 (tokens/second)
+11-15 11:39:41.402 10693 10713 I ExecuTorch: 	Time to first generated token:	0.351000 (seconds)
+11-15 11:39:41.402 10693 10713 I ExecuTorch: 	Sampling time over 67 tokens:	0.203000 (seconds)
+11-15 11:39:41.465 10693 10708 I ExecuTorchOnDevice: coldwarm pair=1 arm=warm fed=20 cached=1474 prefill=351ms ttft=353ms cpu=42.3C screen=true
+11-15 11:39:41.465 10693 10708 I ExecuTorchOnDevice: coldwarm pair=1 replies identical=false
+11-15 11:39:41.512 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:39:42.427 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:39:43.356 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:39:44.382 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:39:45.442 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:39:45.443 10693 10714 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:39:47.234 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:39:47.235 10693 10714 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 903, num_prompt_tokens 255, max_context_len 4096
+11-15 11:39:47.236 10693 10714 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:40:27.361 10693 10714 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:40:27.362 10693 10714 I ExecuTorch: 	Prompt Tokens: 255    Generated Tokens: 578
+11-15 11:40:27.362 10693 10714 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:40:27.362 10693 10714 I ExecuTorch: 	Total inference time:		41.918000 (seconds)		 Rate: 	13.788826 (tokens/second)
+11-15 11:40:27.362 10693 10714 I ExecuTorch: 		Prompt evaluation:	1.792000 (seconds)		 Rate: 	142.299107 (tokens/second)
+11-15 11:40:27.362 10693 10714 I ExecuTorch: 		Generated 578 tokens:	40.126000 (seconds)		 Rate: 	14.404625 (tokens/second)
+11-15 11:40:27.362 10693 10714 I ExecuTorch: 	Time to first generated token:	1.792000 (seconds)
+11-15 11:40:27.362 10693 10714 I ExecuTorch: 	Sampling time over 833 tokens:	0.203000 (seconds)
+11-15 11:40:27.387 10693 10708 I ExecuTorchOnDevice: coldwarm pair=2 turn one: generated=579 reason=END_OF_TURN held=1474 fragments=579 tail=[" you", " need", " further", " details", "!", "<|im_end|>"]
+11-15 11:40:27.390 10693 10708 I ExecuTorchOnDevice: coldwarm pair=2 record: extends, record 7498 of 7597 chars sameTurnOne=true
+11-15 11:40:37.554 10693 10713 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:40:37.828 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:40:37.829 10693 10713 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 1501, num_prompt_tokens 20, max_context_len 4096
+11-15 11:40:37.829 10693 10713 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:40:41.123 10693 10713 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:40:41.123 10693 10713 I ExecuTorch: 	Prompt Tokens: 20    Generated Tokens: 47
+11-15 11:40:41.123 10693 10713 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:40:41.123 10693 10713 I ExecuTorch: 	Total inference time:		3.567000 (seconds)		 Rate: 	13.176339 (tokens/second)
+11-15 11:40:41.123 10693 10713 I ExecuTorch: 		Prompt evaluation:	0.273000 (seconds)		 Rate: 	73.260073 (tokens/second)
+11-15 11:40:41.123 10693 10713 I ExecuTorch: 		Generated 47 tokens:	3.294000 (seconds)		 Rate: 	14.268367 (tokens/second)
+11-15 11:40:41.123 10693 10713 I ExecuTorch: 	Time to first generated token:	0.273000 (seconds)
+11-15 11:40:41.123 10693 10713 I ExecuTorch: 	Sampling time over 67 tokens:	0.216000 (seconds)
+11-15 11:40:41.205 10693 10708 I ExecuTorchOnDevice: coldwarm pair=2 arm=warm fed=20 cached=1474 prefill=273ms ttft=277ms cpu=44.6C screen=true
+11-15 11:40:41.300 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:40:42.203 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:40:43.143 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:40:44.119 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:40:45.031 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:40:45.992 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:40:46.959 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:40:47.885 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:40:48.945 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:40:48.946 10693 10714 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:40:50.817 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:40:50.818 10693 10714 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 1501, num_prompt_tokens 257, max_context_len 4096
+11-15 11:40:50.818 10693 10714 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:40:51.534 10693 10714 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:40:51.534 10693 10714 I ExecuTorch: 	Prompt Tokens: 257    Generated Tokens: 11
+11-15 11:40:51.534 10693 10714 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:40:51.534 10693 10714 I ExecuTorch: 	Total inference time:		2.588000 (seconds)		 Rate: 	4.250386 (tokens/second)
+11-15 11:40:51.534 10693 10714 I ExecuTorch: 		Prompt evaluation:	1.872000 (seconds)		 Rate: 	137.286325 (tokens/second)
+11-15 11:40:51.534 10693 10714 I ExecuTorch: 		Generated 11 tokens:	0.716000 (seconds)		 Rate: 	15.363128 (tokens/second)
+11-15 11:40:51.534 10693 10714 I ExecuTorch: 	Time to first generated token:	1.872000 (seconds)
+11-15 11:40:51.534 10693 10714 I ExecuTorch: 	Sampling time over 268 tokens:	0.002000 (seconds)
+11-15 11:40:51.594 10693 10708 I ExecuTorchOnDevice: coldwarm pair=2 arm=cold fed=1443 cached=0 prefill=9570ms ttft=9570ms cpu=44.6C screen=true
+11-15 11:40:51.594 10693 10708 I ExecuTorchOnDevice: coldwarm pair=2 replies identical=false
+11-15 11:40:51.656 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:40:52.454 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:40:53.275 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:40:54.211 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:40:55.223 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:40:55.224 10693 10713 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:40:56.915 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:40:56.915 10693 10713 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 903, num_prompt_tokens 255, max_context_len 4096
+11-15 11:40:56.916 10693 10713 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:41:36.590 10693 10713 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:41:36.590 10693 10713 I ExecuTorch: 	Prompt Tokens: 255    Generated Tokens: 578
+11-15 11:41:36.590 10693 10713 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:41:36.590 10693 10713 I ExecuTorch: 	Total inference time:		41.365000 (seconds)		 Rate: 	13.973166 (tokens/second)
+11-15 11:41:36.590 10693 10713 I ExecuTorch: 		Prompt evaluation:	1.691000 (seconds)		 Rate: 	150.798344 (tokens/second)
+11-15 11:41:36.590 10693 10713 I ExecuTorch: 		Generated 578 tokens:	39.674000 (seconds)		 Rate: 	14.568735 (tokens/second)
+11-15 11:41:36.590 10693 10713 I ExecuTorch: 	Time to first generated token:	1.691000 (seconds)
+11-15 11:41:36.590 10693 10713 I ExecuTorch: 	Sampling time over 833 tokens:	0.189000 (seconds)
+11-15 11:41:36.611 10693 10708 I ExecuTorchOnDevice: coldwarm pair=3 turn one: generated=579 reason=END_OF_TURN held=1474 fragments=579 tail=[" you", " need", " further", " details", "!", "<|im_end|>"]
+11-15 11:41:46.832 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:41:47.753 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:41:48.687 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:41:49.713 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:41:50.776 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:41:51.883 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:41:52.995 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:41:54.059 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:41:55.177 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:41:55.178 10693 10713 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:41:57.161 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:41:57.162 10693 10713 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 1501, num_prompt_tokens 257, max_context_len 4096
+11-15 11:41:57.162 10693 10713 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:41:57.884 10693 10713 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:41:57.884 10693 10713 I ExecuTorch: 	Prompt Tokens: 257    Generated Tokens: 11
+11-15 11:41:57.884 10693 10713 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:41:57.884 10693 10713 I ExecuTorch: 	Total inference time:		2.706000 (seconds)		 Rate: 	4.065041 (tokens/second)
+11-15 11:41:57.884 10693 10713 I ExecuTorch: 		Prompt evaluation:	1.984000 (seconds)		 Rate: 	129.536290 (tokens/second)
+11-15 11:41:57.884 10693 10713 I ExecuTorch: 		Generated 11 tokens:	0.722000 (seconds)		 Rate: 	15.235457 (tokens/second)
+11-15 11:41:57.884 10693 10713 I ExecuTorch: 	Time to first generated token:	1.984000 (seconds)
+11-15 11:41:57.884 10693 10713 I ExecuTorch: 	Sampling time over 268 tokens:	0.001000 (seconds)
+11-15 11:41:57.940 10693 10708 I ExecuTorchOnDevice: coldwarm pair=3 arm=cold fed=1443 cached=0 prefill=10376ms ttft=10378ms cpu=44.9C screen=true
+11-15 11:41:58.017 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:41:58.861 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:41:59.733 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:42:00.681 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:42:01.641 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:42:01.642 10693 10714 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:42:03.297 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:42:03.297 10693 10714 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 903, num_prompt_tokens 255, max_context_len 4096
+11-15 11:42:03.298 10693 10714 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:42:42.918 10693 10714 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:42:42.918 10693 10714 I ExecuTorch: 	Prompt Tokens: 255    Generated Tokens: 578
+11-15 11:42:42.918 10693 10714 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:42:42.918 10693 10714 I ExecuTorch: 	Total inference time:		41.276000 (seconds)		 Rate: 	14.003295 (tokens/second)
+11-15 11:42:42.918 10693 10714 I ExecuTorch: 		Prompt evaluation:	1.655000 (seconds)		 Rate: 	154.078550 (tokens/second)
+11-15 11:42:42.918 10693 10714 I ExecuTorch: 		Generated 578 tokens:	39.621000 (seconds)		 Rate: 	14.588223 (tokens/second)
+11-15 11:42:42.918 10693 10714 I ExecuTorch: 	Time to first generated token:	1.655000 (seconds)
+11-15 11:42:42.918 10693 10714 I ExecuTorch: 	Sampling time over 833 tokens:	0.188000 (seconds)
+11-15 11:42:42.935 10693 10708 I ExecuTorchOnDevice: coldwarm pair=3 record: extends, record 7498 of 7597 chars sameTurnOne=true
+11-15 11:42:58.130 10693 10714 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:42:58.362 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:42:58.362 10693 10714 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 1501, num_prompt_tokens 20, max_context_len 4096
+11-15 11:42:58.363 10693 10714 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:43:01.567 10693 10714 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:43:01.568 10693 10714 I ExecuTorch: 	Prompt Tokens: 20    Generated Tokens: 47
+11-15 11:43:01.568 10693 10714 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:43:01.568 10693 10714 I ExecuTorch: 	Total inference time:		3.436000 (seconds)		 Rate: 	13.678696 (tokens/second)
+11-15 11:43:01.568 10693 10714 I ExecuTorch: 		Prompt evaluation:	0.231000 (seconds)		 Rate: 	86.580087 (tokens/second)
+11-15 11:43:01.568 10693 10714 I ExecuTorch: 		Generated 47 tokens:	3.205000 (seconds)		 Rate: 	14.664587 (tokens/second)
+11-15 11:43:01.568 10693 10714 I ExecuTorch: 	Time to first generated token:	0.231000 (seconds)
+11-15 11:43:01.568 10693 10714 I ExecuTorch: 	Sampling time over 67 tokens:	0.198000 (seconds)
+11-15 11:43:01.602 10693 10708 I ExecuTorchOnDevice: coldwarm pair=3 arm=warm fed=20 cached=1474 prefill=231ms ttft=232ms cpu=43.9C screen=true
+11-15 11:43:01.602 10693 10708 I ExecuTorchOnDevice: coldwarm pair=3 replies identical=false
+11-15 11:43:01.656 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:43:02.527 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:43:03.410 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:43:04.387 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:43:05.393 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:43:05.394 10693 10713 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:43:07.098 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:43:07.098 10693 10713 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 903, num_prompt_tokens 255, max_context_len 4096
+11-15 11:43:07.099 10693 10713 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:43:47.065 10693 10713 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:43:47.065 10693 10713 I ExecuTorch: 	Prompt Tokens: 255    Generated Tokens: 578
+11-15 11:43:47.065 10693 10713 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:43:47.065 10693 10713 I ExecuTorch: 	Total inference time:		41.671000 (seconds)		 Rate: 	13.870557 (tokens/second)
+11-15 11:43:47.065 10693 10713 I ExecuTorch: 		Prompt evaluation:	1.705000 (seconds)		 Rate: 	149.560117 (tokens/second)
+11-15 11:43:47.065 10693 10713 I ExecuTorch: 		Generated 578 tokens:	39.966000 (seconds)		 Rate: 	14.462293 (tokens/second)
+11-15 11:43:47.065 10693 10713 I ExecuTorch: 	Time to first generated token:	1.705000 (seconds)
+11-15 11:43:47.065 10693 10713 I ExecuTorch: 	Sampling time over 833 tokens:	0.203000 (seconds)
+11-15 11:43:47.077 10693 10708 I ExecuTorchOnDevice: coldwarm pair=4 turn one: generated=579 reason=END_OF_TURN held=1474 fragments=579 tail=[" you", " need", " further", " details", "!", "<|im_end|>"]
+11-15 11:43:47.078 10693 10708 I ExecuTorchOnDevice: coldwarm pair=4 record: extends, record 7498 of 7597 chars sameTurnOne=true
+11-15 11:44:07.312 10693 10713 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:44:07.548 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:44:07.549 10693 10713 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 1501, num_prompt_tokens 20, max_context_len 4096
+11-15 11:44:07.549 10693 10713 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:44:10.626 10693 10713 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:44:10.626 10693 10713 I ExecuTorch: 	Prompt Tokens: 20    Generated Tokens: 47
+11-15 11:44:10.626 10693 10713 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:44:10.626 10693 10713 I ExecuTorch: 	Total inference time:		3.313000 (seconds)		 Rate: 	14.186538 (tokens/second)
+11-15 11:44:10.626 10693 10713 I ExecuTorch: 		Prompt evaluation:	0.236000 (seconds)		 Rate: 	84.745763 (tokens/second)
+11-15 11:44:10.626 10693 10713 I ExecuTorch: 		Generated 47 tokens:	3.077000 (seconds)		 Rate: 	15.274618 (tokens/second)
+11-15 11:44:10.626 10693 10713 I ExecuTorch: 	Time to first generated token:	0.236000 (seconds)
+11-15 11:44:10.626 10693 10713 I ExecuTorch: 	Sampling time over 67 tokens:	0.215000 (seconds)
+11-15 11:44:10.676 10693 10708 I ExecuTorchOnDevice: coldwarm pair=4 arm=warm fed=20 cached=1474 prefill=236ms ttft=237ms cpu=43.1C screen=true
+11-15 11:44:10.790 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:44:11.601 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:44:12.424 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:44:13.356 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:44:14.296 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:44:15.384 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:44:16.482 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:44:17.551 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:44:18.763 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:44:18.764 10693 10714 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:44:20.830 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:44:20.831 10693 10714 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 1501, num_prompt_tokens 257, max_context_len 4096
+11-15 11:44:20.831 10693 10714 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:44:21.579 10693 10714 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:44:21.580 10693 10714 I ExecuTorch: 	Prompt Tokens: 257    Generated Tokens: 11
+11-15 11:44:21.580 10693 10714 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:44:21.580 10693 10714 I ExecuTorch: 	Total inference time:		2.815000 (seconds)		 Rate: 	3.907638 (tokens/second)
+11-15 11:44:21.580 10693 10714 I ExecuTorch: 		Prompt evaluation:	2.067000 (seconds)		 Rate: 	124.334785 (tokens/second)
+11-15 11:44:21.580 10693 10714 I ExecuTorch: 		Generated 11 tokens:	0.748000 (seconds)		 Rate: 	14.705882 (tokens/second)
+11-15 11:44:21.580 10693 10714 I ExecuTorch: 	Time to first generated token:	2.067000 (seconds)
+11-15 11:44:21.580 10693 10714 I ExecuTorch: 	Sampling time over 268 tokens:	0.002000 (seconds)
+11-15 11:44:21.643 10693 10708 I ExecuTorchOnDevice: coldwarm pair=4 arm=cold fed=1443 cached=0 prefill=10107ms ttft=10107ms cpu=43.1C screen=true
+11-15 11:44:21.644 10693 10708 I ExecuTorchOnDevice: coldwarm pair=4 replies identical=false
+11-15 11:44:21.712 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:44:22.602 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:44:23.506 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:44:24.537 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:44:25.654 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:44:25.655 10693 10713 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:44:27.556 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:44:27.556 10693 10713 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 903, num_prompt_tokens 255, max_context_len 4096
+11-15 11:44:27.556 10693 10713 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:45:09.277 10693 10713 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:45:09.277 10693 10713 I ExecuTorch: 	Prompt Tokens: 255    Generated Tokens: 578
+11-15 11:45:09.277 10693 10713 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:45:09.278 10693 10713 I ExecuTorch: 	Total inference time:		43.622000 (seconds)		 Rate: 	13.250195 (tokens/second)
+11-15 11:45:09.278 10693 10713 I ExecuTorch: 		Prompt evaluation:	1.901000 (seconds)		 Rate: 	134.139926 (tokens/second)
+11-15 11:45:09.278 10693 10713 I ExecuTorch: 		Generated 578 tokens:	41.721000 (seconds)		 Rate: 	13.853934 (tokens/second)
+11-15 11:45:09.278 10693 10713 I ExecuTorch: 	Time to first generated token:	1.901000 (seconds)
+11-15 11:45:09.278 10693 10713 I ExecuTorch: 	Sampling time over 833 tokens:	0.195000 (seconds)
+11-15 11:45:09.303 10693 10708 I ExecuTorchOnDevice: coldwarm pair=5 turn one: generated=579 reason=END_OF_TURN held=1474 fragments=579 tail=[" you", " need", " further", " details", "!", "<|im_end|>"]
+11-15 11:45:24.565 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:45:25.441 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:45:26.348 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:45:27.358 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:45:28.388 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:45:29.471 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:45:30.586 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:45:31.635 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:45:32.844 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:45:32.845 10693 10714 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:45:34.909 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:45:34.909 10693 10714 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 1501, num_prompt_tokens 257, max_context_len 4096
+11-15 11:45:34.910 10693 10714 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:45:35.672 10693 10714 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:45:35.673 10693 10714 I ExecuTorch: 	Prompt Tokens: 257    Generated Tokens: 11
+11-15 11:45:35.673 10693 10714 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:45:35.673 10693 10714 I ExecuTorch: 	Total inference time:		2.827000 (seconds)		 Rate: 	3.891051 (tokens/second)
+11-15 11:45:35.673 10693 10714 I ExecuTorch: 		Prompt evaluation:	2.064000 (seconds)		 Rate: 	124.515504 (tokens/second)
+11-15 11:45:35.673 10693 10714 I ExecuTorch: 		Generated 11 tokens:	0.763000 (seconds)		 Rate: 	14.416776 (tokens/second)
+11-15 11:45:35.673 10693 10714 I ExecuTorch: 	Time to first generated token:	2.064000 (seconds)
+11-15 11:45:35.673 10693 10714 I ExecuTorch: 	Sampling time over 268 tokens:	0.003000 (seconds)
+11-15 11:45:35.732 10693 10708 I ExecuTorchOnDevice: coldwarm pair=5 arm=cold fed=1443 cached=0 prefill=10399ms ttft=10401ms cpu=43.2C screen=true
+11-15 11:45:35.783 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:45:36.690 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:45:37.622 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:45:38.659 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:45:39.728 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:45:39.729 10693 10713 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:45:41.519 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:45:41.520 10693 10713 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 903, num_prompt_tokens 255, max_context_len 4096
+11-15 11:45:41.520 10693 10713 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:46:22.538 10693 10713 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:46:22.538 10693 10713 I ExecuTorch: 	Prompt Tokens: 255    Generated Tokens: 578
+11-15 11:46:22.538 10693 10713 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:46:22.538 10693 10713 I ExecuTorch: 	Total inference time:		42.808000 (seconds)		 Rate: 	13.502149 (tokens/second)
+11-15 11:46:22.538 10693 10713 I ExecuTorch: 		Prompt evaluation:	1.790000 (seconds)		 Rate: 	142.458101 (tokens/second)
+11-15 11:46:22.538 10693 10713 I ExecuTorch: 		Generated 578 tokens:	41.018000 (seconds)		 Rate: 	14.091375 (tokens/second)
+11-15 11:46:22.538 10693 10713 I ExecuTorch: 	Time to first generated token:	1.790000 (seconds)
+11-15 11:46:22.538 10693 10713 I ExecuTorch: 	Sampling time over 833 tokens:	0.194000 (seconds)
+11-15 11:46:22.565 10693 10708 I ExecuTorchOnDevice: coldwarm pair=5 record: extends, record 7498 of 7597 chars sameTurnOne=true
+11-15 11:46:37.749 10693 10714 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:46:38.033 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:46:38.033 10693 10714 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 1501, num_prompt_tokens 20, max_context_len 4096
+11-15 11:46:38.034 10693 10714 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:46:41.252 10693 10714 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:46:41.252 10693 10714 I ExecuTorch: 	Prompt Tokens: 20    Generated Tokens: 47
+11-15 11:46:41.252 10693 10714 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:46:41.252 10693 10714 I ExecuTorch: 	Total inference time:		3.502000 (seconds)		 Rate: 	13.420902 (tokens/second)
+11-15 11:46:41.252 10693 10714 I ExecuTorch: 		Prompt evaluation:	0.283000 (seconds)		 Rate: 	70.671378 (tokens/second)
+11-15 11:46:41.252 10693 10714 I ExecuTorch: 		Generated 47 tokens:	3.219000 (seconds)		 Rate: 	14.600808 (tokens/second)
+11-15 11:46:41.252 10693 10714 I ExecuTorch: 	Time to first generated token:	0.283000 (seconds)
+11-15 11:46:41.252 10693 10714 I ExecuTorch: 	Sampling time over 67 tokens:	0.209000 (seconds)
+11-15 11:46:41.309 10693 10708 I ExecuTorchOnDevice: coldwarm pair=5 arm=warm fed=20 cached=1474 prefill=283ms ttft=287ms cpu=43.9C screen=true
+11-15 11:46:41.309 10693 10708 I ExecuTorchOnDevice: coldwarm pair=5 replies identical=false
+11-15 11:46:41.382 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:46:42.279 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:46:43.185 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:46:44.192 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:46:45.242 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:46:45.243 10693 10713 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:46:47.036 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:46:47.037 10693 10713 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 903, num_prompt_tokens 255, max_context_len 4096
+11-15 11:46:47.037 10693 10713 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:47:27.267 10693 10713 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:47:27.267 10693 10713 I ExecuTorch: 	Prompt Tokens: 255    Generated Tokens: 578
+11-15 11:47:27.267 10693 10713 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:47:27.267 10693 10713 I ExecuTorch: 	Total inference time:		42.024000 (seconds)		 Rate: 	13.754045 (tokens/second)
+11-15 11:47:27.267 10693 10713 I ExecuTorch: 		Prompt evaluation:	1.794000 (seconds)		 Rate: 	142.140468 (tokens/second)
+11-15 11:47:27.267 10693 10713 I ExecuTorch: 		Generated 578 tokens:	40.230000 (seconds)		 Rate: 	14.367388 (tokens/second)
+11-15 11:47:27.267 10693 10713 I ExecuTorch: 	Time to first generated token:	1.794000 (seconds)
+11-15 11:47:27.267 10693 10713 I ExecuTorch: 	Sampling time over 833 tokens:	0.189000 (seconds)
+11-15 11:47:27.291 10693 10708 I ExecuTorchOnDevice: coldwarm pair=6 turn one: generated=579 reason=END_OF_TURN held=1474 fragments=579 tail=[" you", " need", " further", " details", "!", "<|im_end|>"]
+11-15 11:47:27.293 10693 10708 I ExecuTorchOnDevice: coldwarm pair=6 record: extends, record 7498 of 7597 chars sameTurnOne=true
+11-15 11:47:47.557 10693 10714 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:47:47.845 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:47:47.845 10693 10714 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 1501, num_prompt_tokens 20, max_context_len 4096
+11-15 11:47:47.845 10693 10714 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:47:51.026 10693 10714 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:47:51.027 10693 10714 I ExecuTorch: 	Prompt Tokens: 20    Generated Tokens: 47
+11-15 11:47:51.027 10693 10714 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:47:51.027 10693 10714 I ExecuTorch: 	Total inference time:		3.468000 (seconds)		 Rate: 	13.552480 (tokens/second)
+11-15 11:47:51.027 10693 10714 I ExecuTorch: 		Prompt evaluation:	0.287000 (seconds)		 Rate: 	69.686411 (tokens/second)
+11-15 11:47:51.027 10693 10714 I ExecuTorch: 		Generated 47 tokens:	3.181000 (seconds)		 Rate: 	14.775228 (tokens/second)
+11-15 11:47:51.027 10693 10714 I ExecuTorch: 	Time to first generated token:	0.287000 (seconds)
+11-15 11:47:51.027 10693 10714 I ExecuTorch: 	Sampling time over 67 tokens:	0.204000 (seconds)
+11-15 11:47:51.098 10693 10708 I ExecuTorchOnDevice: coldwarm pair=6 arm=warm fed=20 cached=1474 prefill=287ms ttft=291ms cpu=42.9C screen=true
+11-15 11:47:51.189 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:47:52.043 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:47:52.939 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:47:53.937 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:47:54.943 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:47:56.045 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:47:57.149 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:47:58.206 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:47:59.429 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:47:59.429 10693 10713 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:48:01.484 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:48:01.484 10693 10713 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 1501, num_prompt_tokens 257, max_context_len 4096
+11-15 11:48:01.484 10693 10713 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:48:02.232 10693 10713 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:48:02.233 10693 10713 I ExecuTorch: 	Prompt Tokens: 257    Generated Tokens: 11
+11-15 11:48:02.233 10693 10713 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:48:02.233 10693 10713 I ExecuTorch: 	Total inference time:		2.803000 (seconds)		 Rate: 	3.924367 (tokens/second)
+11-15 11:48:02.233 10693 10713 I ExecuTorch: 		Prompt evaluation:	2.055000 (seconds)		 Rate: 	125.060827 (tokens/second)
+11-15 11:48:02.233 10693 10713 I ExecuTorch: 		Generated 11 tokens:	0.748000 (seconds)		 Rate: 	14.705882 (tokens/second)
+11-15 11:48:02.233 10693 10713 I ExecuTorch: 	Time to first generated token:	2.055000 (seconds)
+11-15 11:48:02.233 10693 10713 I ExecuTorch: 	Sampling time over 268 tokens:	0.003000 (seconds)
+11-15 11:48:02.253 10693 10708 I ExecuTorchOnDevice: coldwarm pair=6 arm=cold fed=1443 cached=0 prefill=10333ms ttft=10335ms cpu=42.9C screen=true
+11-15 11:48:02.253 10693 10708 I ExecuTorchOnDevice: coldwarm pair=6 replies identical=false
+11-15 11:48:02.292 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:48:03.174 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:48:04.084 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:48:05.127 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:48:06.256 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:48:06.257 10693 10713 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:48:08.172 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:48:08.172 10693 10713 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 903, num_prompt_tokens 255, max_context_len 4096
+11-15 11:48:08.173 10693 10713 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:48:49.906 10693 10713 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:48:49.907 10693 10713 I ExecuTorch: 	Prompt Tokens: 255    Generated Tokens: 578
+11-15 11:48:49.907 10693 10713 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:48:49.907 10693 10713 I ExecuTorch: 	Total inference time:		43.649000 (seconds)		 Rate: 	13.241999 (tokens/second)
+11-15 11:48:49.907 10693 10713 I ExecuTorch: 		Prompt evaluation:	1.915000 (seconds)		 Rate: 	133.159269 (tokens/second)
+11-15 11:48:49.907 10693 10713 I ExecuTorch: 		Generated 578 tokens:	41.734000 (seconds)		 Rate: 	13.849619 (tokens/second)
+11-15 11:48:49.907 10693 10713 I ExecuTorch: 	Time to first generated token:	1.915000 (seconds)
+11-15 11:48:49.907 10693 10713 I ExecuTorch: 	Sampling time over 833 tokens:	0.184000 (seconds)
+11-15 11:48:49.924 10693 10708 I ExecuTorchOnDevice: coldwarm pair=7 turn one: generated=579 reason=END_OF_TURN held=1474 fragments=579 tail=[" you", " need", " further", " details", "!", "<|im_end|>"]
+11-15 11:49:05.179 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:49:06.063 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:49:06.970 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:49:07.985 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:49:09.020 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:49:10.107 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:49:11.214 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:49:12.271 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:49:13.502 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:49:13.502 10693 10714 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:49:15.610 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:49:15.611 10693 10714 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 1501, num_prompt_tokens 257, max_context_len 4096
+11-15 11:49:15.611 10693 10714 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:49:16.493 10693 10714 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:49:16.494 10693 10714 I ExecuTorch: 	Prompt Tokens: 257    Generated Tokens: 11
+11-15 11:49:16.494 10693 10714 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:49:16.494 10693 10714 I ExecuTorch: 	Total inference time:		2.991000 (seconds)		 Rate: 	3.677700 (tokens/second)
+11-15 11:49:16.494 10693 10714 I ExecuTorch: 		Prompt evaluation:	2.109000 (seconds)		 Rate: 	121.858701 (tokens/second)
+11-15 11:49:16.494 10693 10714 I ExecuTorch: 		Generated 11 tokens:	0.882000 (seconds)		 Rate: 	12.471655 (tokens/second)
+11-15 11:49:16.494 10693 10714 I ExecuTorch: 	Time to first generated token:	2.109000 (seconds)
+11-15 11:49:16.494 10693 10714 I ExecuTorch: 	Sampling time over 268 tokens:	0.003000 (seconds)
+11-15 11:49:16.550 10693 10708 I ExecuTorchOnDevice: coldwarm pair=7 arm=cold fed=1443 cached=0 prefill=10480ms ttft=10480ms cpu=43.8C screen=true
+11-15 11:49:16.608 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:49:17.568 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:49:18.558 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:49:19.676 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:49:20.818 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:49:20.819 10693 10713 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:49:22.712 10693 10713 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:49:22.713 10693 10713 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 903, num_prompt_tokens 255, max_context_len 4096
+11-15 11:49:22.713 10693 10713 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:50:03.980 10693 10713 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:50:03.980 10693 10713 I ExecuTorch: 	Prompt Tokens: 255    Generated Tokens: 578
+11-15 11:50:03.980 10693 10713 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:50:03.980 10693 10713 I ExecuTorch: 	Total inference time:		43.161000 (seconds)		 Rate: 	13.391719 (tokens/second)
+11-15 11:50:03.980 10693 10713 I ExecuTorch: 		Prompt evaluation:	1.894000 (seconds)		 Rate: 	134.635692 (tokens/second)
+11-15 11:50:03.980 10693 10713 I ExecuTorch: 		Generated 578 tokens:	41.267000 (seconds)		 Rate: 	14.006349 (tokens/second)
+11-15 11:50:03.980 10693 10713 I ExecuTorch: 	Time to first generated token:	1.894000 (seconds)
+11-15 11:50:03.980 10693 10713 I ExecuTorch: 	Sampling time over 833 tokens:	0.199000 (seconds)
+11-15 11:50:03.994 10693 10708 I ExecuTorchOnDevice: coldwarm pair=7 record: extends, record 7498 of 7597 chars sameTurnOne=true
+11-15 11:50:19.195 10693 10714 I ExecuTorch: RSS after loading model: 1895.859375 MiB (0 if unsupported)
+11-15 11:50:19.458 10693 10714 I ExecuTorch: Prefill token result numel(): 151936
+11-15 11:50:19.458 10693 10714 I ExecuTorch: Max new tokens resolved: 4096, given pos_ 1501, num_prompt_tokens 20, max_context_len 4096
+11-15 11:50:19.459 10693 10714 I ExecuTorch: RSS after prompt prefill: 1895.859375 MiB (0 if unsupported)
+11-15 11:50:22.670 10693 10714 I ExecuTorch: RSS after finishing text generation: 1895.859375 MiB (0 if unsupported)
+11-15 11:50:22.671 10693 10714 I ExecuTorch: 	Prompt Tokens: 20    Generated Tokens: 47
+11-15 11:50:22.671 10693 10714 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:50:22.671 10693 10714 I ExecuTorch: 	Total inference time:		3.474000 (seconds)		 Rate: 	13.529073 (tokens/second)
+11-15 11:50:22.671 10693 10714 I ExecuTorch: 		Prompt evaluation:	0.262000 (seconds)		 Rate: 	76.335878 (tokens/second)
+11-15 11:50:22.671 10693 10714 I ExecuTorch: 		Generated 47 tokens:	3.212000 (seconds)		 Rate: 	14.632628 (tokens/second)
+11-15 11:50:22.671 10693 10714 I ExecuTorch: 	Time to first generated token:	0.262000 (seconds)
+11-15 11:50:22.671 10693 10714 I ExecuTorch: 	Sampling time over 67 tokens:	0.209000 (seconds)
+11-15 11:50:22.733 10693 10708 I ExecuTorchOnDevice: coldwarm pair=7 arm=warm fed=20 cached=1474 prefill=262ms ttft=264ms cpu=44.6C screen=true
+11-15 11:50:22.733 10693 10708 I ExecuTorchOnDevice: coldwarm pair=7 replies identical=false
+11-15 11:50:22.733 10693 10708 I ExecuTorchOnDevice: coldwarm done: /storage/emulated/0/Android/data/io.github.alpharomercoma.openweights.core.engine.test/files/eval-results/Qwen3-1.7B-8da4w-gptq-4k.coldwarm.jsonl

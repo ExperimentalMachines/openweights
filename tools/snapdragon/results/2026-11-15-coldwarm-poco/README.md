@@ -126,8 +126,8 @@ is not counted). Alternating order, cooling gate, greedy (this engine takes the 
 - Every reply was the one word "Paris", so "identical" is scoped to that question.
 - On the POCO the cooling gate was capped at 60 s (`run_restore.sh`, `COOL_LIMIT_S=60`) after
   three hours of runs, so five timed turns of the first three pairs started at 45.7 to 47.3 C.
-  The restored arm's 238 ms matches the deck's 235 ms (2026-08-31), which until now had no cold
-  reading of the same prompt beside it.
+  The restored arm's 238 ms (QAD-Q4_0) sits beside the 235 ms measured on 3 Sep with Q4_K_M
+  (`docs/research/first-turn-latency.md`), which had no matched cold reading.
 - Both arms exclude setup (load, warm, the conversation); neither is a cold app launch.
 
 Files: `LFM2.5-1.2B-Instruct-QAD-Q4_0.restore.*` (POCO, from `run_restore.sh`); `ftl-<device>/`

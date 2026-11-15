@@ -81,7 +81,12 @@ android {
     }
 
     packaging {
-        jniLibs.useLegacyPackaging = false
+        // `-Pow.testJniOnDisk=true` extracts the libraries at install, for the one device
+        // test that needs it: the Hexagon DSP loads its skeleton by file path (see
+        // app/build.gradle.kts), so a QNN export cannot open from an instrumentation APK that
+        // keeps them inside.
+        jniLibs.useLegacyPackaging =
+            providers.gradleProperty("ow.testJniOnDisk").orNull == "true"
         // Khronos's ICD loader is a link target, not a runtime one. Qualcomm lists
         // libOpenCL.so in /vendor/etc/public.libraries.txt, so the app resolves the
         // driver already on the phone. Shipping ours would shadow it, and ours reads

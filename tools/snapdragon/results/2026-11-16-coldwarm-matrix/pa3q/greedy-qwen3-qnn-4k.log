@@ -1,0 +1,587 @@
+11-15 11:37:41.787   541   559 I ExecuTorch: Reading file /sys/devices/soc0/image_version
+11-15 11:37:41.787   541   559 I ExecuTorch: Failed to open midr file /sys/devices/soc0/image_version
+11-15 11:37:41.787   541   559 I ExecuTorch: Reading file /sys/devices/system/cpu/cpu0/regs/identification/midr_el1
+11-15 11:37:41.788   541   559 I ExecuTorch: Reading file /sys/devices/system/cpu/cpu1/regs/identification/midr_el1
+11-15 11:37:41.788   541   559 I ExecuTorch: Reading file /sys/devices/system/cpu/cpu2/regs/identification/midr_el1
+11-15 11:37:41.788   541   559 I ExecuTorch: Reading file /sys/devices/system/cpu/cpu3/regs/identification/midr_el1
+11-15 11:37:41.788   541   559 I ExecuTorch: Reading file /sys/devices/system/cpu/cpu4/regs/identification/midr_el1
+11-15 11:37:41.788   541   559 I ExecuTorch: Reading file /sys/devices/system/cpu/cpu5/regs/identification/midr_el1
+11-15 11:37:41.788   541   559 I ExecuTorch: Reading file /sys/devices/system/cpu/cpu6/regs/identification/midr_el1
+11-15 11:37:41.789   541   559 I ExecuTorch: Reading file /sys/devices/system/cpu/cpu7/regs/identification/midr_el1
+11-15 11:37:41.789   541   559 I ExecuTorch: Resetting threadpool to 4 threads.
+11-15 11:37:41.805   541   559 I ExecuTorch: Resetting threadpool to 4 threads.
+11-15 11:37:41.808   541   559 I ExecuTorch: Reading file /sys/devices/soc0/image_version
+11-15 11:37:41.808   541   559 I ExecuTorch: Failed to open midr file /sys/devices/soc0/image_version
+11-15 11:37:41.808   541   559 I ExecuTorch: Resetting threadpool to 7 threads
+11-15 11:37:41.808   541   559 I ExecuTorch: Resetting threadpool to 7 threads.
+11-15 11:37:41.808   541   559 I ExecuTorch: creating module: model_path=/data/local/tmp/openweights/Qwen3-1.7B-qnn-hybrid-4k.pte
+11-15 11:37:41.808   541   559 I ExecuTorch: creating runner: tokenizer_path=/data/local/tmp/openweights/Qwen3-1.7B-qnn-hybrid-4k.tokenizer.json
+11-15 11:37:41.808   541   559 I ExecuTorch: eval mode=1
+11-15 11:37:42.444   541   559 I ExecuTorch: Loaded json tokenizer
+11-15 11:37:44.405   541   559 I ExecuTorch: Reading metadata from model
+11-15 11:37:44.413   541   559 I ExecuTorch: creating io_memory
+11-15 11:37:44.528   541   559 I ExecuTorch: Prompt Processor: total 903 prompt tokens (AR-128 * 8 iters)
+11-15 11:37:45.136   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:38:04.293   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:38:04.293   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:38:04.294   541   559 I ExecuTorch: 	Prompt Tokens: 903    Generated Tokens: 422
+11-15 11:38:04.294   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:38:04.294   541   559 I ExecuTorch: 	Total inference time:		19.769000 (seconds)		 Rate: 	21.346553 (tokens/second)
+11-15 11:38:04.294   541   559 I ExecuTorch: 		Prompt evaluation:	0.611000 (seconds)		 Rate: 	1477.905074 (tokens/second)
+11-15 11:38:04.294   541   559 I ExecuTorch: 		Generated 422 tokens:	19.158000 (seconds)		 Rate: 	22.027351 (tokens/second)
+11-15 11:38:04.294   541   559 I ExecuTorch: 	Time to first generated token:	0.611000 (seconds)
+11-15 11:38:04.294   541   559 I ExecuTorch: 	Sampling time over 1325 tokens:	0.188000 (seconds)
+11-15 11:38:04.294   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:38:04.301   541   554 I ExecuTorchOnDevice: coldwarm pair=0 turn one: generated=423 reason=END_OF_TURN held=1325 fragments=423 tail=[" or", " address", " any", " specific", " concerns", "!"]
+11-15 11:38:04.301   541   554 I ExecuTorchOnDevice: coldwarm pair=0 record: breaks at 0 of record 0, render 6637: record "" render "<|im_start|>user\nHere is a description of a system I am buil" sameTurnOne=true
+11-15 11:38:44.530   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:38:45.372   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:38:45.702   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:38:45.702   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:38:45.702   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:38:45.702   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:38:45.702   541   559 I ExecuTorch: 	Total inference time:		1.176000 (seconds)		 Rate: 	5.952381 (tokens/second)
+11-15 11:38:45.702   541   559 I ExecuTorch: 		Prompt evaluation:	0.845000 (seconds)		 Rate: 	1592.899408 (tokens/second)
+11-15 11:38:45.702   541   559 I ExecuTorch: 		Generated 7 tokens:	0.331000 (seconds)		 Rate: 	21.148036 (tokens/second)
+11-15 11:38:45.702   541   559 I ExecuTorch: 	Time to first generated token:	0.845000 (seconds)
+11-15 11:38:45.702   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	0.191000 (seconds)
+11-15 11:38:45.702   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:38:45.720   541   554 I ExecuTorchOnDevice: coldwarm pair=0 arm=warm fed=1346 cached=0 prefill=845ms ttft=846ms cpu=44.6C screen=true
+11-15 11:38:45.739   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:38:46.570   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:38:46.900   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:38:46.900   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:38:46.900   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:38:46.900   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:38:46.900   541   559 I ExecuTorch: 	Total inference time:		1.166000 (seconds)		 Rate: 	6.003431 (tokens/second)
+11-15 11:38:46.900   541   559 I ExecuTorch: 		Prompt evaluation:	0.836000 (seconds)		 Rate: 	1610.047847 (tokens/second)
+11-15 11:38:46.900   541   559 I ExecuTorch: 		Generated 7 tokens:	0.330000 (seconds)		 Rate: 	21.212121 (tokens/second)
+11-15 11:38:46.900   541   559 I ExecuTorch: 	Time to first generated token:	0.836000 (seconds)
+11-15 11:38:46.900   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	0.195000 (seconds)
+11-15 11:38:46.900   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:38:46.918   541   554 I ExecuTorchOnDevice: coldwarm pair=0 arm=cold fed=1346 cached=0 prefill=836ms ttft=836ms cpu=44.6C screen=true
+11-15 11:38:46.918   541   554 I ExecuTorchOnDevice: coldwarm pair=0 replies identical=true
+11-15 11:38:46.923   541   559 I ExecuTorch: Prompt Processor: total 903 prompt tokens (AR-128 * 8 iters)
+11-15 11:38:47.528   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:39:09.817   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:39:09.818   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:39:09.818   541   559 I ExecuTorch: 	Prompt Tokens: 903    Generated Tokens: 422
+11-15 11:39:09.818   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:39:09.818   541   559 I ExecuTorch: 	Total inference time:		22.899000 (seconds)		 Rate: 	18.428752 (tokens/second)
+11-15 11:39:09.818   541   559 I ExecuTorch: 		Prompt evaluation:	0.609000 (seconds)		 Rate: 	1482.758621 (tokens/second)
+11-15 11:39:09.818   541   559 I ExecuTorch: 		Generated 422 tokens:	22.290000 (seconds)		 Rate: 	18.932257 (tokens/second)
+11-15 11:39:09.818   541   559 I ExecuTorch: 	Time to first generated token:	0.609000 (seconds)
+11-15 11:39:09.818   541   559 I ExecuTorch: 	Sampling time over 1325 tokens:	0.474000 (seconds)
+11-15 11:39:09.818   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:39:09.828   541   554 I ExecuTorchOnDevice: coldwarm pair=1 turn one: generated=423 reason=END_OF_TURN held=1325 fragments=423 tail=[" or", " address", " any", " specific", " concerns", "!"]
+11-15 11:39:55.008   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:39:55.901   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:39:56.295   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:39:56.295   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:39:56.295   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:39:56.295   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:39:56.295   541   559 I ExecuTorch: 	Total inference time:		1.293000 (seconds)		 Rate: 	5.413766 (tokens/second)
+11-15 11:39:56.295   541   559 I ExecuTorch: 		Prompt evaluation:	0.898000 (seconds)		 Rate: 	1498.886414 (tokens/second)
+11-15 11:39:56.295   541   559 I ExecuTorch: 		Generated 7 tokens:	0.395000 (seconds)		 Rate: 	17.721519 (tokens/second)
+11-15 11:39:56.295   541   559 I ExecuTorch: 	Time to first generated token:	0.898000 (seconds)
+11-15 11:39:56.295   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	0.480000 (seconds)
+11-15 11:39:56.295   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:39:56.327   541   554 I ExecuTorchOnDevice: coldwarm pair=1 arm=cold fed=1346 cached=0 prefill=898ms ttft=898ms cpu=44.8C screen=true
+11-15 11:39:56.331   541   559 I ExecuTorch: Prompt Processor: total 903 prompt tokens (AR-128 * 8 iters)
+11-15 11:39:56.955   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:40:19.459   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:40:19.460   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:40:19.460   541   559 I ExecuTorch: 	Prompt Tokens: 903    Generated Tokens: 422
+11-15 11:40:19.460   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:40:19.460   541   559 I ExecuTorch: 	Total inference time:		23.132000 (seconds)		 Rate: 	18.243126 (tokens/second)
+11-15 11:40:19.460   541   559 I ExecuTorch: 		Prompt evaluation:	0.626000 (seconds)		 Rate: 	1442.492013 (tokens/second)
+11-15 11:40:19.460   541   559 I ExecuTorch: 		Generated 422 tokens:	22.506000 (seconds)		 Rate: 	18.750555 (tokens/second)
+11-15 11:40:19.460   541   559 I ExecuTorch: 	Time to first generated token:	0.626000 (seconds)
+11-15 11:40:19.460   541   559 I ExecuTorch: 	Sampling time over 1325 tokens:	0.759000 (seconds)
+11-15 11:40:19.460   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:40:19.462   541   554 I ExecuTorchOnDevice: coldwarm pair=1 record: breaks at 0 of record 0, render 6637: record "" render "<|im_start|>user\nHere is a description of a system I am buil" sameTurnOne=true
+11-15 11:41:19.774   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:41:20.636   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:41:21.027   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:41:21.027   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:41:21.027   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:41:21.027   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:41:21.027   541   559 I ExecuTorch: 	Total inference time:		1.256000 (seconds)		 Rate: 	5.573248 (tokens/second)
+11-15 11:41:21.027   541   559 I ExecuTorch: 		Prompt evaluation:	0.865000 (seconds)		 Rate: 	1556.069364 (tokens/second)
+11-15 11:41:21.027   541   559 I ExecuTorch: 		Generated 7 tokens:	0.391000 (seconds)		 Rate: 	17.902813 (tokens/second)
+11-15 11:41:21.027   541   559 I ExecuTorch: 	Time to first generated token:	0.865000 (seconds)
+11-15 11:41:21.027   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	0.764000 (seconds)
+11-15 11:41:21.027   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:41:21.067   541   554 I ExecuTorchOnDevice: coldwarm pair=1 arm=warm fed=1346 cached=0 prefill=865ms ttft=865ms cpu=45.1C screen=true
+11-15 11:41:21.067   541   554 I ExecuTorchOnDevice: coldwarm pair=1 replies identical=true
+11-15 11:41:21.073   541   559 I ExecuTorch: Prompt Processor: total 903 prompt tokens (AR-128 * 8 iters)
+11-15 11:41:21.710   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:41:43.907   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:41:43.908   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:41:43.908   541   559 I ExecuTorch: 	Prompt Tokens: 903    Generated Tokens: 422
+11-15 11:41:43.908   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:41:43.908   541   559 I ExecuTorch: 	Total inference time:		22.840000 (seconds)		 Rate: 	18.476357 (tokens/second)
+11-15 11:41:43.908   541   559 I ExecuTorch: 		Prompt evaluation:	0.641000 (seconds)		 Rate: 	1408.736349 (tokens/second)
+11-15 11:41:43.908   541   559 I ExecuTorch: 		Generated 422 tokens:	22.199000 (seconds)		 Rate: 	19.009865 (tokens/second)
+11-15 11:41:43.908   541   559 I ExecuTorch: 	Time to first generated token:	0.641000 (seconds)
+11-15 11:41:43.908   541   559 I ExecuTorch: 	Sampling time over 1325 tokens:	1.041000 (seconds)
+11-15 11:41:43.908   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:41:43.916   541   554 I ExecuTorchOnDevice: coldwarm pair=2 turn one: generated=423 reason=END_OF_TURN held=1325 fragments=423 tail=[" or", " address", " any", " specific", " concerns", "!"]
+11-15 11:41:43.917   541   554 I ExecuTorchOnDevice: coldwarm pair=2 record: breaks at 0 of record 0, render 6637: record "" render "<|im_start|>user\nHere is a description of a system I am buil" sameTurnOne=true
+11-15 11:42:29.085   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:42:29.951   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:42:30.307   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:42:30.307   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:42:30.307   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:42:30.307   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:42:30.307   541   559 I ExecuTorch: 	Total inference time:		1.225000 (seconds)		 Rate: 	5.714286 (tokens/second)
+11-15 11:42:30.307   541   559 I ExecuTorch: 		Prompt evaluation:	0.869000 (seconds)		 Rate: 	1548.906789 (tokens/second)
+11-15 11:42:30.307   541   559 I ExecuTorch: 		Generated 7 tokens:	0.356000 (seconds)		 Rate: 	19.662921 (tokens/second)
+11-15 11:42:30.307   541   559 I ExecuTorch: 	Time to first generated token:	0.869000 (seconds)
+11-15 11:42:30.307   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	1.044000 (seconds)
+11-15 11:42:30.307   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:42:30.345   541   554 I ExecuTorchOnDevice: coldwarm pair=2 arm=warm fed=1346 cached=0 prefill=869ms ttft=869ms cpu=44.6C screen=true
+11-15 11:42:30.357   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:42:31.214   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:42:31.582   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:42:31.582   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:42:31.582   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:42:31.582   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:42:31.582   541   559 I ExecuTorch: 	Total inference time:		1.228000 (seconds)		 Rate: 	5.700326 (tokens/second)
+11-15 11:42:31.582   541   559 I ExecuTorch: 		Prompt evaluation:	0.860000 (seconds)		 Rate: 	1565.116279 (tokens/second)
+11-15 11:42:31.582   541   559 I ExecuTorch: 		Generated 7 tokens:	0.368000 (seconds)		 Rate: 	19.021739 (tokens/second)
+11-15 11:42:31.582   541   559 I ExecuTorch: 	Time to first generated token:	0.860000 (seconds)
+11-15 11:42:31.582   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	1.047000 (seconds)
+11-15 11:42:31.582   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:42:31.605   541   554 I ExecuTorchOnDevice: coldwarm pair=2 arm=cold fed=1346 cached=0 prefill=860ms ttft=860ms cpu=44.6C screen=true
+11-15 11:42:31.605   541   554 I ExecuTorchOnDevice: coldwarm pair=2 replies identical=true
+11-15 11:42:31.613   541   559 I ExecuTorch: Prompt Processor: total 903 prompt tokens (AR-128 * 8 iters)
+11-15 11:42:32.270   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:42:55.073   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:42:55.073   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:42:55.073   541   559 I ExecuTorch: 	Prompt Tokens: 903    Generated Tokens: 422
+11-15 11:42:55.073   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:42:55.073   541   559 I ExecuTorch: 	Total inference time:		23.466000 (seconds)		 Rate: 	17.983465 (tokens/second)
+11-15 11:42:55.073   541   559 I ExecuTorch: 		Prompt evaluation:	0.662000 (seconds)		 Rate: 	1364.048338 (tokens/second)
+11-15 11:42:55.073   541   559 I ExecuTorch: 		Generated 422 tokens:	22.804000 (seconds)		 Rate: 	18.505525 (tokens/second)
+11-15 11:42:55.073   541   559 I ExecuTorch: 	Time to first generated token:	0.662000 (seconds)
+11-15 11:42:55.073   541   559 I ExecuTorch: 	Sampling time over 1325 tokens:	1.325000 (seconds)
+11-15 11:42:55.073   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:42:55.079   541   554 I ExecuTorchOnDevice: coldwarm pair=3 turn one: generated=423 reason=END_OF_TURN held=1325 fragments=423 tail=[" or", " address", " any", " specific", " concerns", "!"]
+11-15 11:43:45.388   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:43:46.255   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:43:46.589   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:43:46.590   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:43:46.590   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:43:46.590   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:43:46.590   541   559 I ExecuTorch: 	Total inference time:		1.205000 (seconds)		 Rate: 	5.809129 (tokens/second)
+11-15 11:43:46.590   541   559 I ExecuTorch: 		Prompt evaluation:	0.870000 (seconds)		 Rate: 	1547.126437 (tokens/second)
+11-15 11:43:46.590   541   559 I ExecuTorch: 		Generated 7 tokens:	0.335000 (seconds)		 Rate: 	20.895522 (tokens/second)
+11-15 11:43:46.590   541   559 I ExecuTorch: 	Time to first generated token:	0.870000 (seconds)
+11-15 11:43:46.590   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	1.327000 (seconds)
+11-15 11:43:46.590   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:43:46.601   541   554 I ExecuTorchOnDevice: coldwarm pair=3 arm=cold fed=1346 cached=0 prefill=870ms ttft=870ms cpu=44.7C screen=true
+11-15 11:43:46.605   541   559 I ExecuTorch: Prompt Processor: total 903 prompt tokens (AR-128 * 8 iters)
+11-15 11:43:47.230   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:44:09.582   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:44:09.582   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:44:09.582   541   559 I ExecuTorch: 	Prompt Tokens: 903    Generated Tokens: 422
+11-15 11:44:09.582   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:44:09.582   541   559 I ExecuTorch: 	Total inference time:		22.980000 (seconds)		 Rate: 	18.363795 (tokens/second)
+11-15 11:44:09.582   541   559 I ExecuTorch: 		Prompt evaluation:	0.628000 (seconds)		 Rate: 	1437.898089 (tokens/second)
+11-15 11:44:09.582   541   559 I ExecuTorch: 		Generated 422 tokens:	22.352000 (seconds)		 Rate: 	18.879742 (tokens/second)
+11-15 11:44:09.582   541   559 I ExecuTorch: 	Time to first generated token:	0.628000 (seconds)
+11-15 11:44:09.582   541   559 I ExecuTorch: 	Sampling time over 1325 tokens:	1.593000 (seconds)
+11-15 11:44:09.582   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:44:09.585   541   554 I ExecuTorchOnDevice: coldwarm pair=3 record: breaks at 0 of record 0, render 6637: record "" render "<|im_start|>user\nHere is a description of a system I am buil" sameTurnOne=true
+11-15 11:44:49.793   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:44:50.674   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:44:51.028   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:44:51.028   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:44:51.028   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:44:51.028   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:44:51.028   541   559 I ExecuTorch: 	Total inference time:		1.238000 (seconds)		 Rate: 	5.654281 (tokens/second)
+11-15 11:44:51.028   541   559 I ExecuTorch: 		Prompt evaluation:	0.884000 (seconds)		 Rate: 	1522.624434 (tokens/second)
+11-15 11:44:51.028   541   559 I ExecuTorch: 		Generated 7 tokens:	0.354000 (seconds)		 Rate: 	19.774011 (tokens/second)
+11-15 11:44:51.028   541   559 I ExecuTorch: 	Time to first generated token:	0.884000 (seconds)
+11-15 11:44:51.028   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	1.596000 (seconds)
+11-15 11:44:51.028   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:44:51.044   541   554 I ExecuTorchOnDevice: coldwarm pair=3 arm=warm fed=1346 cached=0 prefill=884ms ttft=884ms cpu=44.9C screen=true
+11-15 11:44:51.044   541   554 I ExecuTorchOnDevice: coldwarm pair=3 replies identical=true
+11-15 11:44:51.048   541   559 I ExecuTorch: Prompt Processor: total 903 prompt tokens (AR-128 * 8 iters)
+11-15 11:44:51.694   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:45:14.123   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:45:14.123   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:45:14.123   541   559 I ExecuTorch: 	Prompt Tokens: 903    Generated Tokens: 422
+11-15 11:45:14.123   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:45:14.123   541   559 I ExecuTorch: 	Total inference time:		23.078000 (seconds)		 Rate: 	18.285813 (tokens/second)
+11-15 11:45:14.123   541   559 I ExecuTorch: 		Prompt evaluation:	0.649000 (seconds)		 Rate: 	1391.371341 (tokens/second)
+11-15 11:45:14.123   541   559 I ExecuTorch: 		Generated 422 tokens:	22.429000 (seconds)		 Rate: 	18.814927 (tokens/second)
+11-15 11:45:14.123   541   559 I ExecuTorch: 	Time to first generated token:	0.649000 (seconds)
+11-15 11:45:14.123   541   559 I ExecuTorch: 	Sampling time over 1325 tokens:	1.877000 (seconds)
+11-15 11:45:14.123   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:45:14.125   541   554 I ExecuTorchOnDevice: coldwarm pair=4 turn one: generated=423 reason=END_OF_TURN held=1325 fragments=423 tail=[" or", " address", " any", " specific", " concerns", "!"]
+11-15 11:45:14.125   541   554 I ExecuTorchOnDevice: coldwarm pair=4 record: breaks at 0 of record 0, render 6637: record "" render "<|im_start|>user\nHere is a description of a system I am buil" sameTurnOne=true
+11-15 11:45:59.361   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:46:00.271   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:46:00.641   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:46:00.641   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:46:00.641   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:46:00.641   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:46:00.641   541   559 I ExecuTorch: 	Total inference time:		1.287000 (seconds)		 Rate: 	5.439005 (tokens/second)
+11-15 11:46:00.641   541   559 I ExecuTorch: 		Prompt evaluation:	0.916000 (seconds)		 Rate: 	1469.432314 (tokens/second)
+11-15 11:46:00.641   541   559 I ExecuTorch: 		Generated 7 tokens:	0.371000 (seconds)		 Rate: 	18.867925 (tokens/second)
+11-15 11:46:00.641   541   559 I ExecuTorch: 	Time to first generated token:	0.916000 (seconds)
+11-15 11:46:00.641   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	1.880000 (seconds)
+11-15 11:46:00.641   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:46:00.663   541   554 I ExecuTorchOnDevice: coldwarm pair=4 arm=warm fed=1346 cached=0 prefill=916ms ttft=916ms cpu=44.5C screen=true
+11-15 11:46:00.675   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:46:01.533   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:46:01.867   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:46:01.867   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:46:01.867   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:46:01.867   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:46:01.867   541   559 I ExecuTorch: 	Total inference time:		1.195000 (seconds)		 Rate: 	5.857741 (tokens/second)
+11-15 11:46:01.867   541   559 I ExecuTorch: 		Prompt evaluation:	0.861000 (seconds)		 Rate: 	1563.298490 (tokens/second)
+11-15 11:46:01.867   541   559 I ExecuTorch: 		Generated 7 tokens:	0.334000 (seconds)		 Rate: 	20.958084 (tokens/second)
+11-15 11:46:01.867   541   559 I ExecuTorch: 	Time to first generated token:	0.861000 (seconds)
+11-15 11:46:01.867   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	1.882000 (seconds)
+11-15 11:46:01.867   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:46:01.885   541   554 I ExecuTorchOnDevice: coldwarm pair=4 arm=cold fed=1346 cached=0 prefill=861ms ttft=861ms cpu=44.5C screen=true
+11-15 11:46:01.885   541   554 I ExecuTorchOnDevice: coldwarm pair=4 replies identical=true
+11-15 11:46:01.891   541   559 I ExecuTorch: Prompt Processor: total 903 prompt tokens (AR-128 * 8 iters)
+11-15 11:46:02.542   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:46:24.753   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:46:24.753   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:46:24.753   541   559 I ExecuTorch: 	Prompt Tokens: 903    Generated Tokens: 422
+11-15 11:46:24.753   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:46:24.753   541   559 I ExecuTorch: 	Total inference time:		22.866000 (seconds)		 Rate: 	18.455349 (tokens/second)
+11-15 11:46:24.753   541   559 I ExecuTorch: 		Prompt evaluation:	0.654000 (seconds)		 Rate: 	1380.733945 (tokens/second)
+11-15 11:46:24.753   541   559 I ExecuTorch: 		Generated 422 tokens:	22.212000 (seconds)		 Rate: 	18.998739 (tokens/second)
+11-15 11:46:24.753   541   559 I ExecuTorch: 	Time to first generated token:	0.654000 (seconds)
+11-15 11:46:24.753   541   559 I ExecuTorch: 	Sampling time over 1325 tokens:	2.128000 (seconds)
+11-15 11:46:24.753   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:46:24.761   541   554 I ExecuTorchOnDevice: coldwarm pair=5 turn one: generated=423 reason=END_OF_TURN held=1325 fragments=423 tail=[" or", " address", " any", " specific", " concerns", "!"]
+11-15 11:47:10.059   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:47:10.958   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:47:11.350   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:47:11.350   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:47:11.350   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:47:11.350   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:47:11.350   541   559 I ExecuTorch: 	Total inference time:		1.294000 (seconds)		 Rate: 	5.409583 (tokens/second)
+11-15 11:47:11.350   541   559 I ExecuTorch: 		Prompt evaluation:	0.901000 (seconds)		 Rate: 	1493.895671 (tokens/second)
+11-15 11:47:11.350   541   559 I ExecuTorch: 		Generated 7 tokens:	0.393000 (seconds)		 Rate: 	17.811705 (tokens/second)
+11-15 11:47:11.350   541   559 I ExecuTorch: 	Time to first generated token:	0.901000 (seconds)
+11-15 11:47:11.350   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	2.130000 (seconds)
+11-15 11:47:11.350   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:47:11.368   541   554 I ExecuTorchOnDevice: coldwarm pair=5 arm=cold fed=1346 cached=0 prefill=901ms ttft=901ms cpu=44.4C screen=true
+11-15 11:47:11.372   541   559 I ExecuTorch: Prompt Processor: total 903 prompt tokens (AR-128 * 8 iters)
+11-15 11:47:11.994   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:47:34.633   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:47:34.634   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:47:34.634   541   559 I ExecuTorch: 	Prompt Tokens: 903    Generated Tokens: 422
+11-15 11:47:34.634   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:47:34.634   541   559 I ExecuTorch: 	Total inference time:		23.265000 (seconds)		 Rate: 	18.138835 (tokens/second)
+11-15 11:47:34.634   541   559 I ExecuTorch: 		Prompt evaluation:	0.625000 (seconds)		 Rate: 	1444.800000 (tokens/second)
+11-15 11:47:34.634   541   559 I ExecuTorch: 		Generated 422 tokens:	22.640000 (seconds)		 Rate: 	18.639576 (tokens/second)
+11-15 11:47:34.634   541   559 I ExecuTorch: 	Time to first generated token:	0.625000 (seconds)
+11-15 11:47:34.634   541   559 I ExecuTorch: 	Sampling time over 1325 tokens:	2.396000 (seconds)
+11-15 11:47:34.634   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:47:34.644   541   554 I ExecuTorchOnDevice: coldwarm pair=5 record: breaks at 0 of record 0, render 6637: record "" render "<|im_start|>user\nHere is a description of a system I am buil" sameTurnOne=true
+11-15 11:48:19.854   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:48:20.747   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:48:21.143   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:48:21.143   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:48:21.143   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:48:21.143   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:48:21.143   541   559 I ExecuTorch: 	Total inference time:		1.292000 (seconds)		 Rate: 	5.417957 (tokens/second)
+11-15 11:48:21.143   541   559 I ExecuTorch: 		Prompt evaluation:	0.896000 (seconds)		 Rate: 	1502.232143 (tokens/second)
+11-15 11:48:21.143   541   559 I ExecuTorch: 		Generated 7 tokens:	0.396000 (seconds)		 Rate: 	17.676768 (tokens/second)
+11-15 11:48:21.143   541   559 I ExecuTorch: 	Time to first generated token:	0.896000 (seconds)
+11-15 11:48:21.143   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	2.402000 (seconds)
+11-15 11:48:21.143   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:48:21.171   541   554 I ExecuTorchOnDevice: coldwarm pair=5 arm=warm fed=1346 cached=0 prefill=896ms ttft=896ms cpu=44.6C screen=true
+11-15 11:48:21.171   541   554 I ExecuTorchOnDevice: coldwarm pair=5 replies identical=true
+11-15 11:48:21.176   541   559 I ExecuTorch: Prompt Processor: total 903 prompt tokens (AR-128 * 8 iters)
+11-15 11:48:21.808   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:48:44.427   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:48:44.427   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:48:44.428   541   559 I ExecuTorch: 	Prompt Tokens: 903    Generated Tokens: 422
+11-15 11:48:44.428   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:48:44.428   541   559 I ExecuTorch: 	Total inference time:		23.255000 (seconds)		 Rate: 	18.146635 (tokens/second)
+11-15 11:48:44.428   541   559 I ExecuTorch: 		Prompt evaluation:	0.636000 (seconds)		 Rate: 	1419.811321 (tokens/second)
+11-15 11:48:44.428   541   559 I ExecuTorch: 		Generated 422 tokens:	22.619000 (seconds)		 Rate: 	18.656881 (tokens/second)
+11-15 11:48:44.428   541   559 I ExecuTorch: 	Time to first generated token:	0.636000 (seconds)
+11-15 11:48:44.428   541   559 I ExecuTorch: 	Sampling time over 1325 tokens:	2.659000 (seconds)
+11-15 11:48:44.428   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:48:44.433   541   554 I ExecuTorchOnDevice: coldwarm pair=6 turn one: generated=423 reason=END_OF_TURN held=1325 fragments=423 tail=[" or", " address", " any", " specific", " concerns", "!"]
+11-15 11:48:44.434   541   554 I ExecuTorchOnDevice: coldwarm pair=6 record: breaks at 0 of record 0, render 6637: record "" render "<|im_start|>user\nHere is a description of a system I am buil" sameTurnOne=true
+11-15 11:49:39.777   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:49:40.655   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:49:41.015   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:49:41.015   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:49:41.015   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:49:41.015   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:49:41.015   541   559 I ExecuTorch: 	Total inference time:		1.241000 (seconds)		 Rate: 	5.640612 (tokens/second)
+11-15 11:49:41.015   541   559 I ExecuTorch: 		Prompt evaluation:	0.881000 (seconds)		 Rate: 	1527.809308 (tokens/second)
+11-15 11:49:41.015   541   559 I ExecuTorch: 		Generated 7 tokens:	0.360000 (seconds)		 Rate: 	19.444444 (tokens/second)
+11-15 11:49:41.015   541   559 I ExecuTorch: 	Time to first generated token:	0.881000 (seconds)
+11-15 11:49:41.015   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	2.664000 (seconds)
+11-15 11:49:41.015   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:49:41.048   541   554 I ExecuTorchOnDevice: coldwarm pair=6 arm=warm fed=1346 cached=0 prefill=881ms ttft=881ms cpu=44.3C screen=true
+11-15 11:49:41.060   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:49:41.950   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:49:42.296   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:49:42.296   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:49:42.296   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:49:42.296   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:49:42.296   541   559 I ExecuTorch: 	Total inference time:		1.239000 (seconds)		 Rate: 	5.649718 (tokens/second)
+11-15 11:49:42.296   541   559 I ExecuTorch: 		Prompt evaluation:	0.893000 (seconds)		 Rate: 	1507.278835 (tokens/second)
+11-15 11:49:42.296   541   559 I ExecuTorch: 		Generated 7 tokens:	0.346000 (seconds)		 Rate: 	20.231214 (tokens/second)
+11-15 11:49:42.296   541   559 I ExecuTorch: 	Time to first generated token:	0.893000 (seconds)
+11-15 11:49:42.296   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	2.665000 (seconds)
+11-15 11:49:42.296   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:49:42.307   541   554 I ExecuTorchOnDevice: coldwarm pair=6 arm=cold fed=1346 cached=0 prefill=893ms ttft=893ms cpu=44.3C screen=true
+11-15 11:49:42.307   541   554 I ExecuTorchOnDevice: coldwarm pair=6 replies identical=true
+11-15 11:49:42.310   541   559 I ExecuTorch: Prompt Processor: total 903 prompt tokens (AR-128 * 8 iters)
+11-15 11:49:42.938   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:50:05.162   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:50:05.162   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:50:05.162   541   559 I ExecuTorch: 	Prompt Tokens: 903    Generated Tokens: 422
+11-15 11:50:05.162   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:50:05.162   541   559 I ExecuTorch: 	Total inference time:		22.854000 (seconds)		 Rate: 	18.465039 (tokens/second)
+11-15 11:50:05.162   541   559 I ExecuTorch: 		Prompt evaluation:	0.629000 (seconds)		 Rate: 	1435.612083 (tokens/second)
+11-15 11:50:05.162   541   559 I ExecuTorch: 		Generated 422 tokens:	22.225000 (seconds)		 Rate: 	18.987627 (tokens/second)
+11-15 11:50:05.162   541   559 I ExecuTorch: 	Time to first generated token:	0.629000 (seconds)
+11-15 11:50:05.162   541   559 I ExecuTorch: 	Sampling time over 1325 tokens:	2.920000 (seconds)
+11-15 11:50:05.162   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:50:05.166   541   554 I ExecuTorchOnDevice: coldwarm pair=7 turn one: generated=423 reason=END_OF_TURN held=1325 fragments=423 tail=[" or", " address", " any", " specific", " concerns", "!"]
+11-15 11:51:05.444   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:51:06.315   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:51:06.711   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:51:06.711   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:51:06.711   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:51:06.711   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:51:06.711   541   559 I ExecuTorch: 	Total inference time:		1.271000 (seconds)		 Rate: 	5.507474 (tokens/second)
+11-15 11:51:06.711   541   559 I ExecuTorch: 		Prompt evaluation:	0.875000 (seconds)		 Rate: 	1538.285714 (tokens/second)
+11-15 11:51:06.711   541   559 I ExecuTorch: 		Generated 7 tokens:	0.396000 (seconds)		 Rate: 	17.676768 (tokens/second)
+11-15 11:51:06.711   541   559 I ExecuTorch: 	Time to first generated token:	0.875000 (seconds)
+11-15 11:51:06.711   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	2.925000 (seconds)
+11-15 11:51:06.711   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:51:06.743   541   554 I ExecuTorchOnDevice: coldwarm pair=7 arm=cold fed=1346 cached=0 prefill=875ms ttft=875ms cpu=45.0C screen=true
+11-15 11:51:06.746   541   559 I ExecuTorch: Prompt Processor: total 903 prompt tokens (AR-128 * 8 iters)
+11-15 11:51:07.388   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:51:29.826   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:51:29.826   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:51:29.826   541   559 I ExecuTorch: 	Prompt Tokens: 903    Generated Tokens: 422
+11-15 11:51:29.826   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:51:29.826   541   559 I ExecuTorch: 	Total inference time:		23.082000 (seconds)		 Rate: 	18.282644 (tokens/second)
+11-15 11:51:29.826   541   559 I ExecuTorch: 		Prompt evaluation:	0.644000 (seconds)		 Rate: 	1402.173913 (tokens/second)
+11-15 11:51:29.826   541   559 I ExecuTorch: 		Generated 422 tokens:	22.438000 (seconds)		 Rate: 	18.807380 (tokens/second)
+11-15 11:51:29.826   541   559 I ExecuTorch: 	Time to first generated token:	0.644000 (seconds)
+11-15 11:51:29.826   541   559 I ExecuTorch: 	Sampling time over 1325 tokens:	3.172000 (seconds)
+11-15 11:51:29.826   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:51:29.829   541   554 I ExecuTorchOnDevice: coldwarm pair=7 record: breaks at 0 of record 0, render 6637: record "" render "<|im_start|>user\nHere is a description of a system I am buil" sameTurnOne=true
+11-15 11:52:30.095   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:52:30.963   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:52:31.310   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:52:31.311   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:52:31.311   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:52:31.311   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:52:31.311   541   559 I ExecuTorch: 	Total inference time:		1.220000 (seconds)		 Rate: 	5.737705 (tokens/second)
+11-15 11:52:31.311   541   559 I ExecuTorch: 		Prompt evaluation:	0.872000 (seconds)		 Rate: 	1543.577982 (tokens/second)
+11-15 11:52:31.311   541   559 I ExecuTorch: 		Generated 7 tokens:	0.348000 (seconds)		 Rate: 	20.114943 (tokens/second)
+11-15 11:52:31.311   541   559 I ExecuTorch: 	Time to first generated token:	0.872000 (seconds)
+11-15 11:52:31.311   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	3.174000 (seconds)
+11-15 11:52:31.311   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:52:31.337   541   554 I ExecuTorchOnDevice: coldwarm pair=7 arm=warm fed=1346 cached=0 prefill=872ms ttft=872ms cpu=44.6C screen=true
+11-15 11:52:31.337   541   554 I ExecuTorchOnDevice: coldwarm pair=7 replies identical=true
+11-15 11:52:31.340   541   559 I ExecuTorch: Prompt Processor: total 903 prompt tokens (AR-128 * 8 iters)
+11-15 11:52:31.980   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:52:50.327   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:52:50.328   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:52:50.328   541   559 I ExecuTorch: 	Prompt Tokens: 903    Generated Tokens: 422
+11-15 11:52:50.328   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:52:50.328   541   559 I ExecuTorch: 	Total inference time:		18.989000 (seconds)		 Rate: 	22.223392 (tokens/second)
+11-15 11:52:50.328   541   559 I ExecuTorch: 		Prompt evaluation:	0.641000 (seconds)		 Rate: 	1408.736349 (tokens/second)
+11-15 11:52:50.328   541   559 I ExecuTorch: 		Generated 422 tokens:	18.348000 (seconds)		 Rate: 	22.999782 (tokens/second)
+11-15 11:52:50.328   541   559 I ExecuTorch: 	Time to first generated token:	0.641000 (seconds)
+11-15 11:52:50.328   541   559 I ExecuTorch: 	Sampling time over 1325 tokens:	3.344000 (seconds)
+11-15 11:52:50.328   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:52:50.331   541   554 I ExecuTorchOnDevice: coldwarm pair=8 turn one: generated=423 reason=END_OF_TURN held=1325 fragments=423 tail=[" or", " address", " any", " specific", " concerns", "!"]
+11-15 11:52:50.331   541   554 I ExecuTorchOnDevice: coldwarm pair=8 record: breaks at 0 of record 0, render 6637: record "" render "<|im_start|>user\nHere is a description of a system I am buil" sameTurnOne=true
+11-15 11:53:40.569   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:53:41.378   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:53:41.694   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:53:41.695   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:53:41.695   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:53:41.695   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:53:41.695   541   559 I ExecuTorch: 	Total inference time:		1.130000 (seconds)		 Rate: 	6.194690 (tokens/second)
+11-15 11:53:41.695   541   559 I ExecuTorch: 		Prompt evaluation:	0.812000 (seconds)		 Rate: 	1657.635468 (tokens/second)
+11-15 11:53:41.695   541   559 I ExecuTorch: 		Generated 7 tokens:	0.318000 (seconds)		 Rate: 	22.012579 (tokens/second)
+11-15 11:53:41.695   541   559 I ExecuTorch: 	Time to first generated token:	0.812000 (seconds)
+11-15 11:53:41.695   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	3.344000 (seconds)
+11-15 11:53:41.695   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:53:41.709   541   554 I ExecuTorchOnDevice: coldwarm pair=8 arm=warm fed=1346 cached=0 prefill=812ms ttft=813ms cpu=44.6C screen=true
+11-15 11:53:41.723   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:53:42.526   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:53:42.847   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:53:42.847   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:53:42.847   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:53:42.847   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:53:42.847   541   559 I ExecuTorch: 	Total inference time:		1.127000 (seconds)		 Rate: 	6.211180 (tokens/second)
+11-15 11:53:42.847   541   559 I ExecuTorch: 		Prompt evaluation:	0.805000 (seconds)		 Rate: 	1672.049689 (tokens/second)
+11-15 11:53:42.847   541   559 I ExecuTorch: 		Generated 7 tokens:	0.322000 (seconds)		 Rate: 	21.739130 (tokens/second)
+11-15 11:53:42.847   541   559 I ExecuTorch: 	Time to first generated token:	0.805000 (seconds)
+11-15 11:53:42.847   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	3.349000 (seconds)
+11-15 11:53:42.847   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:53:42.860   541   554 I ExecuTorchOnDevice: coldwarm pair=8 arm=cold fed=1346 cached=0 prefill=805ms ttft=805ms cpu=44.6C screen=true
+11-15 11:53:42.860   541   554 I ExecuTorchOnDevice: coldwarm pair=8 replies identical=true
+11-15 11:53:42.864   541   559 I ExecuTorch: Prompt Processor: total 903 prompt tokens (AR-128 * 8 iters)
+11-15 11:53:43.453   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:54:03.029   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:54:03.029   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:54:03.029   541   559 I ExecuTorch: 	Prompt Tokens: 903    Generated Tokens: 422
+11-15 11:54:03.029   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:54:03.029   541   559 I ExecuTorch: 	Total inference time:		20.168000 (seconds)		 Rate: 	20.924236 (tokens/second)
+11-15 11:54:03.029   541   559 I ExecuTorch: 		Prompt evaluation:	0.591000 (seconds)		 Rate: 	1527.918782 (tokens/second)
+11-15 11:54:03.029   541   559 I ExecuTorch: 		Generated 422 tokens:	19.577000 (seconds)		 Rate: 	21.555907 (tokens/second)
+11-15 11:54:03.029   541   559 I ExecuTorch: 	Time to first generated token:	0.591000 (seconds)
+11-15 11:54:03.029   541   559 I ExecuTorch: 	Sampling time over 1325 tokens:	3.532000 (seconds)
+11-15 11:54:03.029   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:54:03.036   541   554 I ExecuTorchOnDevice: coldwarm pair=9 turn one: generated=423 reason=END_OF_TURN held=1325 fragments=423 tail=[" or", " address", " any", " specific", " concerns", "!"]
+11-15 11:54:48.345   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:54:49.225   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:54:49.622   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:54:49.622   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:54:49.622   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:54:49.622   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:54:49.622   541   559 I ExecuTorch: 	Total inference time:		1.280000 (seconds)		 Rate: 	5.468750 (tokens/second)
+11-15 11:54:49.622   541   559 I ExecuTorch: 		Prompt evaluation:	0.883000 (seconds)		 Rate: 	1524.348811 (tokens/second)
+11-15 11:54:49.622   541   559 I ExecuTorch: 		Generated 7 tokens:	0.397000 (seconds)		 Rate: 	17.632242 (tokens/second)
+11-15 11:54:49.622   541   559 I ExecuTorch: 	Time to first generated token:	0.883000 (seconds)
+11-15 11:54:49.622   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	3.535000 (seconds)
+11-15 11:54:49.622   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:54:49.638   541   554 I ExecuTorchOnDevice: coldwarm pair=9 arm=cold fed=1346 cached=0 prefill=883ms ttft=884ms cpu=44.7C screen=true
+11-15 11:54:49.641   541   559 I ExecuTorch: Prompt Processor: total 903 prompt tokens (AR-128 * 8 iters)
+11-15 11:54:50.288   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:55:12.581   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:55:12.581   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:55:12.581   541   559 I ExecuTorch: 	Prompt Tokens: 903    Generated Tokens: 422
+11-15 11:55:12.581   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:55:12.581   541   559 I ExecuTorch: 	Total inference time:		22.942000 (seconds)		 Rate: 	18.394211 (tokens/second)
+11-15 11:55:12.581   541   559 I ExecuTorch: 		Prompt evaluation:	0.648000 (seconds)		 Rate: 	1393.518519 (tokens/second)
+11-15 11:55:12.581   541   559 I ExecuTorch: 		Generated 422 tokens:	22.294000 (seconds)		 Rate: 	18.928860 (tokens/second)
+11-15 11:55:12.581   541   559 I ExecuTorch: 	Time to first generated token:	0.648000 (seconds)
+11-15 11:55:12.581   541   559 I ExecuTorch: 	Sampling time over 1325 tokens:	3.792000 (seconds)
+11-15 11:55:12.581   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:55:12.586   541   554 I ExecuTorchOnDevice: coldwarm pair=9 record: breaks at 0 of record 0, render 6637: record "" render "<|im_start|>user\nHere is a description of a system I am buil" sameTurnOne=true
+11-15 11:55:57.864   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:55:58.725   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:55:59.071   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:55:59.071   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:55:59.072   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:55:59.072   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:55:59.072   541   559 I ExecuTorch: 	Total inference time:		1.210000 (seconds)		 Rate: 	5.785124 (tokens/second)
+11-15 11:55:59.072   541   559 I ExecuTorch: 		Prompt evaluation:	0.864000 (seconds)		 Rate: 	1557.870370 (tokens/second)
+11-15 11:55:59.072   541   559 I ExecuTorch: 		Generated 7 tokens:	0.346000 (seconds)		 Rate: 	20.231214 (tokens/second)
+11-15 11:55:59.072   541   559 I ExecuTorch: 	Time to first generated token:	0.864000 (seconds)
+11-15 11:55:59.072   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	3.794000 (seconds)
+11-15 11:55:59.072   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:55:59.096   541   554 I ExecuTorchOnDevice: coldwarm pair=9 arm=warm fed=1346 cached=0 prefill=864ms ttft=864ms cpu=44.5C screen=true
+11-15 11:55:59.096   541   554 I ExecuTorchOnDevice: coldwarm pair=9 replies identical=true
+11-15 11:55:59.101   541   559 I ExecuTorch: Prompt Processor: total 903 prompt tokens (AR-128 * 8 iters)
+11-15 11:55:59.734   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:56:22.242   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:56:22.242   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:56:22.242   541   559 I ExecuTorch: 	Prompt Tokens: 903    Generated Tokens: 422
+11-15 11:56:22.242   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:56:22.242   541   559 I ExecuTorch: 	Total inference time:		23.145000 (seconds)		 Rate: 	18.232880 (tokens/second)
+11-15 11:56:22.242   541   559 I ExecuTorch: 		Prompt evaluation:	0.636000 (seconds)		 Rate: 	1419.811321 (tokens/second)
+11-15 11:56:22.242   541   559 I ExecuTorch: 		Generated 422 tokens:	22.509000 (seconds)		 Rate: 	18.748056 (tokens/second)
+11-15 11:56:22.242   541   559 I ExecuTorch: 	Time to first generated token:	0.636000 (seconds)
+11-15 11:56:22.242   541   559 I ExecuTorch: 	Sampling time over 1325 tokens:	4.065000 (seconds)
+11-15 11:56:22.242   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:56:22.248   541   554 I ExecuTorchOnDevice: coldwarm pair=10 turn one: generated=423 reason=END_OF_TURN held=1325 fragments=423 tail=[" or", " address", " any", " specific", " concerns", "!"]
+11-15 11:56:22.249   541   554 I ExecuTorchOnDevice: coldwarm pair=10 record: breaks at 0 of record 0, render 6637: record "" render "<|im_start|>user\nHere is a description of a system I am buil" sameTurnOne=true
+11-15 11:57:07.534   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:57:08.374   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:57:08.730   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:57:08.731   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:57:08.731   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:57:08.731   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:57:08.731   541   559 I ExecuTorch: 	Total inference time:		1.200000 (seconds)		 Rate: 	5.833333 (tokens/second)
+11-15 11:57:08.731   541   559 I ExecuTorch: 		Prompt evaluation:	0.843000 (seconds)		 Rate: 	1596.678529 (tokens/second)
+11-15 11:57:08.731   541   559 I ExecuTorch: 		Generated 7 tokens:	0.357000 (seconds)		 Rate: 	19.607843 (tokens/second)
+11-15 11:57:08.731   541   559 I ExecuTorch: 	Time to first generated token:	0.843000 (seconds)
+11-15 11:57:08.731   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	4.068000 (seconds)
+11-15 11:57:08.731   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:57:08.765   541   554 I ExecuTorchOnDevice: coldwarm pair=10 arm=warm fed=1346 cached=0 prefill=843ms ttft=843ms cpu=44.4C screen=true
+11-15 11:57:08.777   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:57:09.654   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:57:10.015   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:57:10.015   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:57:10.015   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:57:10.015   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:57:10.015   541   559 I ExecuTorch: 	Total inference time:		1.241000 (seconds)		 Rate: 	5.640612 (tokens/second)
+11-15 11:57:10.015   541   559 I ExecuTorch: 		Prompt evaluation:	0.880000 (seconds)		 Rate: 	1529.545455 (tokens/second)
+11-15 11:57:10.015   541   559 I ExecuTorch: 		Generated 7 tokens:	0.361000 (seconds)		 Rate: 	19.390582 (tokens/second)
+11-15 11:57:10.015   541   559 I ExecuTorch: 	Time to first generated token:	0.880000 (seconds)
+11-15 11:57:10.015   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	4.074000 (seconds)
+11-15 11:57:10.015   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:57:10.046   541   554 I ExecuTorchOnDevice: coldwarm pair=10 arm=cold fed=1346 cached=0 prefill=880ms ttft=880ms cpu=44.4C screen=true
+11-15 11:57:10.046   541   554 I ExecuTorchOnDevice: coldwarm pair=10 replies identical=true
+11-15 11:57:10.050   541   559 I ExecuTorch: Prompt Processor: total 903 prompt tokens (AR-128 * 8 iters)
+11-15 11:57:10.641   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:57:33.344   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:57:33.344   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:57:33.344   541   559 I ExecuTorch: 	Prompt Tokens: 903    Generated Tokens: 422
+11-15 11:57:33.344   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:57:33.344   541   559 I ExecuTorch: 	Total inference time:		23.297000 (seconds)		 Rate: 	18.113920 (tokens/second)
+11-15 11:57:33.344   541   559 I ExecuTorch: 		Prompt evaluation:	0.593000 (seconds)		 Rate: 	1522.765599 (tokens/second)
+11-15 11:57:33.344   541   559 I ExecuTorch: 		Generated 422 tokens:	22.704000 (seconds)		 Rate: 	18.587033 (tokens/second)
+11-15 11:57:33.344   541   559 I ExecuTorch: 	Time to first generated token:	0.593000 (seconds)
+11-15 11:57:33.344   541   559 I ExecuTorch: 	Sampling time over 1325 tokens:	4.377000 (seconds)
+11-15 11:57:33.344   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:57:33.352   541   554 I ExecuTorchOnDevice: coldwarm pair=11 turn one: generated=423 reason=END_OF_TURN held=1325 fragments=423 tail=[" or", " address", " any", " specific", " concerns", "!"]
+11-15 11:58:28.623   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:58:29.479   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:58:29.875   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:58:29.875   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:58:29.875   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:58:29.875   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:58:29.875   541   559 I ExecuTorch: 	Total inference time:		1.254000 (seconds)		 Rate: 	5.582137 (tokens/second)
+11-15 11:58:29.875   541   559 I ExecuTorch: 		Prompt evaluation:	0.857000 (seconds)		 Rate: 	1570.595099 (tokens/second)
+11-15 11:58:29.875   541   559 I ExecuTorch: 		Generated 7 tokens:	0.397000 (seconds)		 Rate: 	17.632242 (tokens/second)
+11-15 11:58:29.875   541   559 I ExecuTorch: 	Time to first generated token:	0.857000 (seconds)
+11-15 11:58:29.875   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	4.382000 (seconds)
+11-15 11:58:29.875   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:58:29.904   541   554 I ExecuTorchOnDevice: coldwarm pair=11 arm=cold fed=1346 cached=0 prefill=857ms ttft=857ms cpu=44.8C screen=true
+11-15 11:58:29.907   541   559 I ExecuTorch: Prompt Processor: total 903 prompt tokens (AR-128 * 8 iters)
+11-15 11:58:30.532   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:58:52.850   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:58:52.851   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:58:52.851   541   559 I ExecuTorch: 	Prompt Tokens: 903    Generated Tokens: 422
+11-15 11:58:52.851   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:58:52.851   541   559 I ExecuTorch: 	Total inference time:		22.946000 (seconds)		 Rate: 	18.391005 (tokens/second)
+11-15 11:58:52.851   541   559 I ExecuTorch: 		Prompt evaluation:	0.627000 (seconds)		 Rate: 	1440.191388 (tokens/second)
+11-15 11:58:52.851   541   559 I ExecuTorch: 		Generated 422 tokens:	22.319000 (seconds)		 Rate: 	18.907657 (tokens/second)
+11-15 11:58:52.851   541   559 I ExecuTorch: 	Time to first generated token:	0.627000 (seconds)
+11-15 11:58:52.851   541   559 I ExecuTorch: 	Sampling time over 1325 tokens:	4.654000 (seconds)
+11-15 11:58:52.851   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:58:52.857   541   554 I ExecuTorchOnDevice: coldwarm pair=11 record: breaks at 0 of record 0, render 6637: record "" render "<|im_start|>user\nHere is a description of a system I am buil" sameTurnOne=true
+11-15 11:59:38.135   541   559 I ExecuTorch: Prompt Processor: total 1346 prompt tokens (AR-128 * 11 iters)
+11-15 11:59:39.015   541   559 I ExecuTorch: RSS after prompt prefill: 1893.058594 MiB (0 if unsupported)
+11-15 11:59:39.350   541   559 I ExecuTorch: Reached to the end of generation
+11-15 11:59:39.350   541   559 I ExecuTorch: RSS after finishing text generation: 1893.058594 MiB (0 if unsupported)
+11-15 11:59:39.350   541   559 I ExecuTorch: 	Prompt Tokens: 1346    Generated Tokens: 7
+11-15 11:59:39.350   541   559 I ExecuTorch: 	Model Load Time:		0.000000 (seconds)
+11-15 11:59:39.350   541   559 I ExecuTorch: 	Total inference time:		1.218000 (seconds)		 Rate: 	5.747126 (tokens/second)
+11-15 11:59:39.350   541   559 I ExecuTorch: 		Prompt evaluation:	0.882000 (seconds)		 Rate: 	1526.077098 (tokens/second)
+11-15 11:59:39.350   541   559 I ExecuTorch: 		Generated 7 tokens:	0.336000 (seconds)		 Rate: 	20.833333 (tokens/second)
+11-15 11:59:39.350   541   559 I ExecuTorch: 	Time to first generated token:	0.882000 (seconds)
+11-15 11:59:39.350   541   559 I ExecuTorch: 	Sampling time over 1353 tokens:	4.655000 (seconds)
+11-15 11:59:39.350   541   559 E ExecuTorch: Error saving the inference speed file
+11-15 11:59:39.362   541   554 I ExecuTorchOnDevice: coldwarm pair=11 arm=warm fed=1346 cached=0 prefill=882ms ttft=883ms cpu=44.5C screen=true
+11-15 11:59:39.362   541   554 I ExecuTorchOnDevice: coldwarm pair=11 replies identical=true
+11-15 11:59:39.362   541   554 I ExecuTorchOnDevice: coldwarm done: /storage/emulated/0/Android/data/io.github.alpharomercoma.openweights.core.engine.test/files/eval-results/Qwen3-1.7B-qnn-hybrid-4k.coldwarm.jsonl

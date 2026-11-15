@@ -1,0 +1,200 @@
+11-15 11:53:07.828  2608  2640 I OpenWeights: using CPU backend libggml-cpu-android_armv8.6_1.so (score 23)
+11-15 11:53:08.010  2608  2640 I OpenWeights: OpenCL backend registered
+11-15 11:53:14.031  2608  2640 I OpenWeights: weights: 4 host ranges, 1120 MB
+11-15 11:53:14.230  2608  2640 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-15 11:53:14.435  2608  2640 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:53:14.474  2608  2640 I OpenWeights: mem: after load rss 1625 MB, pss 1521 MB, swap 1 MB, majflt 315, minflt 491383, cpu 6710 ms
+11-15 11:53:14.486  2608  2640 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:53:21.935  2608  2640 I OpenWeights: kv: warm prefix snapshot of 1018 tokens, 15415 KB
+11-15 11:53:21.935  2608  2640 I OpenWeights: kv: warmed 1018 tokens in 7444 ms (0 reused)
+11-15 11:53:21.952  2608  2640 I OpenWeights: mem: after warm rss 1712 MB, pss 1608 MB, swap 1 MB, majflt 346, minflt 515638, cpu 46340 ms
+11-15 11:53:21.974  2608  2640 I OpenWeights: mem: before turn rss 1712 MB, pss 1608 MB, swap 1 MB, majflt 346, minflt 515808, cpu 46360 ms
+11-15 11:53:24.932  2608  2640 I OpenWeights: mem: after turn rss 1719 MB, pss 1614 MB, swap 1 MB, majflt 346, minflt 516897, cpu 60020 ms
+11-15 11:53:24.951  2608  2640 I OpenWeights: mem: before turn rss 1719 MB, pss 1614 MB, swap 1 MB, majflt 346, minflt 516977, cpu 60050 ms
+11-15 11:53:24.954  2608  2640 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 11:53:24.954  2608  2640 I OpenWeights: kv: diverged at 1041 of 1137 cached, prompt 1155, re-reading 114
+11-15 11:53:24.955  2608  2640 I OpenWeights: kv: rollback refused; restored the point at 1040, reading 115 instead of 137
+11-15 11:53:29.179  2608  2640 I OpenWeights: mem: after turn rss 1722 MB, pss 1618 MB, swap 1 MB, majflt 346, minflt 517468, cpu 80240 ms
+11-15 11:53:39.255  2608  2640 I OpenWeights: mem: before turn rss 1723 MB, pss 1618 MB, swap 1 MB, majflt 347, minflt 517942, cpu 80300 ms
+11-15 11:53:39.257  2608  2640 I OpenWeights: kv: diverged at 1023 of 1251 cached, prompt 1037, re-reading 14
+11-15 11:53:39.261  2608  2640 I OpenWeights: kv: rollback refused; restored the warm prefix of 1018 instead of re-reading all 1037
+11-15 11:53:41.115  2608  2640 I OpenWeights: mem: after turn rss 1720 MB, pss 1615 MB, swap 1 MB, majflt 347, minflt 518487, cpu 89010 ms
+11-15 11:53:41.279  2608  2635 I WarmPrefixEval: restore LFM3-1.7B-Q4_K_M.gguf pair=0 arm=restored prompt=19 cached=1018 prefill=183ms ttft=183ms cpu=44.0C
+11-15 11:53:44.650  2608  3646 I OpenWeights: weights: 4 host ranges, 1120 MB
+11-15 11:53:44.654  2608  3646 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-15 11:53:44.796  2608  3646 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:53:44.822  2608  3646 I OpenWeights: mem: after load rss 1633 MB, pss 1528 MB, swap 1 MB, majflt 347, minflt 829879, cpu 92710 ms
+11-15 11:53:44.828  2608  3646 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:53:44.846  2608  3646 I OpenWeights: mem: before turn rss 1633 MB, pss 1528 MB, swap 1 MB, majflt 347, minflt 829892, cpu 92740 ms
+11-15 11:53:45.082  2608  3646 I OpenWeights: mem: after turn rss 1639 MB, pss 1534 MB, swap 1 MB, majflt 347, minflt 831429, cpu 93880 ms
+11-15 11:53:45.106  2608  3646 I OpenWeights: mem: before turn rss 1639 MB, pss 1534 MB, swap 1 MB, majflt 347, minflt 831436, cpu 93900 ms
+11-15 11:53:45.108  2608  3646 I OpenWeights: kv: diverged at 2 of 17 cached, prompt 1037, re-reading 1035
+11-15 11:53:45.108  2608  3646 I OpenWeights: kv: rollback to 2 refused (recurrent state), re-reading all 1037
+11-15 11:53:53.011  2608  3646 I OpenWeights: mem: after turn rss 1709 MB, pss 1604 MB, swap 1 MB, majflt 347, minflt 855107, cpu 136350 ms
+11-15 11:53:53.159  2608  2635 I WarmPrefixEval: restore LFM3-1.7B-Q4_K_M.gguf pair=0 arm=cold prompt=1037 cached=0 prefill=6215ms ttft=6216ms cpu=44.0C
+11-15 11:53:53.159  2608  2635 I WarmPrefixEval: restore pair=0 replies identical=true
+11-15 11:53:56.471  2608  3790 I OpenWeights: weights: 4 host ranges, 1120 MB
+11-15 11:53:56.475  2608  3790 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-15 11:53:56.604  2608  3790 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:53:56.629  2608  3790 I OpenWeights: mem: after load rss 1634 MB, pss 1529 MB, swap 1 MB, majflt 347, minflt 1163236, cpu 139970 ms
+11-15 11:53:56.635  2608  3790 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:53:56.652  2608  3790 I OpenWeights: mem: before turn rss 1634 MB, pss 1529 MB, swap 1 MB, majflt 347, minflt 1163248, cpu 139990 ms
+11-15 11:53:56.912  2608  3790 I OpenWeights: mem: after turn rss 1640 MB, pss 1535 MB, swap 1 MB, majflt 347, minflt 1164791, cpu 141230 ms
+11-15 11:54:06.985  2608  3790 I OpenWeights: mem: before turn rss 1640 MB, pss 1535 MB, swap 1 MB, majflt 347, minflt 1164816, cpu 141260 ms
+11-15 11:54:06.988  2608  3790 I OpenWeights: kv: diverged at 2 of 17 cached, prompt 1037, re-reading 1035
+11-15 11:54:06.988  2608  3790 I OpenWeights: kv: rollback to 2 refused (recurrent state), re-reading all 1037
+11-15 11:54:15.009  2608  3790 I OpenWeights: mem: after turn rss 1710 MB, pss 1605 MB, swap 1 MB, majflt 347, minflt 1178858, cpu 183480 ms
+11-15 11:54:15.152  2608  2635 I WarmPrefixEval: restore LFM3-1.7B-Q4_K_M.gguf pair=1 arm=cold prompt=1037 cached=0 prefill=6259ms ttft=6260ms cpu=42.9C
+11-15 11:54:18.457  2608  4224 I OpenWeights: weights: 4 host ranges, 1120 MB
+11-15 11:54:18.461  2608  4224 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-15 11:54:18.606  2608  4224 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:54:18.634  2608  4224 I OpenWeights: mem: after load rss 1636 MB, pss 1531 MB, swap 1 MB, majflt 347, minflt 1475875, cpu 187110 ms
+11-15 11:54:18.641  2608  4224 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:54:25.529  2608  4224 I OpenWeights: kv: warm prefix snapshot of 1018 tokens, 15415 KB
+11-15 11:54:25.529  2608  4224 I OpenWeights: kv: warmed 1018 tokens in 6879 ms (0 reused)
+11-15 11:54:25.546  2608  4224 I OpenWeights: mem: after warm rss 1722 MB, pss 1617 MB, swap 1 MB, majflt 347, minflt 1506471, cpu 225710 ms
+11-15 11:54:25.561  2608  4224 I OpenWeights: mem: before turn rss 1722 MB, pss 1617 MB, swap 1 MB, majflt 347, minflt 1506503, cpu 225730 ms
+11-15 11:54:29.022  2608  4224 I OpenWeights: mem: after turn rss 1727 MB, pss 1622 MB, swap 1 MB, majflt 347, minflt 1507899, cpu 241920 ms
+11-15 11:54:29.043  2608  4224 I OpenWeights: mem: before turn rss 1727 MB, pss 1622 MB, swap 1 MB, majflt 347, minflt 1507935, cpu 241940 ms
+11-15 11:54:29.047  2608  4224 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 11:54:29.047  2608  4224 I OpenWeights: kv: diverged at 1041 of 1137 cached, prompt 1155, re-reading 114
+11-15 11:54:29.048  2608  4224 I OpenWeights: kv: rollback refused; restored the point at 1040, reading 115 instead of 137
+11-15 11:54:33.849  2608  4224 I OpenWeights: mem: after turn rss 1731 MB, pss 1626 MB, swap 1 MB, majflt 347, minflt 1509051, cpu 265580 ms
+11-15 11:54:48.970  2608  4224 I OpenWeights: mem: before turn rss 1731 MB, pss 1626 MB, swap 1 MB, majflt 347, minflt 1509127, cpu 265630 ms
+11-15 11:54:48.972  2608  4224 I OpenWeights: kv: diverged at 1023 of 1251 cached, prompt 1037, re-reading 14
+11-15 11:54:48.977  2608  4224 I OpenWeights: kv: rollback refused; restored the warm prefix of 1018 instead of re-reading all 1037
+11-15 11:54:50.850  2608  4224 I OpenWeights: mem: after turn rss 1728 MB, pss 1623 MB, swap 1 MB, majflt 347, minflt 1510048, cpu 274410 ms
+11-15 11:54:50.998  2608  2635 I WarmPrefixEval: restore LFM3-1.7B-Q4_K_M.gguf pair=1 arm=restored prompt=19 cached=1018 prefill=193ms ttft=194ms cpu=43.4C
+11-15 11:54:50.998  2608  2635 I WarmPrefixEval: restore pair=1 replies identical=true
+11-15 11:54:54.358  2608  4871 I OpenWeights: weights: 4 host ranges, 1120 MB
+11-15 11:54:54.361  2608  4871 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-15 11:54:54.494  2608  4871 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:54:54.517  2608  4871 I OpenWeights: mem: after load rss 1638 MB, pss 1533 MB, swap 1 MB, majflt 347, minflt 1804926, cpu 278080 ms
+11-15 11:54:54.523  2608  4871 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:55:00.803  2608  4871 I OpenWeights: kv: warm prefix snapshot of 1018 tokens, 15415 KB
+11-15 11:55:00.803  2608  4871 I OpenWeights: kv: warmed 1018 tokens in 6272 ms (0 reused)
+11-15 11:55:00.818  2608  4871 I OpenWeights: mem: after warm rss 1724 MB, pss 1619 MB, swap 1 MB, majflt 347, minflt 1835819, cpu 313440 ms
+11-15 11:55:00.837  2608  4871 I OpenWeights: mem: before turn rss 1724 MB, pss 1619 MB, swap 1 MB, majflt 347, minflt 1835849, cpu 313460 ms
+11-15 11:55:03.824  2608  4871 I OpenWeights: mem: after turn rss 1729 MB, pss 1624 MB, swap 1 MB, majflt 347, minflt 1837371, cpu 327540 ms
+11-15 11:55:03.841  2608  4871 I OpenWeights: mem: before turn rss 1729 MB, pss 1624 MB, swap 1 MB, majflt 347, minflt 1837423, cpu 327560 ms
+11-15 11:55:03.844  2608  4871 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 11:55:03.844  2608  4871 I OpenWeights: kv: diverged at 1041 of 1137 cached, prompt 1155, re-reading 114
+11-15 11:55:03.844  2608  4871 I OpenWeights: kv: rollback refused; restored the point at 1040, reading 115 instead of 137
+11-15 11:55:07.605  2608  4871 I OpenWeights: mem: after turn rss 1733 MB, pss 1628 MB, swap 1 MB, majflt 347, minflt 1837975, cpu 345830 ms
+11-15 11:55:17.705  2608  4871 I OpenWeights: mem: before turn rss 1733 MB, pss 1628 MB, swap 1 MB, majflt 347, minflt 1838041, cpu 345870 ms
+11-15 11:55:17.707  2608  4871 I OpenWeights: kv: diverged at 1023 of 1251 cached, prompt 1037, re-reading 14
+11-15 11:55:17.716  2608  4871 I OpenWeights: kv: rollback refused; restored the warm prefix of 1018 instead of re-reading all 1037
+11-15 11:55:19.575  2608  4871 I OpenWeights: mem: after turn rss 1732 MB, pss 1627 MB, swap 1 MB, majflt 347, minflt 1838474, cpu 354630 ms
+11-15 11:55:19.733  2608  2635 I WarmPrefixEval: restore LFM3-1.7B-Q4_K_M.gguf pair=2 arm=restored prompt=19 cached=1018 prefill=198ms ttft=199ms cpu=44.8C
+11-15 11:55:23.085  2608  5723 I OpenWeights: weights: 4 host ranges, 1120 MB
+11-15 11:55:23.088  2608  5723 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-15 11:55:23.228  2608  5723 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:55:23.253  2608  5723 I OpenWeights: mem: after load rss 1642 MB, pss 1537 MB, swap 1 MB, majflt 347, minflt 2133390, cpu 358310 ms
+11-15 11:55:23.259  2608  5723 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:55:23.275  2608  5723 I OpenWeights: mem: before turn rss 1642 MB, pss 1537 MB, swap 1 MB, majflt 347, minflt 2133399, cpu 358340 ms
+11-15 11:55:23.491  2608  5723 I OpenWeights: mem: after turn rss 1648 MB, pss 1543 MB, swap 1 MB, majflt 347, minflt 2134979, cpu 359380 ms
+11-15 11:55:23.514  2608  5723 I OpenWeights: mem: before turn rss 1648 MB, pss 1543 MB, swap 1 MB, majflt 347, minflt 2134989, cpu 359410 ms
+11-15 11:55:23.516  2608  5723 I OpenWeights: kv: diverged at 2 of 17 cached, prompt 1037, re-reading 1035
+11-15 11:55:23.516  2608  5723 I OpenWeights: kv: rollback to 2 refused (recurrent state), re-reading all 1037
+11-15 11:55:33.210  2608  5723 I OpenWeights: mem: after turn rss 1718 MB, pss 1613 MB, swap 1 MB, majflt 347, minflt 2159269, cpu 411740 ms
+11-15 11:55:33.408  2608  2635 I WarmPrefixEval: restore LFM3-1.7B-Q4_K_M.gguf pair=2 arm=cold prompt=1037 cached=0 prefill=7319ms ttft=7321ms cpu=44.8C
+11-15 11:55:33.408  2608  2635 I WarmPrefixEval: restore pair=2 replies identical=true
+11-15 11:55:38.028  2608  5926 I OpenWeights: weights: 4 host ranges, 1120 MB
+11-15 11:55:38.031  2608  5926 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-15 11:55:38.162  2608  5926 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:55:38.185  2608  5926 I OpenWeights: mem: after load rss 1643 MB, pss 1538 MB, swap 1 MB, majflt 347, minflt 2454085, cpu 416700 ms
+11-15 11:55:38.191  2608  5926 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:55:38.212  2608  5926 I OpenWeights: mem: before turn rss 1643 MB, pss 1538 MB, swap 1 MB, majflt 347, minflt 2454094, cpu 416720 ms
+11-15 11:55:38.466  2608  5926 I OpenWeights: mem: after turn rss 1648 MB, pss 1543 MB, swap 1 MB, majflt 347, minflt 2455655, cpu 417930 ms
+11-15 11:55:48.529  2608  5926 I OpenWeights: mem: before turn rss 1651 MB, pss 1545 MB, swap 1 MB, majflt 347, minflt 2455678, cpu 417960 ms
+11-15 11:55:48.531  2608  5926 I OpenWeights: kv: diverged at 2 of 17 cached, prompt 1037, re-reading 1035
+11-15 11:55:48.531  2608  5926 I OpenWeights: kv: rollback to 2 refused (recurrent state), re-reading all 1037
+11-15 11:55:59.642  2608  5926 I OpenWeights: mem: after turn rss 1720 MB, pss 1615 MB, swap 1 MB, majflt 347, minflt 2474187, cpu 471750 ms
+11-15 11:55:59.843  2608  2635 I WarmPrefixEval: restore LFM3-1.7B-Q4_K_M.gguf pair=3 arm=cold prompt=1037 cached=0 prefill=8754ms ttft=8755ms cpu=43.6C
+11-15 11:56:04.760  2608  7045 I OpenWeights: weights: 4 host ranges, 1120 MB
+11-15 11:56:04.765  2608  7045 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-15 11:56:04.962  2608  7045 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:56:04.992  2608  7045 I OpenWeights: mem: after load rss 1633 MB, pss 1528 MB, swap 1 MB, majflt 347, minflt 2764819, cpu 477120 ms
+11-15 11:56:05.002  2608  7045 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:56:11.975  2608  7045 I OpenWeights: kv: warm prefix snapshot of 1018 tokens, 15415 KB
+11-15 11:56:11.976  2608  7045 I OpenWeights: kv: warmed 1018 tokens in 6969 ms (0 reused)
+11-15 11:56:11.991  2608  7045 I OpenWeights: mem: after warm rss 1719 MB, pss 1614 MB, swap 1 MB, majflt 347, minflt 2788172, cpu 515800 ms
+11-15 11:56:12.006  2608  7045 I OpenWeights: mem: before turn rss 1719 MB, pss 1614 MB, swap 1 MB, majflt 347, minflt 2788201, cpu 515820 ms
+11-15 11:56:14.856  2608  7045 I OpenWeights: mem: after turn rss 1724 MB, pss 1619 MB, swap 1 MB, majflt 347, minflt 2789143, cpu 529180 ms
+11-15 11:56:14.870  2608  7045 I OpenWeights: mem: before turn rss 1724 MB, pss 1619 MB, swap 1 MB, majflt 347, minflt 2789177, cpu 529190 ms
+11-15 11:56:14.872  2608  7045 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 11:56:14.872  2608  7045 I OpenWeights: kv: diverged at 1041 of 1137 cached, prompt 1155, re-reading 114
+11-15 11:56:14.873  2608  7045 I OpenWeights: kv: rollback refused; restored the point at 1040, reading 115 instead of 137
+11-15 11:56:18.827  2608  7045 I OpenWeights: mem: after turn rss 1724 MB, pss 1619 MB, swap 1 MB, majflt 347, minflt 2790309, cpu 548460 ms
+11-15 11:56:38.979  2608  7045 I OpenWeights: mem: before turn rss 1725 MB, pss 1620 MB, swap 1 MB, majflt 347, minflt 2790484, cpu 548510 ms
+11-15 11:56:38.982  2608  7045 I OpenWeights: kv: diverged at 1023 of 1251 cached, prompt 1037, re-reading 14
+11-15 11:56:38.986  2608  7045 I OpenWeights: kv: rollback refused; restored the warm prefix of 1018 instead of re-reading all 1037
+11-15 11:56:40.762  2608  7045 I OpenWeights: mem: after turn rss 1722 MB, pss 1617 MB, swap 1 MB, majflt 347, minflt 2790860, cpu 556870 ms
+11-15 11:56:40.902  2608  2635 I WarmPrefixEval: restore LFM3-1.7B-Q4_K_M.gguf pair=3 arm=restored prompt=19 cached=1018 prefill=187ms ttft=188ms cpu=43.1C
+11-15 11:56:40.902  2608  2635 I WarmPrefixEval: restore pair=3 replies identical=true
+11-15 11:56:43.908  2608  7649 I OpenWeights: weights: 4 host ranges, 1120 MB
+11-15 11:56:43.911  2608  7649 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-15 11:56:44.026  2608  7649 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:56:44.049  2608  7649 I OpenWeights: mem: after load rss 1632 MB, pss 1527 MB, swap 1 MB, majflt 347, minflt 3078557, cpu 560140 ms
+11-15 11:56:44.055  2608  7649 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:56:51.551  2608  7649 I OpenWeights: kv: warm prefix snapshot of 1018 tokens, 15415 KB
+11-15 11:56:51.551  2608  7649 I OpenWeights: kv: warmed 1018 tokens in 7489 ms (0 reused)
+11-15 11:56:51.569  2608  7649 I OpenWeights: mem: after warm rss 1718 MB, pss 1613 MB, swap 1 MB, majflt 347, minflt 3110420, cpu 601940 ms
+11-15 11:56:51.592  2608  7649 I OpenWeights: mem: before turn rss 1718 MB, pss 1613 MB, swap 1 MB, majflt 347, minflt 3110449, cpu 601970 ms
+11-15 11:56:55.479  2608  7649 I OpenWeights: mem: after turn rss 1723 MB, pss 1618 MB, swap 1 MB, majflt 347, minflt 3111938, cpu 620490 ms
+11-15 11:56:55.499  2608  7649 I OpenWeights: mem: before turn rss 1723 MB, pss 1618 MB, swap 1 MB, majflt 347, minflt 3111971, cpu 620500 ms
+11-15 11:56:55.503  2608  7649 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 11:56:55.503  2608  7649 I OpenWeights: kv: diverged at 1041 of 1137 cached, prompt 1155, re-reading 114
+11-15 11:56:55.504  2608  7649 I OpenWeights: kv: rollback refused; restored the point at 1040, reading 115 instead of 137
+11-15 11:57:00.057  2608  7649 I OpenWeights: mem: after turn rss 1725 MB, pss 1619 MB, swap 1 MB, majflt 347, minflt 3113117, cpu 643040 ms
+11-15 11:57:10.177  2608  7649 I OpenWeights: mem: before turn rss 1725 MB, pss 1620 MB, swap 1 MB, majflt 347, minflt 3113195, cpu 643070 ms
+11-15 11:57:10.179  2608  7649 I OpenWeights: kv: diverged at 1023 of 1251 cached, prompt 1037, re-reading 14
+11-15 11:57:10.183  2608  7649 I OpenWeights: kv: rollback refused; restored the warm prefix of 1018 instead of re-reading all 1037
+11-15 11:57:14.206  2608  7649 I OpenWeights: mem: after turn rss 1722 MB, pss 1617 MB, swap 1 MB, majflt 347, minflt 3114267, cpu 660210 ms
+11-15 11:57:14.369  2608  2635 I WarmPrefixEval: restore LFM3-1.7B-Q4_K_M.gguf pair=4 arm=restored prompt=19 cached=1018 prefill=1887ms ttft=1889ms cpu=44.9C
+11-15 11:57:18.063  2608  8482 I OpenWeights: weights: 4 host ranges, 1120 MB
+11-15 11:57:18.067  2608  8482 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-15 11:57:18.217  2608  8482 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:57:18.247  2608  8482 I OpenWeights: mem: after load rss 1632 MB, pss 1527 MB, swap 1 MB, majflt 347, minflt 3400493, cpu 664230 ms
+11-15 11:57:18.254  2608  8482 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:57:18.271  2608  8482 I OpenWeights: mem: before turn rss 1632 MB, pss 1528 MB, swap 1 MB, majflt 347, minflt 3400515, cpu 664240 ms
+11-15 11:57:18.496  2608  8482 I OpenWeights: mem: after turn rss 1638 MB, pss 1533 MB, swap 1 MB, majflt 347, minflt 3402110, cpu 665360 ms
+11-15 11:57:28.591  2608  8482 I OpenWeights: mem: before turn rss 1638 MB, pss 1533 MB, swap 1 MB, majflt 347, minflt 3402169, cpu 665400 ms
+11-15 11:57:28.594  2608  8482 I OpenWeights: kv: diverged at 2 of 17 cached, prompt 1037, re-reading 1035
+11-15 11:57:28.594  2608  8482 I OpenWeights: kv: rollback to 2 refused (recurrent state), re-reading all 1037
+11-15 11:57:36.287  2608  8482 I OpenWeights: mem: after turn rss 1709 MB, pss 1604 MB, swap 1 MB, majflt 347, minflt 3427948, cpu 707050 ms
+11-15 11:57:36.430  2608  2635 I WarmPrefixEval: restore LFM3-1.7B-Q4_K_M.gguf pair=4 arm=cold prompt=1037 cached=0 prefill=5990ms ttft=5992ms cpu=43.3C
+11-15 11:57:36.430  2608  2635 I WarmPrefixEval: restore pair=4 replies identical=true
+11-15 11:57:40.304  2608  8795 I OpenWeights: weights: 4 host ranges, 1120 MB
+11-15 11:57:40.308  2608  8795 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-15 11:57:40.486  2608  8795 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:57:40.517  2608  8795 I OpenWeights: mem: after load rss 1634 MB, pss 1529 MB, swap 1 MB, majflt 347, minflt 3715682, cpu 711290 ms
+11-15 11:57:40.526  2608  8795 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:57:40.546  2608  8795 I OpenWeights: mem: before turn rss 1634 MB, pss 1529 MB, swap 1 MB, majflt 347, minflt 3715702, cpu 711330 ms
+11-15 11:57:40.815  2608  8795 I OpenWeights: mem: after turn rss 1640 MB, pss 1535 MB, swap 1 MB, majflt 347, minflt 3717294, cpu 712670 ms
+11-15 11:57:50.901  2608  8795 I OpenWeights: mem: before turn rss 1640 MB, pss 1535 MB, swap 1 MB, majflt 347, minflt 3717354, cpu 712700 ms
+11-15 11:57:50.903  2608  8795 I OpenWeights: kv: diverged at 2 of 17 cached, prompt 1037, re-reading 1035
+11-15 11:57:50.903  2608  8795 I OpenWeights: kv: rollback to 2 refused (recurrent state), re-reading all 1037
+11-15 11:57:58.741  2608  8795 I OpenWeights: mem: after turn rss 1710 MB, pss 1606 MB, swap 1 MB, majflt 347, minflt 3744781, cpu 755260 ms
+11-15 11:57:58.937  2608  2635 I WarmPrefixEval: restore LFM3-1.7B-Q4_K_M.gguf pair=5 arm=cold prompt=1037 cached=0 prefill=5876ms ttft=5877ms cpu=43.9C
+11-15 11:58:03.840  2608  9066 I OpenWeights: weights: 4 host ranges, 1120 MB
+11-15 11:58:03.845  2608  9066 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-15 11:58:04.043  2608  9066 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:58:04.079  2608  9066 I OpenWeights: mem: after load rss 1636 MB, pss 1531 MB, swap 1 MB, majflt 347, minflt 4025375, cpu 760610 ms
+11-15 11:58:04.088  2608  9066 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:58:11.139  2608  9066 I OpenWeights: kv: warm prefix snapshot of 1018 tokens, 15415 KB
+11-15 11:58:11.140  2608  9066 I OpenWeights: kv: warmed 1018 tokens in 7042 ms (0 reused)
+11-15 11:58:11.156  2608  9066 I OpenWeights: mem: after warm rss 1722 MB, pss 1617 MB, swap 1 MB, majflt 347, minflt 4055923, cpu 800820 ms
+11-15 11:58:11.169  2608  9066 I OpenWeights: mem: before turn rss 1722 MB, pss 1617 MB, swap 1 MB, majflt 347, minflt 4055952, cpu 800840 ms
+11-15 11:58:13.923  2608  9066 I OpenWeights: mem: after turn rss 1727 MB, pss 1622 MB, swap 1 MB, majflt 347, minflt 4057296, cpu 813880 ms
+11-15 11:58:13.936  2608  9066 I OpenWeights: mem: before turn rss 1727 MB, pss 1622 MB, swap 1 MB, majflt 347, minflt 4057329, cpu 813890 ms
+11-15 11:58:13.938  2608  9066 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 11:58:13.938  2608  9066 I OpenWeights: kv: diverged at 1041 of 1137 cached, prompt 1155, re-reading 114
+11-15 11:58:13.939  2608  9066 I OpenWeights: kv: rollback refused; restored the point at 1040, reading 115 instead of 137
+11-15 11:58:17.405  2608  9066 I OpenWeights: mem: after turn rss 1730 MB, pss 1625 MB, swap 1 MB, majflt 347, minflt 4057848, cpu 830720 ms
+11-15 11:58:42.576  2608  9066 I OpenWeights: mem: before turn rss 1727 MB, pss 1622 MB, swap 1 MB, majflt 347, minflt 4058089, cpu 830780 ms
+11-15 11:58:42.578  2608  9066 I OpenWeights: kv: diverged at 1023 of 1251 cached, prompt 1037, re-reading 14
+11-15 11:58:42.582  2608  9066 I OpenWeights: kv: rollback refused; restored the warm prefix of 1018 instead of re-reading all 1037
+11-15 11:58:44.519  2608  9066 I OpenWeights: mem: after turn rss 1724 MB, pss 1619 MB, swap 1 MB, majflt 347, minflt 4058468, cpu 839800 ms
+11-15 11:58:44.677  2608  2635 I WarmPrefixEval: restore LFM3-1.7B-Q4_K_M.gguf pair=5 arm=restored prompt=19 cached=1018 prefill=243ms ttft=243ms cpu=43.9C
+11-15 11:58:44.678  2608  2635 I WarmPrefixEval: restore pair=5 replies identical=true

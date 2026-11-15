@@ -1,0 +1,188 @@
+11-15 11:50:48.246  8994  9027 I OpenWeights: using CPU backend libggml-cpu-android_armv8.6_1.so (score 23)
+11-15 11:50:48.364  8994  9027 I OpenWeights: OpenCL backend registered
+11-15 11:50:55.309  8994  9027 I OpenWeights: weights: 3 host ranges, 1689 MB
+11-15 11:50:55.801  8994  9027 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:50:55.846  8994  9027 I OpenWeights: mem: after load rss 2169 MB, pss 2067 MB, swap 1 MB, majflt 312, minflt 653189, cpu 7840 ms
+11-15 11:50:55.852  8994  9027 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:51:07.367  8994  9027 I OpenWeights: kv: warm prefix snapshot of 1018 tokens, 16652 KB
+11-15 11:51:07.367  8994  9027 I OpenWeights: kv: warmed 1018 tokens in 11509 ms (0 reused)
+11-15 11:51:07.399  8994  9027 I OpenWeights: mem: after warm rss 2270 MB, pss 2168 MB, swap 1 MB, majflt 350, minflt 681597, cpu 72540 ms
+11-15 11:51:07.441  8994  9027 I OpenWeights: mem: before turn rss 2271 MB, pss 2169 MB, swap 1 MB, majflt 350, minflt 681758, cpu 72580 ms
+11-15 11:51:10.657  8994  9027 I OpenWeights: mem: after turn rss 2274 MB, pss 2171 MB, swap 1 MB, majflt 350, minflt 682651, cpu 87430 ms
+11-15 11:51:10.691  8994  9027 I OpenWeights: mem: before turn rss 2274 MB, pss 2171 MB, swap 1 MB, majflt 350, minflt 682730, cpu 87450 ms
+11-15 11:51:10.695  8994  9027 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 11:51:10.695  8994  9027 I OpenWeights: kv: diverged at 1040 of 1092 cached, prompt 1108, re-reading 68
+11-15 11:51:10.697  8994  9027 I OpenWeights: kv: rollback refused; restored the point at 1040, reading 68 instead of 90
+11-15 11:51:13.614  8994  9027 I OpenWeights: mem: after turn rss 2275 MB, pss 2172 MB, swap 1 MB, majflt 350, minflt 682961, cpu 101860 ms
+11-15 11:51:23.712  8994  9027 I OpenWeights: mem: before turn rss 2275 MB, pss 2172 MB, swap 1 MB, majflt 351, minflt 683436, cpu 101920 ms
+11-15 11:51:23.714  8994  9027 I OpenWeights: kv: diverged at 1023 of 1146 cached, prompt 1037, re-reading 14
+11-15 11:51:23.717  8994  9027 I OpenWeights: kv: rollback refused; restored the warm prefix of 1018 instead of re-reading all 1037
+11-15 11:51:25.741  8994  9027 I OpenWeights: mem: after turn rss 2275 MB, pss 2172 MB, swap 1 MB, majflt 351, minflt 683945, cpu 111220 ms
+11-15 11:51:25.983  8994  9007 I WarmPrefixEval: restore LFM2.5-2.6B-Q4_K_M.gguf pair=0 arm=restored prompt=19 cached=1018 prefill=332ms ttft=333ms cpu=44.1C
+11-15 11:51:31.348  8994  9653 I OpenWeights: weights: 3 host ranges, 1689 MB
+11-15 11:51:31.480  8994  9653 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:51:31.511  8994  9653 I OpenWeights: mem: after load rss 2175 MB, pss 2072 MB, swap 1 MB, majflt 351, minflt 1220321, cpu 116890 ms
+11-15 11:51:31.515  8994  9653 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:51:31.543  8994  9653 I OpenWeights: mem: before turn rss 2175 MB, pss 2072 MB, swap 1 MB, majflt 351, minflt 1220335, cpu 116920 ms
+11-15 11:51:32.018  8994  9653 I OpenWeights: mem: after turn rss 2180 MB, pss 2077 MB, swap 1 MB, majflt 351, minflt 1221830, cpu 119050 ms
+11-15 11:51:32.055  8994  9653 I OpenWeights: mem: before turn rss 2180 MB, pss 2077 MB, swap 1 MB, majflt 351, minflt 1221837, cpu 119080 ms
+11-15 11:51:32.057  8994  9653 I OpenWeights: kv: diverged at 2 of 17 cached, prompt 1037, re-reading 1035
+11-15 11:51:32.057  8994  9653 I OpenWeights: kv: rollback to 2 refused (recurrent state), re-reading all 1037
+11-15 11:51:45.664  8994  9653 I OpenWeights: mem: after turn rss 2262 MB, pss 2160 MB, swap 1 MB, majflt 351, minflt 1246504, cpu 188260 ms
+11-15 11:51:45.979  8994  9007 I WarmPrefixEval: restore LFM2.5-2.6B-Q4_K_M.gguf pair=0 arm=cold prompt=1037 cached=0 prefill=11143ms ttft=11144ms cpu=44.1C
+11-15 11:51:45.979  8994  9007 I WarmPrefixEval: restore pair=0 replies identical=true
+11-15 11:51:53.171  8994  9951 I OpenWeights: weights: 3 host ranges, 1689 MB
+11-15 11:51:53.308  8994  9951 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:51:53.339  8994  9951 I OpenWeights: mem: after load rss 2177 MB, pss 2075 MB, swap 1 MB, majflt 351, minflt 1713439, cpu 195870 ms
+11-15 11:51:53.343  8994  9951 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:51:53.370  8994  9951 I OpenWeights: mem: before turn rss 2177 MB, pss 2075 MB, swap 1 MB, majflt 351, minflt 1713453, cpu 195900 ms
+11-15 11:51:53.667  8994  9951 I OpenWeights: mem: after turn rss 2182 MB, pss 2080 MB, swap 1 MB, majflt 351, minflt 1714936, cpu 197340 ms
+11-15 11:52:03.753  8994  9951 I OpenWeights: mem: before turn rss 2182 MB, pss 2080 MB, swap 1 MB, majflt 351, minflt 1714963, cpu 197380 ms
+11-15 11:52:03.755  8994  9951 I OpenWeights: kv: diverged at 2 of 17 cached, prompt 1037, re-reading 1035
+11-15 11:52:03.755  8994  9951 I OpenWeights: kv: rollback to 2 refused (recurrent state), re-reading all 1037
+11-15 11:52:18.498  8994  9951 I OpenWeights: mem: after turn rss 2267 MB, pss 2165 MB, swap 1 MB, majflt 351, minflt 1742946, cpu 271650 ms
+11-15 11:52:18.811  8994  9007 I WarmPrefixEval: restore LFM2.5-2.6B-Q4_K_M.gguf pair=1 arm=cold prompt=1037 cached=0 prefill=12297ms ttft=12299ms cpu=43.9C
+11-15 11:52:25.030  8994 10755 I OpenWeights: weights: 3 host ranges, 1689 MB
+11-15 11:52:25.148  8994 10755 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:52:25.180  8994 10755 I OpenWeights: mem: after load rss 2180 MB, pss 2078 MB, swap 1 MB, majflt 351, minflt 2202213, cpu 278250 ms
+11-15 11:52:25.184  8994 10755 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:52:35.065  8994 10755 I OpenWeights: kv: warm prefix snapshot of 1018 tokens, 16652 KB
+11-15 11:52:35.065  8994 10755 I OpenWeights: kv: warmed 1018 tokens in 9871 ms (0 reused)
+11-15 11:52:35.095  8994 10755 I OpenWeights: mem: after warm rss 2283 MB, pss 2180 MB, swap 1 MB, majflt 351, minflt 2236021, cpu 335010 ms
+11-15 11:52:35.127  8994 10755 I OpenWeights: mem: before turn rss 2283 MB, pss 2180 MB, swap 1 MB, majflt 351, minflt 2236033, cpu 335050 ms
+11-15 11:52:38.669  8994 10755 I OpenWeights: mem: after turn rss 2284 MB, pss 2181 MB, swap 1 MB, majflt 351, minflt 2236545, cpu 351450 ms
+11-15 11:52:38.698  8994 10755 I OpenWeights: mem: before turn rss 2284 MB, pss 2181 MB, swap 1 MB, majflt 351, minflt 2236549, cpu 351480 ms
+11-15 11:52:38.702  8994 10755 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 11:52:38.702  8994 10755 I OpenWeights: kv: diverged at 1040 of 1092 cached, prompt 1108, re-reading 68
+11-15 11:52:38.702  8994 10755 I OpenWeights: kv: rollback refused; restored the point at 1040, reading 68 instead of 90
+11-15 11:52:42.292  8994 10755 I OpenWeights: mem: after turn rss 2284 MB, pss 2182 MB, swap 1 MB, majflt 351, minflt 2236679, cpu 369020 ms
+11-15 11:53:07.411  8994 10755 I OpenWeights: mem: before turn rss 2284 MB, pss 2182 MB, swap 1 MB, majflt 351, minflt 2236712, cpu 369060 ms
+11-15 11:53:07.413  8994 10755 I OpenWeights: kv: diverged at 1023 of 1146 cached, prompt 1037, re-reading 14
+11-15 11:53:07.416  8994 10755 I OpenWeights: kv: rollback refused; restored the warm prefix of 1018 instead of re-reading all 1037
+11-15 11:53:09.526  8994 10755 I OpenWeights: mem: after turn rss 2284 MB, pss 2182 MB, swap 2 MB, majflt 351, minflt 2237172, cpu 378360 ms
+11-15 11:53:09.709  8994  9007 I WarmPrefixEval: restore LFM2.5-2.6B-Q4_K_M.gguf pair=1 arm=restored prompt=19 cached=1018 prefill=483ms ttft=484ms cpu=42.7C
+11-15 11:53:09.710  8994  9007 I WarmPrefixEval: restore pair=1 replies identical=true
+11-15 11:53:14.076  8994 11351 I OpenWeights: weights: 3 host ranges, 1689 MB
+11-15 11:53:14.227  8994 11351 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:53:14.325  8994 11351 I OpenWeights: mem: after load rss 2183 MB, pss 2080 MB, swap 2 MB, majflt 351, minflt 2672391, cpu 382970 ms
+11-15 11:53:14.331  8994 11351 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:53:28.293  8994 11351 I OpenWeights: kv: warm prefix snapshot of 1018 tokens, 16652 KB
+11-15 11:53:28.293  8994 11351 I OpenWeights: kv: warmed 1018 tokens in 13954 ms (0 reused)
+11-15 11:53:28.318  8994 11351 I OpenWeights: mem: after warm rss 2284 MB, pss 2183 MB, swap 2 MB, majflt 351, minflt 2698801, cpu 452650 ms
+11-15 11:53:28.357  8994 11351 I OpenWeights: mem: before turn rss 2284 MB, pss 2183 MB, swap 2 MB, majflt 351, minflt 2698812, cpu 452680 ms
+11-15 11:53:31.839  8994 11351 I OpenWeights: mem: after turn rss 2285 MB, pss 2184 MB, swap 2 MB, majflt 351, minflt 2699338, cpu 468320 ms
+11-15 11:53:31.866  8994 11351 I OpenWeights: mem: before turn rss 2285 MB, pss 2184 MB, swap 2 MB, majflt 351, minflt 2699354, cpu 468350 ms
+11-15 11:53:31.869  8994 11351 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 11:53:31.869  8994 11351 I OpenWeights: kv: diverged at 1040 of 1092 cached, prompt 1108, re-reading 68
+11-15 11:53:31.869  8994 11351 I OpenWeights: kv: rollback refused; restored the point at 1040, reading 68 instead of 90
+11-15 11:53:35.598  8994 11351 I OpenWeights: mem: after turn rss 2286 MB, pss 2184 MB, swap 2 MB, majflt 351, minflt 2699513, cpu 485710 ms
+11-15 11:54:05.802  8994 11351 I OpenWeights: mem: before turn rss 2286 MB, pss 2184 MB, swap 2 MB, majflt 351, minflt 2699542, cpu 485780 ms
+11-15 11:54:05.804  8994 11351 I OpenWeights: kv: diverged at 1023 of 1146 cached, prompt 1037, re-reading 14
+11-15 11:54:05.808  8994 11351 I OpenWeights: kv: rollback refused; restored the warm prefix of 1018 instead of re-reading all 1037
+11-15 11:54:08.396  8994 11351 I OpenWeights: mem: after turn rss 2286 MB, pss 2184 MB, swap 2 MB, majflt 351, minflt 2699970, cpu 497450 ms
+11-15 11:54:08.636  8994  9007 I WarmPrefixEval: restore LFM2.5-2.6B-Q4_K_M.gguf pair=2 arm=restored prompt=19 cached=1018 prefill=437ms ttft=439ms cpu=43.7C
+11-15 11:54:14.759  8994 12334 I OpenWeights: weights: 3 host ranges, 1689 MB
+11-15 11:54:14.891  8994 12334 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:54:14.920  8994 12334 I OpenWeights: mem: after load rss 2182 MB, pss 2081 MB, swap 2 MB, majflt 351, minflt 3123989, cpu 503750 ms
+11-15 11:54:14.925  8994 12334 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:54:14.946  8994 12334 I OpenWeights: mem: before turn rss 2182 MB, pss 2081 MB, swap 2 MB, majflt 351, minflt 3123999, cpu 503780 ms
+11-15 11:54:15.320  8994 12334 I OpenWeights: mem: after turn rss 2187 MB, pss 2086 MB, swap 2 MB, majflt 351, minflt 3125435, cpu 505550 ms
+11-15 11:54:25.402  8994 12334 I OpenWeights: mem: before turn rss 2186 MB, pss 2085 MB, swap 2 MB, majflt 351, minflt 3125481, cpu 505580 ms
+11-15 11:54:25.404  8994 12334 I OpenWeights: kv: diverged at 2 of 17 cached, prompt 1037, re-reading 1035
+11-15 11:54:25.404  8994 12334 I OpenWeights: kv: rollback to 2 refused (recurrent state), re-reading all 1037
+11-15 11:54:39.460  8994 12334 I OpenWeights: mem: after turn rss 2252 MB, pss 2151 MB, swap 2 MB, majflt 351, minflt 3153353, cpu 580860 ms
+11-15 11:54:39.711  8994  9007 I WarmPrefixEval: restore LFM2.5-2.6B-Q4_K_M.gguf pair=2 arm=cold prompt=1037 cached=0 prefill=11764ms ttft=11766ms cpu=44.2C
+11-15 11:54:39.712  8994  9007 I WarmPrefixEval: restore pair=2 replies identical=true
+11-15 11:54:46.051  8994 12687 I OpenWeights: weights: 3 host ranges, 1689 MB
+11-15 11:54:46.217  8994 12687 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:54:46.252  8994 12687 I OpenWeights: mem: after load rss 2165 MB, pss 2064 MB, swap 2 MB, majflt 351, minflt 3576372, cpu 587620 ms
+11-15 11:54:46.257  8994 12687 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:54:46.284  8994 12687 I OpenWeights: mem: before turn rss 2165 MB, pss 2064 MB, swap 2 MB, majflt 351, minflt 3576396, cpu 587660 ms
+11-15 11:54:46.777  8994 12687 I OpenWeights: mem: after turn rss 2170 MB, pss 2069 MB, swap 2 MB, majflt 351, minflt 3577919, cpu 590000 ms
+11-15 11:54:56.872  8994 12687 I OpenWeights: mem: before turn rss 2170 MB, pss 2069 MB, swap 2 MB, majflt 351, minflt 3577984, cpu 590050 ms
+11-15 11:54:56.875  8994 12687 I OpenWeights: kv: diverged at 2 of 17 cached, prompt 1037, re-reading 1035
+11-15 11:54:56.875  8994 12687 I OpenWeights: kv: rollback to 2 refused (recurrent state), re-reading all 1037
+11-15 11:55:12.852  8994 12687 I OpenWeights: mem: after turn rss 2254 MB, pss 2154 MB, swap 2 MB, majflt 351, minflt 3603895, cpu 671780 ms
+11-15 11:55:13.049  8994  9007 I WarmPrefixEval: restore LFM2.5-2.6B-Q4_K_M.gguf pair=3 arm=cold prompt=1037 cached=0 prefill=14250ms ttft=14252ms cpu=44.8C
+11-15 11:55:19.571  8994 13135 I OpenWeights: weights: 3 host ranges, 1689 MB
+11-15 11:55:19.752  8994 13135 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:55:19.787  8994 13135 I OpenWeights: mem: after load rss 2167 MB, pss 2067 MB, swap 2 MB, majflt 351, minflt 4025906, cpu 678670 ms
+11-15 11:55:19.793  8994 13135 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:55:33.609  8994 13135 I OpenWeights: kv: warm prefix snapshot of 1018 tokens, 16652 KB
+11-15 11:55:33.609  8994 13135 I OpenWeights: kv: warmed 1018 tokens in 13807 ms (0 reused)
+11-15 11:55:33.634  8994 13135 I OpenWeights: mem: after warm rss 2265 MB, pss 2165 MB, swap 7 MB, majflt 351, minflt 4056520, cpu 753700 ms
+11-15 11:55:33.663  8994 13135 I OpenWeights: mem: before turn rss 2265 MB, pss 2165 MB, swap 7 MB, majflt 351, minflt 4056551, cpu 753730 ms
+11-15 11:55:37.219  8994 13135 I OpenWeights: mem: after turn rss 2266 MB, pss 2167 MB, swap 8 MB, majflt 351, minflt 4057371, cpu 769790 ms
+11-15 11:55:37.245  8994 13135 I OpenWeights: mem: before turn rss 2266 MB, pss 2167 MB, swap 8 MB, majflt 351, minflt 4057404, cpu 769810 ms
+11-15 11:55:37.248  8994 13135 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 11:55:37.248  8994 13135 I OpenWeights: kv: diverged at 1040 of 1092 cached, prompt 1108, re-reading 68
+11-15 11:55:37.249  8994 13135 I OpenWeights: kv: rollback refused; restored the point at 1040, reading 68 instead of 90
+11-15 11:55:40.820  8994 13135 I OpenWeights: mem: after turn rss 2267 MB, pss 2168 MB, swap 8 MB, majflt 351, minflt 4057851, cpu 786550 ms
+11-15 11:56:05.950  8994 13135 I OpenWeights: mem: before turn rss 2267 MB, pss 2168 MB, swap 8 MB, majflt 351, minflt 4057933, cpu 786600 ms
+11-15 11:56:05.952  8994 13135 I OpenWeights: kv: diverged at 1023 of 1146 cached, prompt 1037, re-reading 14
+11-15 11:56:05.958  8994 13135 I OpenWeights: kv: rollback refused; restored the warm prefix of 1018 instead of re-reading all 1037
+11-15 11:56:08.641  8994 13135 I OpenWeights: mem: after turn rss 2267 MB, pss 2168 MB, swap 8 MB, majflt 351, minflt 4058462, cpu 798910 ms
+11-15 11:56:08.892  8994  9007 I WarmPrefixEval: restore LFM2.5-2.6B-Q4_K_M.gguf pair=3 arm=restored prompt=19 cached=1018 prefill=459ms ttft=461ms cpu=44.0C
+11-15 11:56:08.892  8994  9007 I WarmPrefixEval: restore pair=3 replies identical=true
+11-15 11:56:15.825  8994 13845 I OpenWeights: weights: 3 host ranges, 1689 MB
+11-15 11:56:16.001  8994 13845 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:56:16.033  8994 13845 I OpenWeights: mem: after load rss 2164 MB, pss 2065 MB, swap 8 MB, majflt 351, minflt 4480472, cpu 806180 ms
+11-15 11:56:16.039  8994 13845 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:56:29.867  8994 13845 I OpenWeights: kv: warm prefix snapshot of 1018 tokens, 16652 KB
+11-15 11:56:29.867  8994 13845 I OpenWeights: kv: warmed 1018 tokens in 13819 ms (0 reused)
+11-15 11:56:29.892  8994 13845 I OpenWeights: mem: after warm rss 2266 MB, pss 2167 MB, swap 8 MB, majflt 351, minflt 4512570, cpu 884300 ms
+11-15 11:56:29.918  8994 13845 I OpenWeights: mem: before turn rss 2267 MB, pss 2167 MB, swap 8 MB, majflt 351, minflt 4512613, cpu 884320 ms
+11-15 11:56:33.128  8994 13845 I OpenWeights: mem: after turn rss 2270 MB, pss 2171 MB, swap 8 MB, majflt 351, minflt 4513278, cpu 899080 ms
+11-15 11:56:33.151  8994 13845 I OpenWeights: mem: before turn rss 2270 MB, pss 2171 MB, swap 8 MB, majflt 351, minflt 4513288, cpu 899100 ms
+11-15 11:56:33.155  8994 13845 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 11:56:33.155  8994 13845 I OpenWeights: kv: diverged at 1040 of 1092 cached, prompt 1108, re-reading 68
+11-15 11:56:33.155  8994 13845 I OpenWeights: kv: rollback refused; restored the point at 1040, reading 68 instead of 90
+11-15 11:56:36.371  8994 13845 I OpenWeights: mem: after turn rss 2270 MB, pss 2171 MB, swap 8 MB, majflt 351, minflt 4513467, cpu 914780 ms
+11-15 11:56:56.479  8994 13845 I OpenWeights: mem: before turn rss 2268 MB, pss 2169 MB, swap 11 MB, majflt 351, minflt 4513530, cpu 914830 ms
+11-15 11:56:56.482  8994 13845 I OpenWeights: kv: diverged at 1023 of 1146 cached, prompt 1037, re-reading 14
+11-15 11:56:56.487  8994 13845 I OpenWeights: kv: rollback refused; restored the warm prefix of 1018 instead of re-reading all 1037
+11-15 11:56:59.120  8994 13845 I OpenWeights: mem: after turn rss 2267 MB, pss 2169 MB, swap 11 MB, majflt 353, minflt 4514033, cpu 926930 ms
+11-15 11:56:59.363  8994  9007 I WarmPrefixEval: restore LFM2.5-2.6B-Q4_K_M.gguf pair=4 arm=restored prompt=19 cached=1018 prefill=408ms ttft=410ms cpu=43.7C
+11-15 11:57:05.762  8994 14320 I OpenWeights: weights: 3 host ranges, 1689 MB
+11-15 11:57:05.929  8994 14320 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:57:05.961  8994 14320 I OpenWeights: mem: after load rss 2164 MB, pss 2065 MB, swap 11 MB, majflt 353, minflt 4932434, cpu 933740 ms
+11-15 11:57:05.966  8994 14320 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:57:05.992  8994 14320 I OpenWeights: mem: before turn rss 2164 MB, pss 2066 MB, swap 11 MB, majflt 353, minflt 4932444, cpu 933780 ms
+11-15 11:57:06.395  8994 14320 I OpenWeights: mem: after turn rss 2169 MB, pss 2070 MB, swap 11 MB, majflt 353, minflt 4933939, cpu 935730 ms
+11-15 11:57:16.462  8994 14320 I OpenWeights: mem: before turn rss 2169 MB, pss 2070 MB, swap 11 MB, majflt 353, minflt 4933956, cpu 935770 ms
+11-15 11:57:16.465  8994 14320 I OpenWeights: kv: diverged at 2 of 17 cached, prompt 1037, re-reading 1035
+11-15 11:57:16.465  8994 14320 I OpenWeights: kv: rollback to 2 refused (recurrent state), re-reading all 1037
+11-15 11:57:31.065  8994 14320 I OpenWeights: mem: after turn rss 2253 MB, pss 2155 MB, swap 11 MB, majflt 353, minflt 4961278, cpu 1016240 ms
+11-15 11:57:31.286  8994  9007 I WarmPrefixEval: restore LFM2.5-2.6B-Q4_K_M.gguf pair=4 arm=cold prompt=1037 cached=0 prefill=12558ms ttft=12560ms cpu=43.1C
+11-15 11:57:31.286  8994  9007 I WarmPrefixEval: restore pair=4 replies identical=true
+11-15 11:57:37.426  8994 14733 I OpenWeights: weights: 3 host ranges, 1689 MB
+11-15 11:57:37.593  8994 14733 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:57:37.628  8994 14733 I OpenWeights: mem: after load rss 2165 MB, pss 2067 MB, swap 11 MB, majflt 353, minflt 5380677, cpu 1022750 ms
+11-15 11:57:37.633  8994 14733 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:57:37.659  8994 14733 I OpenWeights: mem: before turn rss 2165 MB, pss 2067 MB, swap 11 MB, majflt 353, minflt 5380700, cpu 1022780 ms
+11-15 11:57:38.063  8994 14733 I OpenWeights: mem: after turn rss 2170 MB, pss 2072 MB, swap 11 MB, majflt 353, minflt 5382145, cpu 1024730 ms
+11-15 11:57:48.177  8994 14733 I OpenWeights: mem: before turn rss 2170 MB, pss 2072 MB, swap 11 MB, majflt 353, minflt 5382206, cpu 1024780 ms
+11-15 11:57:48.180  8994 14733 I OpenWeights: kv: diverged at 2 of 17 cached, prompt 1037, re-reading 1035
+11-15 11:57:48.180  8994 14733 I OpenWeights: kv: rollback to 2 refused (recurrent state), re-reading all 1037
+11-15 11:58:01.714  8994 14733 I OpenWeights: mem: after turn rss 2255 MB, pss 2156 MB, swap 11 MB, majflt 353, minflt 5406804, cpu 1099630 ms
+11-15 11:58:01.912  8994  9007 I WarmPrefixEval: restore LFM2.5-2.6B-Q4_K_M.gguf pair=5 arm=cold prompt=1037 cached=0 prefill=11814ms ttft=11816ms cpu=44.0C
+11-15 11:58:07.763  8994 15037 I OpenWeights: weights: 3 host ranges, 1689 MB
+11-15 11:58:07.953  8994 15037 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 11:58:07.988  8994 15037 I OpenWeights: mem: after load rss 2157 MB, pss 2058 MB, swap 11 MB, majflt 353, minflt 5825010, cpu 1105900 ms
+11-15 11:58:07.995  8994 15037 I OpenWeights: loaded: tools=true results=true thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-15 11:58:21.821  8994 15037 I OpenWeights: kv: warm prefix snapshot of 1018 tokens, 16652 KB
+11-15 11:58:21.821  8994 15037 I OpenWeights: kv: warmed 1018 tokens in 13819 ms (0 reused)
+11-15 11:58:21.847  8994 15037 I OpenWeights: mem: after warm rss 2253 MB, pss 2155 MB, swap 11 MB, majflt 353, minflt 5854084, cpu 1184520 ms
+11-15 11:58:21.872  8994 15037 I OpenWeights: mem: before turn rss 2253 MB, pss 2155 MB, swap 11 MB, majflt 354, minflt 5854140, cpu 1184540 ms
+11-15 11:58:25.076  8994 15037 I OpenWeights: mem: after turn rss 2252 MB, pss 2154 MB, swap 11 MB, majflt 354, minflt 5854822, cpu 1199330 ms
+11-15 11:58:25.101  8994 15037 I OpenWeights: mem: before turn rss 2252 MB, pss 2154 MB, swap 11 MB, majflt 354, minflt 5854858, cpu 1199370 ms
+11-15 11:58:25.105  8994 15037 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 11:58:25.105  8994 15037 I OpenWeights: kv: diverged at 1040 of 1092 cached, prompt 1108, re-reading 68
+11-15 11:58:25.105  8994 15037 I OpenWeights: kv: rollback refused; restored the point at 1040, reading 68 instead of 90
+11-15 11:58:28.274  8994 15037 I OpenWeights: mem: after turn rss 2253 MB, pss 2155 MB, swap 11 MB, majflt 354, minflt 5855112, cpu 1214850 ms
+11-15 11:58:48.437  8994 15037 I OpenWeights: mem: before turn rss 2253 MB, pss 2155 MB, swap 11 MB, majflt 354, minflt 5855188, cpu 1214900 ms
+11-15 11:58:48.440  8994 15037 I OpenWeights: kv: diverged at 1023 of 1146 cached, prompt 1037, re-reading 14
+11-15 11:58:48.444  8994 15037 I OpenWeights: kv: rollback refused; restored the warm prefix of 1018 instead of re-reading all 1037
+11-15 11:58:51.086  8994 15037 I OpenWeights: mem: after turn rss 2253 MB, pss 2155 MB, swap 11 MB, majflt 354, minflt 5855754, cpu 1227020 ms
+11-15 11:58:51.326  8994  9007 I WarmPrefixEval: restore LFM2.5-2.6B-Q4_K_M.gguf pair=5 arm=restored prompt=19 cached=1018 prefill=379ms ttft=381ms cpu=43.7C
+11-15 11:58:51.326  8994  9007 I WarmPrefixEval: restore pair=5 replies identical=true

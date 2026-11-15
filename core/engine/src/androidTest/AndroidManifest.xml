@@ -40,6 +40,11 @@
         <uses-native-library
             android:name="libneuron_sys_util.mtk.so"
             android:required="false" />
+        <!-- Qualcomm's FastRPC library, as in the app's manifest, so a QNN export can reach the
+             DSP from this APK (ExecuTorchOnDeviceTest with a qnn file). -->
+        <uses-native-library
+            android:name="libcdsprpc.so"
+            android:required="false" />
 
         <!-- Holds the foreground while PdDecodeProbe runs: the boost it measures was applied
              only to the top app, so an instrumentation process with nothing on screen would
