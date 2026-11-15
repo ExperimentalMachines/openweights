@@ -18,14 +18,17 @@ package io.github.alpharomercoma.openweights.core.engine.eval
 
 import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import io.github.alpharomercoma.openweights.core.common.model.ChatMessage
 import io.github.alpharomercoma.openweights.core.common.model.ChatRole
 import io.github.alpharomercoma.openweights.core.common.model.ModelLoadParams
 import io.github.alpharomercoma.openweights.core.common.model.SamplerParams
+import io.github.alpharomercoma.openweights.core.engine.DeviceState
 import io.github.alpharomercoma.openweights.core.engine.GenerationEvent
 import io.github.alpharomercoma.openweights.core.engine.LlamaCppEngine
+import io.github.alpharomercoma.openweights.core.engine.jsonString
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.toList
@@ -140,6 +143,125 @@ class WarmPrefixEval {
             engine.close()
         }
     }
+
+    /**
+     * The same fresh-chat question, read cold and read over a restored head.
+     *
+     * The fresh-chat figures behind the talk (235 ms on LFM2.5) are times to first token after
+     * a restore, with no cold reading of the same prompt beside them. Here each pair asks the
+     * identical question twice, on two engines. Restored: warm the head with its snapshot,
+     * hold a two-turn conversation so the cache has moved past the head, then open a new
+     * chat, which a hybrid can only serve by restoring the snapshot and a transformer by
+     * rolling back. Cold: a fresh engine that never warmed, with one unrelated turn first so
+     * mapping the weights in is not counted as prefill. Pairs alternate which arm goes first,
+     * each timed turn waits for the CPU to cool, and each row records the phone's state.
+     * `-e gguf <path>` picks one model (default: every .gguf in [EVAL_DIR]); `-e pairs <n>`;
+     * rows go to `eval-results/<stem>.restore.jsonl`.
+     */
+    @Test
+    fun aFreshChatReadColdAndRestored(): Unit = runBlocking {
+        val arguments = InstrumentationRegistry.getArguments()
+        val models = arguments.getString("gguf")?.let { listOf(File(it)) }
+            ?: EVAL_DIR.listFiles { file ->
+                file.extension == "gguf"
+            }.orEmpty().sortedBy { it.name }
+        assumeTrue("no .gguf to run", models.any { it.isFile })
+        val pairs = arguments.getString("pairs")?.toIntOrNull() ?: DEFAULT_PAIRS
+        val out = InstrumentationRegistry.getInstrumentation().targetContext
+            .getExternalFilesDir("eval-results")!!.apply { mkdirs() }
+        for (model in models.filter { it.isFile }) {
+            val sink = File(out, model.nameWithoutExtension + ".restore.jsonl").apply {
+                writeText("")
+            }
+            repeat(pairs) { pair ->
+                val order = if (pair % 2 == 0) listOf(RESTORED, COLD) else listOf(COLD, RESTORED)
+                val replies = mutableMapOf<String, String>()
+                for (arm in order) {
+                    val row = timedFreshChat(model, arm)
+                    replies[arm] = row.reply.text
+                    val s = row.reply.stats
+                    sink.appendText(rowJson(pair, arm, order, row) + "\n")
+                    Log.i(
+                        TAG,
+                        "restore ${model.name} pair=$pair arm=$arm prompt=${s.promptTokens} " +
+                            "cached=${s.cachedTokens} prefill=${s.prefillMs}ms " +
+                            "ttft=${s.timeToFirstTokenMs}ms cpu=${row.before.cpuC}C",
+                    )
+                    // Written before judging, so a failed pair still leaves its row.
+                    if (arm == RESTORED) {
+                        assertWithMessage("${model.name}: the fresh chat did not restore the head")
+                            .that(s.cachedTokens).isGreaterThan(MIN_RESTORED)
+                    } else {
+                        assertWithMessage("${model.name}: the cold arm reused a cache")
+                            .that(s.cachedTokens).isLessThan(MAX_COLD_REUSE)
+                    }
+                }
+                Log.i(
+                    TAG,
+                    "restore pair=$pair replies identical=${replies[RESTORED] == replies[COLD]}",
+                )
+            }
+        }
+    }
+
+    private fun rowJson(pair: Int, arm: String, order: List<String>, row: TimedRow): String {
+        val s = row.reply.stats
+        val fields = listOf(
+            "pair" to "$pair",
+            "arm" to jsonString(arm),
+            "order" to jsonString(order.joinToString("-")),
+            "snapshot_bytes" to "${row.snapshotBytes}",
+            "prompt_tokens" to "${s.promptTokens}",
+            "cached_tokens" to "${s.cachedTokens}",
+            "prefill_ms" to "${s.prefillMs}",
+            "ttft_ms" to "${s.timeToFirstTokenMs}",
+            "generated_tokens" to "${s.generatedTokens}",
+            "decode_ms" to "${s.decodeMs}",
+            "cpu_c_before" to "${row.before.cpuC}",
+            "cpu_c_after" to "${row.after.cpuC}",
+            "battery_c" to "${row.before.batteryC}",
+            "screen_on" to "${row.before.screenOn}",
+            "cooled_s" to "${row.before.waitedS}",
+            "reply" to jsonString(row.reply.text),
+        )
+        return fields.joinToString(", ", "{", "}") { (key, value) -> "\"$key\": $value" }
+    }
+
+    /** One arm of [aFreshChatReadColdAndRestored], on an engine of its own. */
+    private suspend fun timedFreshChat(model: File, arm: String): TimedRow {
+        val engine = LlamaCppEngine()
+        try {
+            engine.load(model, ModelLoadParams(contextLength = CONTEXT))
+            var snapshotBytes = 0L
+            if (arm == RESTORED) {
+                snapshotBytes = engine.warm(listOf(system()), params = PARAMS)?.snapshotBytes ?: 0L
+                val first = engine.ask(QUESTION)
+                engine.ask(
+                    QUESTION,
+                    ChatMessage.text(ChatRole.ASSISTANT, first.text),
+                    ChatMessage.text(ChatRole.USER, "Now add ten to it."),
+                )
+            } else {
+                engine.chat(
+                    listOf(ChatMessage.text(ChatRole.USER, "Say OK.")),
+                    PARAMS.copy(maxTokens = 4),
+                ).toList()
+            }
+            val before = DeviceState.read(coolFirst = true)
+            val reply = engine.ask(SECOND_QUESTION)
+            return TimedRow(reply, snapshotBytes, before, DeviceState.read(coolFirst = false))
+        } finally {
+            engine.unload()
+            engine.close()
+        }
+    }
+
+    private class TimedRow(
+        val reply: Reply,
+        val snapshotBytes: Long,
+        val before: DeviceState,
+        val after: DeviceState,
+    )
 
     @Test
     fun conversationWarmExtendsWithoutTakingTheFreshSnapshot(): Unit = runBlocking {
@@ -271,6 +393,15 @@ class WarmPrefixEval {
 
     private companion object {
         const val TAG = "WarmPrefixEval"
+        const val RESTORED = "restored"
+        const val COLD = "cold"
+        const val DEFAULT_PAIRS = 6
+
+        /** A restored head is the 1,018-token prefix; anything this small restored nothing. */
+        const val MIN_RESTORED = 100
+
+        /** A transformer may keep the BOS and a role opener across the unrelated first turn. */
+        const val MAX_COLD_REUSE = 8
         const val CONTEXT = 4096
 
         /** Deep enough into the prefill to be mid-batch, well short of a full warm. */

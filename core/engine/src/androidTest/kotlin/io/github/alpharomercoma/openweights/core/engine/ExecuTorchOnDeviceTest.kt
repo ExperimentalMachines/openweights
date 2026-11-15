@@ -57,7 +57,10 @@ class ExecuTorchOnDeviceTest {
     fun setUp() {
         assumeTrue("no .pte at ${MODEL.path}", MODEL.isFile)
         assumeTrue("no tokenizer beside ${MODEL.name}", TOKENIZER.isFile)
-        engine = ExecuTorchEngine(NativeExecuTorchBridge())
+        // This engine samples at the temperature it was built with, for every turn; a
+        // SamplerParams temperature does not reach it. `-e temperature 0` makes it greedy.
+        engine = TEMPERATURE?.let { ExecuTorchEngine(NativeExecuTorchBridge(), temperature = it) }
+            ?: ExecuTorchEngine(NativeExecuTorchBridge())
     }
 
     @After
@@ -146,6 +149,155 @@ class ExecuTorchOnDeviceTest {
         // Still an answer, not debris from a mis-split sequence.
         assertThat(two.content).isNotEmpty()
         assertThat(two.content).doesNotContain("<|im_")
+    }
+
+    /**
+     * The same second-turn prompt, read warm and read cold, on one load.
+     *
+     * [reportsWhatASecondTurnCosts] compares turn two with turn one, which feed different
+     * text, so its ratio is not a speedup. Here both arms send the identical turn-two
+     * conversation. Each pair generates its own turn one; warm is the real second turn,
+     * extending the cache turn one left, and cold resets and reads the same prompt whole.
+     *
+     * Sampled, as the app samples, the warm arm has to go first: a forward-only cache has
+     * no way back to the end of turn one once the cold arm has read, and a sampled turn one
+     * comes out different every time (616, 347 and 297 tokens on the POCO). With
+     * `-e temperature 0` the engine is greedy, turn one can be written again, and odd pairs
+     * run cold first and then regenerate turn one for the warm arm, recording whether it
+     * came out the same; greedy is also the only setting under which the two arms' replies
+     * say anything about whether reuse changed the output.
+     *
+     * A warm arm that found nothing to extend is recorded with turn one's reply and the
+     * engine's record against the next render, because that is a reuse failure in its own
+     * right. Every timed turn waits for the CPU to cool, and each row records the CPU and
+     * battery temperatures and whether the screen was on, because this phone throttles a
+     * screen-off run two to five times. `-e pairs <n>` sets the count; rows go to
+     * `eval-results/<stem>.coldwarm.jsonl`.
+     */
+    @Test
+    fun theSecondTurnReadColdAndWarm(): Unit = runBlocking {
+        engine.load(MODEL, PARAMS)
+        val first = listOf(ChatMessage.text(ChatRole.USER, LONG_PROMPT))
+        val ask = ChatMessage.text(ChatRole.USER, "In one word, what did I just describe?")
+        // Reasoning on, as in reportsWhatASecondTurnCosts: Qwen3 with it off closes an empty
+        // think block that the next render drops, and the turn could never be extended.
+        val opening = SamplerParams()
+        val timed = SamplerParams(maxTokens = TIMED_TOKENS)
+        val balanced = TEMPERATURE == 0f
+        val pairs = arguments.getString("pairs")?.toIntOrNull() ?: DEFAULT_PAIRS
+        val out = InstrumentationRegistry.getInstrumentation().targetContext
+            .getExternalFilesDir("eval-results")!!.apply { mkdirs() }
+        val sink = File(out, MODEL.nameWithoutExtension + ".coldwarm.jsonl")
+            .apply { writeText("") }
+
+        var warmHits = 0
+        var rewrittenDifferently = 0
+        repeat(pairs) { pair ->
+            engine.resetContext()
+            val one = turn(first, opening)
+            Log.i(
+                TAG,
+                "coldwarm pair=$pair turn one: generated=${one.stats.generatedTokens} " +
+                    "reason=${one.done.reason} held=${one.stats.contextUsed}",
+            )
+            // A turn one that filled the window leaves no room for turn two, which the
+            // runtime then refuses outright. Not a reuse result either way.
+            if (one.stats.contextUsed + TIMED_TOKENS + ROOM_FOR_ASK >= one.stats.contextSize) {
+                Log.i(TAG, "coldwarm pair=$pair skipped: turn one left no room")
+                return@repeat
+            }
+            val sent = first +
+                ChatMessage.text(ChatRole.ASSISTANT, one.raw.ifEmpty { "Understood." }) +
+                ask
+            val order = if (balanced && pair % 2 == 1) listOf(COLD, WARM) else listOf(WARM, COLD)
+            val replies = mutableMapOf<String, String>()
+            var match = ""
+            for (arm in order) {
+                var sameTurnOne = true
+                if (arm == COLD) {
+                    engine.resetContext()
+                } else {
+                    if (order.first() == COLD) {
+                        engine.resetContext()
+                        sameTurnOne = turn(first, opening).raw == one.raw
+                        if (!sameTurnOne) rewrittenDifferently++
+                    }
+                    match = recordAgainst(sent, timed)
+                    Log.i(TAG, "coldwarm pair=$pair record: $match sameTurnOne=$sameTurnOne")
+                }
+                val before = DeviceState.read(coolFirst = true)
+                val two = turn(sent, timed)
+                val after = DeviceState.read(coolFirst = false)
+                val s = two.stats
+                replies[arm] = two.raw
+                if (arm == WARM && s.cachedTokens > 0) warmHits++
+                val opener = if (arm == WARM) {
+                    """"turn_one_tokens": ${one.stats.generatedTokens}, """ +
+                        """"turn_one_reason": "${one.done.reason}", """ +
+                        """"turn_one": ${jsonString(one.raw)}, """ +
+                        """"record": ${jsonString(match)}, """
+                } else {
+                    ""
+                }
+                val row =
+                    """{"pair": $pair, "arm": "$arm", "order": "${order.joinToString("-")}", """ +
+                        """"temperature": ${TEMPERATURE ?: "null"}, """ +
+                        """"same_turn_one": $sameTurnOne, """ +
+                        opener +
+                        """"prompt_tokens": ${s.promptTokens}, """ +
+                        """"cached_tokens": ${s.cachedTokens}, "prefill_ms": ${s.prefillMs}, """ +
+                        """"ttft_ms": ${s.timeToFirstTokenMs}, """ +
+                        """"generated_tokens": ${s.generatedTokens}, """ +
+                        """"decode_ms": ${s.decodeMs}, "cpu_c_before": ${before.cpuC}, """ +
+                        """"cpu_c_after": ${after.cpuC}, "battery_c": ${before.batteryC}, """ +
+                        """"screen_on": ${before.screenOn}, "cooled_s": ${before.waitedS}, """ +
+                        """"reply": ${jsonString(two.raw)}}"""
+                sink.appendText(row + "\n")
+                Log.i(
+                    TAG,
+                    "coldwarm pair=$pair arm=$arm fed=${s.promptTokens} cached=${s.cachedTokens} " +
+                        "prefill=${s.prefillMs}ms ttft=${s.timeToFirstTokenMs}ms " +
+                        "cpu=${before.cpuC}C screen=${before.screenOn}",
+                )
+            }
+            Log.i(TAG, "coldwarm pair=$pair replies identical=${replies[WARM] == replies[COLD]}")
+        }
+        Log.i(TAG, "coldwarm done: ${sink.absolutePath}")
+        // At least one warm arm must actually have been warm, or nothing was compared.
+        assertThat(warmHits).isAtLeast(1)
+        // A cold-first pair whose turn one came out different did not compare one prompt.
+        // Judged after every row is written, so the rows that say which pair survive.
+        assertThat(rewrittenDifferently).isEqualTo(0)
+    }
+
+    /**
+     * Whether the engine's record of what it fed is a prefix of the next prompt's render,
+     * and if not, the first character where they part. Read through reflection because
+     * both are private, and a test is the only place that needs them: a warm turn that
+     * re-reads everything says only that the comparison failed, never where.
+     */
+    private fun recordAgainst(messages: List<ChatMessage>, params: SamplerParams): String {
+        val record = ExecuTorchEngine::class.java.getDeclaredField("fedText")
+            .apply { isAccessible = true }.get(engine) as String
+        val next = ExecuTorchEngine::class.java.getDeclaredMethod(
+            "render",
+            List::class.java,
+            List::class.java,
+            Boolean::class.javaPrimitiveType,
+        ).apply {
+            isAccessible = true
+        }.invoke(engine, messages, emptyList<Any>(), params.thinking) as String
+        if (record.isNotEmpty() && next.startsWith(record)) {
+            return "extends, record ${record.length} of ${next.length} chars"
+        }
+        val at = record.indices.firstOrNull { it >= next.length || record[it] != next[it] }
+            ?: record.length
+        fun around(text: String) = text.substring(
+            (at - DIFF_CONTEXT).coerceAtLeast(0),
+            (at + DIFF_CONTEXT).coerceAtMost(text.length),
+        )
+        return "breaks at $at of record ${record.length}, render ${next.length}: " +
+            "record ${jsonString(around(record))} render ${jsonString(around(next))}"
     }
 
     /** Reasoning off is the case that cannot reuse the cache; it must still be correct. */
@@ -376,8 +528,11 @@ class ExecuTorchOnDeviceTest {
      * 48 crept back in later, which on a Snapdragon 8 Gen 3 on 2026-09-02 measured the
      * same thing again: turn two re-read all 971 tokens. So the budget is the default.
      */
-    private suspend fun turn(messages: List<ChatMessage>): Turn {
-        val events = engine.chat(messages, SamplerParams()).toList()
+    private suspend fun turn(
+        messages: List<ChatMessage>,
+        params: SamplerParams = SamplerParams(),
+    ): Turn {
+        val events = engine.chat(messages, params).toList()
         return Turn(
             done = events.filterIsInstance<GenerationEvent.Completed>().single(),
             raw = events.filterIsInstance<GenerationEvent.Token>().joinToString("") { it.text },
@@ -408,11 +563,28 @@ class ExecuTorchOnDeviceTest {
                     ),
         )
 
+        /** `-e temperature <t>` builds the engine at that temperature; unset, the app's. */
+        val TEMPERATURE = arguments.getString("temperature")?.toFloatOrNull()
+
         /** `-e context <n>` raises the preference for an export with a larger window. */
         val PARAMS = ModelLoadParams(
             contextLength = arguments.getString("context")?.toIntOrNull() ?: 2048,
         )
         const val TOKENS_BEFORE_STOP = 5
+
+        const val WARM = "warm"
+        const val COLD = "cold"
+        const val DEFAULT_PAIRS = 8
+
+        /** Enough of the reply to compare the two arms token for token; the timing is the prefill's. */
+        const val TIMED_TOKENS = 48
+
+        /** The question and the openers around it, with slack; about 25 tokens measured. */
+        const val ROOM_FOR_ASK = 64
+
+        /** Characters shown either side of where a record and a render part. */
+        const val DIFF_CONTEXT = 60
+
         const val BUDGET = 8
 
         /** The runtime is asked to stop from inside its own token callback: one or two more. */
