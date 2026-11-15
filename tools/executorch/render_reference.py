@@ -259,6 +259,45 @@ LFM25_CASES: dict[str, dict] = {
     },
 }
 
+# LFM3: ChatML turns, tools as one JSON object a line inside <tools> at the foot of the
+# system turn, calls as XML parameters, and an assistant opener that always carries a
+# think tag: left open when reasoning is on, closed empty when it is off.
+LFM3_CASES: dict[str, dict] = {
+    "plain": {"messages": [USER_Q]},
+    "thinkingDisabled": {"messages": [USER_Q], "enable_thinking": False},
+    "withSystem": {"messages": [SYSTEM_TERSE, USER_Q]},
+    "withTools": {"messages": [USER_WEATHER], "tools": [SEARCH_TOOL]},
+    "withSystemAndTools": {"messages": [SYSTEM_TERSE, USER_WEATHER], "tools": [SEARCH_TOOL]},
+    # Reasoning before the last question is replaced by an empty block; after it, kept.
+    "priorThinkingDropped": {
+        "messages": [
+            {"role": "user", "content": "What is 2+2?"},
+            {"role": "assistant", "content": "<think>Simple arithmetic.</think>Four."},
+            {"role": "user", "content": "And 3+3?"},
+            {"role": "assistant", "content": "<think>Also simple.</think>Six."},
+        ],
+        "add_generation_prompt": False,
+    },
+    "toolRun": {
+        "messages": [
+            USER_WEATHER,
+            {"role": "assistant", "content": "", "tool_calls": [WEATHER_CALL]},
+            {"role": "tool", "content": "Manila: 31C, humid."},
+        ],
+        "tools": [SEARCH_TOOL],
+    },
+    # Results with no call id are not merged: each is its own tool turn.
+    "twoToolResults": {
+        "messages": [
+            {"role": "user", "content": "Compare Manila and Tokyo."},
+            {"role": "assistant", "content": "Looking both up."},
+            {"role": "tool", "content": "Manila: 31C."},
+            {"role": "tool", "content": "Tokyo: 22C."},
+        ],
+        "tools": [SEARCH_TOOL],
+    },
+}
+
 # SmolLM3: a system block always opens the prompt, with metadata, a date, the reasoning
 # mode, default or custom instructions and any tools; /no_think closes an empty think
 # block ahead of every assistant turn.
@@ -479,6 +518,15 @@ FAMILIES: dict[str, dict] = {
         "object": "Lfm25PromptFixtures",
         "test": "Lfm25PromptTest",
         "cases": LFM25_CASES,
+        "fixed_date": "",
+        "bos_token": "<|startoftext|>",
+    },
+    "lfm3": {
+        "model": "LiquidAI/LFM3-1.7B",
+        "jinja_file": True,
+        "object": "Lfm3PromptFixtures",
+        "test": "Lfm3PromptTest",
+        "cases": LFM3_CASES,
         "fixed_date": "",
         "bos_token": "<|startoftext|>",
     },
