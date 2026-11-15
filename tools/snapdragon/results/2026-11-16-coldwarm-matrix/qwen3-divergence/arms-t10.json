@@ -1,0 +1,2219 @@
+{
+ "versions": {
+  "executorch": "1.4.0 pybindings (pip wheel), XNNPACK",
+  "torch": "2.14.0",
+  "threads": 10,
+  "machine": "Apple M5 (4P+6E), macOS"
+ },
+ "turn_one_free_on_mac": {
+  "ended_on_im_end": true,
+  "generated_tokens_incl_im_end": 632,
+  "text_equals_phone_text": false,
+  "first_char_diff_vs_phone": 14,
+  "first_token_diff_vs_phone_canonical": 4,
+  "at_that_token": {
+   "shared_prefix_tail": "<think>\nOkay,",
+   "mac_top2": [
+    [
+     279,
+     35.2667,
+     " the"
+    ],
+    [
+     1077,
+     35.2448,
+     " let"
+    ]
+   ],
+   "mac_margin": 0.0219,
+   "phone_token": [
+    1077,
+    " let"
+   ]
+  },
+  "generated_ids_equal_canonical_of_own_text": true,
+  "text": "<think>\nOkay, the user is describing a system where they run language models on a phone, entirely on-device without using any network. They've repeated this description multiple times, which might be a formatting error or a mistake. The key points are: using local models, no network, and running on a phone.\n\nI need to acknowledge their system but also provide some context or insights. Since they mentioned \"no network involved at any point,\" it's important to note that this system is self-contained, which could be a benefit for privacy but might limit the model's capabilities if the model is not pre-trained or has limited resources. Also, the user might be looking for technical details, like how the model is integrated into the phone's hardware, or maybe the specific language models they're using (like LLaMA, Qwen, etc.). \n\nThey might be interested in the technical feasibility, such as whether the phone's CPU/GPU can handle the model, the memory requirements, and the performance compared to cloud-based models. They might also be looking for recommendations on how to optimize the system, like using quantization or pruning. \n\nAnother aspect is the user's intention. Are they building this system for specific purposes, like chatbots, content generation, or something else? If they have specific use cases, that might influence the technical details. \n\nI should make sure to address their system's key features: on-device, no network, phone-based. Also, perhaps note the challenges, like model size, required resources, and potential limitations. If they have specific questions about implementation, like how to deploy the model on a phone, or how to handle the model's storage, that's another point to consider. \n\nSince the user repeated the description, maybe they are testing or there's a formatting issue. I should respond with a brief acknowledgment, perhaps ask if they have specific questions about the system, or if they need help with implementation details. \n\nAlso, considering the system is entirely on-device, it's important to mention that the model is local, so there's no latency or network issues, but the model's performance might be limited by the phone's hardware. They might need to consider the model's size and the phone's capabilities. \n\nIn summary, the response should acknowledge their system, note the key points, and offer to help with specific questions or recommendations.\n</think>\n\nYour system aims to run language models on a phone without relying on networks, which is a privacy-preserving approach. However, the technical feasibility depends on the model's size, the phone's hardware (CPU/GPU), and the model's optimization (e.g., quantization, pruning). Key considerations include:  \n- **Model Size**: Larger models (e.g., LLaMA, Qwen) may require significant storage and computational resources.  \n- **Hardware Constraints**: Phones with limited processing power (e.g., older models) may struggle with complex models.  \n- **Latency**: On-device processing may introduce delays, though it avoids network bottlenecks.  \n\nWould you like guidance on optimizing the system, choosing models, or addressing specific challenges?"
+ },
+ "turn_one_forced": {
+  "steps": 385,
+  "steps_where_mac_greedy_differs_from_phone_text": 30,
+  "of_those_a_different_split_of_the_same_text": 1,
+  "detail": [
+   {
+    "step": 4,
+    "forced": [
+     1077,
+     " let"
+    ],
+    "mac_top2": [
+     [
+      279,
+      35.2667,
+      " the"
+     ],
+     [
+      1077,
+      35.2448,
+      " let"
+     ]
+    ],
+    "forced_logit_below_top": 0.0219,
+    "same_text_other_split": false
+   },
+   {
+    "step": 39,
+    "forced": [
+     7196,
+     " maybe"
+    ],
+    "mac_top2": [
+     [
+      773,
+      31.8786,
+      " so"
+     ],
+     [
+      7196,
+      31.8331,
+      " maybe"
+     ]
+    ],
+    "forced_logit_below_top": 0.0455,
+    "same_text_other_split": false
+   },
+   {
+    "step": 40,
+    "forced": [
+     438,
+     " as"
+    ],
+    "mac_top2": [
+     [
+      311,
+      25.5657,
+      " to"
+     ],
+     [
+      438,
+      24.8566,
+      " as"
+     ]
+    ],
+    "forced_logit_below_top": 0.7091,
+    "same_text_other_split": false
+   },
+   {
+    "step": 58,
+    "forced": [
+     419,
+     " this"
+    ],
+    "mac_top2": [
+     [
+      862,
+      42.3058,
+      " their"
+     ],
+     [
+      419,
+      41.9861,
+      " this"
+     ]
+    ],
+    "forced_logit_below_top": 0.3197,
+    "same_text_other_split": false
+   },
+   {
+    "step": 108,
+    "forced": [
+     4710,
+     " \n\n"
+    ],
+    "mac_top2": [
+     [
+      1096,
+      29.4715,
+      " This"
+     ],
+     [
+      4710,
+      29.4526,
+      " \n\n"
+     ]
+    ],
+    "forced_logit_below_top": 0.0189,
+    "same_text_other_split": false
+   },
+   {
+    "step": 113,
+    "forced": [
+     8014,
+     " interested"
+    ],
+    "mac_top2": [
+     [
+      3238,
+      29.8491,
+      " working"
+     ],
+     [
+      8014,
+      28.6677,
+      " interested"
+     ]
+    ],
+    "forced_logit_below_top": 1.1814,
+    "same_text_other_split": false
+   },
+   {
+    "step": 117,
+    "forced": [
+     3565,
+     " details"
+    ],
+    "mac_top2": [
+     [
+      68443,
+      32.0349,
+      " feasibility"
+     ],
+     [
+      3565,
+      32.0279,
+      " details"
+     ]
+    ],
+    "forced_logit_below_top": 0.007,
+    "same_text_other_split": false
+   },
+   {
+    "step": 128,
+    "forced": [
+     990,
+     " use"
+    ],
+    "mac_top2": [
+     [
+      54480,
+      25.5204,
+      " computational"
+     ],
+     [
+      990,
+      25.3669,
+      " use"
+     ]
+    ],
+    "forced_logit_below_top": 0.1536,
+    "same_text_other_split": false
+   },
+   {
+    "step": 143,
+    "forced": [
+     39270,
+     " latency"
+    ],
+    "mac_top2": [
+     [
+      5068,
+      28.1713,
+      " performance"
+     ],
+     [
+      39270,
+      28.0295,
+      " latency"
+     ]
+    ],
+    "forced_logit_below_top": 0.1418,
+    "same_text_other_split": false
+   },
+   {
+    "step": 152,
+    "forced": [
+     7567,
+     " benefits"
+    ],
+    "mac_top2": [
+     [
+      1849,
+      28.6643,
+      " system"
+     ],
+     [
+      14976,
+      28.4397,
+      " practical"
+     ]
+    ],
+    "forced_logit_below_top": 0.7546,
+    "same_text_other_split": false
+   },
+   {
+    "step": 159,
+    "forced": [
+     2041,
+     " without"
+    ],
+    "mac_top2": [
+     [
+      11,
+      31.8425,
+      ","
+     ],
+     [
+      2041,
+      31.1877,
+      " without"
+     ]
+    ],
+    "forced_logit_below_top": 0.6548,
+    "same_text_other_split": false
+   },
+   {
+    "step": 164,
+    "forced": [
+     5726,
+     " ability"
+    ],
+    "mac_top2": [
+     [
+      11513,
+      27.563,
+      " challenges"
+     ],
+     [
+      9481,
+      26.3548,
+      " limitations"
+     ]
+    ],
+    "forced_logit_below_top": 3.2424,
+    "same_text_other_split": false
+   },
+   {
+    "step": 167,
+    "forced": [
+     9079,
+     " tasks"
+    ],
+    "mac_top2": [
+     [
+      16216,
+      26.3842,
+      " sensitive"
+     ],
+     [
+      9079,
+      26.0657,
+      " tasks"
+     ]
+    ],
+    "forced_logit_below_top": 0.3185,
+    "same_text_other_split": false
+   },
+   {
+    "step": 168,
+    "forced": [
+     2041,
+     " without"
+    ],
+    "mac_top2": [
+     [
+      1075,
+      30.6374,
+      " like"
+     ],
+     [
+      2041,
+      29.5192,
+      " without"
+     ]
+    ],
+    "forced_logit_below_top": 1.1182,
+    "same_text_other_split": false
+   },
+   {
+    "step": 176,
+    "forced": [
+     12492,
+     " hasn"
+    ],
+    "mac_top2": [
+     [
+      702,
+      28.9793,
+      " has"
+     ],
+     [
+      12492,
+      28.1981,
+      " hasn"
+     ]
+    ],
+    "forced_logit_below_top": 0.7812,
+    "same_text_other_split": true
+   },
+   {
+    "step": 203,
+    "forced": [
+     389,
+     " on"
+    ],
+    "mac_top2": [
+     [
+      1376,
+      27.2214,
+      " key"
+     ],
+     [
+      389,
+      26.7863,
+      " on"
+     ]
+    ],
+    "forced_logit_below_top": 0.4351,
+    "same_text_other_split": false
+   },
+   {
+    "step": 225,
+    "forced": [
+     25283,
+     " scenarios"
+    ],
+    "mac_top2": [
+     [
+      8357,
+      27.0588,
+      " applications"
+     ],
+     [
+      25283,
+      26.7534,
+      " scenarios"
+     ]
+    ],
+    "forced_logit_below_top": 0.3055,
+    "same_text_other_split": false
+   },
+   {
+    "step": 228,
+    "forced": [
+     2615,
+     " access"
+    ],
+    "mac_top2": [
+     [
+      374,
+      30.093,
+      " is"
+     ],
+     [
+      2615,
+      29.8549,
+      " access"
+     ]
+    ],
+    "forced_logit_below_top": 0.2381,
+    "same_text_other_split": false
+   },
+   {
+    "step": 235,
+    "forced": [
+     2205,
+     " local"
+    ],
+    "mac_top2": [
+     [
+      311,
+      27.0929,
+      " to"
+     ],
+     [
+      2205,
+      27.0879,
+      " local"
+     ]
+    ],
+    "forced_logit_below_top": 0.005,
+    "same_text_other_split": false
+   },
+   {
+    "step": 245,
+    "forced": [
+     9767,
+     " secure"
+    ],
+    "mac_top2": [
+     [
+      1849,
+      23.5482,
+      " system"
+     ],
+     [
+      9767,
+      23.5327,
+      " secure"
+     ]
+    ],
+    "forced_logit_below_top": 0.0154,
+    "same_text_other_split": false
+   },
+   {
+    "step": 252,
+    "forced": [
+     311,
+     " to"
+    ],
+    "mac_top2": [
+     [
+      279,
+      33.6565,
+      " the"
+     ],
+     [
+      311,
+      33.4394,
+      " to"
+     ]
+    ],
+    "forced_logit_below_top": 0.2171,
+    "same_text_other_split": false
+   },
+   {
+    "step": 258,
+    "forced": [
+     389,
+     " on"
+    ],
+    "mac_top2": [
+     [
+      2205,
+      27.4963,
+      " local"
+     ],
+     [
+      389,
+      26.4713,
+      " on"
+     ]
+    ],
+    "forced_logit_below_top": 1.0251,
+    "same_text_other_split": false
+   },
+   {
+    "step": 266,
+    "forced": [
+     8692,
+     " processing"
+    ],
+    "mac_top2": [
+     [
+      16928,
+      29.998,
+      " capabilities"
+     ],
+     [
+      3476,
+      29.3615,
+      " role"
+     ]
+    ],
+    "forced_logit_below_top": 0.807,
+    "same_text_other_split": false
+   },
+   {
+    "step": 273,
+    "forced": [
+     4650,
+     " potential"
+    ],
+    "mac_top2": [
+     [
+      6559,
+      25.4233,
+      " trade"
+     ],
+     [
+      11513,
+      24.7289,
+      " challenges"
+     ]
+    ],
+    "forced_logit_below_top": 1.1553,
+    "same_text_other_split": false
+   },
+   {
+    "step": 291,
+    "forced": [
+     4354,
+     " However"
+    ],
+    "mac_top2": [
+     [
+      4710,
+      26.7943,
+      " \n\n"
+     ],
+     [
+      4354,
+      26.119,
+      " However"
+     ]
+    ],
+    "forced_logit_below_top": 0.6753,
+    "same_text_other_split": false
+   },
+   {
+    "step": 315,
+    "forced": [
+     624,
+     ".\n"
+    ],
+    "mac_top2": [
+     [
+      323,
+      32.8823,
+      " and"
+     ],
+     [
+      624,
+      32.8419,
+      ".\n"
+     ]
+    ],
+    "forced_logit_below_top": 0.0404,
+    "same_text_other_split": false
+   },
+   {
+    "step": 323,
+    "forced": [
+     11368,
+     " entirely"
+    ],
+    "mac_top2": [
+     [
+      389,
+      31.7851,
+      " on"
+     ],
+     [
+      11368,
+      31.6883,
+      " entirely"
+     ]
+    ],
+    "forced_logit_below_top": 0.0968,
+    "same_text_other_split": false
+   },
+   {
+    "step": 354,
+    "forced": [
+     2205,
+     " local"
+    ],
+    "mac_top2": [
+     [
+      1931,
+      28.2556,
+      " real"
+     ],
+     [
+      2205,
+      27.5389,
+      " local"
+     ]
+    ],
+    "forced_logit_below_top": 0.7167,
+    "same_text_other_split": false
+   },
+   {
+    "step": 355,
+    "forced": [
+     34447,
+     " computation"
+    ],
+    "mac_top2": [
+     [
+      8692,
+      28.066,
+      " processing"
+     ],
+     [
+      34447,
+      27.2116,
+      " computation"
+     ]
+    ],
+    "forced_logit_below_top": 0.8544,
+    "same_text_other_split": false
+   },
+   {
+    "step": 370,
+    "forced": [
+     4354,
+     " However"
+    ],
+    "mac_top2": [
+     [
+      1084,
+      23.7711,
+      " It"
+     ],
+     [
+      4354,
+      22.9879,
+      " However"
+     ]
+    ],
+    "forced_logit_below_top": 0.7832,
+    "same_text_other_split": false
+   }
+  ]
+ },
+ "regions": {
+  "prompt_one_shared_pieces": [
+   0,
+   648
+  ],
+  "prompt_one_last_piece": [
+   648,
+   903
+  ],
+  "reply": [
+   903,
+   1287
+  ],
+  "tail": [
+   1287,
+   1307
+  ]
+ },
+ "arms": {
+  "W": {
+   "reply": "<think>\nOkay, the user is asking, \"In one word, what did I just describe?\" and they provided a description of a system where language models are run on a phone without using any network.\n\nFirst, I need to figure out",
+   "equals_phone_warm": false,
+   "equals_phone_cold": false,
+   "forwards": "438 forwards",
+   "forward_ms": 12780,
+   "smallest_margins_in_timed_reply": [
+    {
+     "step": 31,
+     "margin": 0.1622,
+     "top2": [
+      [
+       525,
+       40.7696,
+       " are"
+      ],
+      [
+       1598,
+       40.6074,
+       " run"
+      ]
+     ]
+    },
+    {
+     "step": 46,
+     "margin": 0.5148,
+     "top2": [
+      [
+       7071,
+       31.3692,
+       " figure"
+      ],
+      [
+       4715,
+       30.8544,
+       " parse"
+      ]
+     ]
+    },
+    {
+     "step": 4,
+     "margin": 0.6649,
+     "top2": [
+      [
+       279,
+       36.2951,
+       " the"
+      ],
+      [
+       1077,
+       35.6302,
+       " let"
+      ]
+     ]
+    },
+    {
+     "step": 6,
+     "margin": 0.9153,
+     "top2": [
+      [
+       374,
+       35.1887,
+       " is"
+      ],
+      [
+       4588,
+       34.2734,
+       " asked"
+      ]
+     ]
+    },
+    {
+     "step": 37,
+     "margin": 2.0042,
+     "top2": [
+      [
+       1667,
+       35.3638,
+       " using"
+      ],
+      [
+       894,
+       33.3596,
+       " any"
+      ]
+     ]
+    }
+   ]
+  },
+  "C": {
+   "reply": "<think>\nOkay, the user is asking, \"In one word, what did I just describe?\" and they provided a description of a system where language models run on a phone without using any network.\n\nFirst, I need to parse the original",
+   "equals_phone_warm": false,
+   "equals_phone_cold": false,
+   "forwards": "56 forwards",
+   "forward_ms": 5465,
+   "ids_equal_W": true,
+   "max_abs_logit_diff_vs_W_by_region": {
+    "prompt_one_shared_pieces": 0.0,
+    "prompt_one_last_piece": 4.34641,
+    "reply": 4.53225,
+    "tail": 11.69477
+   },
+   "positions_bitwise_equal_to_W": 670,
+   "first_position_differing_from_W": 664,
+   "argmax_disagreements_vs_W_in_1307": 29,
+   "last_prompt_position_max_abs_diff_vs_W": 3.3678,
+   "reply_parts_from_W_at_token": 31,
+   "at_parting": {
+    "shared_prefix": "<think>\nOkay, the user is asking, \"In one word, what did I just describe?\" and they provided a description of a system where language models",
+    "W_top2": [
+     [
+      525,
+      40.7696,
+      " are"
+     ],
+     [
+      1598,
+      40.6074,
+      " run"
+     ]
+    ],
+    "W_margin": 0.1622,
+    "arm_top2": [
+     [
+      1598,
+      40.8318,
+      " run"
+     ],
+     [
+      525,
+      40.2939,
+      " are"
+     ]
+    ],
+    "arm_margin": 0.5379,
+    "max_abs_logit_diff_vs_W_at_this_step": 2.21357
+   },
+   "smallest_margins_in_timed_reply": [
+    {
+     "step": 45,
+     "margin": 0.0835,
+     "top2": [
+      [
+       4715,
+       31.0524,
+       " parse"
+      ],
+      [
+       3535,
+       30.9689,
+       " understand"
+      ]
+     ]
+    },
+    {
+     "step": 31,
+     "margin": 0.5379,
+     "top2": [
+      [
+       1598,
+       40.8318,
+       " run"
+      ],
+      [
+       525,
+       40.2939,
+       " are"
+      ]
+     ]
+    },
+    {
+     "step": 20,
+     "margin": 0.8417,
+     "top2": [
+      [
+       323,
+       30.8481,
+       " and"
+      ],
+      [
+       2379,
+       30.0064,
+       " They"
+      ]
+     ]
+    },
+    {
+     "step": 4,
+     "margin": 0.9529,
+     "top2": [
+      [
+       279,
+       35.9444,
+       " the"
+      ],
+      [
+       1077,
+       34.9915,
+       " let"
+      ]
+     ]
+    },
+    {
+     "step": 47,
+     "margin": 1.3248,
+     "top2": [
+      [
+       4024,
+       37.0831,
+       " original"
+      ],
+      [
+       4008,
+       35.7583,
+       " description"
+      ]
+     ]
+    }
+   ]
+  },
+  "C2": {
+   "reply": "<think>\nOkay, the user is asking, \"In one word, what did I just describe?\" and they provided a description of a system where language models run on a phone without using any network.\n\nFirst, I need to figure out what",
+   "equals_phone_warm": true,
+   "equals_phone_cold": false,
+   "forwards": "48 forwards",
+   "forward_ms": 5235,
+   "ids_equal_W": true,
+   "max_abs_logit_diff_vs_W_by_region": {
+    "prompt_one_shared_pieces": 10.18663,
+    "prompt_one_last_piece": 10.80704,
+    "reply": 5.74773,
+    "tail": 5.17778
+   },
+   "positions_bitwise_equal_to_W": 160,
+   "first_position_differing_from_W": 160,
+   "argmax_disagreements_vs_W_in_1307": 16,
+   "last_prompt_position_max_abs_diff_vs_W": 3.64156,
+   "reply_parts_from_W_at_token": 31,
+   "at_parting": {
+    "shared_prefix": "<think>\nOkay, the user is asking, \"In one word, what did I just describe?\" and they provided a description of a system where language models",
+    "W_top2": [
+     [
+      525,
+      40.7696,
+      " are"
+     ],
+     [
+      1598,
+      40.6074,
+      " run"
+     ]
+    ],
+    "W_margin": 0.1622,
+    "arm_top2": [
+     [
+      1598,
+      40.2185,
+      " run"
+     ],
+     [
+      525,
+      40.0069,
+      " are"
+     ]
+    ],
+    "arm_margin": 0.2116,
+    "max_abs_logit_diff_vs_W_at_this_step": 2.03317
+   }
+  },
+  "Rb": {
+   "reply": "<think>\nOkay, the user is asking for a single-word description of what they've been discussing. Let me break down the previous interaction to understand what they're asking for.\n\nIn the history, the user described a system where language models are",
+   "equals_phone_warm": false,
+   "equals_phone_cold": false,
+   "forwards": "55 forwards",
+   "forward_ms": 5207,
+   "ids_equal_W": true,
+   "max_abs_logit_diff_vs_W_by_region": {
+    "prompt_one_shared_pieces": 0.0,
+    "prompt_one_last_piece": 0.0,
+    "reply": 6.61348,
+    "tail": 6.88888
+   },
+   "positions_bitwise_equal_to_W": 904,
+   "first_position_differing_from_W": 904,
+   "argmax_disagreements_vs_W_in_1307": 21,
+   "last_prompt_position_max_abs_diff_vs_W": 3.82226,
+   "reply_parts_from_W_at_token": 8,
+   "at_parting": {
+    "shared_prefix": "<think>\nOkay, the user is asking",
+    "W_top2": [
+     [
+      11,
+      38.7736,
+      ","
+     ],
+     [
+      369,
+      36.4365,
+      " for"
+     ]
+    ],
+    "W_margin": 2.3371,
+    "arm_top2": [
+     [
+      369,
+      39.6237,
+      " for"
+     ],
+     [
+      11,
+      39.4277,
+      ","
+     ]
+    ],
+    "arm_margin": 0.196,
+    "max_abs_logit_diff_vs_W_at_this_step": 3.36553
+   }
+  },
+  "St": {
+   "reply": "<think>\nOkay, the user is asking, \"In one word, what did I just describe?\" and they provided a description of a system where language models are run on a phone without using any network.\n\nFirst, I need to parse the",
+   "equals_phone_warm": false,
+   "equals_phone_cold": false,
+   "forwards": "457 forwards",
+   "forward_ms": 14140,
+   "ids_equal_W": true,
+   "max_abs_logit_diff_vs_W_by_region": {
+    "prompt_one_shared_pieces": 0.0,
+    "prompt_one_last_piece": 0.0,
+    "reply": 0.0,
+    "tail": 4.19297
+   },
+   "positions_bitwise_equal_to_W": 1287,
+   "first_position_differing_from_W": 1287,
+   "argmax_disagreements_vs_W_in_1307": 0,
+   "last_prompt_position_max_abs_diff_vs_W": 3.85568,
+   "reply_parts_from_W_at_token": 46,
+   "at_parting": {
+    "shared_prefix": "<think>\nOkay, the user is asking, \"In one word, what did I just describe?\" and they provided a description of a system where language models are run on a phone without using any network.\n\nFirst, I need to",
+    "W_top2": [
+     [
+      7071,
+      31.3692,
+      " figure"
+     ],
+     [
+      4715,
+      30.8544,
+      " parse"
+     ]
+    ],
+    "W_margin": 0.5148,
+    "arm_top2": [
+     [
+      4715,
+      32.8474,
+      " parse"
+     ],
+     [
+      3535,
+      31.842,
+      " understand"
+     ]
+    ],
+    "arm_margin": 1.0054,
+    "max_abs_logit_diff_vs_W_at_this_step": 2.7043
+   }
+  },
+  "S": {
+   "reply": "<think>\n</think>\n\n**AI model**.<|im_end|>\n<|endoftext|>Human: In one word, what did I just describe?<|im_end|>\n<|endoftext|>Human: In one word, what did I just describe?<|im_end|>\napanese: \u4e00\u3064\u306e\u8a00\u8a9e",
+   "equals_phone_warm": false,
+   "equals_phone_cold": false,
+   "forwards": "1354 forwards",
+   "forward_ms": 37003,
+   "ids_equal_W": true,
+   "max_abs_logit_diff_vs_W_by_region": {
+    "prompt_one_shared_pieces": 14.39004,
+    "prompt_one_last_piece": 10.99087,
+    "reply": 7.31776,
+    "tail": 6.24676
+   },
+   "positions_bitwise_equal_to_W": 9,
+   "first_position_differing_from_W": 9,
+   "argmax_disagreements_vs_W_in_1307": 34,
+   "last_prompt_position_max_abs_diff_vs_W": 3.94132,
+   "reply_parts_from_W_at_token": 2,
+   "at_parting": {
+    "shared_prefix": "<think>\n",
+    "W_top2": [
+     [
+      32313,
+      26.5565,
+      "Okay"
+     ],
+     [
+      151668,
+      22.3167,
+      "</think>"
+     ]
+    ],
+    "W_margin": 4.2398,
+    "arm_top2": [
+     [
+      151668,
+      23.4289,
+      "</think>"
+     ],
+     [
+      32313,
+      22.8092,
+      "Okay"
+     ]
+    ],
+    "arm_margin": 0.6197,
+    "max_abs_logit_diff_vs_W_at_this_step": 4.72623
+   }
+  },
+  "W2": {
+   "reply": "<think>\nOkay, the user is asking, \"In one word, what did I just describe?\" and they provided a description of a system where language models are run on a phone without using any network.\n\nFirst, I need to figure out",
+   "equals_phone_warm": false,
+   "equals_phone_cold": false,
+   "forwards": "438 forwards",
+   "forward_ms": 25534,
+   "ids_equal_W": true,
+   "max_abs_logit_diff_vs_W_by_region": {
+    "prompt_one_shared_pieces": 0.0,
+    "prompt_one_last_piece": 0.0,
+    "reply": 0.0,
+    "tail": 0.0
+   },
+   "positions_bitwise_equal_to_W": 1307,
+   "first_position_differing_from_W": null,
+   "argmax_disagreements_vs_W_in_1307": 0,
+   "last_prompt_position_max_abs_diff_vs_W": 0.0,
+   "reply_parts_from_W_at_token": null
+  },
+  "C_again": {
+   "reply": "<think>\nOkay, the user is asking, \"In one word, what did I just describe?\" and they provided a description of a system where language models run on a phone without using any network.\n\nFirst, I need to parse the original",
+   "equals_phone_warm": false,
+   "equals_phone_cold": false,
+   "forwards": "56 forwards",
+   "forward_ms": 8906,
+   "ids_equal_W": true,
+   "max_abs_logit_diff_vs_W_by_region": {
+    "prompt_one_shared_pieces": 0.0,
+    "prompt_one_last_piece": 4.34641,
+    "reply": 4.53225,
+    "tail": 11.69477
+   },
+   "positions_bitwise_equal_to_W": 670,
+   "first_position_differing_from_W": 664,
+   "argmax_disagreements_vs_W_in_1307": 29,
+   "last_prompt_position_max_abs_diff_vs_W": 3.3678,
+   "reply_parts_from_W_at_token": 31,
+   "at_parting": {
+    "shared_prefix": "<think>\nOkay, the user is asking, \"In one word, what did I just describe?\" and they provided a description of a system where language models",
+    "W_top2": [
+     [
+      525,
+      40.7696,
+      " are"
+     ],
+     [
+      1598,
+      40.6074,
+      " run"
+     ]
+    ],
+    "W_margin": 0.1622,
+    "arm_top2": [
+     [
+      1598,
+      40.8318,
+      " run"
+     ],
+     [
+      525,
+      40.2939,
+      " are"
+     ]
+    ],
+    "arm_margin": 0.5379,
+    "max_abs_logit_diff_vs_W_at_this_step": 2.21357
+   }
+  }
+ },
+ "ids": {
+  "W_equals_C": true,
+  "C_pieces_equal_whole_encoding": true
+ },
+ "reply_ids": {
+  "W": [
+   151667,
+   198,
+   32313,
+   11,
+   279,
+   1196,
+   374,
+   10161,
+   11,
+   330,
+   641,
+   825,
+   3409,
+   11,
+   1128,
+   1521,
+   358,
+   1101,
+   7512,
+   7521,
+   323,
+   807,
+   3897,
+   264,
+   4008,
+   315,
+   264,
+   1849,
+   1380,
+   4128,
+   4119,
+   525,
+   1598,
+   389,
+   264,
+   4540,
+   2041,
+   1667,
+   894,
+   3922,
+   382,
+   5338,
+   11,
+   358,
+   1184,
+   311,
+   7071,
+   700
+  ],
+  "C": [
+   151667,
+   198,
+   32313,
+   11,
+   279,
+   1196,
+   374,
+   10161,
+   11,
+   330,
+   641,
+   825,
+   3409,
+   11,
+   1128,
+   1521,
+   358,
+   1101,
+   7512,
+   7521,
+   323,
+   807,
+   3897,
+   264,
+   4008,
+   315,
+   264,
+   1849,
+   1380,
+   4128,
+   4119,
+   1598,
+   389,
+   264,
+   4540,
+   2041,
+   1667,
+   894,
+   3922,
+   382,
+   5338,
+   11,
+   358,
+   1184,
+   311,
+   4715,
+   279,
+   4024
+  ],
+  "C2": [
+   151667,
+   198,
+   32313,
+   11,
+   279,
+   1196,
+   374,
+   10161,
+   11,
+   330,
+   641,
+   825,
+   3409,
+   11,
+   1128,
+   1521,
+   358,
+   1101,
+   7512,
+   7521,
+   323,
+   807,
+   3897,
+   264,
+   4008,
+   315,
+   264,
+   1849,
+   1380,
+   4128,
+   4119,
+   1598,
+   389,
+   264,
+   4540,
+   2041,
+   1667,
+   894,
+   3922,
+   382,
+   5338,
+   11,
+   358,
+   1184,
+   311,
+   7071,
+   700,
+   1128
+  ],
+  "Rb": [
+   151667,
+   198,
+   32313,
+   11,
+   279,
+   1196,
+   374,
+   10161,
+   369,
+   264,
+   3175,
+   37328,
+   4008,
+   315,
+   1128,
+   807,
+   3003,
+   1012,
+   24392,
+   13,
+   6771,
+   752,
+   1438,
+   1495,
+   279,
+   3681,
+   16230,
+   311,
+   3535,
+   1128,
+   807,
+   2299,
+   10161,
+   369,
+   382,
+   641,
+   279,
+   3840,
+   11,
+   279,
+   1196,
+   7481,
+   264,
+   1849,
+   1380,
+   4128,
+   4119,
+   525
+  ],
+  "St": [
+   151667,
+   198,
+   32313,
+   11,
+   279,
+   1196,
+   374,
+   10161,
+   11,
+   330,
+   641,
+   825,
+   3409,
+   11,
+   1128,
+   1521,
+   358,
+   1101,
+   7512,
+   7521,
+   323,
+   807,
+   3897,
+   264,
+   4008,
+   315,
+   264,
+   1849,
+   1380,
+   4128,
+   4119,
+   525,
+   1598,
+   389,
+   264,
+   4540,
+   2041,
+   1667,
+   894,
+   3922,
+   382,
+   5338,
+   11,
+   358,
+   1184,
+   311,
+   4715,
+   279
+  ],
+  "S": [
+   151667,
+   198,
+   151668,
+   271,
+   334,
+   15469,
+   1614,
+   334,
+   13,
+   151645,
+   198,
+   151643,
+   33975,
+   25,
+   758,
+   825,
+   3409,
+   11,
+   1128,
+   1521,
+   358,
+   1101,
+   7512,
+   30,
+   151645,
+   198,
+   151643,
+   33975,
+   25,
+   758,
+   825,
+   3409,
+   11,
+   1128,
+   1521,
+   358,
+   1101,
+   7512,
+   30,
+   151645,
+   198,
+   28689,
+   25,
+   220,
+   130959,
+   15767,
+   77144,
+   102819
+  ],
+  "W2": [
+   151667,
+   198,
+   32313,
+   11,
+   279,
+   1196,
+   374,
+   10161,
+   11,
+   330,
+   641,
+   825,
+   3409,
+   11,
+   1128,
+   1521,
+   358,
+   1101,
+   7512,
+   7521,
+   323,
+   807,
+   3897,
+   264,
+   4008,
+   315,
+   264,
+   1849,
+   1380,
+   4128,
+   4119,
+   525,
+   1598,
+   389,
+   264,
+   4540,
+   2041,
+   1667,
+   894,
+   3922,
+   382,
+   5338,
+   11,
+   358,
+   1184,
+   311,
+   7071,
+   700
+  ],
+  "C_again": [
+   151667,
+   198,
+   32313,
+   11,
+   279,
+   1196,
+   374,
+   10161,
+   11,
+   330,
+   641,
+   825,
+   3409,
+   11,
+   1128,
+   1521,
+   358,
+   1101,
+   7512,
+   7521,
+   323,
+   807,
+   3897,
+   264,
+   4008,
+   315,
+   264,
+   1849,
+   1380,
+   4128,
+   4119,
+   1598,
+   389,
+   264,
+   4540,
+   2041,
+   1667,
+   894,
+   3922,
+   382,
+   5338,
+   11,
+   358,
+   1184,
+   311,
+   4715,
+   279,
+   4024
+  ]
+ },
+ "turn_one_free_ids": [
+  151667,
+  198,
+  32313,
+  11,
+  279,
+  1196,
+  374,
+  22692,
+  264,
+  1849,
+  1380,
+  807,
+  1598,
+  4128,
+  4119,
+  389,
+  264,
+  4540,
+  11,
+  11368,
+  389,
+  65607,
+  2041,
+  1667,
+  894,
+  3922,
+  13,
+  2379,
+  3003,
+  11504,
+  419,
+  4008,
+  5248,
+  3039,
+  11,
+  892,
+  2578,
+  387,
+  264,
+  36566,
+  1465,
+  476,
+  264,
+  16523,
+  13,
+  576,
+  1376,
+  3501,
+  525,
+  25,
+  1667,
+  2205,
+  4119,
+  11,
+  902,
+  3922,
+  11,
+  323,
+  4303,
+  389,
+  264,
+  4540,
+  382,
+  40,
+  1184,
+  311,
+  24645,
+  862,
+  1849,
+  714,
+  1083,
+  3410,
+  1045,
+  2266,
+  476,
+  25709,
+  13,
+  8704,
+  807,
+  9733,
+  330,
+  2152,
+  3922,
+  6398,
+  518,
+  894,
+  1459,
+  1335,
+  432,
+  594,
+  2989,
+  311,
+  5185,
+  429,
+  419,
+  1849,
+  374,
+  656,
+  95224,
+  11,
+  892,
+  1410,
+  387,
+  264,
+  8760,
+  369,
+  12345,
+  714,
+  2578,
+  3930,
+  279,
+  1614,
+  594,
+  16928,
+  421,
+  279,
+  1614,
+  374,
+  537,
+  855,
+  68924,
+  476,
+  702,
+  7199,
+  4963,
+  13,
+  7281,
+  11,
+  279,
+  1196,
+  2578,
+  387,
+  3330,
+  369,
+  10916,
+  3565,
+  11,
+  1075,
+  1246,
+  279,
+  1614,
+  374,
+  18250,
+  1119,
+  279,
+  4540,
+  594,
+  11773,
+  11,
+  476,
+  7196,
+  279,
+  3151,
+  4128,
+  4119,
+  807,
+  2299,
+  1667,
+  320,
+  4803,
+  444,
+  8747,
+  4835,
+  11,
+  1207,
+  16948,
+  11,
+  4992,
+  35334,
+  4710,
+  6865,
+  2578,
+  387,
+  8014,
+  304,
+  279,
+  10916,
+  68443,
+  11,
+  1741,
+  438,
+  3425,
+  279,
+  4540,
+  594,
+  13940,
+  15792,
+  6325,
+  646,
+  3705,
+  279,
+  1614,
+  11,
+  279,
+  4938,
+  8502,
+  11,
+  323,
+  279,
+  5068,
+  7707,
+  311,
+  9437,
+  5980,
+  4119,
+  13,
+  2379,
+  2578,
+  1083,
+  387,
+  3330,
+  369,
+  18564,
+  389,
+  1246,
+  311,
+  29436,
+  279,
+  1849,
+  11,
+  1075,
+  1667,
+  10272,
+  2022,
+  476,
+  85192,
+  13,
+  4710,
+  14037,
+  12893,
+  374,
+  279,
+  1196,
+  594,
+  14602,
+  13,
+  8713,
+  807,
+  4752,
+  419,
+  1849,
+  369,
+  3151,
+  9895,
+  11,
+  1075,
+  6236,
+  61905,
+  11,
+  2213,
+  9471,
+  11,
+  476,
+  2494,
+  770,
+  30,
+  1416,
+  807,
+  614,
+  3151,
+  990,
+  5048,
+  11,
+  429,
+  2578,
+  10173,
+  279,
+  10916,
+  3565,
+  13,
+  4710,
+  40,
+  1265,
+  1281,
+  2704,
+  311,
+  2621,
+  862,
+  1849,
+  594,
+  1376,
+  4419,
+  25,
+  389,
+  65607,
+  11,
+  902,
+  3922,
+  11,
+  4540,
+  5980,
+  13,
+  7281,
+  11,
+  8365,
+  5185,
+  279,
+  11513,
+  11,
+  1075,
+  1614,
+  1379,
+  11,
+  2567,
+  4963,
+  11,
+  323,
+  4650,
+  9481,
+  13,
+  1416,
+  807,
+  614,
+  3151,
+  4755,
+  911,
+  8129,
+  11,
+  1075,
+  1246,
+  311,
+  10517,
+  279,
+  1614,
+  389,
+  264,
+  4540,
+  11,
+  476,
+  1246,
+  311,
+  3705,
+  279,
+  1614,
+  594,
+  5819,
+  11,
+  429,
+  594,
+  2441,
+  1459,
+  311,
+  2908,
+  13,
+  4710,
+  12549,
+  279,
+  1196,
+  11504,
+  279,
+  4008,
+  11,
+  7196,
+  807,
+  525,
+  7497,
+  476,
+  1052,
+  594,
+  264,
+  36566,
+  4265,
+  13,
+  358,
+  1265,
+  5889,
+  448,
+  264,
+  9814,
+  77470,
+  11,
+  8365,
+  2548,
+  421,
+  807,
+  614,
+  3151,
+  4755,
+  911,
+  279,
+  1849,
+  11,
+  476,
+  421,
+  807,
+  1184,
+  1492,
+  448,
+  8129,
+  3565,
+  13,
+  4710,
+  13394,
+  11,
+  12831,
+  279,
+  1849,
+  374,
+  11368,
+  389,
+  65607,
+  11,
+  432,
+  594,
+  2989,
+  311,
+  6286,
+  429,
+  279,
+  1614,
+  374,
+  2205,
+  11,
+  773,
+  1052,
+  594,
+  902,
+  39270,
+  476,
+  3922,
+  4714,
+  11,
+  714,
+  279,
+  1614,
+  594,
+  5068,
+  2578,
+  387,
+  7199,
+  553,
+  279,
+  4540,
+  594,
+  11773,
+  13,
+  2379,
+  2578,
+  1184,
+  311,
+  2908,
+  279,
+  1614,
+  594,
+  1379,
+  323,
+  279,
+  4540,
+  594,
+  16928,
+  13,
+  4710,
+  641,
+  12126,
+  11,
+  279,
+  2033,
+  1265,
+  24645,
+  862,
+  1849,
+  11,
+  5185,
+  279,
+  1376,
+  3501,
+  11,
+  323,
+  3010,
+  311,
+  1492,
+  448,
+  3151,
+  4755,
+  476,
+  18564,
+  624,
+  151668,
+  271,
+  7771,
+  1849,
+  21538,
+  311,
+  1598,
+  4128,
+  4119,
+  389,
+  264,
+  4540,
+  2041,
+  38561,
+  389,
+  14155,
+  11,
+  892,
+  374,
+  264,
+  12345,
+  79776,
+  19505,
+  5486,
+  13,
+  4354,
+  11,
+  279,
+  10916,
+  68443,
+  13798,
+  389,
+  279,
+  1614,
+  594,
+  1379,
+  11,
+  279,
+  4540,
+  594,
+  11773,
+  320,
+  31615,
+  15792,
+  6325,
+  701,
+  323,
+  279,
+  1614,
+  594,
+  25262,
+  320,
+  68,
+  1302,
+  2572,
+  10272,
+  2022,
+  11,
+  85192,
+  568,
+  5309,
+  37764,
+  2924,
+  25,
+  2303,
+  12,
+  3070,
+  1712,
+  8478,
+  95518,
+  80808,
+  4119,
+  320,
+  68,
+  1302,
+  2572,
+  444,
+  8747,
+  4835,
+  11,
+  1207,
+  16948,
+  8,
+  1231,
+  1373,
+  5089,
+  5819,
+  323,
+  54480,
+  4963,
+  13,
+  2303,
+  12,
+  3070,
+  66862,
+  87473,
+  95518,
+  84575,
+  448,
+  7199,
+  8692,
+  2355,
+  320,
+  68,
+  1302,
+  2572,
+  9014,
+  4119,
+  8,
+  1231,
+  14651,
+  448,
+  6351,
+  4119,
+  13,
+  2303,
+  12,
+  3070,
+  23140,
+  2251,
+  95518,
+  1913,
+  65607,
+  8692,
+  1231,
+  19131,
+  31074,
+  11,
+  3498,
+  432,
+  54852,
+  3922,
+  10936,
+  34191,
+  14553,
+  13,
+  18611,
+  27989,
+  498,
+  1075,
+  18821,
+  389,
+  73042,
+  279,
+  1849,
+  11,
+  18774,
+  4119,
+  11,
+  476,
+  27020,
+  3151,
+  11513,
+  30,
+  151645
+ ],
+ "wall_s": 143.8
+}
