@@ -131,13 +131,18 @@ engine that never warmed.
 | Galaxy S25 Ultra | Qwen3-1.7B Q8_0, rollback | 13 (1,052 kept), **198 ms** [190-213] | 1,064, **4,146 ms** | **21.1x** [19.0-22.0] | **0 of 6** |
 | Galaxy S24 | Qwen3-1.7B Q8_0, rollback | 13 (1,052 kept), **202 ms** [188-417] | 1,064, **6,408 ms** | **31.7x** [15.0-33.8] | **0 of 6** |
 | Galaxy Tab S10+ (MediaTek) | LFM2.5-1.2B QAD-Q4_0, snapshot 12,388 KiB | 18 (1,018 restored), 5,940 ms | 1,036, 21,144 ms | 3.5x, see below | 6 of 6 |
+| Galaxy Tab S10+ (MediaTek) | Qwen3-1.7B Q8_0, rollback | 13 (1,052 kept), 11,409 ms | 1,064, 43,660 ms | 3.8x, see below | 6 of 6 |
 | Galaxy S25 Ultra | gemma-3-1b-it | no warmable head (a one-token head): skipped by the test | | | |
 
 - **After a rollback, Qwen3's greedy reply changed**, the same way on both phones and in every
   pair: the rolled-back cache reasoned first (`<think>\nOkay, the user is asking for the capital
   of France ... </think>\n\nParis`), the reset cache answered with an empty think block
   (`<think>\n</think>\n\nParis`). Both answers are Paris; the texts part at character 8, after
-  `<think>\n`. No token-id trace was kept. The rollback kept 1,052 tokens: the 1,047-token head
+  `<think>\n`. No token-id trace was kept. On the Galaxy Tab S10+, where llama.cpp runs the
+  `android_armv9.0_1` CPU variant instead of the Snapdragons' `android_armv8.6_1`, both arms
+  reasoned and the replies matched in all 6 pairs. The reset-cache reply differed between the
+  tablet and the phones. This is consistent with numerical sensitivity, but these runs neither
+  establish a near tie nor rule out a rollback defect. The rollback kept 1,052 tokens: the 1,047-token head
   and 5 more from the start of the earlier conversation's user turn (role opener and the `What is`
   both questions share; the logs do not say which). Whether this is a near
   tie flipped by the earlier batch layout or a defect in rollback is not established. The
@@ -147,7 +152,7 @@ engine that never warmed.
   there is anomalous.** It chose the `android_armv9.0_1` CPU variant with 8 worker threads, and
   calls carried a floor of about 6 s: 6,123 ms for 165 tokens and 6,151 ms for 290, then 13,051,
   21,356 and 34,875 ms. Its ExecuTorch runs on the same tablet were normal. Cause not
-  investigated; the 3.5x is not comparable with the other rows.
+  investigated; its 3.5x and 3.8x are not comparable with the other rows.
 
 ## Cold prefill against prompt length
 
@@ -173,8 +178,6 @@ only cold reads.
   run: the session's notes put its need at about 5.2 GB available, more than the phone showed
   before the run (not kept here).
 - **QNN sampled** and the QNN 0.6B were not run.
-- The Galaxy Tab S10+'s Qwen3 Q8_0 restore run was still waiting for a device when this was
-  written.
 
 Files: `<device>/<run>.*` per Test Lab phone (`SC-51E`, `pa3q`, `tokay`, `gts10pwifi`): rows
 (`.coldwarm.jsonl`, `.restore.jsonl`, `.prefill.jsonl`) and the test's and runtimes' log lines
