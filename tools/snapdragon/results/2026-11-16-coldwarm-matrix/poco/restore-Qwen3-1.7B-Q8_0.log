@@ -1,0 +1,185 @@
+--------- beginning of main
+11-16 17:04:03.471 16414 16443 I OpenWeights: using CPU backend libggml-cpu-android_armv9.0_1.so (score 55)
+11-16 17:04:03.535 16414 16443 W OpenWeights: ggml_opencl: unsupported GPU 'Mali-G925-Immortalis MC11 r0p1'.
+11-16 17:04:03.535 16414 16443 W OpenWeights: ggml_opencl: drop unsupported device 'Mali-G925-Immortalis MC11 r0p1'.
+11-16 17:04:03.535 16414 16443 I OpenWeights: OpenCL backend registered
+11-16 17:04:03.737 16414 16443 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+11-16 17:04:17.393 16414 16443 I OpenWeights: weights: 2 host ranges, 1743 MB
+11-16 17:04:18.280 16414 16443 I OpenWeights: threads: 8 workers kept alive across graphs
+11-16 17:04:18.308 16414 16443 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+11-16 17:04:18.341 16414 16443 I OpenWeights: mem: after load rss 1576 MB, pss 1541 MB, swap 996 MB, majflt 4320, minflt 1513192, cpu 14090 ms
+11-16 17:04:18.382 16414 16443 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-16 17:04:48.275 16414 16443 I OpenWeights: kv: warmed 1047 tokens in 29853 ms (0 reused)
+11-16 17:04:48.314 16414 16443 I OpenWeights: mem: after warm rss 1852 MB, pss 1825 MB, swap 751 MB, majflt 895792, minflt 1540968, cpu 158590 ms
+11-16 17:04:48.442 16414 16443 I OpenWeights: mem: before turn rss 1868 MB, pss 1838 MB, swap 748 MB, majflt 896418, minflt 1541412, cpu 158700 ms
+11-16 17:04:53.091 16414 16443 I OpenWeights: mem: after turn rss 1886 MB, pss 1856 MB, swap 733 MB, majflt 900199, minflt 1542232, cpu 181330 ms
+11-16 17:04:53.143 16414 16443 I OpenWeights: mem: before turn rss 1886 MB, pss 1857 MB, swap 733 MB, majflt 900227, minflt 1542314, cpu 181400 ms
+11-16 17:04:53.149 16414 16443 I OpenWeights: kv: diverged at 1067 of 1147 cached, prompt 1085, re-reading 18
+11-16 17:04:58.388 16414 16443 I OpenWeights: mem: after turn rss 1889 MB, pss 1860 MB, swap 731 MB, majflt 901162, minflt 1542573, cpu 206900 ms
+11-16 17:05:18.977 16414 16443 I OpenWeights: mem: before turn rss 1877 MB, pss 1841 MB, swap 756 MB, majflt 901887, minflt 1543729, cpu 207120 ms
+11-16 17:05:18.984 16414 16443 I OpenWeights: kv: diverged at 1052 of 1177 cached, prompt 1065, re-reading 13
+11-16 17:05:22.695 16414 16443 I OpenWeights: mem: after turn rss 1878 MB, pss 1842 MB, swap 755 MB, majflt 902016, minflt 1543981, cpu 224900 ms
+11-16 17:05:23.261 16414 16439 I WarmPrefixEval: restore Qwen3-1.7B-Q8_0.gguf pair=0 arm=restored prompt=13 cached=1052 prefill=167ms ttft=169ms cpu=43.545C
+11-16 17:05:23.459 16414 19106 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+11-16 17:05:38.169 16414 19106 I OpenWeights: weights: 2 host ranges, 1743 MB
+11-16 17:05:38.772 16414 19106 I OpenWeights: threads: 8 workers kept alive across graphs
+11-16 17:05:38.847 16414 19106 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+11-16 17:05:38.880 16414 19106 I OpenWeights: mem: after load rss 2307 MB, pss 2282 MB, swap 252 MB, majflt 912819, minflt 3036138, cpu 239920 ms
+11-16 17:05:38.900 16414 19106 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-16 17:05:38.948 16414 19106 I OpenWeights: mem: before turn rss 2308 MB, pss 2281 MB, swap 258 MB, majflt 912905, minflt 3036274, cpu 239980 ms
+11-16 17:05:54.093 16414 19106 I OpenWeights: mem: after turn rss 1692 MB, pss 1666 MB, swap 867 MB, majflt 1543754, minflt 3040433, cpu 288150 ms
+11-16 17:06:09.491 16414 19106 I OpenWeights: mem: before turn rss 458 MB, pss 434 MB, swap 2100 MB, majflt 1544520, minflt 3040738, cpu 288250 ms
+11-16 17:06:09.521 16414 19106 I OpenWeights: kv: diverged at 1 of 15 cached, prompt 1065, re-reading 1064
+11-16 17:06:29.546 16414 19106 I OpenWeights: mem: after turn rss 1865 MB, pss 1842 MB, swap 745 MB, majflt 1979271, minflt 3065004, cpu 421570 ms
+11-16 17:06:30.171 16414 16439 I WarmPrefixEval: restore Qwen3-1.7B-Q8_0.gguf pair=0 arm=cold prompt=1064 cached=1 prefill=16470ms ttft=16479ms cpu=44.477C
+11-16 17:06:30.173 16414 16439 I WarmPrefixEval: restore pair=0 replies identical=false
+11-16 17:06:30.370 16414 21406 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+11-16 17:06:49.385 16414 21406 I OpenWeights: weights: 2 host ranges, 1743 MB
+11-16 17:06:50.413 16414 21406 I OpenWeights: threads: 8 workers kept alive across graphs
+11-16 17:06:50.448 16414 21406 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+11-16 17:06:50.473 16414 21406 I OpenWeights: mem: after load rss 629 MB, pss 605 MB, swap 1925 MB, majflt 1993476, minflt 4557026, cpu 438040 ms
+11-16 17:06:50.509 16414 21406 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-16 17:06:50.723 16414 21406 I OpenWeights: mem: before turn rss 552 MB, pss 528 MB, swap 2006 MB, majflt 1994027, minflt 4557158, cpu 438140 ms
+11-16 17:07:04.190 16414 21406 I OpenWeights: mem: after turn rss 1690 MB, pss 1666 MB, swap 867 MB, majflt 2668230, minflt 4561500, cpu 484170 ms
+11-16 17:07:34.667 16414 21406 I OpenWeights: mem: before turn rss 816 MB, pss 792 MB, swap 1742 MB, majflt 2668874, minflt 4561767, cpu 484300 ms
+11-16 17:07:34.696 16414 21406 I OpenWeights: kv: diverged at 1 of 15 cached, prompt 1065, re-reading 1064
+11-16 17:07:52.213 16414 21406 I OpenWeights: mem: after turn rss 1878 MB, pss 1853 MB, swap 738 MB, majflt 2956894, minflt 4584469, cpu 606970 ms
+11-16 17:07:52.746 16414 16439 I WarmPrefixEval: restore Qwen3-1.7B-Q8_0.gguf pair=1 arm=cold prompt=1064 cached=1 prefill=14065ms ttft=14071ms cpu=43.664C
+11-16 17:07:52.943 16414 25602 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+11-16 17:08:07.238 16414 25602 I OpenWeights: weights: 2 host ranges, 1743 MB
+11-16 17:08:07.799 16414 25602 I OpenWeights: threads: 8 workers kept alive across graphs
+11-16 17:08:07.889 16414 25602 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+11-16 17:08:07.915 16414 25602 I OpenWeights: mem: after load rss 2222 MB, pss 2199 MB, swap 330 MB, majflt 2969253, minflt 6076287, cpu 621540 ms
+11-16 17:08:07.971 16414 25602 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-16 17:08:35.628 16414 25602 I OpenWeights: kv: warmed 1047 tokens in 27638 ms (0 reused)
+11-16 17:08:35.664 16414 25602 I OpenWeights: mem: after warm rss 1849 MB, pss 1824 MB, swap 755 MB, majflt 3886539, minflt 6106141, cpu 766700 ms
+11-16 17:08:35.779 16414 25602 I OpenWeights: mem: before turn rss 1857 MB, pss 1832 MB, swap 753 MB, majflt 3887040, minflt 6106293, cpu 766790 ms
+11-16 17:08:41.158 16414 25602 I OpenWeights: mem: after turn rss 1875 MB, pss 1849 MB, swap 737 MB, majflt 3891013, minflt 6107296, cpu 792400 ms
+11-16 17:08:41.217 16414 25602 I OpenWeights: mem: before turn rss 1876 MB, pss 1850 MB, swap 737 MB, majflt 3891034, minflt 6107345, cpu 792450 ms
+11-16 17:08:41.224 16414 25602 I OpenWeights: kv: diverged at 1067 of 1147 cached, prompt 1085, re-reading 18
+11-16 17:08:46.414 16414 25602 I OpenWeights: mem: after turn rss 1881 MB, pss 1854 MB, swap 732 MB, majflt 3892066, minflt 6107702, cpu 818150 ms
+11-16 17:09:26.922 16414 25602 I OpenWeights: mem: before turn rss 1096 MB, pss 1070 MB, swap 1515 MB, majflt 3892405, minflt 6107920, cpu 818280 ms
+11-16 17:09:26.945 16414 25602 I OpenWeights: kv: diverged at 1052 of 1177 cached, prompt 1065, re-reading 13
+11-16 17:09:32.163 16414 25602 I OpenWeights: mem: after turn rss 1827 MB, pss 1801 MB, swap 788 MB, majflt 4101679, minflt 6138318, cpu 845450 ms
+11-16 17:09:32.721 16414 16439 I WarmPrefixEval: restore Qwen3-1.7B-Q8_0.gguf pair=1 arm=restored prompt=13 cached=1052 prefill=1626ms ttft=1634ms cpu=44.19C
+11-16 17:09:32.726 16414 16439 I WarmPrefixEval: restore pair=1 replies identical=false
+11-16 17:09:32.931 16414 27541 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+11-16 17:09:46.882 16414 27541 I OpenWeights: weights: 2 host ranges, 1743 MB
+11-16 17:09:47.479 16414 27541 I OpenWeights: threads: 8 workers kept alive across graphs
+11-16 17:09:47.616 16414 27541 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+11-16 17:09:47.651 16414 27541 I OpenWeights: mem: after load rss 2324 MB, pss 2303 MB, swap 230 MB, majflt 4110647, minflt 7629617, cpu 859740 ms
+11-16 17:09:47.671 16414 27541 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-16 17:10:20.443 16414 27541 I OpenWeights: kv: warmed 1047 tokens in 32755 ms (0 reused)
+11-16 17:10:20.481 16414 27541 I OpenWeights: mem: after warm rss 1843 MB, pss 1823 MB, swap 761 MB, majflt 5028364, minflt 7663259, cpu 1021040 ms
+11-16 17:10:20.647 16414 27541 I OpenWeights: mem: before turn rss 1852 MB, pss 1832 MB, swap 758 MB, majflt 5028979, minflt 7663439, cpu 1021160 ms
+11-16 17:10:25.116 16414 27541 I OpenWeights: mem: after turn rss 1875 MB, pss 1854 MB, swap 742 MB, majflt 5032999, minflt 7664420, cpu 1044450 ms
+11-16 17:10:25.153 16414 27541 I OpenWeights: mem: before turn rss 1879 MB, pss 1857 MB, swap 740 MB, majflt 5034350, minflt 7664759, cpu 1044510 ms
+11-16 17:10:25.159 16414 27541 I OpenWeights: kv: diverged at 1067 of 1147 cached, prompt 1085, re-reading 18
+11-16 17:10:30.579 16414 27541 I OpenWeights: mem: after turn rss 1885 MB, pss 1860 MB, swap 724 MB, majflt 5036024, minflt 7665221, cpu 1071650 ms
+11-16 17:11:16.093 16414 27541 I OpenWeights: mem: before turn rss 620 MB, pss 597 MB, swap 1988 MB, majflt 5036922, minflt 7665547, cpu 1071800 ms
+11-16 17:11:16.123 16414 27541 I OpenWeights: kv: diverged at 1052 of 1177 cached, prompt 1065, re-reading 13
+11-16 17:11:21.706 16414 27541 I OpenWeights: mem: after turn rss 1826 MB, pss 1802 MB, swap 788 MB, majflt 5354974, minflt 7723292, cpu 1101270 ms
+11-16 17:11:22.256 16414 16439 I WarmPrefixEval: restore Qwen3-1.7B-Q8_0.gguf pair=2 arm=restored prompt=13 cached=1052 prefill=2022ms ttft=2029ms cpu=44.764C
+11-16 17:11:22.466 16414 30080 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+11-16 17:11:36.599 16414 30080 I OpenWeights: weights: 2 host ranges, 1743 MB
+11-16 17:11:37.142 16414 30080 I OpenWeights: threads: 8 workers kept alive across graphs
+11-16 17:11:37.248 16414 30080 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+11-16 17:11:37.285 16414 30080 I OpenWeights: mem: after load rss 2368 MB, pss 2346 MB, swap 188 MB, majflt 5363872, minflt 9214580, cpu 1115790 ms
+11-16 17:11:37.307 16414 30080 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-16 17:11:37.362 16414 30080 I OpenWeights: mem: before turn rss 2374 MB, pss 2352 MB, swap 187 MB, majflt 5364066, minflt 9214718, cpu 1115860 ms
+11-16 17:11:44.354 16414 30080 I OpenWeights: mem: after turn rss 1702 MB, pss 1679 MB, swap 857 MB, majflt 5634486, minflt 9217171, cpu 1143190 ms
+11-16 17:12:24.821 16414 30080 I OpenWeights: mem: before turn rss 966 MB, pss 942 MB, swap 1595 MB, majflt 5635051, minflt 9217469, cpu 1143320 ms
+11-16 17:12:24.850 16414 30080 I OpenWeights: kv: diverged at 1 of 15 cached, prompt 1065, re-reading 1064
+11-16 17:12:42.223 16414 30080 I OpenWeights: mem: after turn rss 1881 MB, pss 1856 MB, swap 729 MB, majflt 5879697, minflt 9241472, cpu 1265250 ms
+11-16 17:12:42.744 16414 16439 I WarmPrefixEval: restore Qwen3-1.7B-Q8_0.gguf pair=2 arm=cold prompt=1064 cached=1 prefill=13858ms ttft=13863ms cpu=44.262C
+11-16 17:12:42.749 16414 16439 I WarmPrefixEval: restore pair=2 replies identical=false
+11-16 17:12:42.951 16414 31287 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+11-16 17:12:58.261 16414 31287 I OpenWeights: weights: 2 host ranges, 1743 MB
+11-16 17:12:58.908 16414 31287 I OpenWeights: threads: 8 workers kept alive across graphs
+11-16 17:12:59.019 16414 31287 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+11-16 17:12:59.051 16414 31287 I OpenWeights: mem: after load rss 1646 MB, pss 1625 MB, swap 908 MB, majflt 5891058, minflt 10732766, cpu 1280560 ms
+11-16 17:12:59.073 16414 31287 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-16 17:12:59.166 16414 31287 I OpenWeights: mem: before turn rss 1632 MB, pss 1610 MB, swap 928 MB, majflt 5891487, minflt 10732897, cpu 1280620 ms
+11-16 17:13:08.261 16414 31287 I OpenWeights: mem: after turn rss 1689 MB, pss 1667 MB, swap 869 MB, majflt 6387223, minflt 10736061, cpu 1317180 ms
+11-16 17:14:03.879 16414 31287 I OpenWeights: mem: before turn rss 1120 MB, pss 1096 MB, swap 1442 MB, majflt 6387786, minflt 10736444, cpu 1317320 ms
+11-16 17:14:03.911 16414 31287 I OpenWeights: kv: diverged at 1 of 15 cached, prompt 1065, re-reading 1064
+11-16 17:14:21.024 16414 31287 I OpenWeights: mem: after turn rss 1883 MB, pss 1858 MB, swap 729 MB, majflt 6587929, minflt 10759456, cpu 1437240 ms
+11-16 17:14:21.578 16414 16439 I WarmPrefixEval: restore Qwen3-1.7B-Q8_0.gguf pair=3 arm=cold prompt=1064 cached=1 prefill=13539ms ttft=13547ms cpu=44.835C
+11-16 17:14:21.791 16414  3789 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+11-16 17:14:38.157 16414  3789 I OpenWeights: weights: 2 host ranges, 1743 MB
+11-16 17:14:38.951 16414  3789 I OpenWeights: threads: 8 workers kept alive across graphs
+11-16 17:14:38.997 16414  3789 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+11-16 17:14:39.031 16414  3789 I OpenWeights: mem: after load rss 1298 MB, pss 1277 MB, swap 1257 MB, majflt 6599356, minflt 12250801, cpu 1453010 ms
+11-16 17:14:39.072 16414  3789 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-16 17:15:06.356 16414  3789 I OpenWeights: kv: warmed 1047 tokens in 27267 ms (0 reused)
+11-16 17:15:06.393 16414  3789 I OpenWeights: mem: after warm rss 1843 MB, pss 1823 MB, swap 759 MB, majflt 7295692, minflt 12273053, cpu 1605320 ms
+11-16 17:15:06.525 16414  3789 I OpenWeights: mem: before turn rss 1852 MB, pss 1831 MB, swap 756 MB, majflt 7296330, minflt 12273210, cpu 1605420 ms
+11-16 17:15:11.666 16414  3789 I OpenWeights: mem: after turn rss 1874 MB, pss 1852 MB, swap 740 MB, majflt 7300323, minflt 12274123, cpu 1631420 ms
+11-16 17:15:11.721 16414  3789 I OpenWeights: mem: before turn rss 1875 MB, pss 1853 MB, swap 740 MB, majflt 7300339, minflt 12274165, cpu 1631460 ms
+11-16 17:15:11.727 16414  3789 I OpenWeights: kv: diverged at 1067 of 1147 cached, prompt 1085, re-reading 18
+11-16 17:15:17.575 16414  3789 I OpenWeights: mem: after turn rss 1886 MB, pss 1863 MB, swap 724 MB, majflt 7303004, minflt 12275232, cpu 1661170 ms
+11-16 17:16:18.169 16414  3789 I OpenWeights: mem: before turn rss 1887 MB, pss 1863 MB, swap 725 MB, majflt 7303059, minflt 12275466, cpu 1661280 ms
+11-16 17:16:18.175 16414  3789 I OpenWeights: kv: diverged at 1052 of 1177 cached, prompt 1065, re-reading 13
+11-16 17:16:21.856 16414  3789 I OpenWeights: mem: after turn rss 1888 MB, pss 1864 MB, swap 724 MB, majflt 7303181, minflt 12275661, cpu 1678900 ms
+11-16 17:16:22.410 16414 16439 I WarmPrefixEval: restore Qwen3-1.7B-Q8_0.gguf pair=3 arm=restored prompt=13 cached=1052 prefill=154ms ttft=156ms cpu=45.265C
+11-16 17:16:22.416 16414 16439 I WarmPrefixEval: restore pair=3 replies identical=false
+11-16 17:16:22.634 16414  7534 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+11-16 17:16:37.242 16414  7534 I OpenWeights: weights: 2 host ranges, 1743 MB
+11-16 17:16:37.912 16414  7534 I OpenWeights: threads: 8 workers kept alive across graphs
+11-16 17:16:37.962 16414  7534 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+11-16 17:16:38.002 16414  7534 I OpenWeights: mem: after load rss 2403 MB, pss 2381 MB, swap 153 MB, majflt 7311555, minflt 13766976, cpu 1693910 ms
+11-16 17:16:38.032 16414  7534 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-16 17:17:04.535 16414  7534 I OpenWeights: kv: warmed 1047 tokens in 26419 ms (0 reused)
+11-16 17:17:04.574 16414  7534 I OpenWeights: mem: after warm rss 1844 MB, pss 1823 MB, swap 758 MB, majflt 7900583, minflt 13793397, cpu 1842840 ms
+11-16 17:17:04.688 16414  7534 I OpenWeights: mem: before turn rss 1852 MB, pss 1831 MB, swap 755 MB, majflt 7901164, minflt 13793570, cpu 1842930 ms
+11-16 17:17:09.756 16414  7534 I OpenWeights: mem: after turn rss 1871 MB, pss 1850 MB, swap 739 MB, majflt 7905081, minflt 13794425, cpu 1868610 ms
+11-16 17:17:09.806 16414  7534 I OpenWeights: mem: before turn rss 1872 MB, pss 1851 MB, swap 739 MB, majflt 7905100, minflt 13794472, cpu 1868660 ms
+11-16 17:17:09.812 16414  7534 I OpenWeights: kv: diverged at 1067 of 1147 cached, prompt 1085, re-reading 18
+11-16 17:17:15.467 16414  7534 I OpenWeights: mem: after turn rss 1878 MB, pss 1856 MB, swap 735 MB, majflt 7906097, minflt 13794793, cpu 1897470 ms
+11-16 17:18:16.030 16414  7534 I OpenWeights: mem: before turn rss 1879 MB, pss 1857 MB, swap 735 MB, majflt 7906411, minflt 13795021, cpu 1897610 ms
+11-16 17:18:16.036 16414  7534 I OpenWeights: kv: diverged at 1052 of 1177 cached, prompt 1065, re-reading 13
+11-16 17:18:19.879 16414  7534 I OpenWeights: mem: after turn rss 1887 MB, pss 1863 MB, swap 724 MB, majflt 7907922, minflt 13795890, cpu 1916080 ms
+11-16 17:18:20.424 16414 16439 I WarmPrefixEval: restore Qwen3-1.7B-Q8_0.gguf pair=4 arm=restored prompt=13 cached=1052 prefill=176ms ttft=178ms cpu=45.91C
+11-16 17:18:20.642 16414  9405 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+11-16 17:18:35.297 16414  9405 I OpenWeights: weights: 2 host ranges, 1743 MB
+11-16 17:18:35.997 16414  9405 I OpenWeights: threads: 8 workers kept alive across graphs
+11-16 17:18:36.091 16414  9405 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+11-16 17:18:36.129 16414  9405 I OpenWeights: mem: after load rss 2340 MB, pss 2318 MB, swap 213 MB, majflt 7916212, minflt 15287248, cpu 1931180 ms
+11-16 17:18:36.151 16414  9405 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-16 17:18:36.220 16414  9405 I OpenWeights: mem: before turn rss 2331 MB, pss 2309 MB, swap 226 MB, majflt 7916577, minflt 15287434, cpu 1931260 ms
+11-16 17:18:57.948 16414  9405 I OpenWeights: mem: after turn rss 1687 MB, pss 1664 MB, swap 871 MB, majflt 8559775, minflt 15291602, cpu 1988650 ms
+11-16 17:19:58.542 16414  9405 I OpenWeights: mem: before turn rss 1333 MB, pss 1310 MB, swap 1228 MB, majflt 8560440, minflt 15291901, cpu 1988810 ms
+11-16 17:19:58.565 16414  9405 I OpenWeights: kv: diverged at 1 of 15 cached, prompt 1065, re-reading 1064
+11-16 17:20:18.697 16414  9405 I OpenWeights: mem: after turn rss 1878 MB, pss 1855 MB, swap 730 MB, majflt 8845570, minflt 15315205, cpu 2126080 ms
+11-16 17:20:19.322 16414 16439 I WarmPrefixEval: restore Qwen3-1.7B-Q8_0.gguf pair=4 arm=cold prompt=1064 cached=1 prefill=16646ms ttft=16654ms cpu=46.125C
+11-16 17:20:19.328 16414 16439 I WarmPrefixEval: restore pair=4 replies identical=false
+11-16 17:20:19.542 16414 13875 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+11-16 17:20:34.903 16414 13875 I OpenWeights: weights: 2 host ranges, 1743 MB
+11-16 17:20:35.524 16414 13875 I OpenWeights: threads: 8 workers kept alive across graphs
+11-16 17:20:35.569 16414 13875 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+11-16 17:20:35.610 16414 13875 I OpenWeights: mem: after load rss 2469 MB, pss 2448 MB, swap 84 MB, majflt 8854008, minflt 16806580, cpu 2141770 ms
+11-16 17:20:35.673 16414 13875 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-16 17:20:35.740 16414 13875 I OpenWeights: mem: before turn rss 2450 MB, pss 2429 MB, swap 109 MB, majflt 8854077, minflt 16806698, cpu 2141870 ms
+11-16 17:20:46.596 16414 13875 I OpenWeights: mem: after turn rss 1698 MB, pss 1675 MB, swap 856 MB, majflt 9313895, minflt 16810805, cpu 2180220 ms
+11-16 17:21:47.241 16414 13875 I OpenWeights: mem: before turn rss 998 MB, pss 974 MB, swap 1559 MB, majflt 9314160, minflt 16811138, cpu 2180370 ms
+11-16 17:21:47.273 16414 13875 I OpenWeights: kv: diverged at 1 of 15 cached, prompt 1065, re-reading 1064
+11-16 17:22:05.708 16414 13875 I OpenWeights: mem: after turn rss 1881 MB, pss 1857 MB, swap 731 MB, majflt 9562252, minflt 16836308, cpu 2311680 ms
+11-16 17:22:06.271 16414 16439 I WarmPrefixEval: restore Qwen3-1.7B-Q8_0.gguf pair=5 arm=cold prompt=1064 cached=1 prefill=14984ms ttft=14992ms cpu=45.839C
+11-16 17:22:06.494 16414 15538 W OpenWeights: load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+11-16 17:22:23.685 16414 15538 I OpenWeights: weights: 2 host ranges, 1743 MB
+11-16 17:22:24.671 16414 15538 I OpenWeights: threads: 8 workers kept alive across graphs
+11-16 17:22:24.736 16414 15538 I OpenWeights: kv: this template drops past thinking; every turn after a thought reply re-reads the conversation
+11-16 17:22:24.773 16414 15538 I OpenWeights: mem: after load rss 1256 MB, pss 1237 MB, swap 1296 MB, majflt 9573434, minflt 18327654, cpu 2328690 ms
+11-16 17:22:24.802 16414 15538 I OpenWeights: loaded: tools=true results=true thinking=true effort=false vision=false audio=false emits=text ctx=4096
+11-16 17:22:54.262 16414 15538 I OpenWeights: kv: warmed 1047 tokens in 29441 ms (0 reused)
+11-16 17:22:54.303 16414 15538 I OpenWeights: mem: after warm rss 1843 MB, pss 1824 MB, swap 761 MB, majflt 10494315, minflt 18368537, cpu 2489120 ms
+11-16 17:22:54.409 16414 15538 I OpenWeights: mem: before turn rss 1852 MB, pss 1831 MB, swap 758 MB, majflt 10494844, minflt 18368749, cpu 2489210 ms
+11-16 17:22:59.512 16414 15538 I OpenWeights: mem: after turn rss 1881 MB, pss 1858 MB, swap 728 MB, majflt 10500520, minflt 18370346, cpu 2515010 ms
+11-16 17:22:59.561 16414 15538 I OpenWeights: mem: before turn rss 1881 MB, pss 1859 MB, swap 728 MB, majflt 10500524, minflt 18370388, cpu 2515050 ms
+11-16 17:22:59.567 16414 15538 I OpenWeights: kv: diverged at 1067 of 1147 cached, prompt 1085, re-reading 18
+11-16 17:23:06.096 16414 15538 I OpenWeights: mem: after turn rss 1870 MB, pss 1847 MB, swap 737 MB, majflt 10501571, minflt 18370933, cpu 2546610 ms
+11-16 17:24:07.092 16414 15538 I OpenWeights: mem: before turn rss 41 MB, pss 15 MB, swap 2571 MB, majflt 10503271, minflt 18371777, cpu 2546870 ms
+11-16 17:24:07.159 16414 15538 I OpenWeights: kv: diverged at 1052 of 1177 cached, prompt 1065, re-reading 13
+11-16 17:24:30.495 16414 15538 I OpenWeights: mem: after turn rss 1813 MB, pss 1789 MB, swap 794 MB, majflt 11328031, minflt 18386411, cpu 2625920 ms
+11-16 17:24:31.155 16414 16439 I WarmPrefixEval: restore Qwen3-1.7B-Q8_0.gguf pair=5 arm=restored prompt=13 cached=1052 prefill=15690ms ttft=15703ms cpu=69.015C
+11-16 17:24:31.160 16414 16439 I WarmPrefixEval: restore pair=5 replies identical=false

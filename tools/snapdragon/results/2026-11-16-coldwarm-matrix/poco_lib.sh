@@ -5,7 +5,10 @@
 # Files come back checked before the phone's copy is deleted. Not handled: an interrupted script
 # leaves its log writer and a stay-on setting on the phone (stop_log and `svc power stayon false`
 # by hand), and nothing here sees another project computing on the same phone.
-USB=${S:?set S to the adb serial of the phone}
+# The phone's own serial, kept apart from S: pick() sets S to whichever transport is up, and a
+# queue that exported S would otherwise hand the wireless address to the next script as the serial.
+USB=${USB_SERIAL:-${S:?set S to the adb serial of the phone}}
+export USB_SERIAL=$USB
 WIFI=${WIFI:-}
 T=io.github.alpharomercoma.openweights.core.engine.test
 PKG=io.github.alpharomercoma.openweights.core.engine

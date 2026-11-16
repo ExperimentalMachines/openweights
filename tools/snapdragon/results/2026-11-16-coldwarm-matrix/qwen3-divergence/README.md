@@ -6,8 +6,11 @@ second turn differently warm and cold, `... describe?" and they provided ...` ag
 possible: the arms fed different token ids (H1), or the same ids with different arithmetic
 (H2). Everything here ran on the Mac, with no phone.
 
-**Answer: H2, with H1 very unlikely but not excluded by observation.** In the Mac
-reconstruction both arms are fed the same 1,307 ids; the phones' generated ids were not logged.
+**Answer: on the Mac, H2 is a demonstrated mechanism; that it caused the phones' divergence is
+likely but not proved, and H1 is very unlikely but not excluded by observation.** In the Mac
+reconstruction both arms are fed the same 1,307 ids; the phones' generated ids were not logged,
+and the Mac does not reproduce the phones' warm and cold divergence (its C2 arm does write the
+phones' warm reply).
 What differs is how those ids were grouped into forward calls: the retained prefix computed
 turn one's reply one token per step during decode, the reset cache computed the same ids in
 batched prefill pieces, and on this export the logits depend on that forward-call schedule,
