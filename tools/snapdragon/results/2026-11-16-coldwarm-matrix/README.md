@@ -113,7 +113,8 @@ with `"<|im_end|>"` delivered as a fragment of its own (`[..., "?", "<|im_end|>"
 `RecordingBridge` records each fragment as the Java callback receives it, before the engine
 holds anything back; it cannot see token ids or anything dropped before the Java callback. ExecuTorch 1.6.0's token loop hands each token to the callback before its
 end-of-sequence check, so the token that ended these turns reached the engine as no text, or not
-at all; which token it was is still not recorded. A reply ending in "!" does not by itself cause
+at all; which token it was is still not recorded (found on 2026-11-16: for this export the
+runtime's end token is token 0, `"!"`; see "Why Qwen3's replies ended on "!"" below). A reply ending in "!" does not by itself cause
 it: the 8da4w-gptq CPU export's greedy turn one also ended "...further details!" and was stopped by
 the engine on `<|im_end|>` in all 8 pairs.
 
@@ -171,17 +172,284 @@ On the S24 the cold read grows close to linearly with length: time per token ros
 (ExecuTorch) and 19% (llama.cpp) from the shortest prompt to the longest. These sweeps measure
 only cold reads.
 
+## The POCO and MediaTek's NPU (2026-11-16, daytime)
+
+The POCO X8 Pro Max (MediaTek Dimensity 9500, MT6991, Android 16, HyperOS) dropped off USB
+overnight and its rows were lost. These runs were made the next day on the owner's phone, on the
+charger, screen on in every row, with the same test and the same cooling gate (45 C, capped at
+60 s). USB dropped three times during the day: a few seconds into the first test, in the last minute
+of the first full run, and 45 s into its repeat. From the second drop on, `poco_et.sh`, `poco_restore.sh` and
+`poco_llama_prefill.sh` start each test in its own session on the phone and write its log there
+(`poco_lib.sh`), so a dropped transport no longer ends a test, and they carry on over wireless
+debugging (`WIFI=<ip:port>`) while USB is down. The run that died in its last minute was
+repeated in full; its first three pairs, read off the phone before the repeat, gave the same
+replies.
+
+From 11:22:47 another project's benchmarks (ExecuPhone, SmolVLM2 and Gemma 3) ran on the same
+phone at the same time. Every row here is from before that, except where a row says otherwise;
+the runs that overlapped it (llama.cpp's Qwen3 rollback, a sampled Qwen3 run) are left out and
+listed under "Not measured".
+
+### Qwen3-1.7B INT8-INT4, greedy, the fifth chip
+
+| Phone | Retained prefix: 20 tokens, median | Reset cache: 1,307 tokens, median | Ratio, median [range] | By order (reset first, retained first) | Replies identical |
+|---|---|---|---|---|---|
+| POCO X8 Pro Max (MediaTek MT6991) | **214 ms** [195-243] | **9,544 ms** [8,485-14,669] | **44.8x** [41.5-60.4] | 46.8x, 42.7x | 0 of 8 |
+
+All 8 pairs reused the prefix and reached position 1,307 in both arms. The retained-prefix reply
+and the reset-cache reply are each byte-identical to the other four chips' (one distinct reply
+per arm across all five phones), parting at character 75 as above. This run followed the aborted
+one with no rest, and the phone started its turns at 44.7 to 57.1 C; the reset-cache read took
+8.5 s at 44.7 C and 14.7 s at 55.0 C. In the four pairs whose turns all started at or under 47.4 C
+the ratio was 41.5x to 46.2x.
+
+### LFM2.5-1.2B on MediaTek's NPU, and on the CPU with the same export
+
+`-e bridge mtk-npu` runs the same test through `DisaggregatedExecuTorchBridge`: MediaTek's NPU
+(NeuroPilot) reads every prompt and the CPU export writes the reply, with the state handed across
+after each read. The NPU half is the a16w8 2k export staged under
+`/data/local/tmp/mtk_models/0pd-g8-2048/mtk/mt6991/` (4 chunks, batch 128); the CPU half is
+`LFM2.5-1.2B-Instruct-8da4w-2k.pte`. Every row records `on_npu`, and the test fails if the bridge
+fell back to the CPU. The bridge takes the first staged directory with chunks, not one bound to
+the CPU export; the load lines in `*.pd.log` and `greedy-lfm25-2k-npu-fix.log` name the a16w8 2k
+chunks and this `.pte`. The CPU run uses the same `.pte` without the NPU. Times are the
+instrumented engine's (`ExecuTorchEngine.chat` to its first token), not taps in the app.
+
+| POCO, LFM2.5-1.2B 2k | Pairs, reuse | Retained prefix: prefill, median | Retained prefix: first token, median | Reset cache: prefill, median | Ratio (prefill) | Replies identical |
+|---|---|---|---|---|---|---|
+| CPU (XNNPACK), overlapped, see below | 8, 8 | **89 ms** [87-103] | 90 ms | **3,300 ms** [3,284-3,316], 971 tokens | **37.0x** [31.9-38.1] | 8 of 8 |
+| NPU, the engine as shipped | 8, **0** | none: 5,709 ms [5,522-7,424] labelled warm, a full read | **11,671 ms** [10,887-14,046] | **5,651 ms** [5,532-6,735], 998 tokens | none | 8 of 8 |
+| NPU, runtime-end prototype (not shipped), pairs 0 to 6 | 7, 7 | **430 ms** [420-454] | 433 ms | **5,657 ms** [5,595-5,738], 998 tokens | **13.1x** [12.3-13.5] | **0 of 7** |
+
+- **As shipped, the NPU path never reused the prefix.** MediaTek's runner stops at its own stop
+  token (`Reached stop token 7` in `*.pd.log`) without handing that token's text to the callback;
+  turn one's last fragment was `"?"` in all 8 pairs, the engine saw no end marker, dropped its
+  record, and the second turn reset the runtime. With this export a reset reloads the NPU runtime
+  (2.0 to 3.0 s) and the CPU module (1.9 to 2.7 s; its first load took 2.8 s) before the full
+  read, so the engine's second turn took a median 11,671 ms to its first token, 2.1 times the
+  5,662 ms of a read from a reset cache (the test resets that arm before its clock starts).
+- **With the prototype the NPU path reused the prefix in every pair** and the second turn took
+  a median 433 ms to its first token, against 11,671 ms as shipped (a ratio of the two runs'
+  medians, 27x). Pair 7's timed arms (11:24 to 11:25; its turn one started at 11:22:48) overlapped
+  the other project's install and push and are left out: its reset-cache read took 6,618 ms,
+  against 5,595 to 5,738 ms in pairs 0 to 6. The prototype (`runtime-end-fix-2026-11-16.patch`,
+  held outside the repository, built into the test APK only) treats a reply as whole when nothing
+  in the engine stopped the runtime, no budget was spent and the window was not full by the
+  engine's estimate, and assumes the runtime's end token is then what ended the loop. That
+  assumption is not proved for every bridge (a runtime can also return for its own budget, a
+  cancel or a full window, and the engine's position is an estimate), and it is wrong for the
+  INT8-INT4 Qwen3 export, whose runtime stops on `"!"` (see below), so it is not a fix to ship.
+- **The CPU run recorded lower times than the NPU for both reads**: a reset-cache read of about
+  1,000 tokens took 3.3 s on the CPU and 5.7 s on the NPU, a retained-prefix turn 89 ms on the CPU
+  and 430 ms on the NPU with the prototype. This is not a matched processor comparison: the two
+  backends wrote different turn ones (971 and 998 tokens at turn two), the NPU half is a16w8
+  against the CPU's 8da4w, the NPU path hands its state to the CPU after each read, and the CPU
+  run is to be repeated alone.
+- **NPU call times are consistent with whole 128-token batches plus overhead** (the export's
+  runner logs `batch=128`; the logs give tokens and time per call, not batches run). In the
+  as-shipped run, calls of 160 to 256 tokens took a median 828 ms (156 calls, 808 to 1,568 ms) and
+  the 4-token opener 650 ms (28 calls); in the prototype run before the overlap, calls of 5, 20 and
+  73 tokens took a median 419, 429 and 425 ms (24 calls, 411 to 640 ms). The cold read was fed as
+  4, 163, 160, 162, 160, 160 and 189 tokens: 13 batches if each call rounds up. Packed whole, the
+  998 tokens need 8, or 9 with the opener kept separate (an estimate, not measured).
+- **With reuse the NPU's greedy reply changed**: `Device-based offline AI.` with the retained
+  prefix and `Device-only AI` from a reset cache, in pairs 0 to 7 alike. Both arms reached the same
+  position before the reply (998, the runner's `NPU fed ... total` at the handoff), and turn one's 73-token reply was fed to the NPU
+  (`NPU fed 73 tokens`) before the second turn. The two arms fed the same text in different
+  pieces to a quantized NPU; why the reply changed was not established.
+
+The CPU run (11:25 to 11:40) overlapped the other project's app install and a benchmark of
+theirs that ended after 6 s (11:37:27 to 11:37:33); its 16 rows are flat (87 to 103 ms and 3,284 to
+3,316 ms), but it is to be run again alone.
+
+`summarise.py` prints the CPU and Qwen3 rows. For the NPU rows it reads the timings but not the
+runner's positions (`NPU fed ... total` in the bridge's lines) and has no pair filter: the
+prototype's pairs 0 to 6 are its rows with `pair` under 7, and over all 8 pairs it gives 436 ms,
+5,664 ms and 13.2x.
+
+Not done on the NPU: sampled runs, other models (only LFM2.5-1.2B has an MT6991 export here), a
+batch-aligned feed.
+
+## Four families on both runtimes (2026-11-16, afternoon)
+
+Llama 3.2 and Gemma 3 beside the LFM2.5 and Qwen3 above, measured the same way on both runtimes:
+the same second turn read with the first turn kept in the cache and from a reset cache, greedy,
+order alternated, turn one written again for every reset-first pair and checked equal, a 48-token
+timed reply after the cooling gate. ExecuTorch runs `ExecuTorchOnDeviceTest#theSecondTurnReadColdAndWarm`
+as before (12 pairs); llama.cpp runs the new twin, `WarmPrefixEval#theSecondTurnReadColdAndWarm`
+(8 pairs, the same user turn and question, no system message, so Gemma runs too). Test Lab,
+Android 16, test APK v11 and v12 (v12 adds `-e sentences`). Models: Llama 3.2 1B (our
+`experimentalmachines/Llama-3.2-1B-Instruct-ExecuTorch` 8da4w-gptq 4k; Q4_0 GGUF), Llama 3.2 3B
+(Q4_0 GGUF), Gemma 3 1B (`larryliu0820/Gemma3-1B-IT-INT8-INT4-ExecuTorch-XNNPACK`, the only CPU
+export we found; Q4_K_M GGUF), Gemma 3n E2B (unsloth Q4_K_M GGUF), LFM2.5 1.2B (QAD-Q4_0 GGUF) and
+Qwen3 1.7B (Q8_0 GGUF). The Galaxy Tab S10+ ran ExecuTorch only (its llama.cpp timing is anomalous,
+above).
+
+| Model | Runtime | Phone | Pairs, reuse | Retained, median | Reset, median | Ratio [range] | Same reply | Warmest start |
+|---|---|---|---|---|---|---|---|---|
+| Llama 3.2 1B | ExecuTorch 8da4w-gptq 4k | Galaxy S24 | 12, 12 | 126 ms | 3090 ms, 994 tokens | 25.1x [20.4-32.3] | 12 of 12 | 45 C |
+| Llama 3.2 1B | ExecuTorch 8da4w-gptq 4k | Galaxy S25 Ultra | 12, 12 | 85 ms | 3149 ms, 994 tokens | 36.9x [33.3-39.8] | 12 of 12 | 44 C |
+| Llama 3.2 1B | ExecuTorch 8da4w-gptq 4k | Pixel 9 | 12, 12 | 332 ms | 8294 ms, 994 tokens | 25.0x [23.5-26.2] | 12 of 12 | 67 C |
+| Llama 3.2 1B | ExecuTorch 8da4w-gptq 4k | Galaxy Tab S10+ | 12, 12 | 103 ms | 3480 ms, 994 tokens | 34.6x [30.4-36.0] | 12 of 12 | 45 C |
+| Llama 3.2 1B | llama.cpp Q4_0 | Galaxy S24 | 8, 8 | 163 ms | 5064 ms, 1004 tokens | 30.9x [25.6-35.1] | 8 of 8 | 43 C |
+| Llama 3.2 1B | llama.cpp Q4_0 | Galaxy S25 Ultra | 8, 8 | 122 ms | 3788 ms, 1004 tokens | 29.9x [23.2-35.4] | 8 of 8 | 44 C |
+| Llama 3.2 1B | llama.cpp Q4_0 | Pixel 9 | 8, 8 | 374 ms | 18459 ms, 994 tokens | 49.4x [43.1-56.6] | 8 of 8 | 66 C |
+| Llama 3.2 3B | llama.cpp Q4_0 | Galaxy S24 | 8, 8 | 472 ms | 18574 ms, 1033 tokens | 38.5x [34.5-41.1] | 8 of 8 | 45 C |
+| Llama 3.2 3B | llama.cpp Q4_0 | Galaxy S25 Ultra | 8, 8 | 280 ms | 12586 ms, 1033 tokens | 45.8x [33.1-52.0] | 8 of 8 | 44 C |
+| Llama 3.2 3B | llama.cpp Q4_0 | Pixel 9 | 8, 8 | 1035 ms | 51598 ms, 1060 tokens | 49.5x [44.0-62.7] | 8 of 8 | 44 C |
+| Gemma 3 1B | ExecuTorch INT8-INT4 (1k window, 690-token prompt) | Galaxy S24 | 12, 12 | 110 ms | 2382 ms, 690 tokens | 21.9x [15.3-29.6] | 0 of 12 | 44 C |
+| Gemma 3 1B | ExecuTorch INT8-INT4 (1k window, 690-token prompt) | Galaxy S25 Ultra | 12, 12 | 123 ms | 3345 ms, 690 tokens | 27.7x [22.5-29.1] | 0 of 12 | 44 C |
+| Gemma 3 1B | ExecuTorch INT8-INT4 (1k window, 690-token prompt) | Pixel 9 | 12, 12 | 442 ms | 6434 ms, 690 tokens | 14.5x [13.4-17.4] | 0 of 12 | 65 C |
+| Gemma 3 1B | ExecuTorch INT8-INT4 (1k window, 690-token prompt) | Galaxy Tab S10+ | 12, 12 | 102 ms | 2676 ms, 690 tokens | 26.2x [22.8-28.3] | 0 of 12 | 45 C |
+| Gemma 3 1B | llama.cpp Q4_K_M | Galaxy S24 | 8, 8 | 270 ms | 12204 ms, 930 tokens | 44.2x [39.9-47.6] | 8 of 8 | 44 C |
+| Gemma 3 1B | llama.cpp Q4_K_M | Galaxy S25 Ultra | 8, 8 | 194 ms | 8404 ms, 930 tokens | 42.6x [36.1-61.8] | 8 of 8 | 44 C |
+| Gemma 3 1B | llama.cpp Q4_K_M | Pixel 9 | 8, 8 | 516 ms | 23744 ms, 930 tokens | 46.1x [40.4-49.0] | 8 of 8 | 66 C |
+| Gemma 3n E2B | llama.cpp Q4_K_M | Galaxy S24 | 8, 8 | 544 ms | 20560 ms, 971 tokens | 37.7x [4.7-48.7] | 0 of 8 | 45 C |
+| Gemma 3n E2B | llama.cpp Q4_K_M | Galaxy S25 Ultra | 8, 8 | 329 ms | 13289 ms, 971 tokens | 42.4x [36.5-49.0] | 0 of 8 | 44 C |
+| Gemma 3n E2B | llama.cpp Q4_K_M | Pixel 9 | 8, 8 | 746 ms | 39964 ms, 928 tokens | 56.3x [51.3-62.4] | 8 of 8 | 69 C |
+| LFM2.5 1.2B | llama.cpp QAD-Q4_0 | Galaxy S24 | 8, 8 | 182 ms | 6258 ms, 1010 tokens | 32.9x [25.3-36.0] | 8 of 8 | 45 C |
+| LFM2.5 1.2B | llama.cpp QAD-Q4_0 | Galaxy S25 Ultra | 8, 8 | 160 ms | 5314 ms, 1010 tokens | 33.7x [18.4-36.3] | 8 of 8 | 45 C |
+| Qwen3 1.7B | llama.cpp Q8_0 | Galaxy S24 | 8, 8 | 2284 ms | 7313 ms, 1251 tokens | 3.1x [2.8-3.8] | 8 of 8 | 45 C |
+| Qwen3 1.7B | llama.cpp Q8_0 | Galaxy S25 Ultra | 8, 8 | 1983 ms | 5288 ms, 1251 tokens | 2.8x [2.4-3.4] | 8 of 8 | 45 C |
+
+Times are each engine's `prefillMs`, which is not cut at the same place on both runtimes: on
+llama.cpp it spans tokenizing, aligning the cache and reading the prompt; on ExecuTorch it is the
+runtime's own prefill plus the pieces the engine fed before it, timed on the host. Compare within a
+row, not across runtimes. The reset-cache token count is the runtime's position for ExecuTorch (994
+for Llama, 690 for Gemma; the rows' own field is the engine's estimate) and llama.cpp's own count
+for llama.cpp. `families.py` prints the table. Replies are compared as text, not token ids.
+
+- **Across the runs in this table every warm turn reused the first turn** (224 of 224 pairs: 96 on
+  ExecuTorch, 128 on llama.cpp), every reset arm reused nothing, and the ExecuTorch arms reached the
+  same runtime position in every pair. Every ExecuTorch turn one here (Llama 3.2 and Gemma 3) ended
+  on its family's own marker delivered as text (`<|eot_id|>`, `<end_of_turn>`), so no ExecuTorch
+  runtime ended a turn by itself in these runs; the llama.cpp test does not record how turn one
+  ended (llama.cpp ends on the end-of-generation ids the GGUF lists).
+- **Qwen3 on llama.cpp kept only part of the cache: 2.8x and 3.1x.** Its chat template drops the
+  reasoning of earlier assistant turns, so turn two's prompt differs from the cache at turn one's
+  reply: each warm arm kept the 902-token user turn and read 349 tokens again (the 849-token first
+  reply as the template renders it once its reasoning is removed, and the question), 1.6 to 2.8 s
+  (medians 1.98 s on the S25 Ultra and 2.28 s on the S24). The ExecuTorch engine renders
+  history as it was fed, reasoning included, which is why Qwen3 kept the whole turn there (28.3x to
+  54.5x above).
+- **Reuse changed the greedy reply on some families and not others.** Identical in every pair:
+  Llama 3.2 on both runtimes, Gemma 3 1B and LFM2.5 on llama.cpp. Changed in every pair, the same
+  way on every chip: Gemma 3 1B on ExecuTorch (`Optimization.` kept, `Translation.` reset, four
+  chips from three vendors), Qwen3 on ExecuTorch (above), and Gemma 3n on llama.cpp on the two
+  Snapdragons, where only the whitespace after `On-device.` differed (on the Pixel 9 both arms
+  answered `On-device.`). For Qwen3 the analysis in `qwen3-divergence/` points to the same token ids
+  computed with different arithmetic (a reconstruction on a Mac); the other families were not
+  analysed.
+- **A model that reads its prompt more slowly gained more in these pairs, though not as a rule.** On
+  llama.cpp Llama 3.2 3B read its 1,033 tokens 3.3 to 3.7 times as slowly as 1B read 1,004 (S25
+  Ultra and S24) and gained 45.8x and 38.5x against 29.9x and 30.9x; Gemma 3 1B read 930 tokens 2.2
+  to 2.4 times as slowly as Llama 3.2 1B and gained 42.6x and 44.2x. But Gemma 3n read more slowly
+  than Llama 3.2 3B on the S25 Ultra (13,289 against 12,586 ms) and gained less (42.4x against
+  45.8x): the ratio depends on what the retained turn costs as well as on the full read. Why Gemma
+  reads more slowly was not analysed.
+- **The same family gave different conversations on different chips' llama.cpp builds**: the
+  Pixel 9 wrote a shorter turn one than the Snapdragons for Llama 3.2 1B (44 against 54 tokens) and
+  Gemma 3n (928 against 971 at turn two). Within a phone both arms reached the same token count.
+
+Limits: the Pixel 9 started its timed turns at 46 to 69 C in every run but Llama 3.2 3B (at most
+44 C), above the cooling target, so its ratios may be thermally confounded; its LFM2.5 and Qwen3 llama.cpp runs did not start (the gcloud
+login expired) and are covered by the S24 and S25 Ultra; Gemma 3 1B's ExecuTorch export is exported at 1,024 tokens, so its prompt was 28
+sentences (690 tokens) and its ratios are not comparable to the 1,000-token rows (its first runs at
+40 sentences skipped every pair: turn one left no room); one export per family and runtime.
+
+## Why Qwen3's replies ended on "!", and a second Tab S10+ (2026-11-16, daytime)
+
+Runs on a Galaxy Tab S10+ (MT6989) reserved through Device Streaming for this study (12:45 to
+13:56 local), over `poco_et.sh` with `S=localhost:5612`; files in `gts10pwifi-day/`. Same test,
+Qwen3-1.7B INT8-INT4, sampled (the app's sampling), warm first, 16 pairs each.
+
+| Run | Engine | Completed pairs | Reuse | Retained prefix, median | Reset cache, median | Ratio, hits |
+|---|---|---|---|---|---|---|
+| `sampled-qwen3-int8` | as shipped | 15 | 10 | **194 ms** [170-244] | **10,636 ms** [7,963-12,224] | **50.1x** [40.6-62.1] |
+| `sampled-qwen3-int8-eoscfg` | as shipped | 14 | 11 | **189 ms** [161-218] | **9,452 ms** [7,293-10,144] | **47.0x** [43.9-56.7] |
+| `sampled-qwen3-int8-fix` | runtime-end prototype | 16 | 16 | **189 ms** [173-238] | **10,407 ms** [7,795-13,431] | **50.3x** [44.3-64.0] |
+
+Every missed pair (5 and 3) is one whose turn one the runtime ended itself, on `"!"`, as on the
+three phones overnight. The `eoscfg` run put a `tokenizer_config.json` naming `<|im_end|>` beside
+the tokenizer; it changed nothing, because the tokenizer reads that file only when it is handed a
+directory and the engine hands it the tokenizer file, so it is a second run of the shipped engine.
+
+**The cause: for this export the runtime's end token is token 0, which is `"!"`.**
+
+- The export has no `get_eos_ids` method, only the older `get_eos_id` (151645, read on the Mac
+  with ExecuTorch's Python bindings). ExecuTorch 1.6.0's runner then falls back to the
+  tokenizer's own end token (`extension/llm/runner/llm_runner_helper.cpp`, `get_eos_ids`).
+- Given a file path, the HF tokenizer does not read `tokenizer_config.json`. It then looks for
+  exactly one special token whose name holds "end" or "eos"; Qwen3 has six (`<|endoftext|>`,
+  `<|im_end|>`, `<|object_ref_end|>`, `<|box_end|>`, `<|quad_end|>`, `<|vision_end|>`), so it
+  keeps its default end token, 0 (`hf_tokenizer.cpp`, `setup_special_token_ids`; `tokenizer.h`).
+  Token 0 in Qwen3's vocabulary is `"!"`. This reading is from a local tokenizers checkout of
+  2026-09-10 and the 1.6.0 runner source, not a trace on the phone.
+- The app's own Qwen3 export (`Qwen3-1.7B-8da4w-gptq-4k`) has `get_eos_ids` = [151645, 151643].
+  Its greedy turn ones ended `" details", "!", "<|im_end|>"` on the S24 and S25 Ultra (16 of 16),
+  with no runtime end-of-sequence line: there `"!"` did not stop anything.
+- In the 146 first replies of completed pairs recorded for this export in this folder (rewritten
+  turn ones and `poco/overlapped-execuphone/` excluded), `"!"` appears 27 times, each time as the
+  last character, and never inside a reply. A reply such as
+  `Sure! Here is ...` would presumably stop at `Sure!` with this export; none occurred here.
+- **The stopping `"!"` never enters the cache.** With the prototype keeping the record, the three
+  turn ones that ended on `"!"` left the retained-prefix arm one position short of the reset-cache
+  arm at turn two (1,467 against 1,468; 1,370 against 1,371; 1,377 against 1,378); in the 13 other
+  pairs both arms reached the same position. So for this export the shipped engine is right to
+  drop its record, and the prototype is wrong: it records a `"!"` the runtime never read.
+- **The app cannot hand the runtime a better end token.** The tokenizer would read a
+  `tokenizer_config.json` naming `<|im_end|>` if it were given a directory, but ExecuTorch's
+  Android `LlmModule` refuses any tokenizer path that is not a file
+  (`ExecuTorchRuntime.validateFilePath`); a build of the engine that passed a directory failed to
+  open the model on a Galaxy Tab S10+ ("path is not a file"). The fix belongs in the export
+  (`get_eos_ids`) or the runtime (reading `get_eos_id` when `get_eos_ids` is absent). Every export
+  of ours checked lists `get_eos_ids` (Qwen3 8da4w-gptq 4k and 2k, LFM2.5 1.2B 4k and 32k,
+  LFM2.5 2.6B, LFM2.5-VL 450M).
+
+**On MediaTek's NPU the stop is the real end token.** MediaTek's runner takes its stop tokens from
+the export (`[2, 7, 0]` for LFM2.5, `[151643, 151645]` for Qwen3) and stopped at token 7 and 151645,
+the `<|im_end|>` of each, without handing its text to the callback. There the cache holds the reply
+without the marker, as after a clean end, and the prototype's record matched it (998 and 998 on
+the POCO; 1,653 and 1,653 below). A fix to ship would keep the record only when the runtime
+reports that it stopped on the template's end token; the prototype cannot tell the two apart.
+
+**Qwen3-1.7B on this tablet's NPU** (MT6989, the a16w4 2k export from the MediaTek matrix session,
+`tools/mediatek/results/2026-11-16-mt6989/`; CPU half the INT8-INT4 `.pte`; greedy). Both runs
+stopped in pair 1, when turn one (about 730 tokens) left no room in the 2k window
+(`ContextWindowExceededException`), so each has one pair:
+
+| Pair 0 | Retained prefix | Reset cache |
+|---|---|---|
+| As shipped | none: the record was dropped, 1,829 tokens read, 17,242 ms | 17,106 ms |
+| Runtime-end prototype | **878 ms** (20 read, 1,626 kept, both arms at 1,653) | 16,636 ms |
+
+NPU reads ran at about 94 tokens/s in 160-token pieces (about 1.7 s per piece). Every reply on the
+NPU began with `<|file_sep|>` (151664) where the CPU writes `<think>` (151667); the MediaTek matrix
+session records the same in every Qwen3 NPU prefill it ran (0.6B and 1.7B), so it belongs to the
+exports, not to this test. After turn one the prototype fed the 730-token reply to the NPU, which
+took 5.3 s after the reply was complete.
+
 ## Not measured, and what failed
 
-- **The POCO** dropped off USB during a greedy Qwen3 run; its rows stayed on the phone and were
-  not pulled. Nothing from the POCO is in this folder. The MediaTek NPU path (NeuroPilot) was not
-  run: the session's notes put its need at about 5.2 GB available, more than the phone showed
-  before the run (not kept here).
+- **The POCO overnight** dropped off USB during a greedy Qwen3 run, and those rows were lost; the
+  POCO's runs above were made the next day.
+- **On the POCO, overlapped and left out**: llama.cpp's Qwen3-1.7B Q8_0 rollback (11:40 to 12:03,
+  the phone at 48 to 62 C) and sampled Qwen3 (stopped after 4 rows). Both are to be run again
+  alone, with the sampled run repeated on the runtime-end prototype. Their rows are kept in
+  `poco/overlapped-execuphone/` and used nowhere above; the CPU run's first attempt is kept there too
+  and is the CPU row of the NPU table, labelled as overlapped.
+- **Not run on the POCO**: Qwen3 4k on the CPU and the GPU, llama.cpp restores of the other
+  GGUFs, cold prefill against prompt length.
 - **QNN sampled** and the QNN 0.6B were not run.
 
 Files: `<device>/<run>.*` per Test Lab phone (`SC-51E`, `pa3q`, `tokay`, `gts10pwifi`): rows
 (`.coldwarm.jsonl`, `.restore.jsonl`, `.prefill.jsonl`) and the test's and runtimes' log lines
 (never the whole logcat). `ftl.sh` ran them (ACCOUNT, PROJECT, BUCKET, RAW, APK from the
-environment); `poco_et.sh`, `poco_restore.sh` and `poco_llama_prefill.sh` are the USB equivalents;
-`summarise.py` and `report_restore.py` print the tables. The test APK was built with
+environment); `poco_et.sh`, `poco_restore.sh` and `poco_llama_prefill.sh` (with `poco_lib.sh`) are the
+equivalents for a phone on USB or wireless debugging, writing to `poco/` (`<run>.log` is the
+test's, the runtime's and the NPU bridge's lines; `greedy-lfm25-2k-npu.pd.log` holds the bridge's
+lines for that run, which its `.log` filter missed);
+`summarise.py` and `report_restore.py` print the tables, and `families.py` the family table
+(`WarmPrefixEval#theSecondTurnReadColdAndWarm` is the llama.cpp test behind it). The day's
+second tablet runs are in `gts10pwifi-day/`. The test APK was built with
 `-Pow.testJniOnDisk=true` (then presence alone; now it must be `true`).

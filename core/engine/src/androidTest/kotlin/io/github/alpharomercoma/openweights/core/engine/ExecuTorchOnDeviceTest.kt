@@ -65,7 +65,18 @@ class ExecuTorchOnDeviceTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         QnnSupport.init(context)
         VulkanSupport.init(context)
-        bridge = RecordingBridge(NativeExecuTorchBridge())
+        // `-e bridge mtk-npu`: MediaTek's NPU reads every prompt and the CPU export writes the
+        // reply, with the NPU half staged under /data/local/tmp/mtk_models as
+        // DisaggregatedOnDeviceTest describes. The talk was asked what reuse looks like there.
+        val inner = when (BRIDGE) {
+            NATIVE -> NativeExecuTorchBridge()
+            MTK_NPU -> DisaggregatedExecuTorchBridge(stagingRoot = File(MTK_STAGING))
+            // A misspelt option would otherwise run on the CPU and record the misspelling.
+            else -> throw IllegalArgumentException(
+                "-e bridge must be $NATIVE or $MTK_NPU, not $BRIDGE",
+            )
+        }
+        bridge = RecordingBridge(inner)
         engine = TEMPERATURE?.let { ExecuTorchEngine(bridge, temperature = it) }
             ?: ExecuTorchEngine(bridge)
     }
@@ -184,6 +195,8 @@ class ExecuTorchOnDeviceTest {
     @Test
     fun theSecondTurnReadColdAndWarm(): Unit = runBlocking {
         engine.load(MODEL, PARAMS)
+        // A bridge that fell back to the CPU would measure the CPU under the NPU's name.
+        if (BRIDGE == MTK_NPU) assertThat(bridge.prefillingOnNpu).isTrue()
         val first = listOf(ChatMessage.text(ChatRole.USER, LONG_PROMPT))
         val ask = ChatMessage.text(ChatRole.USER, "In one word, what did I just describe?")
         // Reasoning on, as in reportsWhatASecondTurnCosts: Qwen3 with it off closes an empty
@@ -253,6 +266,8 @@ class ExecuTorchOnDeviceTest {
                 val row =
                     """{"pair": $pair, "arm": "$arm", "order": "${order.joinToString("-")}", """ +
                         """"temperature": ${TEMPERATURE ?: "null"}, """ +
+                        """"bridge": ${jsonString(BRIDGE)}, """ +
+                        """"on_npu": ${bridge.prefillingOnNpu}, """ +
                         """"same_turn_one": $sameTurnOne, """ +
                         opener +
                         """"prompt_tokens": ${s.promptTokens}, """ +
@@ -620,6 +635,15 @@ class ExecuTorchOnDeviceTest {
         /** `-e temperature <t>` builds the engine at that temperature; unset, the app's. */
         val TEMPERATURE = arguments.getString("temperature")?.toFloatOrNull()
 
+        /**
+         * `-e bridge mtk-npu` reads prompts on MediaTek's NPU; unset or `native`, the runtime the
+         * `.pte` was compiled for (the CPU, Vulkan or QNN), which is what `on_npu = false` means.
+         */
+        const val NATIVE = "native"
+        const val MTK_NPU = "mtk-npu"
+        const val MTK_STAGING = "/data/local/tmp/mtk_models"
+        val BRIDGE: String = arguments.getString("bridge") ?: NATIVE
+
         /** `-e context <n>` raises the preference for an export with a larger window. */
         val PARAMS = ModelLoadParams(
             contextLength = arguments.getString("context")?.toIntOrNull() ?: 2048,
@@ -648,8 +672,15 @@ class ExecuTorchOnDeviceTest {
         /** The tail handed to generate is never smaller than the shipped one. */
         const val PIECE_TAIL_FLOOR = 1600
 
-        /** Long enough that re-reading it is visibly different from not re-reading it. */
-        val LONG_PROMPT = describing(sentences = 40)
+        /**
+         * Long enough that re-reading it is visibly different from not re-reading it.
+         * `-e sentences <n>` shortens it for an export whose window cannot hold 40 (Gemma 3
+         * 1B INT8-INT4 is exported at 1,024 tokens, which the 40-sentence turn fills).
+         */
+        val LONG_PROMPT = describing(
+            sentences = arguments.getString("sentences")?.toIntOrNull() ?: LONG_SENTENCES,
+        )
+        const val LONG_SENTENCES = 40
 
         /** [LONG_PROMPT] at another length: the same sentence, [sentences] times. */
         fun describing(sentences: Int) = buildString {

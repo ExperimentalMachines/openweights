@@ -1,0 +1,83 @@
+--------- beginning of main
+11-15 21:29:54.959  4639  4665 I ExecuTorch: Reading file /sys/devices/soc0/image_version
+11-15 21:29:54.959  4639  4665 I ExecuTorch: Failed to open midr file /sys/devices/soc0/image_version
+11-15 21:29:54.959  4639  4665 I ExecuTorch: Number of efficient cores 0
+11-15 21:29:54.959  4639  4665 I ExecuTorch: Resetting threadpool to 4 threads.
+11-15 21:29:55.243  4639  4665 I OpenWeightsPD: NeuroPilot NPU runtime available
+11-15 21:29:55.248  4639  4665 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (Qwen3-1.7B-neuropilot-a16w4-2k-chunk1of4.pte..), embedding=Qwen3-1.7B-neuropilot-embedding-fp32.bin, CPU model=Qwen3-1.7B-INT8-INT4-ExecuTorch-XNNPACK.pte
+11-15 21:29:55.248  4639  4665 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/Qwen3-1.7B-INT8-INT4-ExecuTorch-XNNPACK.tokenizer.json
+11-15 21:29:55.630  4639  4665 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=151669
+11-15 21:29:55.630  4639  4665 I OpenWeightsPD: DisaggregatedSession: stop tokens = [151643,151645]
+11-15 21:29:55.630  4639  4665 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=16 layers=28 dim=128 maxlen=40960
+11-15 21:29:55.630  4639  4665 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-15 21:29:57.710  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 2.08 s
+11-15 21:29:57.710  4639  4665 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/Qwen3-1.7B-INT8-INT4-ExecuTorch-XNNPACK.pte
+11-15 21:30:00.483  4639  4665 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-15 21:30:00.483  4639  4665 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 2.77 s
+11-15 21:30:00.483  4639  4665 I OpenWeightsPD: DisaggregatedSession: state block has 0 conv, 28 K/V pairs (8 heads x 128 dim), 28 layers
+11-15 21:30:00.484  4639  4665 I OpenWeightsPD: DisaggregatedSession: Built 28 layer mappings for state handoff
+11-15 21:30:00.484  4639  4665 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376663257143888)
+11-15 21:30:00.529  4639  4661 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-15 21:30:00.549  4639  4665 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-15 21:30:02.768  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 3 tokens in 2213.54 ms (1.4 tok/s), 3 total in 2213.54 ms, next_tok=32
+11-15 21:30:04.475  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 1705.51 ms (95.6 tok/s), 166 total in 3919.05 ms, next_tok=9471
+11-15 21:30:06.184  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 1707.65 ms (93.7 tok/s), 326 total in 5626.70 ms, next_tok=389
+11-15 21:30:07.922  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 1737.44 ms (93.2 tok/s), 488 total in 7364.14 ms, next_tok=448
+11-15 21:30:09.610  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 1687.51 ms (94.8 tok/s), 648 total in 9051.65 ms, next_tok=1459
+11-15 21:30:11.292  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 255 tokens in 1673.37 ms (152.4 tok/s), 903 total in 10725.02 ms, next_tok=151664
+11-15 21:30:11.386  4639  4665 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 93.967 ms
+11-15 21:30:52.597  4639  4665 I OpenWeightsPD: DisaggregatedSession: Reached stop token 151645
+11-15 21:30:52.597  4639  4665 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 730 tokens in 41210.15 ms (17.71 tok/s)
+11-15 21:30:52.597  4639  4665 I OpenWeightsPD: DisaggregatedSession: decode kept 5.52 cores busy
+11-15 21:30:52.597  4639  4665 I OpenWeightsPD: DisaggregatedSession: forward() was 40882.39 ms of that (99.2%), 56.08 ms per token
+11-15 21:30:52.606  4639  4661 I ExecuTorchOnDevice: coldwarm pair=0 turn one: generated=731 reason=END_OF_TURN held=1626 fragments=730 tail=[" this", " system", " or", " implementing", " it", "!"]
+11-15 21:30:52.606  4639  4661 I ExecuTorchOnDevice: coldwarm pair=0 record: breaks at 0 of record 0, render 8002: record "" render "<|im_start|>user\nHere is a description of a system I am buil" sameTurnOne=true
+11-15 21:31:07.765  4639  4665 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-15 21:31:08.649  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 3 tokens in 883.21 ms (3.4 tok/s), 3 total in 883.21 ms, next_tok=2132
+11-15 21:31:10.347  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 1697.97 ms (96.0 tok/s), 166 total in 2581.18 ms, next_tok=9471
+11-15 21:31:12.049  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 1700.69 ms (94.1 tok/s), 326 total in 4281.87 ms, next_tok=389
+11-15 21:31:13.758  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 1709.37 ms (94.8 tok/s), 488 total in 5991.23 ms, next_tok=448
+11-15 21:31:15.458  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 1699.43 ms (94.1 tok/s), 648 total in 7690.66 ms, next_tok=1459
+11-15 21:31:17.166  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 1707.37 ms (93.7 tok/s), 808 total in 9398.03 ms, next_tok=4128
+11-15 21:31:18.031  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 97 tokens in 863.96 ms (112.3 tok/s), 905 total in 10262.00 ms, next_tok=32313
+11-15 21:31:19.761  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 149 tokens in 1729.61 ms (86.1 tok/s), 1054 total in 11991.60 ms, next_tok=4416
+11-15 21:31:21.504  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 138 tokens in 1740.60 ms (79.3 tok/s), 1192 total in 13732.20 ms, next_tok=4416
+11-15 21:31:22.379  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 109 tokens in 874.54 ms (124.6 tok/s), 1301 total in 14606.74 ms, next_tok=4416
+11-15 21:31:25.011  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 352 tokens in 2628.19 ms (133.9 tok/s), 1653 total in 17234.93 ms, next_tok=151664
+11-15 21:31:25.040  4639  4665 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 29.228 ms
+11-15 21:31:28.007  4639  4665 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 48 tokens in 2967.31 ms (16.18 tok/s)
+11-15 21:31:28.008  4639  4665 I OpenWeightsPD: DisaggregatedSession: decode kept 5.42 cores busy
+11-15 21:31:28.008  4639  4665 I OpenWeightsPD: DisaggregatedSession: forward() was 2943.55 ms of that (99.2%), 62.63 ms per token
+11-15 21:31:28.054  4639  4661 I ExecuTorchOnDevice: coldwarm pair=0 arm=warm fed=1829 cached=0 prefill=17242ms ttft=17298ms cpu=40.5C screen=true
+11-15 21:31:28.086  4639  4661 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-15 21:31:28.111  4639  4665 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-15 21:31:28.968  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 3 tokens in 857.15 ms (3.5 tok/s), 3 total in 857.15 ms, next_tok=29
+11-15 21:31:30.674  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 1704.99 ms (95.6 tok/s), 166 total in 2562.14 ms, next_tok=9471
+11-15 21:31:32.375  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 1701.32 ms (94.0 tok/s), 326 total in 4263.46 ms, next_tok=389
+11-15 21:31:34.083  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 1707.30 ms (94.9 tok/s), 488 total in 5970.76 ms, next_tok=448
+11-15 21:31:35.782  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 1698.76 ms (94.2 tok/s), 648 total in 7669.53 ms, next_tok=1459
+11-15 21:31:37.506  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 1723.44 ms (92.8 tok/s), 808 total in 9392.97 ms, next_tok=4128
+11-15 21:31:38.362  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 97 tokens in 855.20 ms (113.4 tok/s), 905 total in 10248.17 ms, next_tok=32313
+11-15 21:31:40.070  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 149 tokens in 1707.98 ms (87.2 tok/s), 1054 total in 11956.16 ms, next_tok=4416
+11-15 21:31:41.785  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 138 tokens in 1714.13 ms (80.5 tok/s), 1192 total in 13670.29 ms, next_tok=785
+11-15 21:31:42.653  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 109 tokens in 867.36 ms (125.7 tok/s), 1301 total in 14537.65 ms, next_tok=4416
+11-15 21:31:45.218  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 352 tokens in 2563.42 ms (137.3 tok/s), 1653 total in 17101.06 ms, next_tok=151664
+11-15 21:31:45.244  4639  4665 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 26.239 ms
+11-15 21:31:48.158  4639  4665 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 48 tokens in 2914.15 ms (16.47 tok/s)
+11-15 21:31:48.158  4639  4665 I OpenWeightsPD: DisaggregatedSession: decode kept 5.46 cores busy
+11-15 21:31:48.158  4639  4665 I OpenWeightsPD: DisaggregatedSession: forward() was 2895.92 ms of that (99.4%), 61.62 ms per token
+11-15 21:31:48.177  4639  4661 I ExecuTorchOnDevice: coldwarm pair=0 arm=cold fed=1829 cached=0 prefill=17106ms ttft=17144ms cpu=40.4C screen=true
+11-15 21:31:48.178  4639  4661 I ExecuTorchOnDevice: coldwarm pair=0 replies identical=false
+11-15 21:31:48.206  4639  4661 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-15 21:31:48.217  4639  4665 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-15 21:31:49.064  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 3 tokens in 846.82 ms (3.5 tok/s), 3 total in 846.82 ms, next_tok=29
+11-15 21:31:50.769  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 1704.40 ms (95.6 tok/s), 166 total in 2551.22 ms, next_tok=9471
+11-15 21:31:52.472  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 1702.55 ms (94.0 tok/s), 326 total in 4253.77 ms, next_tok=389
+11-15 21:31:54.178  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 1706.10 ms (95.0 tok/s), 488 total in 5959.87 ms, next_tok=448
+11-15 21:31:55.902  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 1722.61 ms (92.9 tok/s), 648 total in 7682.48 ms, next_tok=1459
+11-15 21:31:57.616  4639  4665 I OpenWeightsPD: DisaggregatedSession: NPU fed 255 tokens in 1714.09 ms (148.8 tok/s), 903 total in 9396.57 ms, next_tok=151664
+11-15 21:31:57.631  4639  4665 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 15.054 ms
+11-15 21:33:09.148  4639  4665 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 1146 tokens in 71516.79 ms (16.02 tok/s)
+11-15 21:33:09.148  4639  4665 I OpenWeightsPD: DisaggregatedSession: decode kept 5.51 cores busy
+11-15 21:33:09.148  4639  4665 I OpenWeightsPD: DisaggregatedSession: forward() was 70989.87 ms of that (99.3%), 62.00 ms per token
+11-15 21:33:09.175  4639  4665 I OpenWeightsPD: DisaggregatedSession: ResetContext completed

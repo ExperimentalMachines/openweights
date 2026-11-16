@@ -1,0 +1,75 @@
+INSTRUMENTATION_STATUS: class=io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stream=
+io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest:
+INSTRUMENTATION_STATUS: test=theSecondTurnReadColdAndWarm
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=1
+INSTRUMENTATION_STATUS: stack=io.github.alpharomercoma.openweights.core.engine.LlamaException: ExecuTorch could not open this model: Cannot load tokenizer path: path is not a file: /data/user/0/io.github.alpharomercoma.openweights.core.engine.test/cache/runtime-tokenizers/e87e59f00cdaa9a0a37f2bc2
+	at io.github.alpharomercoma.openweights.core.engine.NativeExecuTorchBridge.load(NativeExecuTorchBridge.kt:85)
+	at io.github.alpharomercoma.openweights.core.engine.RecordingBridge.load(Unknown Source:12)
+	at io.github.alpharomercoma.openweights.core.engine.ExecuTorchEngine.open(ExecuTorchEngine.kt:356)
+	at io.github.alpharomercoma.openweights.core.engine.ExecuTorchEngine.loadLocked(ExecuTorchEngine.kt:271)
+	at io.github.alpharomercoma.openweights.core.engine.ExecuTorchEngine.access$loadLocked(ExecuTorchEngine.kt:65)
+	at io.github.alpharomercoma.openweights.core.engine.ExecuTorchEngine$load$2$1.invokeSuspend(ExecuTorchEngine.kt:202)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+	at kotlinx.coroutines.internal.LimitedDispatcher$Worker.run(LimitedDispatcher.kt:124)
+	at kotlinx.coroutines.scheduling.TaskImpl.run(Tasks.kt:89)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler.runSafely(CoroutineScheduler.kt:586)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.executeTask(CoroutineScheduler.kt:798)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker(CoroutineScheduler.kt:717)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineScheduler.kt:704)
+
+INSTRUMENTATION_STATUS: stream=
+Error in theSecondTurnReadColdAndWarm(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest):
+io.github.alpharomercoma.openweights.core.engine.LlamaException: ExecuTorch could not open this model: Cannot load tokenizer path: path is not a file: /data/user/0/io.github.alpharomercoma.openweights.core.engine.test/cache/runtime-tokenizers/e87e59f00cdaa9a0a37f2bc2
+	at io.github.alpharomercoma.openweights.core.engine.NativeExecuTorchBridge.load(NativeExecuTorchBridge.kt:85)
+	at io.github.alpharomercoma.openweights.core.engine.RecordingBridge.load(Unknown Source:12)
+	at io.github.alpharomercoma.openweights.core.engine.ExecuTorchEngine.open(ExecuTorchEngine.kt:356)
+	at io.github.alpharomercoma.openweights.core.engine.ExecuTorchEngine.loadLocked(ExecuTorchEngine.kt:271)
+	at io.github.alpharomercoma.openweights.core.engine.ExecuTorchEngine.access$loadLocked(ExecuTorchEngine.kt:65)
+	at io.github.alpharomercoma.openweights.core.engine.ExecuTorchEngine$load$2$1.invokeSuspend(ExecuTorchEngine.kt:202)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+	at kotlinx.coroutines.internal.LimitedDispatcher$Worker.run(LimitedDispatcher.kt:124)
+	at kotlinx.coroutines.scheduling.TaskImpl.run(Tasks.kt:89)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler.runSafely(CoroutineScheduler.kt:586)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.executeTask(CoroutineScheduler.kt:798)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker(CoroutineScheduler.kt:717)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineScheduler.kt:704)
+
+INSTRUMENTATION_STATUS: test=theSecondTurnReadColdAndWarm
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_RESULT: stream=
+
+Time: 0.116
+There was 1 failure:
+1) theSecondTurnReadColdAndWarm(io.github.alpharomercoma.openweights.core.engine.ExecuTorchOnDeviceTest)
+io.github.alpharomercoma.openweights.core.engine.LlamaException: ExecuTorch could not open this model: Cannot load tokenizer path: path is not a file: /data/user/0/io.github.alpharomercoma.openweights.core.engine.test/cache/runtime-tokenizers/e87e59f00cdaa9a0a37f2bc2
+	at io.github.alpharomercoma.openweights.core.engine.NativeExecuTorchBridge.load(NativeExecuTorchBridge.kt:85)
+	at io.github.alpharomercoma.openweights.core.engine.RecordingBridge.load(Unknown Source:12)
+	at io.github.alpharomercoma.openweights.core.engine.ExecuTorchEngine.open(ExecuTorchEngine.kt:356)
+	at io.github.alpharomercoma.openweights.core.engine.ExecuTorchEngine.loadLocked(ExecuTorchEngine.kt:271)
+	at io.github.alpharomercoma.openweights.core.engine.ExecuTorchEngine.access$loadLocked(ExecuTorchEngine.kt:65)
+	at io.github.alpharomercoma.openweights.core.engine.ExecuTorchEngine$load$2$1.invokeSuspend(ExecuTorchEngine.kt:202)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:100)
+	at kotlinx.coroutines.internal.LimitedDispatcher$Worker.run(LimitedDispatcher.kt:124)
+	at kotlinx.coroutines.scheduling.TaskImpl.run(Tasks.kt:89)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler.runSafely(CoroutineScheduler.kt:586)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.executeTask(CoroutineScheduler.kt:798)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker(CoroutineScheduler.kt:717)
+	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineScheduler.kt:704)
+
+FAILURES!!!
+Tests run: 1,  Failures: 1
+
+
+INSTRUMENTATION_CODE: -1
+OW_EXIT=0

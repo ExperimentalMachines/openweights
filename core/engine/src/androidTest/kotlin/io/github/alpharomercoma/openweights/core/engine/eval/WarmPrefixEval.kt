@@ -28,6 +28,7 @@ import io.github.alpharomercoma.openweights.core.common.model.SamplerParams
 import io.github.alpharomercoma.openweights.core.engine.DeviceState
 import io.github.alpharomercoma.openweights.core.engine.GenerationEvent
 import io.github.alpharomercoma.openweights.core.engine.LlamaCppEngine
+import io.github.alpharomercoma.openweights.core.engine.StopReason
 import io.github.alpharomercoma.openweights.core.engine.jsonString
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -267,6 +268,127 @@ class WarmPrefixEval {
         }
     }
 
+    /**
+     * The same second turn read with the first turn kept in the cache and from a reset cache,
+     * the llama.cpp twin of `ExecuTorchOnDeviceTest.theSecondTurnReadColdAndWarm`: the same
+     * user turn ([longPrompt], about a thousand tokens), the same question, greedy, the turn
+     * one reply carried as the app carries it, the order alternated with turn one written
+     * again for every cold-first pair, a 48-token timed reply after the cooling gate. No
+     * system message, so it runs on Gemma, whose template folds a system text into the first
+     * turn and leaves [aFreshChatReadColdAndRestored] nothing to restore. `-e gguf <path>`,
+     * `-e pairs <n>` (default 8); rows go to `eval-results/<stem>.coldwarm.jsonl` in the
+     * ExecuTorch test's layout.
+     */
+    @Test
+    fun theSecondTurnReadColdAndWarm(): Unit = runBlocking {
+        val arguments = InstrumentationRegistry.getArguments()
+        val model = File(arguments.getString("gguf") ?: "$EVAL_DIR/none.gguf")
+        assumeTrue("no .gguf at $model", model.isFile)
+        val pairs = arguments.getString("pairs")?.toIntOrNull() ?: COLDWARM_PAIRS
+        val out = InstrumentationRegistry.getInstrumentation().targetContext
+            .getExternalFilesDir("eval-results")!!.apply { mkdirs() }
+        val sink = File(out, model.nameWithoutExtension + ".coldwarm.jsonl")
+            .apply { writeText("") }
+        val first = listOf(ChatMessage.text(ChatRole.USER, longPrompt()))
+        val opening = PARAMS.copy(maxTokens = TURN_ONE_TOKENS)
+        val timed = PARAMS.copy(maxTokens = TIMED_TOKENS)
+        val engine = LlamaCppEngine()
+        var warmHits = 0
+        var rewritten = 0
+        var coldReused = 0
+        try {
+            engine.load(model, ModelLoadParams(contextLength = CONTEXT))
+            repeat(pairs) { pair ->
+                engine.resetContext()
+                val one = engine.turn(first, opening)
+                // A turn one cut by its budget leaves a cache the engine does not extend; such a
+                // pair compares nothing, so it is skipped and said so.
+                if (one.reason != StopReason.END_OF_TURN) {
+                    Log.i(TAG, "coldwarm pair=$pair skipped: turn one ended ${one.reason}")
+                    return@repeat
+                }
+                val sent = first + ChatMessage.text(ChatRole.ASSISTANT, one.text) +
+                    ChatMessage.text(ChatRole.USER, ASK)
+                val order = if (pair % 2 == 1) listOf(COLD, WARM) else listOf(WARM, COLD)
+                val replies = mutableMapOf<String, String>()
+                for (arm in order) {
+                    var sameTurnOne = true
+                    if (arm == COLD) {
+                        engine.resetContext()
+                    } else if (order.first() == COLD) {
+                        engine.resetContext()
+                        val again = engine.turn(first, opening)
+                        sameTurnOne = again.text == one.text && again.reason == one.reason
+                        if (!sameTurnOne) rewritten++
+                    }
+                    val before = DeviceState.read(coolFirst = true)
+                    val two = engine.turn(sent, timed)
+                    val after = DeviceState.read(coolFirst = false)
+                    val s = two.stats
+                    replies[arm] = two.text
+                    if (arm == WARM && s.cachedTokens > MIN_RESTORED) warmHits++
+                    if (arm == COLD && s.cachedTokens > 0) coldReused++
+                    val fields = listOf(
+                        "pair" to "$pair",
+                        "arm" to jsonString(arm),
+                        "order" to jsonString(order.joinToString("-")),
+                        "temperature" to "0.0",
+                        "runtime" to jsonString("llama.cpp"),
+                        "same_turn_one" to "$sameTurnOne",
+                        "turn_one_tokens" to "${one.stats.generatedTokens}",
+                        "turn_one_reason" to jsonString("${one.reason}"),
+                        "turn_one" to jsonString(one.text),
+                        "prompt_tokens" to "${s.promptTokens}",
+                        "cached_tokens" to "${s.cachedTokens}",
+                        "prefill_ms" to "${s.prefillMs}",
+                        "ttft_ms" to "${s.timeToFirstTokenMs}",
+                        "generated_tokens" to "${s.generatedTokens}",
+                        "decode_ms" to "${s.decodeMs}",
+                        "cpu_c_before" to "${before.cpuC}",
+                        "cpu_c_after" to "${after.cpuC}",
+                        "battery_c" to "${before.batteryC}",
+                        "screen_on" to "${before.screenOn}",
+                        "cooled_s" to "${before.waitedS}",
+                        "reply" to jsonString(two.text),
+                    )
+                    val row = fields.joinToString(", ", "{", "}") { (k, v) -> "\"$k\": $v" }
+                    sink.appendText(row + "\n")
+                    Log.i(
+                        TAG,
+                        "coldwarm ${model.name} pair=$pair arm=$arm fed=${s.promptTokens} " +
+                            "cached=${s.cachedTokens} prefill=${s.prefillMs}ms " +
+                            "ttft=${s.timeToFirstTokenMs}ms " +
+                            "turn_one=${one.stats.generatedTokens} " +
+                            "cpu=${before.cpuC}C screen=${before.screenOn}",
+                    )
+                }
+                val same = replies[WARM] == replies[COLD]
+                Log.i(TAG, "coldwarm pair=$pair replies identical=$same")
+            }
+        } finally {
+            engine.unload()
+            engine.close()
+        }
+        // Judged after every row is written, so a failed run still leaves its rows.
+        assertWithMessage("${model.name}: no warm arm reused the first turn")
+            .that(warmHits).isAtLeast(1)
+        assertWithMessage("${model.name}: a rewritten turn one came out different")
+            .that(rewritten).isEqualTo(0)
+        assertWithMessage("${model.name}: a reset arm reused a cache")
+            .that(coldReused).isEqualTo(0)
+    }
+
+    /** One turn on whatever the engine holds, with the text the app would store as history. */
+    private suspend fun LlamaCppEngine.turn(
+        messages: List<ChatMessage>,
+        params: SamplerParams,
+    ): Reply {
+        val events = chat(messages, params).toList()
+        val done = events.filterIsInstance<GenerationEvent.Completed>().single()
+        val raw = events.filterIsInstance<GenerationEvent.Token>().joinToString("") { it.text }
+        return Reply(raw.ifEmpty { done.content }, done.stats, done.reason)
+    }
+
     private fun rowJson(pair: Int, arm: String, order: List<String>, row: TimedRow): String {
         val s = row.reply.stats
         val fields = listOf(
@@ -451,6 +573,7 @@ class WarmPrefixEval {
     private class Reply(
         val text: String,
         val stats: io.github.alpharomercoma.openweights.core.engine.GenerationStats,
+        val reason: StopReason? = null,
     )
 
     /** One greedy turn: the system prefix, the question, and whatever else extends it. */
@@ -502,6 +625,28 @@ class WarmPrefixEval {
         }
 
         const val QUESTION = "What is 2+2? Reply with just the number."
+
+        const val WARM = "warm"
+        const val COLDWARM_PAIRS = 8
+
+        /** Turn one ends on its own marker well inside this; a cut turn one is not reused. */
+        const val TURN_ONE_TOKENS = 1100
+
+        /** As in the ExecuTorch test: enough of the reply to compare the arms token for token. */
+        const val TIMED_TOKENS = 48
+        const val ASK = "In one word, what did I just describe?"
+
+        /** The text `ExecuTorchOnDeviceTest.LONG_PROMPT` sends, so both runtimes read the same. */
+        fun longPrompt(sentences: Int = 40) = buildString {
+            append("Here is a description of a system I am building. ")
+            repeat(sentences) {
+                append(
+                    "It runs language models on a phone, entirely on device, with no " +
+                        "network involved at any point in generation. ",
+                )
+            }
+            append("Acknowledge briefly.")
+        }
 
         /** A reply as it might have been decoded, carried into a branch or reopened chat. */
         const val CARRIED_REPLY = "4"

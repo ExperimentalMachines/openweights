@@ -1,0 +1,632 @@
+--------- beginning of main
+11-16 11:08:46.056  4181  4232 I ExecuTorch: Reading file /sys/devices/soc0/image_version
+11-16 11:08:46.056  4181  4232 I ExecuTorch: Failed to open midr file /sys/devices/soc0/image_version
+11-16 11:08:46.056  4181  4232 I ExecuTorch: Number of efficient cores 0
+11-16 11:08:46.056  4181  4232 I ExecuTorch: Resetting threadpool to 4 threads.
+11-16 11:08:46.284  4181  4232 I OpenWeightsPD: NeuroPilot NPU runtime available
+11-16 11:08:46.290  4181  4232 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:08:46.291  4181  4232 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:08:46.431  4181  4232 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:08:46.431  4181  4232 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:08:46.431  4181  4232 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:08:46.431  4181  4232 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:08:47.766  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 1.33 s
+11-16 11:08:47.766  4181  4232 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:08:50.088  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:08:50.088  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 2.32 s
+11-16 11:08:50.088  4181  4232 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:08:50.088  4181  4232 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:08:50.088  4181  4232 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:08:50.102  4181  4225 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:08:50.114  4181  4232 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:08:50.841  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 725.74 ms (5.5 tok/s), 4 total in 725.74 ms, next_tok=1
+11-16 11:08:51.643  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 801.24 ms (203.4 tok/s), 167 total in 1526.98 ms, next_tok=8253
+11-16 11:08:52.804  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 1160.94 ms (137.8 tok/s), 327 total in 2687.92 ms, next_tok=884
+11-16 11:08:54.264  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 1456.78 ms (111.2 tok/s), 489 total in 4144.69 ms, next_tok=916
+11-16 11:08:55.145  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 879.61 ms (181.9 tok/s), 649 total in 5024.30 ms, next_tok=2129
+11-16 11:08:56.015  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 256 tokens in 867.84 ms (295.0 tok/s), 905 total in 5892.14 ms, next_tok=13618
+11-16 11:08:56.017  4181  4232 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.652 ms
+11-16 11:08:58.770  4181  4232 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:08:58.770  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 73 tokens in 2753.45 ms (26.51 tok/s)
+11-16 11:08:58.771  4181  4232 I OpenWeightsPD: DisaggregatedSession: decode kept 4.08 cores busy
+11-16 11:08:58.771  4181  4232 I OpenWeightsPD: DisaggregatedSession: forward() was 2719.36 ms of that (98.8%), 37.77 ms per token
+11-16 11:08:59.417  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 73 tokens in 639.91 ms (114.1 tok/s), 978 total in 6532.06 ms, next_tok=7
+11-16 11:08:59.425  4181  4225 I ExecuTorchOnDevice: coldwarm pair=0 turn one: generated=74 reason=END_OF_TURN held=976 fragments=73 tail=[" like", " me", " to", " do", " that", "?"]
+11-16 11:08:59.425  4181  4225 I ExecuTorchOnDevice: coldwarm pair=0 record: extends, record 4874 of 4973 chars sameTurnOne=true
+11-16 11:10:00.281  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 20 tokens in 423.88 ms (47.2 tok/s), 998 total in 6955.94 ms, next_tok=20882
+11-16 11:10:00.283  4181  4232 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.888 ms
+11-16 11:10:00.442  4181  4232 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:10:00.442  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 5 tokens in 159.64 ms (31.32 tok/s)
+11-16 11:10:00.442  4181  4232 I OpenWeightsPD: DisaggregatedSession: decode kept 4.02 cores busy
+11-16 11:10:00.442  4181  4232 I OpenWeightsPD: DisaggregatedSession: forward() was 157.60 ms of that (98.7%), 39.40 ms per token
+11-16 11:10:00.865  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 5 tokens in 422.49 ms (11.8 tok/s), 1003 total in 7378.43 ms, next_tok=7
+11-16 11:10:00.883  4181  4225 I ExecuTorchOnDevice: coldwarm pair=0 arm=warm fed=20 cached=976 prefill=423ms ttft=427ms cpu=46.197C screen=true
+11-16 11:10:01.838  4181  4225 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:10:01.838  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:10:02.089  4181  4225 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:10:02.089  4181  4225 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:10:02.090  4181  4225 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:10:02.092  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:10:05.521  4181  4225 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 3.43 s
+11-16 11:10:05.521  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:10:08.202  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:10:08.202  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 2.68 s
+11-16 11:10:08.202  4181  4225 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:10:08.202  4181  4225 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:10:08.203  4181  4225 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:10:38.410  4181  4232 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:10:39.085  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 674.41 ms (5.9 tok/s), 4 total in 674.41 ms, next_tok=1
+11-16 11:10:39.917  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 831.16 ms (196.1 tok/s), 167 total in 1505.57 ms, next_tok=8253
+11-16 11:10:40.741  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 823.38 ms (194.3 tok/s), 327 total in 2328.95 ms, next_tok=884
+11-16 11:10:41.565  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 823.21 ms (196.8 tok/s), 489 total in 3152.17 ms, next_tok=916
+11-16 11:10:42.397  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 831.43 ms (192.4 tok/s), 649 total in 3983.60 ms, next_tok=2129
+11-16 11:10:43.223  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 825.48 ms (193.8 tok/s), 809 total in 4809.08 ms, next_tok=3869
+11-16 11:10:44.086  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 189 tokens in 859.64 ms (219.9 tok/s), 998 total in 5668.72 ms, next_tok=20882
+11-16 11:10:44.088  4181  4232 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 2.006 ms
+11-16 11:10:44.249  4181  4232 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:10:44.249  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 3 tokens in 160.23 ms (18.72 tok/s)
+11-16 11:10:44.249  4181  4232 I OpenWeightsPD: DisaggregatedSession: decode kept 3.27 cores busy
+11-16 11:10:44.249  4181  4232 I OpenWeightsPD: DisaggregatedSession: forward() was 158.64 ms of that (99.0%), 79.32 ms per token
+11-16 11:10:44.669  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 3 tokens in 420.27 ms (7.1 tok/s), 1001 total in 6088.99 ms, next_tok=7
+11-16 11:10:44.684  4181  4225 I ExecuTorchOnDevice: coldwarm pair=0 arm=cold fed=978 cached=0 prefill=5672ms ttft=5683ms cpu=44.692C screen=true
+11-16 11:10:44.684  4181  4225 I ExecuTorchOnDevice: coldwarm pair=0 replies identical=false
+11-16 11:10:45.683  4181  4225 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:10:45.683  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:10:45.923  4181  4225 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:10:45.923  4181  4225 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:10:45.923  4181  4225 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:10:45.923  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:10:48.570  4181  4225 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 2.65 s
+11-16 11:10:48.570  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:10:50.726  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:10:50.726  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 2.16 s
+11-16 11:10:50.726  4181  4225 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:10:50.726  4181  4225 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:10:50.726  4181  4225 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:10:50.732  4181  4232 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:10:51.392  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 660.31 ms (6.1 tok/s), 4 total in 660.31 ms, next_tok=1
+11-16 11:10:52.220  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 827.42 ms (197.0 tok/s), 167 total in 1487.73 ms, next_tok=8253
+11-16 11:10:53.045  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 823.84 ms (194.2 tok/s), 327 total in 2311.57 ms, next_tok=884
+11-16 11:10:53.867  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 821.75 ms (197.1 tok/s), 489 total in 3133.32 ms, next_tok=916
+11-16 11:10:54.691  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 823.59 ms (194.3 tok/s), 649 total in 3956.91 ms, next_tok=2129
+11-16 11:10:55.513  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 256 tokens in 819.76 ms (312.3 tok/s), 905 total in 4776.67 ms, next_tok=13618
+11-16 11:10:55.515  4181  4232 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.716 ms
+11-16 11:10:57.565  4181  4232 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:10:57.565  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 73 tokens in 2050.08 ms (35.61 tok/s)
+11-16 11:10:57.565  4181  4232 I OpenWeightsPD: DisaggregatedSession: decode kept 6.06 cores busy
+11-16 11:10:57.565  4181  4232 I OpenWeightsPD: DisaggregatedSession: forward() was 2020.38 ms of that (98.6%), 28.06 ms per token
+11-16 11:10:57.983  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 73 tokens in 415.22 ms (175.8 tok/s), 978 total in 5191.89 ms, next_tok=7
+11-16 11:10:57.985  4181  4225 I ExecuTorchOnDevice: coldwarm pair=1 turn one: generated=74 reason=END_OF_TURN held=976 fragments=73 tail=[" like", " me", " to", " do", " that", "?"]
+11-16 11:10:58.866  4181  4225 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:10:58.866  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:10:59.092  4181  4225 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:10:59.092  4181  4225 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:10:59.092  4181  4225 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:10:59.092  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:11:01.433  4181  4225 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 2.34 s
+11-16 11:11:01.434  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:11:03.769  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:11:03.769  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 2.34 s
+11-16 11:11:03.769  4181  4225 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:11:03.769  4181  4225 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:11:03.769  4181  4225 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:11:49.119  4181  4232 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:11:49.791  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 671.26 ms (6.0 tok/s), 4 total in 671.26 ms, next_tok=1
+11-16 11:11:50.639  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 847.50 ms (192.3 tok/s), 167 total in 1518.76 ms, next_tok=8253
+11-16 11:11:51.461  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 821.58 ms (194.7 tok/s), 327 total in 2340.34 ms, next_tok=884
+11-16 11:11:52.286  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 824.33 ms (196.5 tok/s), 489 total in 3164.67 ms, next_tok=916
+11-16 11:11:53.124  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 837.23 ms (191.1 tok/s), 649 total in 4001.90 ms, next_tok=2129
+11-16 11:11:53.947  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 823.14 ms (194.4 tok/s), 809 total in 4825.03 ms, next_tok=3869
+11-16 11:11:54.778  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 189 tokens in 830.38 ms (227.6 tok/s), 998 total in 5655.42 ms, next_tok=20882
+11-16 11:11:54.781  4181  4232 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 2.064 ms
+11-16 11:11:54.950  4181  4232 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:11:54.950  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 3 tokens in 169.80 ms (17.67 tok/s)
+11-16 11:11:54.951  4181  4232 I OpenWeightsPD: DisaggregatedSession: decode kept 3.29 cores busy
+11-16 11:11:54.951  4181  4232 I OpenWeightsPD: DisaggregatedSession: forward() was 168.52 ms of that (99.2%), 84.26 ms per token
+11-16 11:11:55.371  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 3 tokens in 420.26 ms (7.1 tok/s), 1001 total in 6075.67 ms, next_tok=7
+11-16 11:11:55.387  4181  4225 I ExecuTorchOnDevice: coldwarm pair=1 arm=cold fed=978 cached=0 prefill=5657ms ttft=5667ms cpu=44.62C screen=true
+11-16 11:11:56.282  4181  4225 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:11:56.283  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:11:56.509  4181  4225 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:11:56.509  4181  4225 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:11:56.509  4181  4225 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:11:56.509  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:11:58.977  4181  4225 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 2.47 s
+11-16 11:11:58.977  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:12:00.942  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:12:00.942  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 1.96 s
+11-16 11:12:00.942  4181  4225 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:12:00.942  4181  4225 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:12:00.942  4181  4225 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:12:00.953  4181  4232 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:12:01.591  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 636.40 ms (6.3 tok/s), 4 total in 636.40 ms, next_tok=1
+11-16 11:12:02.408  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 817.09 ms (199.5 tok/s), 167 total in 1453.48 ms, next_tok=8253
+11-16 11:12:03.228  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 819.25 ms (195.3 tok/s), 327 total in 2272.73 ms, next_tok=884
+11-16 11:12:04.048  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 819.51 ms (197.7 tok/s), 489 total in 3092.24 ms, next_tok=916
+11-16 11:12:04.964  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 915.71 ms (174.7 tok/s), 649 total in 4007.95 ms, next_tok=2129
+11-16 11:12:05.796  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 256 tokens in 831.25 ms (308.0 tok/s), 905 total in 4839.20 ms, next_tok=13618
+11-16 11:12:05.798  4181  4232 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.861 ms
+11-16 11:12:07.828  4181  4232 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:12:07.828  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 73 tokens in 2030.00 ms (35.96 tok/s)
+11-16 11:12:07.828  4181  4232 I OpenWeightsPD: DisaggregatedSession: decode kept 6.11 cores busy
+11-16 11:12:07.828  4181  4232 I OpenWeightsPD: DisaggregatedSession: forward() was 2001.42 ms of that (98.6%), 27.80 ms per token
+11-16 11:12:08.240  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 73 tokens in 411.12 ms (177.6 tok/s), 978 total in 5250.32 ms, next_tok=7
+11-16 11:12:08.244  4181  4225 I ExecuTorchOnDevice: coldwarm pair=1 record: extends, record 4874 of 4973 chars sameTurnOne=true
+11-16 11:12:48.986  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 20 tokens in 422.78 ms (47.3 tok/s), 998 total in 5673.09 ms, next_tok=20882
+11-16 11:12:48.988  4181  4232 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.912 ms
+11-16 11:12:49.145  4181  4232 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:12:49.145  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 5 tokens in 157.51 ms (31.74 tok/s)
+11-16 11:12:49.145  4181  4232 I OpenWeightsPD: DisaggregatedSession: decode kept 4.03 cores busy
+11-16 11:12:49.145  4181  4232 I OpenWeightsPD: DisaggregatedSession: forward() was 155.40 ms of that (98.7%), 38.85 ms per token
+11-16 11:12:49.567  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 5 tokens in 421.10 ms (11.9 tok/s), 1003 total in 6094.19 ms, next_tok=7
+11-16 11:12:49.585  4181  4225 I ExecuTorchOnDevice: coldwarm pair=1 arm=warm fed=20 cached=976 prefill=423ms ttft=426ms cpu=44.811C screen=true
+11-16 11:12:49.585  4181  4225 I ExecuTorchOnDevice: coldwarm pair=1 replies identical=false
+11-16 11:12:50.522  4181  4225 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:12:50.522  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:12:50.722  4181  4225 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:12:50.723  4181  4225 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:12:50.723  4181  4225 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:12:50.723  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:12:53.006  4181  4225 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 2.28 s
+11-16 11:12:53.006  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:12:55.271  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:12:55.271  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 2.26 s
+11-16 11:12:55.271  4181  4225 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:12:55.271  4181  4225 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:12:55.271  4181  4225 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:12:55.281  4181  4232 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:12:55.926  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 644.63 ms (6.2 tok/s), 4 total in 644.63 ms, next_tok=1
+11-16 11:12:56.748  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 821.74 ms (198.4 tok/s), 167 total in 1466.38 ms, next_tok=8253
+11-16 11:12:57.562  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 813.30 ms (196.7 tok/s), 327 total in 2279.68 ms, next_tok=884
+11-16 11:12:58.375  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 812.93 ms (199.3 tok/s), 489 total in 3092.61 ms, next_tok=916
+11-16 11:12:59.194  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 817.85 ms (195.6 tok/s), 649 total in 3910.45 ms, next_tok=2129
+11-16 11:13:00.008  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 256 tokens in 813.84 ms (314.6 tok/s), 905 total in 4724.29 ms, next_tok=13618
+11-16 11:13:00.010  4181  4232 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.965 ms
+11-16 11:13:02.057  4181  4232 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:13:02.057  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 73 tokens in 2047.09 ms (35.66 tok/s)
+11-16 11:13:02.057  4181  4232 I OpenWeightsPD: DisaggregatedSession: decode kept 6.10 cores busy
+11-16 11:13:02.057  4181  4232 I OpenWeightsPD: DisaggregatedSession: forward() was 2019.17 ms of that (98.6%), 28.04 ms per token
+11-16 11:13:02.469  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 73 tokens in 411.25 ms (177.5 tok/s), 978 total in 5135.55 ms, next_tok=7
+11-16 11:13:02.473  4181  4225 I ExecuTorchOnDevice: coldwarm pair=2 turn one: generated=74 reason=END_OF_TURN held=976 fragments=73 tail=[" like", " me", " to", " do", " that", "?"]
+11-16 11:13:02.474  4181  4225 I ExecuTorchOnDevice: coldwarm pair=2 record: extends, record 4874 of 4973 chars sameTurnOne=true
+11-16 11:14:03.333  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 20 tokens in 441.63 ms (45.3 tok/s), 998 total in 5577.18 ms, next_tok=20882
+11-16 11:14:03.335  4181  4232 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.951 ms
+11-16 11:14:03.503  4181  4232 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:14:03.503  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 5 tokens in 167.88 ms (29.78 tok/s)
+11-16 11:14:03.503  4181  4232 I OpenWeightsPD: DisaggregatedSession: decode kept 4.00 cores busy
+11-16 11:14:03.503  4181  4232 I OpenWeightsPD: DisaggregatedSession: forward() was 165.87 ms of that (98.8%), 41.47 ms per token
+11-16 11:14:03.917  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 5 tokens in 413.71 ms (12.1 tok/s), 1003 total in 5990.89 ms, next_tok=7
+11-16 11:14:03.935  4181  4225 I ExecuTorchOnDevice: coldwarm pair=2 arm=warm fed=20 cached=976 prefill=442ms ttft=445ms cpu=45.289C screen=true
+11-16 11:14:04.764  4181  4225 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:14:04.764  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:14:04.970  4181  4225 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:14:04.970  4181  4225 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:14:04.970  4181  4225 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:14:04.970  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:14:07.535  4181  4225 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 2.56 s
+11-16 11:14:07.535  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:14:09.990  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:14:09.990  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 2.45 s
+11-16 11:14:09.990  4181  4225 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:14:09.990  4181  4225 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:14:09.990  4181  4225 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:14:25.124  4181  4232 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:14:25.794  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 666.24 ms (6.0 tok/s), 4 total in 666.24 ms, next_tok=1
+11-16 11:14:26.631  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 836.31 ms (194.9 tok/s), 167 total in 1502.55 ms, next_tok=8253
+11-16 11:14:27.463  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 831.43 ms (192.4 tok/s), 327 total in 2333.98 ms, next_tok=884
+11-16 11:14:28.344  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 880.65 ms (184.0 tok/s), 489 total in 3214.64 ms, next_tok=916
+11-16 11:14:29.180  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 835.76 ms (191.4 tok/s), 649 total in 4050.40 ms, next_tok=2129
+11-16 11:14:30.008  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 827.39 ms (193.4 tok/s), 809 total in 4877.79 ms, next_tok=3869
+11-16 11:14:30.866  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 189 tokens in 857.85 ms (220.3 tok/s), 998 total in 5735.63 ms, next_tok=20882
+11-16 11:14:30.869  4181  4232 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 2.118 ms
+11-16 11:14:31.040  4181  4232 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:14:31.040  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 3 tokens in 170.94 ms (17.55 tok/s)
+11-16 11:14:31.040  4181  4232 I OpenWeightsPD: DisaggregatedSession: decode kept 3.11 cores busy
+11-16 11:14:31.040  4181  4232 I OpenWeightsPD: DisaggregatedSession: forward() was 169.43 ms of that (99.1%), 84.71 ms per token
+11-16 11:14:31.456  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 3 tokens in 415.92 ms (7.2 tok/s), 1001 total in 6151.55 ms, next_tok=7
+11-16 11:14:31.471  4181  4225 I ExecuTorchOnDevice: coldwarm pair=2 arm=cold fed=978 cached=0 prefill=5738ms ttft=5749ms cpu=44.955C screen=true
+11-16 11:14:31.471  4181  4225 I ExecuTorchOnDevice: coldwarm pair=2 replies identical=false
+11-16 11:14:32.426  4181  4225 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:14:32.426  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:14:32.637  4181  4225 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:14:32.637  4181  4225 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:14:32.637  4181  4225 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:14:32.637  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:14:34.983  4181  4225 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 2.35 s
+11-16 11:14:34.983  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:14:37.011  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:14:37.011  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 2.03 s
+11-16 11:14:37.011  4181  4225 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:14:37.011  4181  4225 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:14:37.011  4181  4225 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:14:37.016  4181  4232 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:14:37.653  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 635.66 ms (6.3 tok/s), 4 total in 635.66 ms, next_tok=1
+11-16 11:14:38.488  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 834.67 ms (195.3 tok/s), 167 total in 1470.33 ms, next_tok=8253
+11-16 11:14:39.306  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 817.52 ms (195.7 tok/s), 327 total in 2287.85 ms, next_tok=884
+11-16 11:14:40.136  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 829.36 ms (195.3 tok/s), 489 total in 3117.21 ms, next_tok=916
+11-16 11:14:40.962  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 825.98 ms (193.7 tok/s), 649 total in 3943.19 ms, next_tok=2129
+11-16 11:14:41.790  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 256 tokens in 827.45 ms (309.4 tok/s), 905 total in 4770.64 ms, next_tok=13618
+11-16 11:14:41.792  4181  4232 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.814 ms
+11-16 11:14:43.820  4181  4232 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:14:43.820  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 73 tokens in 2027.52 ms (36.00 tok/s)
+11-16 11:14:43.820  4181  4232 I OpenWeightsPD: DisaggregatedSession: decode kept 6.13 cores busy
+11-16 11:14:43.820  4181  4232 I OpenWeightsPD: DisaggregatedSession: forward() was 2001.33 ms of that (98.7%), 27.80 ms per token
+11-16 11:14:44.237  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 73 tokens in 416.89 ms (175.1 tok/s), 978 total in 5187.54 ms, next_tok=7
+11-16 11:14:44.240  4181  4225 I ExecuTorchOnDevice: coldwarm pair=3 turn one: generated=74 reason=END_OF_TURN held=976 fragments=73 tail=[" like", " me", " to", " do", " that", "?"]
+11-16 11:14:45.111  4181  4225 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:14:45.112  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:14:45.313  4181  4225 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:14:45.313  4181  4225 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:14:45.313  4181  4225 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:14:45.313  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:14:47.660  4181  4225 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 2.35 s
+11-16 11:14:47.660  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:14:49.668  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:14:49.668  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 2.01 s
+11-16 11:14:49.668  4181  4225 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:14:49.668  4181  4225 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:14:49.668  4181  4225 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:15:19.901  4181  4232 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:15:20.560  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 657.81 ms (6.1 tok/s), 4 total in 657.81 ms, next_tok=1
+11-16 11:15:21.377  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 816.73 ms (199.6 tok/s), 167 total in 1474.53 ms, next_tok=8253
+11-16 11:15:22.194  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 816.17 ms (196.0 tok/s), 327 total in 2290.70 ms, next_tok=884
+11-16 11:15:23.018  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 823.88 ms (196.6 tok/s), 489 total in 3114.58 ms, next_tok=916
+11-16 11:15:23.838  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 819.43 ms (195.3 tok/s), 649 total in 3934.02 ms, next_tok=2129
+11-16 11:15:24.663  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 824.32 ms (194.1 tok/s), 809 total in 4758.34 ms, next_tok=3869
+11-16 11:15:25.497  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 189 tokens in 833.84 ms (226.7 tok/s), 998 total in 5592.18 ms, next_tok=20882
+11-16 11:15:25.499  4181  4232 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.888 ms
+11-16 11:15:25.675  4181  4232 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:15:25.675  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 3 tokens in 175.77 ms (17.07 tok/s)
+11-16 11:15:25.675  4181  4232 I OpenWeightsPD: DisaggregatedSession: decode kept 3.32 cores busy
+11-16 11:15:25.675  4181  4232 I OpenWeightsPD: DisaggregatedSession: forward() was 174.40 ms of that (99.2%), 87.20 ms per token
+11-16 11:15:26.092  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 3 tokens in 416.44 ms (7.2 tok/s), 1001 total in 6008.62 ms, next_tok=7
+11-16 11:15:26.107  4181  4225 I ExecuTorchOnDevice: coldwarm pair=3 arm=cold fed=978 cached=0 prefill=5595ms ttft=5604ms cpu=44.835C screen=true
+11-16 11:15:27.028  4181  4225 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:15:27.028  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:15:27.237  4181  4225 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:15:27.237  4181  4225 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:15:27.237  4181  4225 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:15:27.237  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:15:29.472  4181  4225 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 2.24 s
+11-16 11:15:29.472  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:15:31.601  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:15:31.601  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 2.13 s
+11-16 11:15:31.601  4181  4225 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:15:31.601  4181  4225 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:15:31.601  4181  4225 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:15:31.612  4181  4232 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:15:32.242  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 629.07 ms (6.4 tok/s), 4 total in 629.07 ms, next_tok=1
+11-16 11:15:33.063  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 820.35 ms (198.7 tok/s), 167 total in 1449.42 ms, next_tok=8253
+11-16 11:15:33.876  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 813.32 ms (196.7 tok/s), 327 total in 2262.75 ms, next_tok=884
+11-16 11:15:34.695  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 818.19 ms (198.0 tok/s), 489 total in 3080.94 ms, next_tok=916
+11-16 11:15:35.519  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 823.13 ms (194.4 tok/s), 649 total in 3904.08 ms, next_tok=2129
+11-16 11:15:36.333  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 256 tokens in 813.34 ms (314.8 tok/s), 905 total in 4717.42 ms, next_tok=13618
+11-16 11:15:36.334  4181  4232 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.679 ms
+11-16 11:15:38.382  4181  4232 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:15:38.382  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 73 tokens in 2046.92 ms (35.66 tok/s)
+11-16 11:15:38.382  4181  4232 I OpenWeightsPD: DisaggregatedSession: decode kept 6.11 cores busy
+11-16 11:15:38.382  4181  4232 I OpenWeightsPD: DisaggregatedSession: forward() was 2016.61 ms of that (98.5%), 28.01 ms per token
+11-16 11:15:38.796  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 73 tokens in 413.94 ms (176.4 tok/s), 978 total in 5131.36 ms, next_tok=7
+11-16 11:15:38.801  4181  4225 I ExecuTorchOnDevice: coldwarm pair=3 record: extends, record 4874 of 4973 chars sameTurnOne=true
+11-16 11:16:39.717  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 20 tokens in 454.02 ms (44.1 tok/s), 998 total in 5585.38 ms, next_tok=20882
+11-16 11:16:39.719  4181  4234 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.888 ms
+11-16 11:16:39.884  4181  4234 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:16:39.884  4181  4234 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 5 tokens in 164.68 ms (30.36 tok/s)
+11-16 11:16:39.884  4181  4234 I OpenWeightsPD: DisaggregatedSession: decode kept 4.06 cores busy
+11-16 11:16:39.884  4181  4234 I OpenWeightsPD: DisaggregatedSession: forward() was 162.75 ms of that (98.8%), 40.69 ms per token
+11-16 11:16:40.302  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 5 tokens in 417.47 ms (12.0 tok/s), 1003 total in 6002.85 ms, next_tok=7
+11-16 11:16:40.317  4181  4225 I ExecuTorchOnDevice: coldwarm pair=3 arm=warm fed=20 cached=976 prefill=454ms ttft=459ms cpu=46.293C screen=true
+11-16 11:16:40.317  4181  4225 I ExecuTorchOnDevice: coldwarm pair=3 replies identical=false
+11-16 11:16:41.148  4181  4225 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:16:41.148  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:16:41.363  4181  4225 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:16:41.363  4181  4225 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:16:41.363  4181  4225 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:16:41.363  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:16:44.053  4181  4225 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 2.69 s
+11-16 11:16:44.053  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:16:46.596  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:16:46.596  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 2.54 s
+11-16 11:16:46.596  4181  4225 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:16:46.597  4181  4225 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:16:46.597  4181  4225 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:16:46.609  4181  4234 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:16:47.281  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 670.77 ms (6.0 tok/s), 4 total in 670.77 ms, next_tok=1
+11-16 11:16:48.135  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 853.80 ms (190.9 tok/s), 167 total in 1524.58 ms, next_tok=8253
+11-16 11:16:48.960  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 824.23 ms (194.1 tok/s), 327 total in 2348.81 ms, next_tok=884
+11-16 11:16:49.789  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 828.48 ms (195.5 tok/s), 489 total in 3177.28 ms, next_tok=916
+11-16 11:16:50.621  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 831.44 ms (192.4 tok/s), 649 total in 4008.72 ms, next_tok=2129
+11-16 11:16:51.453  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 256 tokens in 831.36 ms (307.9 tok/s), 905 total in 4840.08 ms, next_tok=13618
+11-16 11:16:51.455  4181  4234 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.921 ms
+11-16 11:16:53.485  4181  4234 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:16:53.485  4181  4234 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 73 tokens in 2029.89 ms (35.96 tok/s)
+11-16 11:16:53.485  4181  4234 I OpenWeightsPD: DisaggregatedSession: decode kept 6.16 cores busy
+11-16 11:16:53.485  4181  4234 I OpenWeightsPD: DisaggregatedSession: forward() was 2003.35 ms of that (98.7%), 27.82 ms per token
+11-16 11:16:53.947  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 73 tokens in 461.78 ms (158.1 tok/s), 978 total in 5301.87 ms, next_tok=7
+11-16 11:16:53.949  4181  4225 I ExecuTorchOnDevice: coldwarm pair=4 turn one: generated=74 reason=END_OF_TURN held=976 fragments=73 tail=[" like", " me", " to", " do", " that", "?"]
+11-16 11:16:53.950  4181  4225 I ExecuTorchOnDevice: coldwarm pair=4 record: extends, record 4874 of 4973 chars sameTurnOne=true
+11-16 11:17:54.823  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 20 tokens in 429.40 ms (46.6 tok/s), 998 total in 5731.26 ms, next_tok=20882
+11-16 11:17:54.825  4181  4234 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 2.021 ms
+11-16 11:17:54.984  4181  4234 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:17:54.984  4181  4234 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 5 tokens in 159.01 ms (31.44 tok/s)
+11-16 11:17:54.984  4181  4234 I OpenWeightsPD: DisaggregatedSession: decode kept 4.11 cores busy
+11-16 11:17:54.984  4181  4234 I OpenWeightsPD: DisaggregatedSession: forward() was 156.94 ms of that (98.7%), 39.24 ms per token
+11-16 11:17:55.404  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 5 tokens in 419.42 ms (11.9 tok/s), 1003 total in 6150.68 ms, next_tok=7
+11-16 11:17:55.418  4181  4225 I ExecuTorchOnDevice: coldwarm pair=4 arm=warm fed=20 cached=976 prefill=430ms ttft=433ms cpu=44.787C screen=true
+11-16 11:17:56.463  4181  4225 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:17:56.464  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:17:56.674  4181  4225 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:17:56.674  4181  4225 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:17:56.674  4181  4225 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:17:56.674  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:17:59.134  4181  4225 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 2.46 s
+11-16 11:17:59.134  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:18:01.318  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:18:01.318  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 2.18 s
+11-16 11:18:01.318  4181  4225 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:18:01.318  4181  4225 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:18:01.318  4181  4225 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:18:21.468  4181  4234 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:18:22.135  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 666.18 ms (6.0 tok/s), 4 total in 666.18 ms, next_tok=1
+11-16 11:18:22.965  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 829.23 ms (196.6 tok/s), 167 total in 1495.42 ms, next_tok=8253
+11-16 11:18:23.789  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 824.21 ms (194.1 tok/s), 327 total in 2319.63 ms, next_tok=884
+11-16 11:18:24.615  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 825.40 ms (196.3 tok/s), 489 total in 3145.03 ms, next_tok=916
+11-16 11:18:25.437  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 820.87 ms (194.9 tok/s), 649 total in 3965.90 ms, next_tok=2129
+11-16 11:18:26.260  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 823.28 ms (194.3 tok/s), 809 total in 4789.19 ms, next_tok=3869
+11-16 11:18:27.110  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 189 tokens in 849.45 ms (222.5 tok/s), 998 total in 5638.64 ms, next_tok=20882
+11-16 11:18:27.112  4181  4234 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.954 ms
+11-16 11:18:27.280  4181  4234 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:18:27.280  4181  4234 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 3 tokens in 167.47 ms (17.91 tok/s)
+11-16 11:18:27.280  4181  4234 I OpenWeightsPD: DisaggregatedSession: decode kept 3.23 cores busy
+11-16 11:18:27.280  4181  4234 I OpenWeightsPD: DisaggregatedSession: forward() was 165.72 ms of that (99.0%), 82.86 ms per token
+11-16 11:18:27.700  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 3 tokens in 419.54 ms (7.2 tok/s), 1001 total in 6058.18 ms, next_tok=7
+11-16 11:18:27.714  4181  4225 I ExecuTorchOnDevice: coldwarm pair=4 arm=cold fed=978 cached=0 prefill=5640ms ttft=5651ms cpu=44.859C screen=true
+11-16 11:18:27.714  4181  4225 I ExecuTorchOnDevice: coldwarm pair=4 replies identical=false
+11-16 11:18:28.505  4181  4225 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:18:28.506  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:18:28.713  4181  4225 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:18:28.713  4181  4225 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:18:28.713  4181  4225 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:18:28.713  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:18:31.033  4181  4225 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 2.32 s
+11-16 11:18:31.034  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:18:33.148  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:18:33.148  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 2.11 s
+11-16 11:18:33.148  4181  4225 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:18:33.148  4181  4225 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:18:33.148  4181  4225 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:18:33.153  4181  4234 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:18:33.834  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 680.81 ms (5.9 tok/s), 4 total in 680.81 ms, next_tok=1
+11-16 11:18:34.679  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 844.94 ms (192.9 tok/s), 167 total in 1525.74 ms, next_tok=8253
+11-16 11:18:35.501  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 821.75 ms (194.7 tok/s), 327 total in 2347.49 ms, next_tok=884
+11-16 11:18:36.331  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 829.00 ms (195.4 tok/s), 489 total in 3176.49 ms, next_tok=916
+11-16 11:18:37.150  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 818.91 ms (195.4 tok/s), 649 total in 3995.40 ms, next_tok=2129
+11-16 11:18:37.985  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 256 tokens in 834.48 ms (306.8 tok/s), 905 total in 4829.88 ms, next_tok=13618
+11-16 11:18:37.987  4181  4234 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.721 ms
+11-16 11:18:40.056  4181  4234 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:18:40.056  4181  4234 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 73 tokens in 2069.09 ms (35.28 tok/s)
+11-16 11:18:40.056  4181  4234 I OpenWeightsPD: DisaggregatedSession: decode kept 5.98 cores busy
+11-16 11:18:40.056  4181  4234 I OpenWeightsPD: DisaggregatedSession: forward() was 2039.64 ms of that (98.6%), 28.33 ms per token
+11-16 11:18:40.490  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 73 tokens in 433.42 ms (168.4 tok/s), 978 total in 5263.30 ms, next_tok=7
+11-16 11:18:40.492  4181  4225 I ExecuTorchOnDevice: coldwarm pair=5 turn one: generated=74 reason=END_OF_TURN held=976 fragments=73 tail=[" like", " me", " to", " do", " that", "?"]
+11-16 11:18:41.323  4181  4225 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:18:41.323  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:18:41.543  4181  4225 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:18:41.543  4181  4225 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:18:41.543  4181  4225 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:18:41.543  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:18:44.309  4181  4225 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 2.77 s
+11-16 11:18:44.309  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:18:46.455  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:18:46.455  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 2.15 s
+11-16 11:18:46.455  4181  4225 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:18:46.455  4181  4225 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:18:46.455  4181  4225 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:19:31.796  4181  4234 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:19:32.467  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 668.37 ms (6.0 tok/s), 4 total in 668.37 ms, next_tok=1
+11-16 11:19:33.299  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 830.93 ms (196.2 tok/s), 167 total in 1499.30 ms, next_tok=8253
+11-16 11:19:34.132  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 833.12 ms (192.0 tok/s), 327 total in 2332.43 ms, next_tok=884
+11-16 11:19:34.960  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 827.40 ms (195.8 tok/s), 489 total in 3159.82 ms, next_tok=916
+11-16 11:19:35.789  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 828.16 ms (193.2 tok/s), 649 total in 3987.98 ms, next_tok=2129
+11-16 11:19:36.622  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 832.60 ms (192.2 tok/s), 809 total in 4820.58 ms, next_tok=3869
+11-16 11:19:37.472  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 189 tokens in 849.63 ms (222.5 tok/s), 998 total in 5670.21 ms, next_tok=20882
+11-16 11:19:37.474  4181  4234 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.865 ms
+11-16 11:19:37.649  4181  4234 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:19:37.649  4181  4234 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 3 tokens in 174.16 ms (17.23 tok/s)
+11-16 11:19:37.649  4181  4234 I OpenWeightsPD: DisaggregatedSession: decode kept 3.07 cores busy
+11-16 11:19:37.649  4181  4234 I OpenWeightsPD: DisaggregatedSession: forward() was 172.96 ms of that (99.3%), 86.48 ms per token
+11-16 11:19:38.070  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 3 tokens in 421.53 ms (7.1 tok/s), 1001 total in 6091.74 ms, next_tok=7
+11-16 11:19:38.088  4181  4225 I ExecuTorchOnDevice: coldwarm pair=5 arm=cold fed=978 cached=0 prefill=5671ms ttft=5683ms cpu=44.835C screen=true
+11-16 11:19:39.056  4181  4225 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:19:39.056  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:19:39.263  4181  4225 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:19:39.263  4181  4225 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:19:39.263  4181  4225 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:19:39.263  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:19:41.740  4181  4225 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 2.48 s
+11-16 11:19:41.740  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:19:43.729  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:19:43.729  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 1.99 s
+11-16 11:19:43.729  4181  4225 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:19:43.729  4181  4225 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:19:43.729  4181  4225 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:19:43.746  4181  4232 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:19:44.392  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 645.06 ms (6.2 tok/s), 4 total in 645.06 ms, next_tok=1
+11-16 11:19:45.241  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 848.68 ms (192.1 tok/s), 167 total in 1493.74 ms, next_tok=8253
+11-16 11:19:46.066  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 824.43 ms (194.1 tok/s), 327 total in 2318.17 ms, next_tok=884
+11-16 11:19:46.894  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 827.50 ms (195.8 tok/s), 489 total in 3145.67 ms, next_tok=916
+11-16 11:19:47.723  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 828.62 ms (193.1 tok/s), 649 total in 3974.29 ms, next_tok=2129
+11-16 11:19:48.549  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 256 tokens in 826.00 ms (309.9 tok/s), 905 total in 4800.29 ms, next_tok=13618
+11-16 11:19:48.551  4181  4232 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.657 ms
+11-16 11:19:50.597  4181  4232 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:19:50.597  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 73 tokens in 2045.78 ms (35.68 tok/s)
+11-16 11:19:50.597  4181  4232 I OpenWeightsPD: DisaggregatedSession: decode kept 6.13 cores busy
+11-16 11:19:50.597  4181  4232 I OpenWeightsPD: DisaggregatedSession: forward() was 2016.26 ms of that (98.6%), 28.00 ms per token
+11-16 11:19:51.044  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 73 tokens in 444.97 ms (164.1 tok/s), 978 total in 5245.26 ms, next_tok=7
+11-16 11:19:51.049  4181  4225 I ExecuTorchOnDevice: coldwarm pair=5 record: extends, record 4874 of 4973 chars sameTurnOne=true
+11-16 11:20:51.917  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 20 tokens in 420.21 ms (47.6 tok/s), 998 total in 5665.47 ms, next_tok=20882
+11-16 11:20:51.919  4181  4232 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.991 ms
+11-16 11:20:52.087  4181  4232 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:20:52.087  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 5 tokens in 167.01 ms (29.94 tok/s)
+11-16 11:20:52.087  4181  4232 I OpenWeightsPD: DisaggregatedSession: decode kept 4.05 cores busy
+11-16 11:20:52.087  4181  4232 I OpenWeightsPD: DisaggregatedSession: forward() was 164.85 ms of that (98.7%), 41.21 ms per token
+11-16 11:20:52.499  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 5 tokens in 412.15 ms (12.1 tok/s), 1003 total in 6077.62 ms, next_tok=7
+11-16 11:20:52.515  4181  4225 I ExecuTorchOnDevice: coldwarm pair=5 arm=warm fed=20 cached=976 prefill=420ms ttft=424ms cpu=44.907C screen=true
+11-16 11:20:52.515  4181  4225 I ExecuTorchOnDevice: coldwarm pair=5 replies identical=false
+11-16 11:20:53.453  4181  4225 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:20:53.453  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:20:53.660  4181  4225 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:20:53.660  4181  4225 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:20:53.660  4181  4225 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:20:53.661  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:20:56.281  4181  4225 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 2.62 s
+11-16 11:20:56.281  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:20:58.360  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:20:58.360  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 2.08 s
+11-16 11:20:58.360  4181  4225 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:20:58.360  4181  4225 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:20:58.360  4181  4225 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:20:58.369  4181  4232 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:20:59.022  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 647.70 ms (6.2 tok/s), 4 total in 647.70 ms, next_tok=1
+11-16 11:20:59.846  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 823.21 ms (198.0 tok/s), 167 total in 1470.92 ms, next_tok=8253
+11-16 11:21:00.668  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 821.84 ms (194.7 tok/s), 327 total in 2292.75 ms, next_tok=884
+11-16 11:21:01.486  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 817.20 ms (198.2 tok/s), 489 total in 3109.96 ms, next_tok=916
+11-16 11:21:02.298  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 812.38 ms (197.0 tok/s), 649 total in 3922.34 ms, next_tok=2129
+11-16 11:21:03.117  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 256 tokens in 818.38 ms (312.8 tok/s), 905 total in 4740.71 ms, next_tok=13618
+11-16 11:21:03.119  4181  4232 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.675 ms
+11-16 11:21:05.143  4181  4232 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:21:05.143  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 73 tokens in 2023.71 ms (36.07 tok/s)
+11-16 11:21:05.143  4181  4232 I OpenWeightsPD: DisaggregatedSession: decode kept 6.12 cores busy
+11-16 11:21:05.143  4181  4232 I OpenWeightsPD: DisaggregatedSession: forward() was 1998.73 ms of that (98.8%), 27.76 ms per token
+11-16 11:21:05.581  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 73 tokens in 437.53 ms (166.8 tok/s), 978 total in 5178.24 ms, next_tok=7
+11-16 11:21:05.584  4181  4225 I ExecuTorchOnDevice: coldwarm pair=6 turn one: generated=74 reason=END_OF_TURN held=976 fragments=73 tail=[" like", " me", " to", " do", " that", "?"]
+11-16 11:21:05.585  4181  4225 I ExecuTorchOnDevice: coldwarm pair=6 record: extends, record 4874 of 4973 chars sameTurnOne=true
+11-16 11:21:46.345  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 20 tokens in 445.25 ms (44.9 tok/s), 998 total in 5623.49 ms, next_tok=20882
+11-16 11:21:46.347  4181  4232 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 2.019 ms
+11-16 11:21:46.513  4181  4232 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:21:46.513  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 5 tokens in 165.77 ms (30.16 tok/s)
+11-16 11:21:46.513  4181  4232 I OpenWeightsPD: DisaggregatedSession: decode kept 4.00 cores busy
+11-16 11:21:46.513  4181  4232 I OpenWeightsPD: DisaggregatedSession: forward() was 163.65 ms of that (98.7%), 40.91 ms per token
+11-16 11:21:46.933  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 5 tokens in 419.79 ms (11.9 tok/s), 1003 total in 6043.28 ms, next_tok=7
+11-16 11:21:46.949  4181  4225 I ExecuTorchOnDevice: coldwarm pair=6 arm=warm fed=20 cached=976 prefill=445ms ttft=448ms cpu=44.979C screen=true
+11-16 11:21:47.859  4181  4225 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:21:47.859  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:21:48.102  4181  4225 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:21:48.102  4181  4225 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:21:48.102  4181  4225 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:21:48.102  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:21:50.820  4181  4225 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 2.72 s
+11-16 11:21:50.820  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:21:53.463  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:21:53.463  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 2.64 s
+11-16 11:21:53.464  4181  4225 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:21:53.464  4181  4225 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:21:53.464  4181  4225 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:22:28.746  4181  4232 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:22:29.406  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 659.56 ms (6.1 tok/s), 4 total in 659.56 ms, next_tok=1
+11-16 11:22:30.248  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 841.04 ms (193.8 tok/s), 167 total in 1500.60 ms, next_tok=8253
+11-16 11:22:31.074  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 825.84 ms (193.7 tok/s), 327 total in 2326.44 ms, next_tok=884
+11-16 11:22:31.896  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 821.85 ms (197.1 tok/s), 489 total in 3148.29 ms, next_tok=916
+11-16 11:22:32.721  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 824.25 ms (194.1 tok/s), 649 total in 3972.54 ms, next_tok=2129
+11-16 11:22:33.548  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 826.04 ms (193.7 tok/s), 809 total in 4798.58 ms, next_tok=3869
+11-16 11:22:34.398  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 189 tokens in 849.41 ms (222.5 tok/s), 998 total in 5647.99 ms, next_tok=20882
+11-16 11:22:34.400  4181  4232 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.978 ms
+11-16 11:22:34.567  4181  4232 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:22:34.567  4181  4232 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 3 tokens in 166.75 ms (17.99 tok/s)
+11-16 11:22:34.567  4181  4232 I OpenWeightsPD: DisaggregatedSession: decode kept 3.18 cores busy
+11-16 11:22:34.567  4181  4232 I OpenWeightsPD: DisaggregatedSession: forward() was 165.59 ms of that (99.3%), 82.80 ms per token
+11-16 11:22:34.980  4181  4232 I OpenWeightsPD: DisaggregatedSession: NPU fed 3 tokens in 412.12 ms (7.3 tok/s), 1001 total in 6060.11 ms, next_tok=7
+11-16 11:22:34.996  4181  4225 I ExecuTorchOnDevice: coldwarm pair=6 arm=cold fed=978 cached=0 prefill=5650ms ttft=5660ms cpu=44.859C screen=true
+11-16 11:22:34.996  4181  4225 I ExecuTorchOnDevice: coldwarm pair=6 replies identical=false
+11-16 11:22:35.933  4181  4225 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:22:35.933  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:22:36.174  4181  4225 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:22:36.174  4181  4225 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:22:36.174  4181  4225 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:22:36.174  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:22:39.080  4181  4225 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 2.91 s
+11-16 11:22:39.080  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:22:41.267  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:22:41.267  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 2.19 s
+11-16 11:22:41.267  4181  4225 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:22:41.267  4181  4225 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:22:41.267  4181  4225 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:22:41.272  4181  4234 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:22:41.891  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 618.84 ms (6.5 tok/s), 4 total in 618.84 ms, next_tok=1
+11-16 11:22:42.723  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 831.74 ms (196.0 tok/s), 167 total in 1450.59 ms, next_tok=8253
+11-16 11:22:43.545  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 821.95 ms (194.7 tok/s), 327 total in 2272.54 ms, next_tok=884
+11-16 11:22:44.363  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 817.19 ms (198.2 tok/s), 489 total in 3089.73 ms, next_tok=916
+11-16 11:22:45.184  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 820.09 ms (195.1 tok/s), 649 total in 3909.82 ms, next_tok=2129
+11-16 11:22:46.022  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 256 tokens in 837.66 ms (305.6 tok/s), 905 total in 4747.48 ms, next_tok=13618
+11-16 11:22:46.024  4181  4234 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.737 ms
+11-16 11:22:48.137  4181  4234 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:22:48.137  4181  4234 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 73 tokens in 2113.32 ms (34.54 tok/s)
+11-16 11:22:48.137  4181  4234 I OpenWeightsPD: DisaggregatedSession: decode kept 5.90 cores busy
+11-16 11:22:48.137  4181  4234 I OpenWeightsPD: DisaggregatedSession: forward() was 2083.16 ms of that (98.6%), 28.93 ms per token
+11-16 11:22:48.583  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 73 tokens in 445.54 ms (163.8 tok/s), 978 total in 5193.02 ms, next_tok=7
+11-16 11:22:48.586  4181  4225 I ExecuTorchOnDevice: coldwarm pair=7 turn one: generated=74 reason=END_OF_TURN held=976 fragments=73 tail=[" like", " me", " to", " do", " that", "?"]
+11-16 11:22:49.392  4181  4225 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:22:49.392  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:22:49.638  4181  4225 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:22:49.638  4181  4225 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:22:49.638  4181  4225 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:22:49.638  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:22:52.079  4181  4225 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 2.44 s
+11-16 11:22:52.079  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:22:54.123  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:22:54.123  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 2.04 s
+11-16 11:22:54.123  4181  4225 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:22:54.123  4181  4225 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:22:54.123  4181  4225 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:23:54.578  4181  4234 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:23:55.508  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 924.69 ms (4.3 tok/s), 4 total in 924.69 ms, next_tok=1
+11-16 11:23:56.475  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 966.51 ms (168.6 tok/s), 167 total in 1891.20 ms, next_tok=8253
+11-16 11:23:57.409  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 934.00 ms (171.3 tok/s), 327 total in 2825.20 ms, next_tok=884
+11-16 11:23:58.344  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 933.95 ms (173.5 tok/s), 489 total in 3759.14 ms, next_tok=916
+11-16 11:23:59.275  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 930.50 ms (172.0 tok/s), 649 total in 4689.64 ms, next_tok=2129
+11-16 11:24:00.223  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 948.08 ms (168.8 tok/s), 809 total in 5637.72 ms, next_tok=3869
+11-16 11:24:01.200  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 189 tokens in 972.62 ms (194.3 tok/s), 998 total in 6610.33 ms, next_tok=20882
+11-16 11:24:01.226  4181  4234 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 26.549 ms
+11-16 11:24:01.579  4181  4234 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:24:01.580  4181  4234 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 3 tokens in 353.03 ms (8.50 tok/s)
+11-16 11:24:01.580  4181  4234 I OpenWeightsPD: DisaggregatedSession: decode kept 4.45 cores busy
+11-16 11:24:01.580  4181  4234 I OpenWeightsPD: DisaggregatedSession: forward() was 351.32 ms of that (99.5%), 175.66 ms per token
+11-16 11:24:02.059  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 3 tokens in 477.16 ms (6.3 tok/s), 1001 total in 7087.49 ms, next_tok=7
+11-16 11:24:02.078  4181  4225 I ExecuTorchOnDevice: coldwarm pair=7 arm=cold fed=978 cached=0 prefill=6618ms ttft=6665ms cpu=50.546C screen=true
+11-16 11:24:03.080  4181  4225 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:24:03.081  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 11:24:03.311  4181  4225 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 11:24:03.311  4181  4225 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 11:24:03.311  4181  4225 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 11:24:03.311  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 11:24:06.413  4181  4225 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 3.10 s
+11-16 11:24:06.413  4181  4225 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 11:24:09.233  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU delegate threadpool has 7 threads
+11-16 11:24:09.233  4181  4225 I OpenWeightsPD: DisaggregatedSession: CPU Module initialized in 2.82 s
+11-16 11:24:09.233  4181  4225 I OpenWeightsPD: DisaggregatedSession: state block has 10 conv, 6 K/V pairs (8 heads x 64 dim), 16 layers
+11-16 11:24:09.233  4181  4225 I OpenWeightsPD: DisaggregatedSession: Built 16 layer mappings for state handoff
+11-16 11:24:09.233  4181  4225 I OpenWeightsPD: Disaggregated NPU+CPU runtime successfully initialized (handle=-5476376647953089984)
+11-16 11:24:09.247  4181  4234 I OpenWeightsPD: DisaggregatedSession: ResetContext completed
+11-16 11:24:09.978  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 4 tokens in 727.65 ms (5.5 tok/s), 4 total in 727.65 ms, next_tok=1
+11-16 11:24:10.956  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 163 tokens in 977.66 ms (166.7 tok/s), 167 total in 1705.31 ms, next_tok=8253
+11-16 11:24:11.895  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 939.01 ms (170.4 tok/s), 327 total in 2644.32 ms, next_tok=884
+11-16 11:24:12.836  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 162 tokens in 940.02 ms (172.3 tok/s), 489 total in 3584.34 ms, next_tok=916
+11-16 11:24:13.776  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 160 tokens in 939.41 ms (170.3 tok/s), 649 total in 4523.75 ms, next_tok=2129
+11-16 11:24:14.717  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 256 tokens in 936.87 ms (273.3 tok/s), 905 total in 5460.62 ms, next_tok=13618
+11-16 11:24:14.719  4181  4234 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 1.958 ms
+11-16 11:24:17.066  4181  4234 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:24:17.066  4181  4234 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 73 tokens in 2346.45 ms (31.11 tok/s)
+11-16 11:24:17.066  4181  4234 I OpenWeightsPD: DisaggregatedSession: decode kept 5.64 cores busy
+11-16 11:24:17.066  4181  4234 I OpenWeightsPD: DisaggregatedSession: forward() was 2318.13 ms of that (98.8%), 32.20 ms per token
+11-16 11:24:17.578  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 73 tokens in 510.90 ms (142.9 tok/s), 978 total in 5971.52 ms, next_tok=7
+11-16 11:24:17.583  4181  4225 I ExecuTorchOnDevice: coldwarm pair=7 record: extends, record 4874 of 4973 chars sameTurnOne=true
+11-16 11:25:18.461  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 20 tokens in 481.10 ms (41.6 tok/s), 998 total in 6452.62 ms, next_tok=20882
+11-16 11:25:18.463  4181  4234 I OpenWeightsPD: DisaggregatedSession: State handoff (NPU -> CPU) completed in 2.008 ms
+11-16 11:25:18.652  4181  4234 I OpenWeightsPD: DisaggregatedSession: Reached stop token 7
+11-16 11:25:18.652  4181  4234 I OpenWeightsPD: DisaggregatedSession: CPU Decode completed: 5 tokens in 188.11 ms (26.58 tok/s)
+11-16 11:25:18.652  4181  4234 I OpenWeightsPD: DisaggregatedSession: decode kept 4.11 cores busy
+11-16 11:25:18.652  4181  4234 I OpenWeightsPD: DisaggregatedSession: forward() was 186.04 ms of that (98.9%), 46.51 ms per token
+11-16 11:25:19.136  4181  4234 I OpenWeightsPD: DisaggregatedSession: NPU fed 5 tokens in 483.84 ms (10.3 tok/s), 1003 total in 6936.46 ms, next_tok=7
+11-16 11:25:19.154  4181  4225 I ExecuTorchOnDevice: coldwarm pair=7 arm=warm fed=20 cached=976 prefill=481ms ttft=485ms cpu=47.607C screen=true
+11-16 11:25:19.154  4181  4225 I ExecuTorchOnDevice: coldwarm pair=7 replies identical=false
+11-16 11:25:19.154  4181  4225 I ExecuTorchOnDevice: coldwarm done: /storage/emulated/0/Android/data/io.github.alpharomercoma.openweights.core.engine.test/files/eval-results/LFM2.5-1.2B-Instruct-8da4w-2k.coldwarm.jsonl

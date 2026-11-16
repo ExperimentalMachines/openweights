@@ -1,0 +1,106 @@
+11-15 23:29:13.726 12111 12136 I OpenWeights: using CPU backend libggml-cpu-android_armv8.6_1.so (score 23)
+11-15 23:29:13.806 12111 12136 I OpenWeights: OpenCL backend registered
+11-15 23:29:14.032 12111 12136 W OpenWeights: load: control-looking token:    212 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+11-15 23:29:16.862 12111 12136 I OpenWeights: weights: 4 host ranges, 780 MB
+11-15 23:29:17.013 12111 12136 W OpenWeights: llama_kv_cache_iswa: using full-size SWA cache (ref: https://github.com/ggml-org/llama.cpp/pull/13194#issuecomment-2868343055)
+11-15 23:29:17.208 12111 12136 I OpenWeights: threads: 6 workers kept alive across graphs
+11-15 23:29:17.240 12111 12136 I OpenWeights: kv: this template keeps past thinking inline; replaying it verbatim
+11-15 23:29:17.255 12111 12136 I OpenWeights: mem: after load rss 1373 MB, pss 1268 MB, swap 0 MB, majflt 199, minflt 473147, cpu 3730 ms
+11-15 23:29:17.259 12111 12136 I OpenWeights: loaded: tools=false results=false thinking=false effort=false vision=false audio=false emits=text ctx=4096
+11-15 23:29:17.283 12111 12136 I OpenWeights: mem: before turn rss 1374 MB, pss 1267 MB, swap 0 MB, majflt 200, minflt 473499, cpu 3750 ms
+11-15 23:29:17.294 12111 12136 W OpenWeights: kleidiai: no kernel for tensor type q5_0, not accelerated by KleidiAI (kernels available for Q4_0, Q4_K, Q8_0 and Q6_K)
+11-15 23:29:26.016 12111 12136 I OpenWeights: mem: after turn rss 1432 MB, pss 1324 MB, swap 0 MB, majflt 238, minflt 494718, cpu 49260 ms
+11-15 23:29:36.099 12111 12136 I OpenWeights: mem: before turn rss 1433 MB, pss 1325 MB, swap 0 MB, majflt 239, minflt 495282, cpu 49310 ms
+11-15 23:29:36.107 12111 12136 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 23:29:36.474 12111 12136 I OpenWeights: mem: after turn rss 1433 MB, pss 1325 MB, swap 0 MB, majflt 239, minflt 496079, cpu 51090 ms
+11-15 23:29:36.486 12111 12125 I WarmPrefixEval: coldwarm gemma-3-1b-it-Q4_K_M.gguf pair=0 arm=warm fed=20 cached=910 prefill=235ms ttft=237ms turn_one=5 cpu=39.9C screen=true
+11-15 23:29:36.516 12111 12136 I OpenWeights: mem: before turn rss 1433 MB, pss 1325 MB, swap 0 MB, majflt 239, minflt 496243, cpu 51120 ms
+11-15 23:29:36.521 12111 12136 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 23:29:45.149 12111 12136 I OpenWeights: mem: after turn rss 1435 MB, pss 1326 MB, swap 0 MB, majflt 239, minflt 497445, cpu 97460 ms
+11-15 23:29:45.160 12111 12125 I WarmPrefixEval: coldwarm gemma-3-1b-it-Q4_K_M.gguf pair=0 arm=cold fed=930 cached=0 prefill=8484ms ttft=8488ms turn_one=5 cpu=39.9C screen=true
+11-15 23:29:45.160 12111 12125 I WarmPrefixEval: coldwarm pair=0 replies identical=true
+11-15 23:29:45.177 12111 12136 I OpenWeights: mem: before turn rss 1435 MB, pss 1326 MB, swap 0 MB, majflt 239, minflt 497484, cpu 97480 ms
+11-15 23:30:00.093 12111 12136 I OpenWeights: mem: after turn rss 1437 MB, pss 1330 MB, swap 0 MB, majflt 239, minflt 498751, cpu 158420 ms
+11-15 23:30:15.199 12111 12136 I OpenWeights: mem: before turn rss 1437 MB, pss 1330 MB, swap 0 MB, majflt 239, minflt 498772, cpu 158460 ms
+11-15 23:30:15.206 12111 12136 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 23:30:23.562 12111 12136 I OpenWeights: mem: after turn rss 1439 MB, pss 1332 MB, swap 0 MB, majflt 239, minflt 499735, cpu 205480 ms
+11-15 23:30:23.574 12111 12125 I WarmPrefixEval: coldwarm gemma-3-1b-it-Q4_K_M.gguf pair=1 arm=cold fed=930 cached=0 prefill=8221ms ttft=8224ms turn_one=5 cpu=40.9C screen=true
+11-15 23:30:23.593 12111 12136 I OpenWeights: mem: before turn rss 1439 MB, pss 1332 MB, swap 0 MB, majflt 239, minflt 499742, cpu 205490 ms
+11-15 23:30:31.803 12111 12136 I OpenWeights: mem: after turn rss 1440 MB, pss 1332 MB, swap 0 MB, majflt 239, minflt 500670, cpu 252500 ms
+11-15 23:30:41.893 12111 12136 I OpenWeights: mem: before turn rss 1440 MB, pss 1332 MB, swap 0 MB, majflt 239, minflt 500728, cpu 252540 ms
+11-15 23:30:41.901 12111 12136 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 23:30:42.228 12111 12136 I OpenWeights: mem: after turn rss 1440 MB, pss 1333 MB, swap 0 MB, majflt 239, minflt 501513, cpu 254180 ms
+11-15 23:30:42.237 12111 12125 I WarmPrefixEval: coldwarm gemma-3-1b-it-Q4_K_M.gguf pair=1 arm=warm fed=20 cached=910 prefill=191ms ttft=195ms turn_one=5 cpu=41.8C screen=true
+11-15 23:30:42.238 12111 12125 I WarmPrefixEval: coldwarm pair=1 replies identical=true
+11-15 23:30:42.256 12111 12136 I OpenWeights: mem: before turn rss 1440 MB, pss 1333 MB, swap 0 MB, majflt 239, minflt 501522, cpu 254200 ms
+11-15 23:30:50.261 12111 12136 I OpenWeights: mem: after turn rss 1442 MB, pss 1335 MB, swap 0 MB, majflt 239, minflt 502369, cpu 299950 ms
+11-15 23:30:50.286 12111 12136 I OpenWeights: mem: before turn rss 1442 MB, pss 1335 MB, swap 0 MB, majflt 239, minflt 502378, cpu 299960 ms
+11-15 23:30:50.292 12111 12136 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 23:30:50.617 12111 12136 I OpenWeights: mem: after turn rss 1442 MB, pss 1335 MB, swap 0 MB, majflt 239, minflt 503150, cpu 301660 ms
+11-15 23:30:50.626 12111 12125 I WarmPrefixEval: coldwarm gemma-3-1b-it-Q4_K_M.gguf pair=2 arm=warm fed=20 cached=910 prefill=193ms ttft=195ms turn_one=5 cpu=41.8C screen=true
+11-15 23:30:50.650 12111 12136 I OpenWeights: mem: before turn rss 1442 MB, pss 1335 MB, swap 0 MB, majflt 239, minflt 503172, cpu 301680 ms
+11-15 23:30:50.656 12111 12136 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 23:31:01.109 12111 12136 I OpenWeights: mem: after turn rss 1443 MB, pss 1335 MB, swap 0 MB, majflt 239, minflt 504143, cpu 360280 ms
+11-15 23:31:01.121 12111 12125 I WarmPrefixEval: coldwarm gemma-3-1b-it-Q4_K_M.gguf pair=2 arm=cold fed=930 cached=0 prefill=10287ms ttft=10290ms turn_one=5 cpu=41.8C screen=true
+11-15 23:31:01.121 12111 12125 I WarmPrefixEval: coldwarm pair=2 replies identical=true
+11-15 23:31:01.141 12111 12136 I OpenWeights: mem: before turn rss 1443 MB, pss 1335 MB, swap 0 MB, majflt 239, minflt 504150, cpu 360310 ms
+11-15 23:31:09.559 12111 12136 I OpenWeights: mem: after turn rss 1447 MB, pss 1340 MB, swap 0 MB, majflt 239, minflt 504977, cpu 407690 ms
+11-15 23:31:24.676 12111 12136 I OpenWeights: mem: before turn rss 1447 MB, pss 1339 MB, swap 0 MB, majflt 239, minflt 505010, cpu 407750 ms
+11-15 23:31:24.684 12111 12136 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 23:31:34.038 12111 12136 I OpenWeights: mem: after turn rss 1435 MB, pss 1328 MB, swap 0 MB, majflt 239, minflt 506609, cpu 457180 ms
+11-15 23:31:34.051 12111 12125 I WarmPrefixEval: coldwarm gemma-3-1b-it-Q4_K_M.gguf pair=3 arm=cold fed=930 cached=0 prefill=9212ms ttft=9215ms turn_one=5 cpu=42.2C screen=true
+11-15 23:31:34.071 12111 12136 I OpenWeights: mem: before turn rss 1435 MB, pss 1328 MB, swap 0 MB, majflt 239, minflt 506624, cpu 457210 ms
+11-15 23:31:43.218 12111 12136 I OpenWeights: mem: after turn rss 1436 MB, pss 1328 MB, swap 0 MB, majflt 239, minflt 507538, cpu 507950 ms
+11-15 23:31:53.312 12111 12136 I OpenWeights: mem: before turn rss 1436 MB, pss 1328 MB, swap 0 MB, majflt 239, minflt 507559, cpu 507990 ms
+11-15 23:31:53.318 12111 12136 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 23:31:53.636 12111 12136 I OpenWeights: mem: after turn rss 1436 MB, pss 1328 MB, swap 0 MB, majflt 239, minflt 508343, cpu 509590 ms
+11-15 23:31:53.645 12111 12125 I WarmPrefixEval: coldwarm gemma-3-1b-it-Q4_K_M.gguf pair=3 arm=warm fed=20 cached=910 prefill=188ms ttft=191ms turn_one=5 cpu=43.6C screen=true
+11-15 23:31:53.645 12111 12125 I WarmPrefixEval: coldwarm pair=3 replies identical=true
+11-15 23:31:53.663 12111 12136 I OpenWeights: mem: before turn rss 1436 MB, pss 1328 MB, swap 0 MB, majflt 239, minflt 508349, cpu 509600 ms
+11-15 23:32:02.228 12111 12136 I OpenWeights: mem: after turn rss 1438 MB, pss 1330 MB, swap 0 MB, majflt 239, minflt 509287, cpu 556860 ms
+11-15 23:32:12.310 12111 12136 I OpenWeights: mem: before turn rss 1438 MB, pss 1330 MB, swap 0 MB, majflt 239, minflt 509306, cpu 556890 ms
+11-15 23:32:12.318 12111 12136 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 23:32:12.627 12111 12136 I OpenWeights: mem: after turn rss 1438 MB, pss 1330 MB, swap 0 MB, majflt 239, minflt 510134, cpu 558460 ms
+11-15 23:32:12.636 12111 12125 I WarmPrefixEval: coldwarm gemma-3-1b-it-Q4_K_M.gguf pair=4 arm=warm fed=20 cached=910 prefill=179ms ttft=182ms turn_one=5 cpu=43.4C screen=true
+11-15 23:32:12.664 12111 12136 I OpenWeights: mem: before turn rss 1438 MB, pss 1330 MB, swap 0 MB, majflt 239, minflt 510142, cpu 558490 ms
+11-15 23:32:12.671 12111 12136 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 23:32:23.928 12111 12136 I OpenWeights: mem: after turn rss 1440 MB, pss 1333 MB, swap 0 MB, majflt 239, minflt 511096, cpu 613610 ms
+11-15 23:32:23.944 12111 12125 I WarmPrefixEval: coldwarm gemma-3-1b-it-Q4_K_M.gguf pair=4 arm=cold fed=930 cached=0 prefill=11059ms ttft=11063ms turn_one=5 cpu=43.4C screen=true
+11-15 23:32:23.944 12111 12125 I WarmPrefixEval: coldwarm pair=4 replies identical=true
+11-15 23:32:23.966 12111 12136 I OpenWeights: mem: before turn rss 1440 MB, pss 1333 MB, swap 0 MB, majflt 239, minflt 511102, cpu 613630 ms
+11-15 23:32:35.527 12111 12136 I OpenWeights: mem: after turn rss 1441 MB, pss 1333 MB, swap 0 MB, majflt 239, minflt 512002, cpu 674450 ms
+11-15 23:32:55.674 12111 12136 I OpenWeights: mem: before turn rss 1441 MB, pss 1333 MB, swap 0 MB, majflt 239, minflt 512027, cpu 674500 ms
+11-15 23:32:55.682 12111 12136 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 23:33:04.154 12111 12136 I OpenWeights: mem: after turn rss 1443 MB, pss 1335 MB, swap 0 MB, majflt 239, minflt 512926, cpu 722630 ms
+11-15 23:33:04.166 12111 12125 I WarmPrefixEval: coldwarm gemma-3-1b-it-Q4_K_M.gguf pair=5 arm=cold fed=930 cached=0 prefill=8323ms ttft=8327ms turn_one=5 cpu=41.5C screen=true
+11-15 23:33:04.186 12111 12136 I OpenWeights: mem: before turn rss 1443 MB, pss 1335 MB, swap 0 MB, majflt 239, minflt 512932, cpu 722660 ms
+11-15 23:33:13.436 12111 12136 I OpenWeights: mem: after turn rss 1443 MB, pss 1336 MB, swap 0 MB, majflt 239, minflt 513931, cpu 775310 ms
+11-15 23:33:23.534 12111 12136 I OpenWeights: mem: before turn rss 1445 MB, pss 1338 MB, swap 0 MB, majflt 239, minflt 513948, cpu 775350 ms
+11-15 23:33:23.541 12111 12136 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 23:33:23.875 12111 12136 I OpenWeights: mem: after turn rss 1445 MB, pss 1338 MB, swap 0 MB, majflt 239, minflt 514787, cpu 777040 ms
+11-15 23:33:23.884 12111 12125 I WarmPrefixEval: coldwarm gemma-3-1b-it-Q4_K_M.gguf pair=5 arm=warm fed=20 cached=910 prefill=210ms ttft=212ms turn_one=5 cpu=43.5C screen=true
+11-15 23:33:23.884 12111 12125 I WarmPrefixEval: coldwarm pair=5 replies identical=true
+11-15 23:33:23.903 12111 12136 I OpenWeights: mem: before turn rss 1445 MB, pss 1338 MB, swap 0 MB, majflt 239, minflt 514793, cpu 777060 ms
+11-15 23:33:32.102 12111 12136 I OpenWeights: mem: after turn rss 1446 MB, pss 1338 MB, swap 0 MB, majflt 239, minflt 515637, cpu 823510 ms
+11-15 23:33:42.200 12111 12136 I OpenWeights: mem: before turn rss 1434 MB, pss 1326 MB, swap 0 MB, majflt 239, minflt 515918, cpu 823570 ms
+11-15 23:33:42.207 12111 12136 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 23:33:42.530 12111 12136 I OpenWeights: mem: after turn rss 1434 MB, pss 1326 MB, swap 0 MB, majflt 239, minflt 516704, cpu 825220 ms
+11-15 23:33:42.539 12111 12125 I WarmPrefixEval: coldwarm gemma-3-1b-it-Q4_K_M.gguf pair=6 arm=warm fed=20 cached=910 prefill=197ms ttft=200ms turn_one=5 cpu=43.5C screen=true
+11-15 23:33:42.565 12111 12136 I OpenWeights: mem: before turn rss 1434 MB, pss 1326 MB, swap 0 MB, majflt 239, minflt 516748, cpu 825240 ms
+11-15 23:33:42.571 12111 12136 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 23:33:51.000 12111 12136 I OpenWeights: mem: after turn rss 1435 MB, pss 1327 MB, swap 0 MB, majflt 239, minflt 517895, cpu 873250 ms
+11-15 23:33:51.009 12111 12125 I WarmPrefixEval: coldwarm gemma-3-1b-it-Q4_K_M.gguf pair=6 arm=cold fed=930 cached=0 prefill=8293ms ttft=8295ms turn_one=5 cpu=43.5C screen=true
+11-15 23:33:51.009 12111 12125 I WarmPrefixEval: coldwarm pair=6 replies identical=true
+11-15 23:33:51.025 12111 12136 I OpenWeights: mem: before turn rss 1435 MB, pss 1328 MB, swap 0 MB, majflt 239, minflt 517910, cpu 873270 ms
+11-15 23:34:02.667 12111 12136 I OpenWeights: mem: after turn rss 1436 MB, pss 1328 MB, swap 0 MB, majflt 239, minflt 518887, cpu 939260 ms
+11-15 23:34:12.756 12111 12136 I OpenWeights: mem: before turn rss 1436 MB, pss 1328 MB, swap 0 MB, majflt 239, minflt 518907, cpu 939300 ms
+11-15 23:34:12.763 12111 12136 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 23:34:21.102 12111 12136 I OpenWeights: mem: after turn rss 1438 MB, pss 1330 MB, swap 0 MB, majflt 239, minflt 519842, cpu 986470 ms
+11-15 23:34:21.111 12111 12125 I WarmPrefixEval: coldwarm gemma-3-1b-it-Q4_K_M.gguf pair=7 arm=cold fed=930 cached=0 prefill=8197ms ttft=8199ms turn_one=5 cpu=43.3C screen=true
+11-15 23:34:21.130 12111 12136 I OpenWeights: mem: before turn rss 1438 MB, pss 1330 MB, swap 0 MB, majflt 239, minflt 519848, cpu 986500 ms
+11-15 23:34:32.775 12111 12136 I OpenWeights: mem: after turn rss 1440 MB, pss 1333 MB, swap 0 MB, majflt 239, minflt 520810, cpu 1052690 ms
+11-15 23:34:42.872 12111 12136 I OpenWeights: mem: before turn rss 1440 MB, pss 1333 MB, swap 0 MB, majflt 239, minflt 520844, cpu 1052730 ms
+11-15 23:34:42.879 12111 12136 I OpenWeights: kv: 1 remembered reply spliced into the prompt
+11-15 23:34:43.200 12111 12136 I OpenWeights: mem: after turn rss 1440 MB, pss 1333 MB, swap 0 MB, majflt 239, minflt 521646, cpu 1054340 ms
+11-15 23:34:43.209 12111 12125 I WarmPrefixEval: coldwarm gemma-3-1b-it-Q4_K_M.gguf pair=7 arm=warm fed=20 cached=910 prefill=195ms ttft=198ms turn_one=5 cpu=43.3C screen=true
+11-15 23:34:43.209 12111 12125 I WarmPrefixEval: coldwarm pair=7 replies identical=true
