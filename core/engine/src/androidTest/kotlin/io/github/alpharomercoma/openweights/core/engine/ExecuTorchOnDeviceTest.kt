@@ -297,6 +297,32 @@ class ExecuTorchOnDeviceTest {
     }
 
     /**
+     * [ReuseBoundary] on this engine: what a second turn does after a clean end, a budget cut,
+     * a cancel and an edited history, each against a reset. Greedy only (`-e temperature 0`),
+     * because a case arm run second writes turn one again and has to get the same text.
+     * `-e repeats <n>` sets the count; rows go to `eval-results/<stem>.boundary.jsonl`.
+     */
+    @Test
+    fun reuseBoundaries(): Unit = runBlocking {
+        assertThat(TEMPERATURE).isEqualTo(0f)
+        engine.load(MODEL, PARAMS)
+        if (BRIDGE == MTK_NPU) assertThat(bridge.prefillingOnNpu).isTrue()
+        val out = InstrumentationRegistry.getInstrumentation().targetContext
+            .getExternalFilesDir("eval-results")!!.apply { mkdirs() }
+        ReuseBoundary(
+            engine = engine,
+            runtime = if (BRIDGE == MTK_NPU) "executorch-mtk-npu" else "executorch",
+            model = MODEL.name,
+            sink = File(out, MODEL.nameWithoutExtension + ".boundary.jsonl"),
+            prompt = LONG_PROMPT,
+            opening = SamplerParams(),
+            timed = SamplerParams(maxTokens = ReuseBoundary.TIMED_TOKENS),
+            recordNote = { messages, params -> recordAgainst(messages, params) },
+        ).run(arguments.getString("repeats")?.toIntOrNull() ?: ReuseBoundary.REPEATS)
+            .check(MODEL.name)
+    }
+
+    /**
      * What a cold read costs as the prompt grows: one user turn of 10, 21, 42 and 84 of
      * [LONG_PROMPT]'s sentences (about 250, 500, 1,000 and 2,000 tokens on LFM2.5), each from
      * a reset cache after the cooling gate, the order reversed every other round. The

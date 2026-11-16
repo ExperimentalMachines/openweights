@@ -28,6 +28,7 @@ import io.github.alpharomercoma.openweights.core.common.model.SamplerParams
 import io.github.alpharomercoma.openweights.core.engine.DeviceState
 import io.github.alpharomercoma.openweights.core.engine.GenerationEvent
 import io.github.alpharomercoma.openweights.core.engine.LlamaCppEngine
+import io.github.alpharomercoma.openweights.core.engine.ReuseBoundary
 import io.github.alpharomercoma.openweights.core.engine.StopReason
 import io.github.alpharomercoma.openweights.core.engine.jsonString
 import kotlinx.coroutines.async
@@ -376,6 +377,39 @@ class WarmPrefixEval {
             .that(rewritten).isEqualTo(0)
         assertWithMessage("${model.name}: a reset arm reused a cache")
             .that(coldReused).isEqualTo(0)
+    }
+
+    /**
+     * [ReuseBoundary] on llama.cpp, with the same prompt and cases as the ExecuTorch test: a
+     * clean end, a budget cut, a cancel and an edited history, each against a reset. Run on a
+     * full-attention GGUF the edit is a truncation; on a hybrid (LFM2.5) the cache refuses a
+     * partial rollback and the engine's own recovery shows in its kv log lines.
+     * `-e gguf <path>`, `-e repeats <n>`; rows go to `eval-results/<stem>.boundary.jsonl`.
+     */
+    @Test
+    fun reuseBoundaries(): Unit = runBlocking {
+        val arguments = InstrumentationRegistry.getArguments()
+        val model = File(arguments.getString("gguf") ?: "$EVAL_DIR/none.gguf")
+        assumeTrue("no .gguf at $model", model.isFile)
+        val out = InstrumentationRegistry.getInstrumentation().targetContext
+            .getExternalFilesDir("eval-results")!!.apply { mkdirs() }
+        val engine = LlamaCppEngine()
+        try {
+            engine.load(model, ModelLoadParams(contextLength = CONTEXT))
+            ReuseBoundary(
+                engine = engine,
+                runtime = "llama.cpp",
+                model = model.name,
+                sink = File(out, model.nameWithoutExtension + ".boundary.jsonl"),
+                prompt = longPrompt(),
+                opening = PARAMS.copy(maxTokens = TURN_ONE_TOKENS),
+                timed = PARAMS.copy(maxTokens = ReuseBoundary.TIMED_TOKENS),
+            ).run(arguments.getString("repeats")?.toIntOrNull() ?: ReuseBoundary.REPEATS)
+                .check(model.name)
+        } finally {
+            engine.unload()
+            engine.close()
+        }
     }
 
     /** One turn on whatever the engine holds, with the text the app would store as history. */
