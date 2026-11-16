@@ -223,11 +223,7 @@ class DisaggregatedExecuTorchBridge(
         // The reply reached the end of the NPU window: the turn loop answers that as a full
         // context, the same as the CPU runtime's own overflow.
         if (code == REASON_WINDOW_FULL) throw overflow()
-        val reason = when (code) {
-            REASON_CANCELLED -> StopReason.CANCELLED
-            REASON_MAX_TOKENS -> StopReason.MAX_TOKENS
-            else -> StopReason.END_OF_TURN
-        }
+        val reason = stopReasonFor(code)
         openedNpu()
         val totalTokens = res.getOrElse(RESULT_PROMPT_TOKENS) { 0L }.toInt()
         val totalMs = res.getOrElse(RESULT_PREFILL_MS) { 0L }
@@ -244,6 +240,7 @@ class DisaggregatedExecuTorchBridge(
             generatedTokens = genTokens,
             prefillMs = prefillMs,
             decodeMs = decodeMs,
+            endedOnStopToken = endedOnStopToken(code),
         )
     }
 
@@ -478,7 +475,7 @@ class DisaggregatedExecuTorchBridge(
         }
     }
 
-    private companion object {
+    internal companion object {
         const val TAG = "OpenWeightsPD"
         const val ENABLE_MARKER = "enable-pd"
 
@@ -490,9 +487,28 @@ class DisaggregatedExecuTorchBridge(
         const val RESULT_PREFILL_MS = 3
         const val RESULT_DECODE_MS = 4
 
+        /** The runner's loop ended on one of its stop tokens, which it never feeds back. */
+        const val REASON_END_OF_TURN = 0
         const val REASON_MAX_TOKENS = 1
         const val REASON_CANCELLED = 2
         const val REASON_WINDOW_FULL = 3
+
+        /**
+         * The engine's reason for the runner's code. A code this side does not know still
+         * reads as the end of a turn, as it always has, but never as a stop on a stop token.
+         */
+        internal fun stopReasonFor(code: Int): StopReason = when (code) {
+            REASON_CANCELLED -> StopReason.CANCELLED
+            REASON_MAX_TOKENS -> StopReason.MAX_TOKENS
+            else -> StopReason.END_OF_TURN
+        }
+
+        /**
+         * Only the runner's own end-of-turn code says its loop ended on a stop token: it
+         * returns that code for nothing else (cancel, budget and a full window have their own,
+         * tools/npu/mtk_pd_disaggregated_jni.cpp).
+         */
+        internal fun endedOnStopToken(code: Int): Boolean = code == REASON_END_OF_TURN
         private const val BYTES_PER_GB = (1L shl 30).toDouble()
 
         /** In the binary gigabytes the model cards use, so the two figures can be compared. */

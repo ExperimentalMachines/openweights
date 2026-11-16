@@ -30,6 +30,16 @@ data class ExecuTorchOutcome(
     val generatedTokens: Int = 0,
     val prefillMs: Long = 0,
     val decodeMs: Long = 0,
+    /**
+     * True only when the runtime itself says its loop ended on one of its stop tokens, which
+     * it never feeds back: how the reply ended, not yet what the cache holds. MediaTek's
+     * runner stops on `<|im_end|>` without handing its text to the callback, so the marker
+     * never reaches the engine, and without this every reply there lost its cache (2026-11-16,
+     * POCO and Galaxy Tab S10+). The engine then keeps its record only if the reply is
+     * committed to the NPU half as well. A bridge whose runtime does not say why it stopped
+     * leaves it false.
+     */
+    val endedOnStopToken: Boolean = false,
 )
 
 /**

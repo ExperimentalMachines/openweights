@@ -88,15 +88,7 @@ class ExecuTorchEngine(
     private var template: PromptTemplate? = null
     private var contextSize: Int = 0
 
-    /** What [resetRuntime] needs to open the same file again. */
-    private class Opened(
-        val model: File,
-        val tokenizer: File,
-        val temperature: Float,
-        val stateResetAtZero: Boolean?,
-    )
-
-    private var opened: Opened? = null
+    private var opened: OpenedExport? = null
     private var moduleHasRun = false
 
     /** The pass running now, under [turns]. See [PassMeter]. */
@@ -353,7 +345,7 @@ class ExecuTorchEngine(
         // turns generic and repetitive (Software Mansion's model notes, and their runner's
         // defaults for LFM2.5-VL).
         val heat = if (multimodal) VISION_TEMPERATURE else temperature
-        val held = Opened(modelFile, tokenizer, heat, stateResetAtZero)
+        val held = OpenedExport(modelFile, tokenizer, heat, stateResetAtZero)
         if (!gpuChecked {
                 bridge.load(modelFile.absolutePath, tokenizer.absolutePath, heat, multimodal)
             }
@@ -522,8 +514,9 @@ class ExecuTorchEngine(
         // The MediaTek runtime writes the reply on the CPU and reads prompts on the NPU, whose
         // cache never saw it: recorded as held without that, the next turn appended to a
         // conversation missing the last answer (codex QA). commitReply feeds it to the NPU.
+        val whole = reply.endedWhole(outcome, cancelRequested) && pictures.isEmpty()
         fedText =
-            if (reply.endedCleanly && pictures.isEmpty() && bridge.commitReply(reply.answer)) {
+            if (whole && bridge.commitReply(reply.answer)) {
                 prompt + reply.answer
             } else {
                 ""
@@ -1182,6 +1175,14 @@ class ExecuTorchEngine(
     }
 }
 
+/** What the engine's resetRuntime needs to open the same file again. */
+private class OpenedExport(
+    val model: File,
+    val tokenizer: File,
+    val temperature: Float,
+    val stateResetAtZero: Boolean?,
+)
+
 /**
  * When a generation has to be cut, decided a callback at a time.
  *
@@ -1234,6 +1235,17 @@ private class StreamedReply(private val template: PromptTemplate) {
 
     /** True once the model produced an end-of-turn marker rather than merely stopping. */
     val endedCleanly: Boolean get() = ends >= 0
+
+    /**
+     * Whether the reply ended where a record of it can be kept: on the marker, or where the
+     * runtime says its loop ended on its own stop token without handing over the marker's
+     * text (MediaTek's runner), which it never feeds back either. The record is kept only
+     * once the reply is also committed (`commitReply`). Anything else that ended without the
+     * marker (a budget, a full window, a cancel, or a stop on "!" for an export whose end
+     * token falls back to id 0) leaves a cache this side cannot describe.
+     */
+    fun endedWhole(outcome: ExecuTorchOutcome, cancelled: Boolean): Boolean =
+        endedCleanly || (outcome.endedOnStopToken && !cancelled)
 
     /** The reply without the marker or anything after it. */
     val answer: String get() = text.take(if (ends >= 0) ends else text.length).toString()

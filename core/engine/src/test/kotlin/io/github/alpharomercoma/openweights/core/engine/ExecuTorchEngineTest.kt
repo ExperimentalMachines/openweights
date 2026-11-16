@@ -1028,6 +1028,86 @@ class ExecuTorchEngineTest {
     }
 
     @Test
+    fun `a reply the runtime ended on its own stop token is reused`() = runTest {
+        // MediaTek's runner stops on <|im_end|> and never hands its text over, so the marker
+        // does not arrive; it says why it stopped, and the cache it leaves is the same as
+        // after a reply the engine stopped on the marker.
+        bridge.reply = "Hello."
+        bridge.outcome = ExecuTorchOutcome(StopReason.END_OF_TURN, endedOnStopToken = true)
+        engine.load(installed(MODEL), PARAMS)
+
+        val first = listOf(user("Hi"))
+        engine.chat(first).toList()
+        engine.chat(first + assistant("Hello.") + user("Again")).toList()
+
+        assertThat(bridge.committed).contains("Hello.")
+        assertThat(bridge.contextResets).isEqualTo(1)
+        assertThat(bridge.prompts[1]).startsWith("<|im_end|>\n<|im_start|>user\nAgain")
+    }
+
+    @Test
+    fun `a stop token as the very first token keeps the prompt as the record`() = runTest {
+        // MediaTek's runner can predict a stop token straight from the prompt: nothing is
+        // emitted or fed, both halves hold the prompt, and the next turn extends it.
+        bridge.reply = ""
+        bridge.outcome = ExecuTorchOutcome(StopReason.END_OF_TURN, endedOnStopToken = true)
+        engine.load(installed(MODEL), PARAMS)
+
+        val first = listOf(user("Hi"))
+        engine.chat(first).toList()
+        engine.chat(first + assistant("") + user("Again")).toList()
+
+        assertThat(bridge.committed).containsExactly("", "")
+        assertThat(bridge.contextResets).isEqualTo(1)
+        assertThat(bridge.prompts[1]).startsWith("<|im_end|>")
+    }
+
+    @Test
+    fun `a stop-token end whose commit failed is not reused`() = runTest {
+        bridge.reply = "Hello."
+        bridge.outcome = ExecuTorchOutcome(StopReason.END_OF_TURN, endedOnStopToken = true)
+        bridge.commits = false
+        engine.load(installed(MODEL), PARAMS)
+
+        val first = listOf(user("Hi"))
+        engine.chat(first).toList()
+        engine.chat(first + assistant("Hello.") + user("Again")).toList()
+
+        assertThat(bridge.contextResets).isEqualTo(2)
+    }
+
+    @Test
+    fun `a reply that ended with neither the marker nor a stop token is not reused`() = runTest {
+        // The runtime stopped without saying why: a stop on "!" (an export whose end token is
+        // id 0), a budget or a full window all look like this, and none of them leaves a
+        // cache this side can describe.
+        bridge.reply = "Hello!"
+        engine.load(installed(MODEL), PARAMS)
+
+        val first = listOf(user("Hi"))
+        engine.chat(first).toList()
+        engine.chat(first + assistant("Hello!") + user("Again")).toList()
+
+        assertThat(bridge.contextResets).isEqualTo(2)
+        assertThat(bridge.prompts[1]).contains("<|im_start|>user\nHi<|im_end|>")
+    }
+
+    @Test
+    fun `a stop-token end that was cancelled is not reused`() = runTest {
+        bridge.reply = "Hello there and more"
+        bridge.outcome = ExecuTorchOutcome(StopReason.END_OF_TURN, endedOnStopToken = true)
+        bridge.beforeFragment = { engine.cancel() }
+        engine.load(installed(MODEL), PARAMS)
+
+        val first = listOf(user("Hi"))
+        engine.chat(first).toList()
+        bridge.beforeFragment = null
+        engine.chat(first + assistant("Hel") + user("Again")).toList()
+
+        assertThat(bridge.contextResets).isEqualTo(2)
+    }
+
+    @Test
     fun `a budget stop retains occupancy but the next turn replays the whole prompt`() = runTest {
         bridge.exportedContextLength = 2048
         bridge.reply = "Hello, and I was still talking when"

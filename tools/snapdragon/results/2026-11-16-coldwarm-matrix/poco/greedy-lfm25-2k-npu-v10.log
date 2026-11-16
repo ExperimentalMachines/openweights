@@ -1,0 +1,14 @@
+--------- beginning of main
+11-16 16:59:45.288 10916 10946 I ExecuTorch: Reading file /sys/devices/soc0/image_version
+11-16 16:59:45.288 10916 10946 I ExecuTorch: Failed to open midr file /sys/devices/soc0/image_version
+11-16 16:59:45.288 10916 10946 I ExecuTorch: Number of efficient cores 0
+11-16 16:59:45.289 10916 10946 I ExecuTorch: Resetting threadpool to 4 threads.
+11-16 16:59:45.593 10916 10946 I OpenWeightsPD: NeuroPilot NPU runtime available
+11-16 16:59:45.604 10916 10946 I OpenWeightsPD: Loading Disaggregated runtime: 4 NPU chunks (LFM2.5-1.2B-Instruct-neuropilot-a16w8-2k-chunk1of4.pte..), embedding=LFM2.5-1.2B-Instruct-neuropilot-embedding-fp32.bin, CPU model=LFM2.5-1.2B-Instruct-8da4w-2k.pte
+11-16 16:59:45.604 10916 10946 I OpenWeightsPD: DisaggregatedSession: Initializing Tokenizer: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.tokenizer.json
+11-16 16:59:45.818 10916 10946 I OpenWeightsPD: DisaggregatedSession: Tokenizer loaded, vocab_size=64402
+11-16 16:59:45.818 10916 10946 I OpenWeightsPD: DisaggregatedSession: stop tokens = [2,7,0]
+11-16 16:59:45.818 10916 10946 I OpenWeightsPD: DisaggregatedSession: runner options: batch=128 cache=2048 hidden=2048 heads=32 layers=16 dim=64 maxlen=128000
+11-16 16:59:45.818 10916 10946 I OpenWeightsPD: DisaggregatedSession: Initializing NPU Runtime with 4 chunks...
+11-16 16:59:52.475 10916 10946 I OpenWeightsPD: DisaggregatedSession: NPU Runtime initialized in 6.66 s
+11-16 16:59:52.475 10916 10946 I OpenWeightsPD: DisaggregatedSession: Initializing CPU Module: /data/local/tmp/openweights/eval/LFM2.5-1.2B-Instruct-8da4w-2k.pte
