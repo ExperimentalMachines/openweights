@@ -61,12 +61,15 @@ turn two, median:
 |---|---|---|---|
 | As shipped | 0 of 8 | 11,671 ms | 5,662 ms |
 | Prototype, keeping the record on any runtime-ended reply | 7 of 7 (pairs 0 to 6) | 433 ms | 5,667 ms |
-| This change (code 0 only) | not measured | | |
+| This change (code 0 only), test APK built at 3f1aab51 | 8 of 8 | 441 ms | 5,952 ms |
 
-This change has not run on a phone. Its run on the POCO crashed while the CPU half was loading,
-after the NPU half had started (`greedy-lfm25-2k-npu-v10.*`); the cause was not recorded. What the
-prototype shows is that keeping and committing the reply lets the NPU path reuse its prefix; that
-the exact build passes code 0 through and does the same is still to be measured.
+The change was measured on the POCO at 18:15 on 16 Nov (`greedy-lfm25-2k-npu-v13.*`): every
+turn one ended `END_OF_TURN` on code 0, its reply was committed to the NPU half, and the second
+turn read 20 tokens on top of it to the position the reset-cache arm reached (998). A first
+attempt at the same build crashed while the CPU half loaded (`greedy-lfm25-2k-npu-v10.*`, which
+records only the crash; its cause was not established). The operator saw about 1.5 GB available
+after it and stopped another app's idle process before the run that worked; neither is in the
+run's files.
 
 Both arms reached the same runner position (998) with the record kept, and on a Galaxy Tab S10+
 (MT6989, Qwen3-1.7B a16w4) the one pair before the 2k window filled reached 1,653 in both. With

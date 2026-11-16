@@ -231,6 +231,7 @@ instrumented engine's (`ExecuTorchEngine.chat` to its first token), not taps in 
 | CPU (XNNPACK), run alone | 8, 8 | **85 ms** [82-89] | 85 ms | **3,312 ms** [3,301-3,635], 971 tokens | **39.0x** [37.7-44.3] | 8 of 8 |
 | NPU, the engine as shipped | 8, **0** | none: 5,709 ms [5,522-7,424] labelled warm, a full read | **11,671 ms** [10,887-14,046] | **5,651 ms** [5,532-6,735], 998 tokens | none | 8 of 8 |
 | NPU, runtime-end prototype (not shipped), pairs 0 to 6 | 7, 7 | **430 ms** [420-454] | 433 ms | **5,657 ms** [5,595-5,738], 998 tokens | **13.1x** [12.3-13.5] | **0 of 7** |
+| NPU, the committed fix (3f1aab51), run alone | 8, **8** | **438 ms** [418-491] | 441 ms | **5,945 ms** [5,543-6,793], 998 tokens | **13.6x** [12.3-15.5] | **0 of 8** |
 
 - **As shipped, the NPU path never reused the prefix.** MediaTek's runner stops at its own stop
   token (`Reached stop token 7` in `*.pd.log`) without handing that token's text to the callback;
@@ -250,6 +251,18 @@ instrumented engine's (`ExecuTorchEngine.chat` to its first token), not taps in 
   assumption is not proved for every bridge (a runtime can also return for its own budget, a
   cancel or a full window, and the engine's position is an estimate), and it is wrong for the
   INT8-INT4 Qwen3 export, whose runtime stops on `"!"` (see below), so it is not a fix to ship.
+- **The committed fix reused the prefix in all 8 pairs** (`poco/greedy-lfm25-2k-npu-v13.*`, 18:15
+  on 16 Nov). Not recorded in these files, from the operator's adb checks: the test APK was built
+  from the tree at 3f1aab51, no other test was running, and another app's idle process was
+  stopped first (available memory 2.3 GB before, 7.5 GB after). An earlier attempt at this build
+  crashed while the CPU half loaded (`greedy-lfm25-2k-npu-v10.*`, which records only the crash);
+  about 1.5 GB was available just after it, and its cause was not established. The engine now keeps its record when
+  the runner reports that it stopped on a stop token (code 0) and the reply was committed to the
+  NPU half: turn one ended `END_OF_TURN` in every pair, its 73-token reply was fed to the NPU
+  (`NPU fed 73 ... 978 total`), and the second turn read 20 tokens on top of it to 998, the
+  position the reset-cache arm reached by reading all 998. Median first token 441 ms against
+  11,671 ms as shipped; the reply changed with reuse exactly as in the prototype run. Turns started
+  at 44.0 to 46.4 C (7 of 16 above the 45 C gate, which waits at most 60 s).
 - **The CPU run recorded lower times than the NPU for both reads**: a reset-cache read of about
   1,000 tokens took 3.3 s on the CPU and 5.7 s on the NPU, a retained-prefix turn 85 ms on the CPU
   and 430 ms on the NPU with the prototype. This is not a matched processor comparison: the two
@@ -342,7 +355,10 @@ for llama.cpp. `families.py` prints the table. Replies are compared as text, not
   reply as the template renders it once its reasoning is removed, and the question), 1.6 to 2.8 s
   (medians 1.98 s on the S25 Ultra and 2.28 s on the S24). The ExecuTorch engine renders
   history as it was fed, reasoning included, which is why Qwen3 kept the whole turn there (28.3x to
-  54.5x above).
+  54.5x above). Neither choice is simply right: Qwen3's model card asks that history carry only the
+  final answer, which its template does, and the llama.cpp engine asks every template to keep past
+  thinking and logs the ones that refuse (`kv: this template drops past thinking`); Qwen3's
+  refuses. What keeping the reasoning does to answer quality was not measured.
 - **Reuse changed the greedy reply on some families and not others.** Identical in every pair:
   Llama 3.2 on both runtimes, Gemma 3 1B and LFM2.5 on llama.cpp. Changed in every pair, the same
   way on every chip: Gemma 3 1B on ExecuTorch (`Optimization.` kept, `Translation.` reset, four
