@@ -18,6 +18,40 @@ PORT=${PORT:-5599}; S=localhost:$PORT; A="adb -s $S"; ST=$ROOT/tools/eval/stream
 bridge() { (cd "$ST" && uv run --with google-cloud-devicestreaming python ds_bridge.py "$@"); }
 log() { echo "$(date -u +%T) $*" | tee -a "$R/session.log"; }
 on_dev() { $A shell "$1" 2>/dev/null | tr -d '\r'; }
+# A hard limit on one command (macOS has no timeout(1)): an alarm set before exec survives the exec.
+tmo() { perl -e 'alarm shift; exec @ARGV' "$@"; }
+# Cancel the session and confirm it, or say loudly that it is still billing. The cancel needs a fresh gcloud
+# token: on 2026-11-17 (session 15) a Workspace login lapsed mid-run, the one cancel failed, and the session
+# billed on idle until a person signed in again. Every exit after the reservation goes through here, and only a
+# confirmed cancel closes the ledger row (Codex review, 2026-11-17: a failed cancel used to log SESSION_END).
+# Success is the bridge's exit status 0 and its exact line "cancelled <session>" (Codex review round 2: any
+# output containing "cancelled", even an error, used to count). Each call has a time limit and the whole
+# cleanup ten minutes by the clock, so a hung gcloud or bridge cannot stall it.
+cancel_checked() {
+  local by=$(( $(date -u +%s) + 600 )) k=0 out rc
+  while [ "$(date -u +%s)" -lt $by ]; do k=$((k + 1))
+    if tmo 30 gcloud auth print-access-token >/dev/null 2>&1; then
+      out=$(cd "$ST" && tmo 90 uv run --with google-cloud-devicestreaming python ds_bridge.py cancel "$SESS" 2>&1); rc=$?
+      echo "$out" | tail -1 >> "$R/session.log"
+      [ $rc = 0 ] && [ "$(echo "$out" | tail -1)" = "cancelled $SESS" ] && return 0
+    fi
+    log "CANCEL FAILED for $SESS (try $k): if gcloud wants a login, run gcloud auth login for the session's account"; sleep 30
+  done
+  log "SESSION STILL ACTIVE: $SESS was not cancelled; cancel it by hand (tools/eval/streaming/ds_bridge.py cancel $SESS)"
+  return 1; }
+# (The clock is checked before each attempt, so an attempt that starts near ten minutes can run about two and a
+# half minutes past them: bounded, not exact.)
+# Every ledger write goes through ledger.py, which locks the file, and a failed write fails the run.
+ledger() { python3 "$HERE/ledger.py" "$RES/ledger.tsv" "$@"; }
+ledger_ok=1
+# A failure after the reservation and before the chain: cancel, close the ledger row only if the cancel is
+# confirmed (Codex review round 3: a confirmed startup cancel used to leave the row open), and fail.
+startup_fail() {
+  if cancel_checked; then
+    ledger set "${SESS##*session-}" "end=$(date -u +%FT%TZ)" "mins=$(( ($(date -u +%s) - T0 + 59) / 60 ))" "note=cancelled at startup: $1" \
+      || log "LEDGER: could not close the row for $SESS"
+  else log "SESSION_OPEN $LAB: not cancelled at startup, ledger row left open"; fi
+  pkill -f "ds_bridge.py serve $SESS " 2>/dev/null; exit 1; }
 # One failed adb call is not a lost device: on 2026-11-16 the S24 session's adb link closed while the
 # phone and session were fine, and the driver cancelled at once, losing two models. Reconnect for
 # about two minutes before giving up.
@@ -51,14 +85,29 @@ until grep -q -E "ACTIVE|FAILED|rror" "$R/reserve.log" 2>/dev/null; do sleep 10;
 grep -q ACTIVE "$R/reserve.log" || { log "reserve failed: $(tail -2 "$R/reserve.log")"; exit 1; }
 SESS=$(grep -o "projects/[^ ]*/deviceSessions/session-[a-z0-9]*" "$R/reserve.log" | tail -1)
 T0=$(date -u +%s)
+# The ledger row goes in as soon as the session exists, so a failure before the unit is known still leaves a
+# record of something that may be billing (Codex review round 2); the unit is filled in below.
+ledger add "$(printf '%s\tgts10pwifi\t%s\t\t\t%s, unit pending: queue %s (session.sh)' "${SESS##*session-}" "$(date -u -r $T0 +%FT%TZ)" "$LAB" "$(basename "$Q")")" \
+  || { log "LEDGER: could not add the row for $SESS"; ledger_ok=0; }
 (cd "$ST" && nohup uv run --with google-cloud-devicestreaming python ds_bridge.py serve "$SESS" --port $PORT -v > "$R/bridge.log" 2>&1 &)
-sleep 8; adb disconnect $S >/dev/null 2>&1; adb connect $S >/dev/null
-for i in $(seq 1 30); do $A get-state >/dev/null 2>&1 && break; sleep 5; done
+sleep 8; ready_by=$(( $(date -u +%s) + 300 ))
+tmo 10 adb disconnect $S >/dev/null 2>&1; tmo 20 adb connect $S >/dev/null 2>&1
+# Wait for a shell that answers, not get-state: on 2026-11-17 (session 16) get-state passed as soon as the
+# local bridge accepted, while the unit's first shell still failed, so the push and the chain start failed in
+# the same second and the session sat active with nothing running. Reconnect while waiting; give up (and
+# cancel, so nothing bills) after five minutes by the clock: every adb call has its own time limit, since one
+# hung call would otherwise hold the loop (Codex review, 2026-11-17).
+# (An attempt that starts just before the deadline can run about a minute past it: bounded, not exact.)
+ready=0
+while [ "$(date -u +%s)" -lt $ready_by ]; do
+  tmo 20 adb -s $S shell "echo ok" 2>/dev/null | grep -q ok && { ready=1; break; }
+  tmo 10 adb disconnect $S >/dev/null 2>&1; tmo 20 adb connect $S >/dev/null 2>&1; sleep 10; done
+if [ $ready = 0 ]; then log "no shell answered on $S in five minutes: cancelling $SESS"; startup_fail "no shell answered"; fi
 EXP=$(bridge list 2>/dev/null | grep "^$SESS " | awk '{print $4" "$5}' | cut -c1-19)
-E=$(date -j -u -f "%Y-%m-%d %H:%M:%S" "$EXP" +%s) || { log "no expiry for $SESS"; exit 1; }
+E=$(date -j -u -f "%Y-%m-%d %H:%M:%S" "$EXP" +%s) || { log "no expiry for $SESS: cancelling"; startup_fail "no expiry"; }
 UNIT=$(on_dev 'getprop ro.serialno | sha256sum | cut -c1-8')
 log "active $SESS unit $UNIT expires $EXP UTC"
-printf '%s\tgts10pwifi\t%s\t\t\t%s, unit %s: queue %s (session.sh)\n' "${SESS##*session-}" "$(date -u -r $T0 +%FT%TZ)" "$LAB" "$UNIT" "$(basename "$Q")" >> "$RES/ledger.tsv"
+ledger set "${SESS##*session-}" "unit=$UNIT" || { log "LEDGER: could not fill in the unit for $SESS"; ledger_ok=0; }
 
 "$HERE/push.sh" $S "$BENCH" "$CURL" $(for d in $npus; do echo "$NPU/${d#npu/}"; done) > "$R/push.log" 2>&1 || { log "push failed"; tail -5 "$R/push.log"; }
 for g in $ggufs; do $A push "$GG/$g" /data/local/tmp/mtk/gguf/ > /dev/null 2>&1 || log "gguf push failed: $g"; done
@@ -103,21 +152,20 @@ if [ $gone = 0 ]; then
   for f in $(on_dev 'ls /data/misc/perfetto-traces/' | grep "^${LAB}hot"); do $A pull "/data/misc/perfetto-traces/$f" "$R/$f" > /dev/null 2>&1; done
   log "pulled: $(ls "$R" | wc -l | tr -d ' ') files"
 fi
+closed=0
+# Deliberately not cancelled when the link is lost but the server still lists the session as active: the chain
+# may still be running on the unit with results not yet pulled. The ledger row stays open and the script fails
+# below, so a person pulls and cancels.
 if [ $gone = 1 ] && active; then
   log "NOT cancelling: the link was lost but the server still lists the session as active (pull and cancel by hand)"
 else
-  bridge cancel "$SESS" 2>&1 | tail -1 | tee -a "$R/session.log"
+  cancel_checked && closed=1
 fi
 pkill -f "ds_bridge.py serve $SESS " 2>/dev/null
 T1=$(date -u +%s)
-python3 - "$RES/ledger.tsv" "${SESS##*session-}" "$(date -u -r $T1 +%FT%TZ)" $(( (T1 - T0 + 59) / 60 )) <<'EOF'
-import sys
-p, sid, end, mins = sys.argv[1:]
-rows = [l.rstrip("\n").split("\t") for l in open(p)]
-for r in rows:
-    if r[0] == sid:
-        r += [""] * (6 - len(r))
-        r[3], r[4] = end, mins
-open(p, "w").write("".join("\t".join(r) + "\n" for r in rows))
-EOF
+# A session that was not cancelled is still billing: leave its ledger row open and fail.
+[ $closed = 1 ] || { log "SESSION_OPEN $LAB: not cancelled, ledger row left open"; exit 1; }
+ledger set "${SESS##*session-}" "end=$(date -u -r $T1 +%FT%TZ)" "mins=$(( (T1 - T0 + 59) / 60 ))" \
+  || { log "LEDGER NOT UPDATED for $SESS: cancelled, but its row is still open"; exit 1; }
 log "SESSION_END $LAB $(( (T1 - T0) / 60 )) min"
+[ $ledger_ok = 1 ] || { log "LEDGER: an earlier write failed for $SESS; check ledger.tsv"; exit 1; }

@@ -1,0 +1,37 @@
+# Codex astra (gpt-6-astra, max effort), review round 4, 2026-11-17. Brief: BRIEF-4.md (below). Final message only.
+
+# Round 4: the ledger fixes only
+
+Your round-3 findings are at the end of codex-review-3.txt here. New file
+/Users/alpha/mobile-inference/tools/mediatek/ledger.py (flock-locked add/set of ledger.tsv); session.sh now
+routes all four ledger writes through it (`ledger add` at reservation, `ledger set` for unit, startup close
+via startup_fail(), final close), fails the run on a failed write, and startup_fail() closes the row only after
+a confirmed cancel. The overrun limits (about a minute on the readiness wait, about 2.5 minutes on cleanup)
+are now documented, not removed. Diff: `git -C /Users/alpha/mobile-inference diff
+study/mediatek-prefill-decode -- tools/mediatek/session.sh` plus ledger.py (new, untracked). The agent's
+tests: set on a missing row exits 1; 40 parallel appends racing 40 parallel rewrites kept 40/40 rows and 40/40
+notes; startup_fail with a confirmed cancel closed the row and exited 1; with a failed cancel left it open,
+logged SESSION_OPEN and exited 1.
+
+Give FIXED / PARTLY / NOT FIXED for your three round-3 findings, then any new bug in ledger.py or the changed
+lines (quote them). Read-only. No preamble. Keep it short.
+
+## Findings
+
+codex
+- **FIXED:** Concurrent append/rewrite loss. Both operations hold the same exclusive lock through file closure.
+- **FIXED:** Startup cancellation leaving rows open. `startup_fail()` closes the row after confirmed cancellation and exits 1.
+- **FIXED:** Write failures returning success. Final-write failures exit 1; earlier failures are remembered and also force exit 1.
+
+**Additional [P2]: Failed rewrites can still erase the entire ledger.** [ledger.py:43](/Users/alpha/mobile-inference/tools/mediatek/ledger.py:43):
+
+```python
+f.truncate()
+f.write("".join("\t".join(r) + "\n" for r in rows))
+```
+
+An in-memory `ENOSPC` injection after truncation left both sessions’ rows erased. Locking fixes concurrency but retains this existing failure hazard. Use a separate lock file and atomic replacement.
+
+Read-only; shell syntax and stubbed error-path checks passed.
+
+

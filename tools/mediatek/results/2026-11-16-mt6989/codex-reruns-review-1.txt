@@ -1,0 +1,96 @@
+# Codex astra (gpt-6-astra, max effort), review round 1, 2026-11-17. Brief: BRIEF.md (below). Final message only.
+
+# Adversarial review: two reruns added to the MediaTek prefill/decode study (2026-11-17)
+
+You are reviewing work another agent did today. Be adversarial: find wrong numbers, overclaims, wrong
+causal language, code bugs, and anything on the page that is now stale. Verify every number you can from the
+raw files; do not trust the notes. Read-only: change nothing.
+
+## What changed today
+
+1. Llama 3.2 1B on the Galaxy Tab S10+ (Dimensity 9300+) was rerun as session 15 (unit d429dc0d) with the
+   NPU runtime applying Llama 3's RoPE scaling (runner.txt rope_llama3_*), because session 4's NPU runtime
+   had not (its NPU replies drifted). The page now reads session 15 instead of session 4 for that model.
+2. Qwen3 0.6B's first token after NPU prefill is always 151664 `<|file_sep|>` where CPU gives 151667
+   `<think>`. Session 16 (unit e880d908) tested whether the two-prompt calibration causes it, with an export
+   calibrated on nine prompts (`-cal9`).
+3. Tooling: tools/mediatek/session.sh (wait for a shell that answers before pushing; retry the cancel on an
+   expired gcloud login), tools/mediatek/fetch_export.sh (MTK_PROJECT), queues phone/q-s15.txt, q-s16.txt.
+
+## Files
+
+Repo A: /Users/alpha/mobile-inference (the study's raw data and tools)
+- tools/mediatek/results/2026-11-16-mt6989/NOTES.md: read the section starting
+  "## 2026-11-17: the two loose ends" to the end (and the older sections on session 4, the RoPE fix and the
+  Qwen3 first token, for context).
+- Raw: tools/mediatek/results/2026-11-16-mt6989/s15/results-s15.jsonl, s16/results-s16.jsonl,
+  s4/results-s4.jsonl, s5/results-s5.jsonl, s15/chain-s15.log, s16/chain-s16.log, s15/session.log,
+  s16/session.log, ledger.tsv (last two rows).
+- Analyzer: tools/mediatek/analyze_mtk.py (run it: `python3 analyze_mtk.py <results.jsonl> --unit s15=d429dc0d`).
+- Tooling diffs: `git -C /Users/alpha/mobile-inference diff --no-index /dev/null tools/mediatek/session.sh`
+  is not useful; instead compare tools/mediatek/session.sh against the committed copy:
+  `git -C /Users/alpha/mobile-inference diff study/mediatek-prefill-decode -- tools/mediatek/session.sh tools/mediatek/fetch_export.sh`.
+
+Repo B: /Users/alpha/experimentalmachines.org (the site)
+- `git -C /Users/alpha/experimentalmachines.org diff study/dimensity-9300-snapdragon-8-gen-3 -- scripts/build-prefill-decode-mtk-data.mjs app/research/dimensity-9300-snapdragon-8-gen-3/page.tsx`
+- The regenerated data: lib/prefill-decode-mtk-data.ts (the Llama 3.2 1B entries of mtkModels, sdTwins and
+  the s15 entry of mtkSessions). The agent claims a control rebuild with session 4 restored reproduced the
+  committed data exactly after prettier, so only those three entries changed. Check what you can.
+- The rendered page text is saved at
+  /private/tmp/claude-501/-Users-alpha/e6cb9cac-a7fb-45e3-9e42-2299985df6b3/scratchpad/page.html (from the
+  local dev server).
+
+## Questions to answer
+
+1. Are the s4 vs s15 table numbers in NOTES.md right (totals, rates, agreement, turns < 4)? Recompute.
+2. Is the s16 first-token result right (23 turns each, 0/23 for both exports, first tokens 151664 vs 151667)?
+   Is "the number of calibration prompts is not the cause" justified by 2 vs 9 prompts of the same kind, or
+   should it be narrower? Same for the page sentence.
+3. Is the NOTES claim "agreement rose only in the cells that read or hand over the NPU's cache; cpu:gpu and
+   gpu:cpu did not move, which points at the fix rather than the unit" sound, given one run per session on two
+   different units? Is "unit and heat, not the fix: the table changes no compute" for the timing changes sound?
+4. Does anything on the page or in the generator still describe session 4 or unit 4bff7833 as Llama 3.2 1B's
+   run, or use counts (units, sessions, turns) that the swap made stale? Check memory, heat, unit counts,
+   the "Runs" and limits bullets, the first-token table.
+5. The page says `<|file_sep|>` is "an end-of-text token". Is that accurate for Qwen3 in llama.cpp (is it an
+   end-of-generation token there), or is it wrong or misleading?
+6. session.sh: are the two edits correct bash (variables defined before use, on_dev/log/bridge available,
+   exit paths leave nothing billing, the retry loop's grep on "cancelled" matches what ds_bridge.py prints)?
+   Any new failure mode? fetch_export.sh: correct?
+7. Anything else wrong.
+
+## Output
+
+A numbered list of findings, most severe first. Each: file and line, what is wrong, the evidence (numbers you
+recomputed, quotes), and the fix. Then a short list of what you checked and found correct. No preamble.
+
+## Findings
+
+codex
+1. **[P1] Cancellation failures still leave billing active and can falsely close the ledger.** [session.sh:120](/Users/alpha/mobile-inference/tools/mediatek/session.sh:120) falls through after all 20 retries fail, records an end time and prints `SESSION_END`. A stubbed run with every authentication attempt failing reached that path and exited successfully. The [startup failure path:63](/Users/alpha/mobile-inference/tools/mediatek/session.sh:63) also cancels only once without checking success; expiry lookup failure at line 66 exits without cancellation. **Fix:** share checked cancellation handling across post-reservation exits, record unresolved sessions as still open, and return failure unless termination is confirmed.
+
+2. **[P2] The new readiness loop does not enforce its five-minute deadline.** At [session.sh:61](/Users/alpha/mobile-inference/tools/mediatek/session.sh:61), `on_dev` runs a synchronous `adb shell` without a timeout; reconnect commands are also unbounded. Thirty attempts limit completed calls, so a hanging call can prevent cancellation indefinitely. **Fix:** bound individual calls and enforce an elapsed-time deadline.
+
+3. **[P2] The calibration conclusion exceeds the experiment.** [NOTES.md:501](/Users/alpha/mobile-inference/tools/mediatek/results/2026-11-16-mt6989/NOTES.md:501), line 512, and [page.tsx:974](/Users/alpha/experimentalmachines.org/app/research/dimensity-9300-snapdragon-8-gen-3/page.tsx:974) claim calibration count is ruled out. The measurements are correct: both exports produced 151664 on **23/23 turns**, with **0/23** matching CPU’s 151667. However, two versus nine short prompts of the same kind cannot exclude insufficient calibration coverage or a larger-count threshold. **Fix:** “Increasing this calibration set from two to nine prompts did not change the first-token defect.”
+
+4. **[P2] The rerun cannot establish the stated causes of agreement and timing changes.** [NOTES.md:538](/Users/alpha/mobile-inference/tools/mediatek/results/2026-11-16-mt6989/NOTES.md:538) attributes timing differences to “unit and heat, not the fix”; lines 540–545 attribute agreement changes to the fix and remaining disagreement to quantisation. Besides RoPE, the comparison changed units, benchmark binaries, export artifacts, process layout (**one versus three processes**) and execution order. The rebuilt export’s equivalence is explicitly unverified. All four CPU/GPU-only cells retain identical token sequences across their 24 turns, which supports an NPU-specific explanation, but does not distinguish the RoPE change from other NPU changes. **Fix:** describe the agreement improvement as consistent with the fix and earlier cosine probes; leave timing and residual-disagreement causes unassigned. “Same order” is correct for performance ranking, not execution order.
+
+5. **[P2] “NPU decode moved 0 to 2%” is numerically wrong.** [NOTES.md:538](/Users/alpha/mobile-inference/tools/mediatek/results/2026-11-16-mt6989/NOTES.md:538): recomputed decode-rate changes are **+4.79%** for `cpu:npu` (8.867424 → 9.292564 tok/s), **+1.90%** for `npu:npu`, and **−0.70%** for `gpu:npu`. **Fix:** report that range, or explicitly say the **pooled** NPU decode rate increased about **1.9%**.
+
+6. **[P3] The displayed study dates omit both reruns.** [prefill-decode-mtk.ts:90](/Users/alpha/experimentalmachines.org/lib/prefill-decode-mtk.ts:90) and [studies.ts:113](/Users/alpha/experimentalmachines.org/lib/studies.ts:113) still say “15 and 16 November 2026,” including in the saved HTML. The s15 timed matrix spans **2026-11-17 02:17:12–03:48:06 UTC**; s16 also ran November 17. **Fix:** update both date sources to include November 17.
+
+7. **[P3] “One timed run per pairing” needs a retained-run qualifier.** [page.tsx:805](/Users/alpha/experimentalmachines.org/app/research/dimensity-9300-snapdragon-8-gen-3/page.tsx:805) and line 1098 retain that wording, while line 1100 correctly acknowledges Llama’s second run. **Fix:** “One retained timed run per pairing; Llama 3.2 1B uses the corrected rerun.”
+
+8. **[P3] “End-of-text token” is imprecise, but the stop-token classification is correct.** [page.tsx:973](/Users/alpha/experimentalmachines.org/app/research/dimensity-9300-snapdragon-8-gen-3/page.tsx:973): `<|file_sep|>` is a file-separator token. The benchmark’s llama.cpp revision explicitly includes it in the end-of-generation set, and the s16 runtime log lists `151664` as EOG. **Fix:** say “a file-separator token that llama.cpp treats as end-of-generation.” Keep the stop-token counts. [llama.cpp implementation](https://raw.githubusercontent.com/ggml-org/llama.cpp/b2e5e9b/src/llama-vocab.cpp), [Qwen tokenizer configuration](https://huggingface.co/Qwen/Qwen3-0.6B/raw/main/tokenizer_config.json).
+
+Checked and correct:
+
+- **All 78 numeric fields** in the nine-row s4/s15 comparison table match independent recomputation: totals, rates, conventional agreement medians and low-agreement counts, which exclude turn zero. Each session completed **24 × 9 turns**, with identical work, nine passed gates and no failed turns or steps over 500 ms.
+- s16’s **23 CPU + 23 two-prompt NPU + 23 nine-prompt NPU turns** match the stated results. Export files match their recorded SHA-256 hashes; calibration reports identify two and nine prompts; runners are identical and configuration fingerprints match the chain logs.
+- In-memory regeneration matches the working data. Restoring s4 reproduces the committed **data values** exactly. Only `mtkModels[0]`, `sdTwins[1]` and `mtkSessions[0]` change semantically. Formatter-level byte equality was not verified.
+- Llama’s updated values are correct: **3,566 MiB**, three processes, **2,384 heat samples**, **85.7%** at top CPU limits, maximum AP **55.7°C**, zero critical readings, and first-token counts **51/72**, **13 distinct**, **0/72 stops**. No stale s4 association remains for Llama. Published MediaTek matrices now cover **seven units, eight sessions and 1,450 pairing-turn observations**.
+- Bash syntax, helper/variable availability, the `cancelled` match against `ds_bridge.py`, and `MTK_PROJECT` default/override expansion are correct. Ledger durations recompute to **111 + 31 = 142 minutes**, or **$21.30 at the stated rate**.
+
+No files changed. Live cloud cleanup was not independently verified.
+
+

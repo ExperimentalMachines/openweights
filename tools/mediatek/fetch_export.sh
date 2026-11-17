@@ -4,7 +4,9 @@
 #   tools/mediatek/fetch_export.sh <export name, e.g. Qwen_Qwen3-0.6B-MT6989-2048-A16W8> <local dir> <window>
 set -u
 NAME=$1; DEST=$2; WIN=$3
-G=(--project thematic-garage-514815-a4 --zone us-central1-a --quiet)
+# MTK_PROJECT names the export VM's project: the first account's project lost billing on 2026-11-16,
+# and the Llama 3.2 1B rerun's exports were rebuilt on the second account's on 2026-11-17.
+G=(--project "${MTK_PROJECT:-thematic-garage-514815-a4}" --zone us-central1-a --quiet)
 SRC="~/mtk/out/$NAME/mtk/mt6989"
 mkdir -p "$DEST"
 files=$(gcloud compute ssh mtk-export "${G[@]}" --command "cd $SRC && ls" 2>/dev/null)

@@ -1,0 +1,53 @@
+# Codex astra (gpt-6-astra, max effort), review round 2, 2026-11-17. Brief: BRIEF-2.md (below). Final message only.
+
+# Round 2: verify the fixes to your round-1 findings (codex-review-1.txt in this folder)
+
+Read your round-1 findings at the end of codex-review-1.txt and BRIEF.md for the file map. For each of your 8
+findings, say FIXED, PARTLY or NOT FIXED, with evidence. Then look for anything the fixes broke or new issues
+in the changed text. Read-only: change nothing.
+
+Changed since round 1:
+- /Users/alpha/mobile-inference/tools/mediatek/session.sh: new tmo() (perl alarm) and cancel_checked(); the
+  readiness wait now has a 300 s wall-clock deadline with each adb call bounded; every exit after the
+  reservation goes through cancel_checked; only a confirmed cancel writes the ledger end time, otherwise it
+  logs SESSION_OPEN and exits 1. The agent stub-tested tmo (killed at 2 s) and cancel_checked (auth failing:
+  20 retries, rc 1; success: rc 0; bridge error: rc 1). Diff: `git -C /Users/alpha/mobile-inference diff
+  study/mediatek-prefill-decode -- tools/mediatek/session.sh`.
+- NOTES.md (/Users/alpha/mobile-inference/tools/mediatek/results/2026-11-16-mt6989/NOTES.md), from
+  "## 2026-11-17: the two loose ends" to the end: calibration wording narrowed; timing causes unassigned;
+  NPU decode range corrected; agreement described as consistent with the fix, citing session 4's same-unit
+  check; quantisation cause marked untested.
+- Site (/Users/alpha/experimentalmachines.org): page.tsx lines ~805, ~973-974, ~1098; lib/studies.ts and
+  lib/prefill-decode-mtk.ts dates. Diff: `git -C /Users/alpha/experimentalmachines.org diff
+  study/dimensity-9300-snapdragon-8-gen-3 -- app lib scripts`. Rendered text: ../page.html.
+
+Output: the 8 verdicts, then any new findings (file, line, evidence, fix), most severe first. No preamble.
+
+## Findings
+
+codex
+1. **PARTLY [P1]: cancellation and ledger handling.** [session.sh:130](/Users/alpha/mobile-inference/tools/mediatek/session.sh:130) now leaves the ledger open and exits 1 when ordinary cancellation fails. However, lines 131–134 still skip cancellation when `gone=1` and the server reports ACTIVE; a stub reproduced that exit without calling `cancel_checked`. Startup failures also precede the ledger’s creation at line 85, leaving no ledger entry if cancellation fails. **Fix:** record the reservation immediately and route every subsequent exit through checked cleanup.
+
+2. **PARTLY [P2]: five-minute readiness deadline.** [session.sh:68](/Users/alpha/mobile-inference/tools/mediatek/session.sh:68) still performs unbounded `adb disconnect` and `adb connect` before starting the deadline. Inside the loop, an iteration beginning at second 299 can request another **20 + 10 + 20 + 10 seconds** before checking again. The timeout helper itself works: it terminated an eight-second sleep after two seconds, returning 142. **Fix:** establish the deadline before connecting and cap every command and sleep by the remaining time.
+
+3. **PARTLY [P2]: calibration conclusion.** [NOTES.md:501](/Users/alpha/mobile-inference/tools/mediatek/results/2026-11-16-mt6989/NOTES.md:501) still says **“calibration count ruled out.”** The following prose and page now correctly limit the conclusion. Recalculation confirms both exports produced 151664 on **23/23 turns**, versus CPU’s 151667. **Fix:** rename the heading to say increasing calibration from two to nine prompts did not change the defect.
+
+4. **FIXED: causal claims.** [NOTES.md:539](/Users/alpha/mobile-inference/tools/mediatek/results/2026-11-16-mt6989/NOTES.md:539) distinguishes performance ranking from execution order, identifies the confounders, leaves timing causes unassigned, describes agreement as consistent with RoPE, and marks quantisation as untested. Raw data confirms unchanged CPU/GPU handoff token sequences across all 24 turns; the earlier same-unit cosine checks support the RoPE explanation.
+
+5. **FIXED: NPU decode range.** [NOTES.md:540](/Users/alpha/mobile-inference/tools/mediatek/results/2026-11-16-mt6989/NOTES.md:540) matches recomputation: **−0.696%** `gpu:npu`, **+1.896%** `npu:npu`, **+4.794%** `cpu:npu`. All **78 numeric fields** in the comparison table also match.
+
+6. **FIXED: study dates.** [prefill-decode-mtk.ts:90](/Users/alpha/experimentalmachines.org/lib/prefill-decode-mtk.ts:90) and [studies.ts:113](/Users/alpha/experimentalmachines.org/lib/studies.ts:113) both say **“15 to 17 November 2026.”** The saved HTML contains the updated dates.
+
+7. **FIXED: retained-run qualifier.** [page.tsx:805](/Users/alpha/experimentalmachines.org/app/research/dimensity-9300-snapdragon-8-gen-3/page.tsx:805) now says “One kept timed run per pairing”; line 1098 explicitly identifies Llama’s second run. Both appear in the saved HTML.
+
+8. **FIXED: token terminology.** [page.tsx:973](/Users/alpha/experimentalmachines.org/app/research/dimensity-9300-snapdragon-8-gen-3/page.tsx:973) now calls `<|file_sep|>` a file-separator token that llama.cpp treats as end-of-generation. The pinned `b2e5e9b` implementation includes it in the EOG set, and s16 runtime logs identify 151664 as EOG.
+
+New findings, most severe first:
+
+9. **[P1] A failed cancellation can still be accepted as successful.** [session.sh:29](/Users/alpha/mobile-inference/tools/mediatek/session.sh:29) checks only the pipeline’s final `grep`, ignoring the bridge’s exit status and matching any occurrence of `cancelled`. A bridge stub printing `ERROR: request cancelled` and exiting **1** made `cancel_checked` return **0**. That permits false ledger closure and `SESSION_END`. **Fix:** require a successful bridge exit and the exact confirmation `cancelled $SESS`.
+
+10. **[P2] Cancellation retries have no time bound.** [session.sh:29](/Users/alpha/mobile-inference/tools/mediatek/session.sh:29) leaves both authentication and the bridge command unbounded. Hanging either stub prevented retries and required external termination; twenty attempts do not bound a stalled first attempt. **Fix:** bound both commands and the overall cleanup duration, then report unresolved cancellation and exit 1.
+
+No files changed. Cancellation checks used in-memory stubs; live cloud cleanup was not exercised.
+
+

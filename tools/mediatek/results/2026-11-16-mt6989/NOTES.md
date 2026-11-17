@@ -488,3 +488,92 @@ under the heat figure (computed, unitSplit), names the left-out 41-minute run on
 and says the runs do not show which chip throttles more (Codex round 3, codex-simplify-review-3.txt).
 Rates are now stored at six decimals: two-decimal storage rounded twice and moved about 25 displayed
 numbers by one in the last digit (29.15 showed as 29.1 for 29.154); no finding changed.
+
+## 2026-11-17: the two loose ends, rerun on the second account (project voltaic-psyche-514908-s2)
+
+The first account's project is closed, so its export VM and exports were gone. The three exports below were
+rebuilt on a new VM (mtk-export, n2-highmem-8, the free trial's 8 vCPU cap) from the same exporter commit
+(execupack 34c55110), the same pinned NeuroPilot SDK and the same VM patches as on 2026-11-15 (abspath for the
+tool Python; calibration on alpaca2.txt, the first two lines of alpaca.txt). The bench is bench3, the binary
+session 11 ran after the RoPE fix (bin e4f0316f70645351, libs e5df00f8eefaee63). Session 4's MT6989 export
+files were never listed with sizes, so the rebuilt Llama export cannot be compared to it byte for byte.
+
+### Qwen3's first token after NPU prefill: nine calibration prompts instead of two did not change it (session 16, unit e880d908)
+
+Queue q-s16.txt: cpu:cpu and npu:cpu on the two-prompt export, then npu:cpu on a nine-prompt export (`-cal9`,
+calibration on all of alpaca.txt; only the chunk checksums differ, runner.txt is identical), all 23 turns,
+one unit, 0 turn errors (results-s16.jsonl).
+| prefill on | first token, 23 turns | same as cpu:cpu |
+|---|---|---|
+| CPU (cpu:cpu) | 151667 `<think>` on all 23 | |
+| NPU, two-prompt export | 151664 `<|file_sep|>` on all 23 | 0/23 |
+| NPU, nine-prompt export | 151664 `<|file_sep|>` on all 23 | 0/23 |
+The defect reproduces on the rebuilt export, and raising the calibration set from two to nine prompts did not
+change it. That does not rule calibration out (Codex review, 2026-11-17, round 1): all nine are short alpaca
+prompts, so too little coverage or a larger-count threshold remain possible, as does something in the export's
+last chunk.
+The next test is a top-k dump of the NPU's prefill logits, which needs a bench flag and a rebuild.
+Session: session.sh's adb connect ran before the bridge listened on port 5600, so its push and chain start
+failed at 02:48:26 while the session was active; noticed at 02:57, the push and chain start were done by hand
+at 03:04 with the same commands (the first attempt, logged at 03:02:31, ran nothing because zsh did not split
+the adb command), and its pull loop, which had exited, restarted. 31 session minutes.
+
+### Llama 3.2 1B rerun with llama3 RoPE scaling on the NPU (session 15, unit d429dc0d, 24 turns x 9 cells at 2k)
+
+Queue q-s15.txt (split_queue.py, three processes), warm-up first, every gate passed, 0 failed turns, no
+decode step over 500 ms. runner.txt carries rope_llama3_* (factor 32, low 1, high 4, original 8192). The page
+now reads this session for Llama 3.2 1B instead of session 4 (generator entry changed; a control rebuild with
+session 4 reproduced the published data exactly, so only the Llama rows, their S24-turn twins and the
+session-log entry changed).
+| cell | total s s4 | total s s15 | prefill tok/s s4 / s15 | decode tok/s s4 / s15 | agree w/ D:D s4 -> s15 | turns < 4 s4 -> s15 |
+|---|---|---|---|---|---|---|
+| cpu:cpu | 280.2 | 273.2 | 180 / 193 | 31.8 / 32.4 | - | - |
+| npu:cpu | 283.7 | 275.2 | 168 / 183 | 31.8 / 32.5 | 6.5 -> 7 | 9 -> 7 |
+| cpu:gpu | 332.3 | 300.8 | 193 / 209 | 26.0 / 28.8 | 69.5 -> 69.5 | 2 -> 2 |
+| npu:gpu | 332.6 | 300.8 | 171 / 175 | 26.4 / 29.5 | 7 -> 9 | 10 -> 6 |
+| gpu:cpu | 545.0 | 475.9 | 20 / 24 | 35.8 / 38.5 | 36 -> 36 | 1 -> 1 |
+| gpu:gpu | 585.9 | 537.8 | 21 / 23 | 28.6 / 29.7 | - | - |
+| cpu:npu | 904.3 | 861.3 | 236 / 263 | 8.9 / 9.3 | 2.5 -> 12.5 | 11 -> 6 |
+| npu:npu | 907.6 | 891.3 | 190 / 190 | 8.9 / 9.1 | - | - |
+| gpu:npu | 1197.3 | 1196.1 | 22 / 23 | 8.6 / 8.5 | 3.5 -> 9 | 10 -> 5 |
+- The nine cells rank in the same order by total time (not run order: session 4 ran one process, session 15
+  three); CPU -> CPU fastest, NPU -> CPU within 1%. NPU decode rates changed -0.7% (gpu:npu) to +4.8% (cpu:npu,
+  8.87 -> 9.29 tok/s), +1.9% npu:npu; the CPU and GPU cells ran 3 to 13% faster. The two runs differ in unit,
+  bench binary, export build, process layout and run order as well as the RoPE table, so these timing changes
+  are not assigned a cause (corrected in Codex review round 1: an earlier draft said "0 to 2%" and blamed unit
+  and heat).
+- Agreement rose in the four cells that read or hand over the NPU's cache and not in the two handoffs without
+  the NPU (cpu:gpu 69.5, gpu:cpu 36; their token sequences are identical across all 24 turns in both runs).
+  That is consistent with the RoPE fix, which session 4's same-unit check isolated (s4/check-long-l3.jsonl,
+  s4/l3-quality.jsonl), but this pair of runs alone cannot separate it from the other NPU-side changes.
+- Replies: npu:gpu at pos 513 and 821 were word salad in session 4 ("deepfaced to begistered", "a hot spares are
+  noted") and are on topic here ("To effectively identify and combat the potential risks associated with
+  deepfakes", "You are correct that not using more 8TB disks"). Agreement stays below the CPU/GPU handoffs; the
+  NPU export (A16W8) and the GGUF (Q4_0) are quantised differently, but that cause is not tested here.
+- Session: the driver's cancel at 03:49 failed (alpha@viableview.com needed reauthentication, which cannot
+  prompt non-interactively), so the session stayed active until the owner signed in again and it was cancelled
+  by hand at 03:58:16: 111 session minutes, about 9 of them idle.
+
+### Cost and clean-up, 2026-11-17
+
+Credit before this work: $49.25 (console, ~01:00 UTC). Device Streaming 142 session minutes (s15 111, s16 31),
+about $21 at $0.15/min; the export VM ran ~01:01 to ~02:41 UTC (n2-highmem-8, 250 GB pd-balanced), about $1.
+The VM and its disk are deleted; the project has no instances, disks, addresses, snapshots or buckets left.
+
+### session.sh after the two failures above (Codex review, 2026-11-17, rounds 1 to 4)
+
+- Waits for a shell that answers (not get-state) for five minutes by the clock, every adb call time-limited
+  (perl alarm, as macOS has no timeout); cancels if none answers.
+- Writes the ledger row when the session exists (unit pending, filled in later).
+- Every exit after the reservation cancels through cancel_checked: success is exit status 0 and the exact line
+  "cancelled <session>", each gcloud and bridge call time-limited, ten minutes by the clock in all. Only a
+  confirmed cancel closes the ledger row; otherwise the row stays open, SESSION_OPEN is logged and the script
+  exits 1. A link lost while the server still lists the session as active is deliberately not cancelled (the
+  chain may still be running, results unpulled) and ends the same loud way.
+- Every ledger write goes through ledger.py: an flock on ledger.tsv.lock from read to write (two sessions ran side
+  by side today, and an unlocked rewrite could drop the other's row), rewrites to a temporary file swapped in
+  only when complete (a full disk cannot erase the ledger), and a failed write fails the run. A startup failure
+  closes its row only after a confirmed cancel.
+- Tested with stubs only (auth failing, hanging, a bridge error containing "cancelled", the right line with
+  exit 1, a hanging bridge, 40 parallel appends against 40 parallel rewrites: none lost, an injected ENOSPC: the
+  ledger intact); not yet run against a real session. Reviews: codex-reruns-review-1.txt to -4.txt.

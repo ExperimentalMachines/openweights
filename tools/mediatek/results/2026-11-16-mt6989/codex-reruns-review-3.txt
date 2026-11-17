@@ -1,0 +1,57 @@
+# Codex astra (gpt-6-astra, max effort), review round 3, 2026-11-17. Brief: BRIEF-3.md (below). Final message only.
+
+# Round 3: session.sh only
+
+Your round-2 findings are at the end of codex-review-2.txt in this folder. Since then
+/Users/alpha/mobile-inference/tools/mediatek/session.sh changed again (diff against the committed copy:
+`git -C /Users/alpha/mobile-inference diff study/mediatek-prefill-decode -- tools/mediatek/session.sh`):
+cancel_checked now requires exit status 0 and the exact last line "cancelled $SESS", bounds gcloud (30 s) and
+the bridge (90 s) with tmo, and runs ten minutes by the clock; the ledger row is written right after the
+reservation with "unit pending" and filled in once the unit is read; the readiness deadline starts before the
+first (now bounded) connect; the deliberate no-cancel path on a lost link is documented and ends in
+SESSION_OPEN / exit 1. The agent stub-tested: real confirmation rc 0; error text containing "cancelled" rc 1;
+exact line with exit 1 rc 1; hanging bridge rc 1 (bounded); hanging gcloud rc 1 (bounded); ledger insert then
+unit fill-in.
+
+For your round-2 items 1, 2, 9 and 10 say FIXED, PARTLY or NOT FIXED with evidence, then list any new bug in
+session.sh (quote the line). Check in particular: is `tmo` usable with `uv` and `gcloud` as written (PATH,
+exec), does `cd "$ST"` inside the command substitution behave, is `local` fine in this bash, does the
+python one-liner that fills in the unit survive bash quoting, and is any exit path after the reservation left
+that neither cancels nor fails. Read-only. No preamble.
+
+## Findings
+
+codex
+- **1. FIXED:** The reservation is recorded before readiness checks at [line 77](/Users/alpha/mobile-inference/tools/mediatek/session.sh:77). Startup failures attempt cancellation and exit 1. The deliberate lost-link path reaches `SESSION_OPEN` and exits 1 at [line 158](/Users/alpha/mobile-inference/tools/mediatek/session.sh:158), confirmed with stubs. No explicit post-reservation path returns success without confirmed cancellation.
+
+- **2. PARTLY:** [Lines 79–80](/Users/alpha/mobile-inference/tools/mediatek/session.sh:79) establish the readiness deadline before bounded initial connections. However, an iteration starting at second 299 still permits another `20 + 10 + 20 + 10` seconds. The documented overrun remains; five minutes is not a strict limit.
+
+- **9. FIXED:** [Line 36](/Users/alpha/mobile-inference/tools/mediatek/session.sh:36) requires both status 0 and the exact confirmation. In-memory tests accepted the correct confirmation and rejected error text containing `cancelled`, exact confirmation with status 1, another session’s confirmation, and a subsequent error line.
+
+- **10. PARTLY:** Authentication and cancellation now have individual limits. However, [lines 32–38](/Users/alpha/mobile-inference/tools/mediatek/session.sh:32) check the overall deadline only before an attempt. An attempt starting just before ten minutes can consume another `30 + 90 + 30` seconds. Cleanup can therefore take approximately 12½ minutes.
+
+The requested shell checks pass: `uv` and `gcloud` are executables on the inherited PATH; Perl’s `exec` resolves commands there. The installed gcloud wrapper execs Python, and installed uv 0.11.28 forwards `SIGALRM` to its child. [Matching uv source](https://github.com/astral-sh/uv/blob/ebf0f43d7/crates/uv/src/child.rs#L194-L202). `cd "$ST"` changes only the substitution’s directory and preserves the command’s status. `local` works in installed Bash 3.2.57. The exact Bash-quoted Python updater successfully filled the matching row while preserving another row in an in-memory test.
+
+New findings:
+
+- **[P2] The new unit updater can erase another session’s ledger entry.** [Line 101](/Users/alpha/mobile-inference/tools/mediatek/session.sh:101):
+  ```python
+  open(p, "w").write("".join("\t".join(r) + "\n" for r in rows))
+  ```
+  It rewrites an earlier snapshot without locking the shared ledger. An in-memory interleaving reproduced another reservation’s append disappearing. This matters because the script explicitly supports concurrent sessions on different ports.
+
+- **[P2] Successful startup cancellation leaves the new ledger row open.** [Line 92](/Users/alpha/mobile-inference/tools/mediatek/session.sh:92):
+  ```bash
+  pkill -f "ds_bridge.py serve $SESS " 2>/dev/null; exit 1; fi
+  ```
+  Both readiness and expiry failure branches exit before ledger closure, even when `cancel_checked` succeeds. Both were reproduced with cancellation returning 0 and no ledger update.
+
+- **[P2] Ledger-write failures can still produce success.** [Line 169](/Users/alpha/mobile-inference/tools/mediatek/session.sh:169):
+  ```bash
+  log "SESSION_END $LAB $(( (T1 - T0) / 60 )) min"
+  ```
+  After successful cancellation, a ledger-writer stub returning 1 still produced `SESSION_END` and exit 0. This final-write defect predates this revision; the new insertion and unit update likewise lack error checks.
+
+Read-only review; `session.sh` remained unchanged. No live cloud cancellation was exercised.
+
+
