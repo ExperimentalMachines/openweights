@@ -1139,9 +1139,10 @@ class ExecuTorchEngine(
      * its prompt inside an open block, so the reply starts mid-thought and closes a block it
      * never opened; read alone, that closer is text and the thinking becomes the answer.
      * Only when the block did close: a thought cut off by the budget stays as it arrived.
+     * Qwen3.5 follows the tag with a newline and LFM3 does not, hence the trim.
      */
     private fun String.underOpener(prompt: String): String {
-        val continuesThought = prompt.endsWith(THINK_OPEN + "\n") && THINK_CLOSE in this
+        val continuesThought = prompt.trimEnd('\n').endsWith(THINK_OPEN) && THINK_CLOSE in this
         return if (continuesThought && !startsWith(THINK_OPEN)) THINK_OPEN + this else this
     }
 

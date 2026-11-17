@@ -128,11 +128,12 @@ object PromptTemplates {
             "phi4mini" in name -> Phi4Template
             "gemma3" in name -> Gemma3Template
             "lfm25" in name -> Lfm25Template
+            "lfm3" in name -> Lfm3Template
             else -> null
         }
     }
 
-    private val EXCLUDED = listOf("vl", "vision", "coder", "guard")
+    private val EXCLUDED = listOf("vl", "vision", "coder", "guard", "omni")
 
     /** Families this build can render, for an error message that tells the user something. */
     val known: List<String> = listOf(
@@ -145,6 +146,7 @@ object PromptTemplates {
         "Phi-4-mini",
         "Gemma 3",
         "LFM 2.5",
+        "LFM3",
         "LFM2.5-VL",
     )
 }
@@ -349,4 +351,26 @@ private object Lfm25Template : PromptTemplate {
         tools: List<ToolDefinition>,
         thinking: Boolean,
     ): String = Lfm25Prompt.render(messages, tools, verbatimHistory = true, includeBos = false)
+}
+
+/**
+ * [Lfm3Prompt] as a [PromptTemplate], verbatim for the same reason as [Lfm25Template].
+ * Unlike LFM2.5, this template has a switch for reasoning, so the toggle does something.
+ */
+private object Lfm3Template : PromptTemplate {
+    override val bosToken: String = "<|startoftext|>"
+    override val stopMarkers: List<String> = listOf(IM_END)
+    override val supportsThinking: Boolean = true
+
+    override fun render(
+        messages: List<ChatMessage>,
+        tools: List<ToolDefinition>,
+        thinking: Boolean,
+    ): String = Lfm3Prompt.render(
+        messages,
+        tools,
+        thinking,
+        verbatimHistory = true,
+        includeBos = false,
+    )
 }

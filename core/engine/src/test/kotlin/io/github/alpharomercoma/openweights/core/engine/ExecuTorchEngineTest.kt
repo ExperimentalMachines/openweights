@@ -985,6 +985,25 @@ class ExecuTorchEngineTest {
     }
 
     @Test
+    fun `LFM3 reasons under an opener with no newline after the tag`() = runTest {
+        // The same open block as Qwen3.5, spelled without the newline. The second turn
+        // must also extend what the runtime holds: LFM3 is a hybrid, so a mismatch at the
+        // head of the stored turn is a whole re-read.
+        bridge.reply = "Because.</think>Hello.<|im_end|>"
+        engine.load(installed(LFM3), PARAMS)
+
+        val first = listOf(user("Hi"))
+        val done = engine.chat(first).completed()
+        val stored = assistantHistoryText("Because.</think>Hello.", done.stats.thinkingPrefilled)
+        engine.chat(first + assistant(stored) + user("Again")).toList()
+
+        assertThat(bridge.prompts[0]).endsWith("<|im_start|>assistant\n<think>")
+        assertThat(done.reasoning).isEqualTo("Because.")
+        assertThat(done.content).isEqualTo("Hello.")
+        assertThat(bridge.contextResets).isEqualTo(1)
+    }
+
+    @Test
     fun `starts over when the tools on offer change`() = runTest {
         // The tool list lives in the system block at the very front of the prompt, and this
         // app withdraws tools when a turn's budget is spent. Everything after that moves, so
@@ -1560,6 +1579,9 @@ class ExecuTorchEngineTest {
 
         /** A different family whose name contains the one above, named as the exporter names it. */
         const val QWEN35 = "Qwen3.5-2B-8da4w-2k.pte"
+
+        /** The hybrid whose opener holds a think tag with nothing after it. */
+        const val LFM3 = "LFM3-1.7B-8da4w-gptq-4k.pte"
 
         /** What Software Mansion's LFM2.5-VL export reports; a real vision export always has one. */
         const val EXPORTED_WINDOW = 2048

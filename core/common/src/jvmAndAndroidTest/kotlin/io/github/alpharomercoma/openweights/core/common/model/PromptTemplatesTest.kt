@@ -41,6 +41,8 @@ class PromptTemplatesTest {
             "Phi-4-mini-instruct-INT8-INT4.pte" to "<|end|>",
             "gemma-3-4b-it-HQQ-INT8-INT4.pte" to "<end_of_turn>",
             "react-native-executorch-lfm-2.5-lfm_2_5_1_2b_xnnpack_8da4w.pte" to "<|im_end|>",
+            "lfm_3_1_7b_xnnpack_8da4w.pte" to "<|im_end|>",
+            "LFM3-1.7B-8da4w-gptq-4k.pte" to "<|im_end|>",
         )
 
         expectations.forEach { (fileName, marker) ->
@@ -127,6 +129,7 @@ class PromptTemplatesTest {
             "phi-4-mini.pte",
             "gemma-3.pte",
             "lfm2.5.pte",
+            "lfm3.pte",
             "lfm2.5-vl.pte",
         )
         assertThat(installable.mapNotNull { PromptTemplates.forModel(it) })

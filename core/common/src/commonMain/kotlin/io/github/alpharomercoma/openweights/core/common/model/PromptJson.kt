@@ -42,6 +42,14 @@ internal fun ToolDefinition.asToolJson(): String {
 }
 
 /**
+ * A tool as the function object alone, which is how LFM3's template lists one: the same
+ * spelling as [asToolJson] without the OpenAI wrapper around it.
+ */
+internal fun ToolDefinition.asBareToolJson(): String =
+    """{"name": ${name.jsonQuoted()}, "description": ${description.jsonQuoted()}, """ +
+        """"parameters": ${parametersJson.canonicalJson()}}"""
+
+/**
  * [this] JSON with its whitespace laid out the way `json.dumps` does by default: nothing
  * between tokens except `", "` after a member and `": "` after a key.
  *
