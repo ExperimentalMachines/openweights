@@ -1,0 +1,83 @@
+codex
+**The comparison is substantially fairer, and the current timing arithmetic checks out. The partial S24 Gemma does not leak.** Two material issues remain: the failure safeguard misses a benchmark error type, and the tablet’s winning Qwen pairing continues past an end-of-generation token.
+
+I made no file changes. I recomputed the raw results and exercised the generator entirely in memory. The review copy lacks s7–s11, so I read those from the source repository; all page-consumed generated data matched the rebuild.
+1. **Material safeguard gap — `turn_error` failures can still publish a reduced workload.**
+   [build-prefill-decode-mtk-data.mjs:151](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex9/site/build-prefill-decode-mtk-data.mjs:151) rejects errors only on `kind === "turn"`. Both benchmarks also emit `kind: "turn_error"` for template, prefix and snapshot failures; see [pd_bench_sd.cpp:444](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex9/pd_bench_sd.cpp:444). The completion check also ignores `done.failures`.
+   A realistic synthetic check replaced Qwen’s final `WildChat-1M-18#2` turn in all nine S24 pairings with `turn_error`, with `done.failures = 9`. The generator published it without warning:
+   - **22 turns**, down from 23.
+   - **5,594 prompt tokens**, down from 5,919.
+   - **6,854 reply tokens**, down from 7,382.
+   - The tablet twin was silently reduced to match.
+   Equal pairing sets cannot detect the same failure occurring in every pairing. This round-one finding is **partially fixed**, not closed.
+   Conversely, an ordinary failed `turn` now withholds the model; one missing pairing turn triggers an error; changes to `pos`, `new_tokens` or `decode_steps` across devices trigger errors. Those fixes work. **No such failed-turn defect exists in the currently published rows.** Rejecting every nonzero `done.failures` indiscriminately would also be wrong: tablet Qwen’s first process reports five skipped pairings that were subsequently completed.
+2. **Material interpretation issue — the tablet’s Qwen winner is forced continuation past an end token.**
+   The first-token note at [page.tsx:699](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex9/site/page.tsx:699) mentions `<|file_sep|>`, but omits its recorded consequence.
+   All **69/69 tablet Qwen turns with NPU prefill** have `eog_at: 0` and empty recorded `text`, including **23/23 NPU→CPU turns**, the tablet’s winner. The corresponding S24 count is **0/69**. An example is [results-s5.jsonl:34](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex9/mediatek/s5/results-s5.jsonl:34).
+   The benchmark deliberately generates the fixed reply length before checking EOG; see [pd_bench_mtk.cpp:783](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex9/pd_bench_mtk.cpp:783) and line 845. A decoder respecting that GGUF’s EOG classification would stop immediately.
+   **192.761 seconds remains a valid fixed-work throughput result.** It does not establish that this pairing delivers the fastest usable reply. That qualification belongs beside the fastest-pairing finding, alongside the known Llama RoPE defect. “The rest went on alike” understates this limitation and favours the tablet’s practical pairing story.
+3. **Moderate — the same-method wording is only partly repaired.**
+   Regrouped process order is now disclosed correctly. However, “the same models, **files**, turns and cooling gate” survives in [studies-entry.ts:5](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex9/site/studies-entry.ts:5) and [page.tsx:32](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex9/site/page.tsx:32).
+   For the shared models, the tablet NPU uses **A16W8 exports**, while the S24 NPU uses the **Q4_0 GGUF**. The later disclosure is accurate, but it does not make the unqualified opening promise true. This remains a comparison of the measured device/runtime/export combinations.
+4. **Moderate — the thermal headline overstates the evidence and introduces another causal claim.**
+   [page.tsx:231](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex9/site/page.tsx:231) unconditionally says the S24 “could not cool between pairings.” In fact:
+   - S24 Qwen: **7 gates passed; 2 timed out**.
+   - S24 Llama: **9 timed out**.
+   - Both corresponding tablet models: **18/18 passed**.
+   “Often failed to meet the gate within two minutes” is supported. A general inability to cool is not.
+   The core-count attribution is now explicitly disclaimed, correctly. But [page.tsx:835](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex9/site/page.tsx:835) calls the warmer start “part of what a phone is,” and line 823 attributes cooling capability to form. This experiment did not isolate form factor from unit, environment, workload or runtime differences. Those statements favour the tablet beyond the measured result.
+5. **Moderate — the pairing-specific slow-step table displays the wrong median.**
+   [page.tsx:685](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex9/site/page.tsx:685) displays `m.cpuStepMs`, which [generator:293](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex9/site/build-prefill-decode-mtk-data.mjs:293) pools across every CPU-decoding pairing.
+   | Pairing shown | Displayed median | That pairing’s raw median |
+   |---|---:|---:|
+   | Tablet Qwen CPU→CPU | 19.5 ms | **21.49 ms** |
+   | Tablet LFM2.5 1.2B NPU→CPU | 21.3 ms | **21.83 ms** |
+   Either compute the pairing’s median or label this column “model-wide CPU median.” Both current errors make the displayed tablet pairing look slightly better.
+6. **Moderate latent issue — several headline conditions do not establish their wording.**
+   The current NPU and fastest-pairing selections are numerically defensible, but the conditions are incomplete:
+   - [page.tsx:188](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex9/site/page.tsx:188): “Snapdragon ran close” tests only whether MediaTek trails. Snapdragon could be far ahead and receive the same headline.
+   - Line 198: failing `cpuWrites` does not imply the pairings differed; both devices could choose NPU→NPU.
+   - Line 222: if Snapdragon wins every model, the fallback incorrectly says neither device finished first every time. The following sentence still reports negative “less time” on MediaTek.
+   - “The GPUs split” and the thermal headline are unconditional.
+   - Empty arrays satisfy `.every(...)`; there is no nonempty comparison guard.
+   Currently, S24 Llama GPU prefill is **0.97055× CPU**, rounded to **1.0×** in the finding. The GPU result is mixed on S24, rather than uniformly faster there.
+7. **Low — several new figure labels need correction or qualification.**
+   - **Heat-probe duration:** [page.tsx:610](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex9/site/page.tsx:610) implies approximately 21 minutes of heating for both thread counts. The logs show **20.55/20.47 minutes before hot6**, then **6.17/6.15 additional minutes before hot2**, with hot6 between them. The generator retains only the first duration.
+   - **Session minutes:** [generator:492](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex9/site/build-prefill-decode-mtk-data.mjs:492) measures elapsed span including gaps, while the table’s heat samples cover timed turns. S24 Llama shows **82 minutes**, but its timed turns total **65.087 minutes**. Label the duration explicitly.
+   - **Memory units:** the benches divide `/proc/meminfo` values by 1,024, producing **MiB**, while [page.tsx:732](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex9/site/page.tsx:732) labels them MB.
+   - **Q8 exception:** “every other processor read the same Q4_0 file” at line 699 is false for the displayed Qwen3 1.7B Q8_0 row.
+   - **Future Gemma heat caption:** [page.tsx:551](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex9/site/page.tsx:551) promises matching work, but the table includes full tablet entries as well as matched twins. Once Gemma completes, its full tablet row has **23 turns**, versus **17** on S24. The matched twin is correct, but the blanket caption will not be.
+   - The source links labelled “Their raw results” and “The benchmarks” resolve only to MediaTek paths in [prefill-decode-mtk.ts:16](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex9/site/prefill-decode-mtk.ts:16).
+The current shared-model findings recompute as follows. All ratios are against that device’s own CPU.
+| Model/device | NPU prefill | NPU decode | GPU prefill | Fastest observed pairing | Seconds |
+|---|---:|---:|---:|---|---:|
+| Qwen, tablet | 0.4992× | 0.1451× | 0.1439× | NPU→CPU | 192.761 |
+| Qwen, S24 | 4.1581× | 0.9395× | 1.3090× | NPU→CPU | 279.609 |
+| Llama, tablet | 0.8782× | 0.2657× | 0.1043× | CPU→CPU | 280.207 |
+| Llama, S24 | 8.4512× | 1.0827× | 0.9706× | NPU→NPU | 373.212 |
+Thus the tablet’s measured leads are **31.0607% for Qwen** and **24.9202% for Llama**. The cover correctly computes medians of **6.3046× versus 0.6887×**, displayed **6.3× versus 0.7×**. I found no arithmetic manipulation or unequal statistic there.
+Each pairing on both devices performs identical recorded work:
+| Model | Turns | New prompt tokens | Decode steps | Reply tokens |
+|---|---:|---:|---:|---:|
+| Qwen | 23 | 5,919 | 7,359 | 7,382 |
+| Llama | 24 | 6,462 | 7,774 | 7,798 |
+The round-one heat-window fix is substantive. [generator:134](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex9/site/build-prefill-decode-mtk-data.mjs:134) now tests membership in individual turn intervals, excluding intervening gates and gaps.
+| Model | Tablet: all CPU limits at top | S24: all CPU limits at top |
+|---|---:|---:|
+| Qwen | **2,161 / 2,329 = 92.8%** | **313 / 1,324 = 23.6%** |
+| Llama | **1,470 / 2,500 = 58.8%** | **54 / 1,581 = 3.4%** |
+Both loggers use device epoch seconds; the benchmarks record device epoch milliseconds. I found no host-clock mismatch, malformed policy readings or backwards logger timestamps. There is a remaining precision limitation: logger timestamps are whole seconds taken before sequential field/HAL reads, so “during timed turns” means timestamp-selected samples, not exact per-field timing. A +1-second sensitivity check changes these shares by at most **0.2 percentage points**.
+The remaining round-one dispositions are:
+- **Gate outcomes: fixed.** Counts and matrix markers now expose them.
+- **Core-count causation: fixed explicitly**, subject to the separate form-factor wording above.
+- **“Neither got stuck”: substantively fixed.** The page reports the stalls. Shared-model CPU decode contains **7/45,399 steps over 500 ms on the tablet**, versus **0/45,399 on S24**; maxima are **1,705.42 ms versus 264.63 ms**. The data supports absence of a sustained collapse in these runs.
+- **Untimed idle: fixed.** The unsupported extra-second claim is gone; the extra S24 HAL read is disclosed. Qwen’s mean within-pairing inter-turn gaps are **119.08 ms S24 versus 37.20 ms tablet**.
+- **“Of samples”: fixed.**
+- **Subset conversation count: fixed.** A synthetic completion using the actual partial Gemma’s turn set produced a tablet twin with **17 turns, six conversations, 1,718 heat samples and 45.5% at top**.
+- **Policy order: fixed.** Policies receive their actual core-group labels; S24 policy 2 is no longer described as slower than policy 5.
+**No current partial-Gemma leakage found:** the supplied snapshot contains **17 NPU→GPU turns and no Gemma `done` record**. It is absent from S24 models, twins, findings, cover and published-model heat summaries.
+**No substantive asymmetry found in matrix ordering, highlighting, rate formulas, first-token counting or chart scales.** The tablet heat probes are explicitly identified as tablet-only. Their rates and the memory deltas recompute correctly.
+Finally, the page exposes all published pairings, but not literally every measured quantity. Missing summaries include GPU clock/load readings, per-pairing `cappedTurns`/`hotTurns`, clock-sample denominators, load times, and the EOG outcomes discussed above. Some are reasonable omissions from a summary; EOG and starting-throttle information are particularly relevant to interpreting these results.
+tokens used
+185,290
+CODEX_EXIT 0

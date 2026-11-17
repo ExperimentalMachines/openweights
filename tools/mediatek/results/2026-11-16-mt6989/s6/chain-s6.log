@@ -1,0 +1,13 @@
+19:04:31 soc MT6989 model SM-X820 bin e4f0316f70645351
+19:04:31 start s6warm google_gemma-3-1b-it-Q4_0.gguf - cpu:cpu gguf=4c62ce8950bc6d5b bin=e4f0316f70645351 libs=e5df00f8eefaee63 npu=- window=2048
+19:08:26 end s6warm google_gemma-3-1b-it-Q4_0.gguf rc 0
+19:08:27 start s6 google_gemma-3-1b-it-Q4_0.gguf npu/gemma3-1b-a16w8-2k npu:gpu,gpu:gpu,gpu:npu gguf=4c62ce8950bc6d5b bin=e4f0316f70645351 libs=e5df00f8eefaee63 npu=b78462a7deb3f7d0 window=2048
+19:46:52 end s6 google_gemma-3-1b-it-Q4_0.gguf rc 0
+19:46:52 start s6 google_gemma-3-1b-it-Q4_0.gguf npu/gemma3-1b-a16w8-2k npu:npu,cpu:cpu,cpu:npu,npu:cpu gguf=4c62ce8950bc6d5b bin=e4f0316f70645351 libs=e5df00f8eefaee63 npu=b78462a7deb3f7d0 window=2048
+20:27:11 end s6 google_gemma-3-1b-it-Q4_0.gguf rc 0
+20:27:11 start s6 google_gemma-3-1b-it-Q4_0.gguf - cpu:gpu,gpu:cpu gguf=4c62ce8950bc6d5b bin=e4f0316f70645351 libs=e5df00f8eefaee63 npu=- window=2048
+20:44:57 end s6 google_gemma-3-1b-it-Q4_0.gguf rc 0
+20:44:57 skip s6 LFM2.5-1.2B-Instruct-QAD-Q4_0.gguf: 110 min would pass the session end
+20:44:57 skip s6 LFM2.5-1.2B-Instruct-QAD-Q4_0.gguf: 86 min would pass the session end
+20:45:03 chain stopped after Gemma (LFM2.5 held out; hot.sh next)
+CHAIN_DONE

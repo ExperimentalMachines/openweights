@@ -1,0 +1,6 @@
+# Session s24g (Galaxy S24 Ultra): Llama-3.2-3B-Instruct-Q4_0.gguf, all nine pairings in the tablet's seeded order (cell-orders.txt).
+# One unit per model, six sessions at once (owner, 2026-11-16). Six-conversation subset to fit the 3-hour session (about 140 min).
+# One conversation per dataset: the warm-up (a full CPU-only pass, ~16 min on this model) left too little of the session for the six-conversation subset (~143 min).
+Llama-3.2-3B-Instruct-Q4_0.gguf htp gpu:cpu,gpu:npu,cpu:npu,cpu:cpu,cpu:gpu,npu:gpu,npu:npu,npu:cpu,gpu:gpu 90 -c conversations-3.jsonl
+Llama-3.2-3B-Instruct-Q4_0.gguf htp cpu:npu,npu:npu,npu:cpu 1 -c conversations-3.jsonl
+Llama-3.2-3B-Instruct-Q4_0.gguf htp gpu:npu,npu:gpu 1 -c conversations-3.jsonl

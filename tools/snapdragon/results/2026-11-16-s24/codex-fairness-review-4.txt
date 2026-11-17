@@ -1,0 +1,93 @@
+codex
+**The raw runs validate, but the fairness review is not closed.** The main remaining problems are how the restricted S24 results are described and where that restriction is inconsistently applied.
+
+I made no file changes. I independently recomputed the matched statistics, rebuilt all seven generated exports in memory with **zero differences**, and evaluated all 120 matrix/table selections. Omitted tablet files and the cover’s upstream definitions were read from the original local repositories.
+1. **High, current — Qwen3 4B’s working S24 NPU is misrepresented, and its faster pairing is excluded from “fastest.”**
+   [page.tsx:147](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex11/site/page.tsx:147) interprets the restricted S24 row’s `fits === 4` as **“NPU refused to load.”** Both NPU duel views therefore say this about the S24, although its NPU completed successfully.
+   The same restricted row supplies “each device’s fastest pairing” at [page.tsx:640](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex11/site/page.tsx:640):
+   | Qwen3 4B, same nine turns | Pairing | Time |
+   |---|---|---:|
+   | Tablet’s fastest | CPU→CPU | 265.553 s |
+   | S24 result used in comparison | GPU→CPU | 323.517 s |
+   | S24’s actual fastest | NPU→NPU | **282.073 s** |
+   The tablet’s advantage is therefore **5.86% against the S24’s actual best**, versus **17.92% against its restricted best**. The successful NPU→NPU turns begin at [results-s24i.jsonl:55](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex11/snapdragon/s24i/results-s24i.jsonl:55).
+   Consequently, the fastest-pairing finding should say **NPU→NPU for eight S24 rows**, not seven, if it means unrestricted fastest. Restricting pooled comparisons is reasonable; describing excluded measurements as failures or unrestricted best results is not.
+2. **Moderate, current — the post incorrectly says the S24 used one process throughout.**
+   [page.tsx:988](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex11/site/page.tsx:988) explicitly says every S24 pairing ran in one process and seeded order. The memory explanation at `page.tsx:877` and order explanation at `page.tsx:975` repeat this distinction.
+   **s24e, s24f, s24g and s24i each completed their nine pairings across three processes: 4 + 3 + 2 pairings.** The first three initially refused the NPU copy and appended its pairings; Qwen3 4B used the planned split and **768 MiB admission margin**. See [chain-s24e.log:4](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex11/snapdragon/s24e/chain-s24e.log:4) and [q-s24i.txt:6](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex11/snapdragon/q-s24i.txt:6).
+   These details are disclosed in the run notes, but contradicted by the post. The supplied top-level `q-s24e/f/g.txt` snapshots also omit the appended commands; their per-session queue copies contain them.
+3. **Moderate, current — pooled rate and time-to-first-token tables still bypass `sdShared`.**
+   [DuoViews.tsx:342](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex11/site/DuoViews.tsx:342) supplies full `sdModels` to the selected-model view, and [duo.tsx:19](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex11/site/duo.tsx:19) does the same for All models. `RateTables` pools these at [DuoViews.tsx:247](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex11/site/DuoViews.tsx:247).
+   For **S24 Qwen3 1.7B Q8_0**, this produces:
+   | Statistic | Current table: nine pairings | Matched five pairings |
+   |---|---:|---:|
+   | GPU prefill | 122.32 tok/s | **135.77 tok/s** |
+   | CPU first-token median | 1,349.6 ms | **1,302.2 ms** |
+   | GPU first-token median | 1,246.4 ms | **1,031.1 ms** |
+   Both device rows merely say “23 turns”; the differing pairing pools are not identified. Individual matrix cells can legitimately retain every measured pairing, but pooled comparisons need `sdShared` or an explicit qualification.
+4. **Moderate, current — the cover uses different NPU cohorts.**
+   The cover fragment at [studies-entry.ts:6](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex11/site/studies-entry.ts:6) receives its arrays from [lib/studies.ts:47](/Users/alpha/experimentalmachines.org/lib/studies.ts:47). Those definitions still use full `sdModels`, independently dropping null tablet ratios.
+   Raw recomputation gives:
+   | Cover calculation | S24 | Tablet |
+   | Current: nine S24 NPU rows versus eight tablet rows | 8.499366× | 0.856371× |
+   | Matched eight eligible rows, shared pairings | **8.739417×** | **0.856371×** |
+   The matched cover should display **8.7× against 0.9×**, rather than **8.5× against 0.9×**. The tablet has no Qwen3 4B NPU measurement, so a matched NPU median cannot cover all nine rows.
+5. **Moderate, current wording and latent condition — “both only lowered their clocks” exceeds the heat evidence.**
+   [page.tsx:499](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex11/site/page.tsx:499) makes that claim, but `softOnly` at `page.tsx:207` only checks that eight cores were reported online. That does not establish that clock reduction was the **only** mechanism. The post itself acknowledges this measurement limitation at `page.tsx:761`.
+   The predicate also does not require clock limits to decrease or decode losses to be positive. In memory, unchanged limits and **10%/20% decode gains** still produced “CPU decode lost more” and “decode fell −10%/−20%.”
+   **The current loss numbers are correct.** The appropriate claim is the observed slowdown with lowered limits and all cores reported online, qualified to these probes.
+6. **Low, latent — two headline boundary cases remain incorrect.**
+   At [page.tsx:94](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex11/site/page.tsx:94), ties become `mtk: false`; `sdFirst` consequently credits them to Snapdragon. Equal fastest times produced **“Snapdragon … finished … first” and “0% less time.”**
+   The nonempty-model guard at [page.tsx:417](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex11/site/page.tsx:417) also does not protect an empty **NPU** cohort. Keeping only the valid Qwen3 4B comparison produced **“Infinity to -Infinity”** in both NPU findings.
+   Neither occurs in the current complete nine-row dataset.
+7. **Low, current — two descriptions still omit the Q8_0 exception.**
+   [page.tsx:962](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex11/site/page.tsx:962) calls the files Q4_0, as does `page.tsx:984` for the S24 NPU. Qwen3 1.7B Q8_0 actually used its Q8_0 file. The qualification already present in the first-token section should apply here too.
+**The nine-row completeness and matched-work checks passed.** All **81 S24 pairings, comprising 1,530 turn rows**, completed without a failed `turn` or `turn_error`, duplicates, or missing per-pairing turns.
+The following totals are per pairing and match the tablet twin:
+| Model row | S24 session | Turns | New prompt tokens | Decode steps | Shared pairings |
+|---|---|---:|---:|---:|---:|
+| Qwen3 0.6B | s24a | 23 | 5,919 | 7,359 | 9 |
+| Llama 3.2 1B | s24b | 24 | 6,462 | 7,774 | 9 |
+| Gemma 3 1B | s24b | 17 | 4,811 | 6,151 | 9 |
+| LFM2.5 1.2B | s24c | 23 | 6,097 | 7,658 | 9 |
+| Qwen3 1.7B Q4_0 | s24d | 23 | 5,919 | 7,359 | 5 |
+| Qwen3 1.7B Q8_0 | s24e | 23 | 5,919 | 7,359 | 5 |
+| LFM2.5 2.6B | s24f | 19 | 5,761 | 6,096 | 9 |
+| Llama 3.2 3B | s24g | 9 | 1,898 | 2,681 | 5 |
+| Qwen3 4B | s24i | 9 | 1,893 | 2,704 | 4 |
+Completion records are in each session’s `results-<session>.jsonl`: **s24a:230; s24b:239,416; s24c:230; s24d:230; s24e:110,190,245; s24f:94,162,209; s24g:54,92,119; s24i:48,86,113**.
+The initial `done.failures:5` in s24e/f/g counts five **skipped pairings after load refusal**, subsequently completed—not failed turns. The harness explicitly increments that counter for skipped cells at [pd_bench_sd.cpp:431](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex11/pd_bench_sd.cpp:431).
+I found no cross-device differences in matched `pos`, `new_tokens`, `decode_steps`, `output_tokens`, `turn_gen` or `ref_tokens`. The three- and six-conversation selections are correct. Each model stays on one recorded unit; s24h and the cancelled first Llama run do not enter the comparison. “One unit per model” holds, although units are reused: **a64940db appears in both s24b and s24c**.
+**`sdShared` itself is correctly restricted.** Its rates, first-token medians, first-token agreement, heat intervals, CPU-step medians and step counts all reproduce from only the included pairings. The filtering at [generator:256](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex11/site/build-prefill-decode-mtk-data.mjs:256), `:286`, `:334` and `:343` works. The remaining failures are consumers and descriptions.
+The current finding numbers recompute as follows:
+| Finding | Raw result |
+|---|---|
+| NPU prefill, eight eligible rows | S24 **4.1581–9.9399×** CPU; tablet **0.4992–1.1138×** |
+| NPU decode | S24 **0.9395–1.1717×**; tablet **0.1451–0.3384×** |
+| GPU prefill, nine rows | S24 **0.9706–1.6513×**; tablet **0.08235–0.14386×** |
+| Fastest completion | Tablet first on **9/9**, including against unrestricted S24 best; displayed **3–33%** range remains correct |
+| CPU limits at top, shared pairings | S24 **0.3685–35.0187%**; tablet **24.3013–96.5162%** |
+| Cooling-gate timeouts | S24 **55/64**; tablet **10/64** |
+| CPU steps exceeding 500 ms | S24 **1/145,320**; tablet **8/145,320** |
+Thus the neutral NPU-prefill headline correctly handles the tablet’s two above-CPU results. The NPU-decode and GPU headlines are supported. The fastest-pairing line needs finding 1’s correction; the heat headline needs finding 5’s qualification.
+**The heat probes use the same arithmetic and identical work.** Each probe contains the same three Gemma turns, **915 new prompt tokens and 1,233 decode steps**, with zero failed turns. Rates are pooled totals, and step statistics use the individual steps through the shared implementation at [generator:475](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex11/site/build-prefill-decode-mtk-data.mjs:475).
+| Probe session | Initial heating | Further heating | Hot status | Decode loss, 6 threads | Decode loss, 2 threads |
+|---|---:|---:|---:|---:|---:|
+| Tablet s6 | 20.55 min | 6.17 min | 4 | 2.891% | 16.136% |
+| Tablet s7 | 20.47 min | 6.15 min | 2 | 4.078% | **−0.834%** |
+| S24 s24c | 20.63 min | 6.22 min | 4 | 17.016% | 39.848% |
+| S24 s24d | **15.18 min** | 6.22 min | 4 | 28.339% | 31.432% |
+The critical-only calculation correctly excludes s7. It compares **one critical tablet unit with two critical S24 units**.
+The shorter S24 heating is **partially disclosed**: [page.tsx:746](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex11/site/page.tsx:746) renders “15 to 21 minutes,” but does not identify s24d as the shortened run. Its log records the shorter allocation at [hot-s24dhot.log:4](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex11/snapdragon/s24d/hot-s24dhot.log:4).
+**That shortened run does not create the headline’s 17–40% range: the full-duration s24c probe alone supplies both endpoints.** Nevertheless, unequal heating durations and baseline statuses—tablet 0/1 versus S24 2/3—prevent treating this as a controlled estimate of relative thermal susceptibility. The effect of the shorter duration itself was not measured.
+**The specific round-three fixes mostly hold.**
+- **Gemma matching:** fixed in All models, duels and first-token agreement. Tablet CPU→CPU is **178.993 s over 17 turns**; agreement is **36/51**, versus S24 **48/51**. The full tablet row is separately labelled.
+- **Withheld-twin fallback:** fixed. An injected tablet failure leaves an S24-only card, without a false Dimensity label.
+- **Headline denominator, empty overall cohort and GPU threshold:** the reported counterexamples now behave correctly. A twice-as-fast S24 renders **50% less time**. Remaining boundary cases are listed above.
+- **Continuation wording:** fixed. All **115/115** matched tablet Qwen NPU-prefilled turns start with EOG; none has an identical continuation after removing the first token. The unsupported reassurance is gone.
+- **Reported rounding error:** fixed. Gemma’s **781/1,718 = 45.459837%** now displays **45%**.
+- **Failure safeguards:** the tested failed-turn, missing-turn, duplicate-turn, unequal-work and missing-completion cases are rejected or withheld.
+I found no further arithmetic errors in the matched heat cards, per-pairing tables, slow-step medians or probe statistics, and no missing switch keys or outcome-dependent defaults.
+tokens used
+204,673
+CODEX_EXIT 0

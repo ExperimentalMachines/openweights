@@ -1,0 +1,23 @@
+session	model	reserved_utc	ended_utc	active_min_upper	note
+1e9xs9hiprcb2	gts10pwifi	2026-11-15T17:16:36Z	2026-11-15T17:19:00Z	3	probe attempt, failed on the Mac (no timeout); cancelled
+2bpcb0cg0jx7w	gts10pwifi	2026-11-15T19:33:31Z	2026-11-15T19:39:03Z	12	probe: thermal zones denied, CPU ceilings + GPU clock readable, Neuron adapter present, tracefs readable
+vm:mtk-export	n2-highmem-16 us-central1-a	2026-11-15T19:53:29Z			GCE VM for MT6989 exports, ~$0.95/h on demand, delete when exports are done
+vm:mtk-build	n2-standard-8 us-central1-a	2026-11-15T20:03:23Z			GCE VM to build the ExecuTorch 1.6.0 MediaTek runtime and pd_bench_mtk, ~$0.39/h
+vm:mtk-build	n2-standard-8 us-central1-a	2026-11-15T20:04:03Z			GCE VM to build the ExecuTorch 1.6.0 MediaTek runtime and pd_bench_mtk, ~$0.39/h
+3f4fe0dk63qeu	gts10pwifi	2026-11-15T20:32:00Z	2026-11-15T23:08:50Z	157	session 3, unit d650f7bb: pilot, NPU access, two kernel panics (4k), memory probe, heat test, thread sweeps, handoff checks (4 formats), 9-cell smoke at 2k
+disk:mtk-data	1000GB pd-standard us-central1-a	2026-11-15T20:39:34Z			data disk for export caches, ~$1.33/day, delete with the VM
+bucket:gs://mtk-pd-thematic-514815	us-central1	2026-11-15T21:28:27Z			transfer of exports VM -> Mac; delete when done
+other:333jokfunags4,zej7xs519o3va,3tuykgaggfrk8 (m2q) kmd424lq0snra (cubs)	-	2026-11-15T20:06Z..20:59Z			the owner's ExecuPhone session (execuphone-9b), per its ledger ~/execuphone/bench/ddp/ledger.tsv: kmd424lq0snra cubs 6.3 min, 3tuykgaggfrk8 m2q 0.48, zej7xs519o3va m2q 4.89, 333jokfunags4 m2q 50.54; same project credit
+131d6ywhi2dbh	gts10pwifi	2026-11-15T23:13:00Z	2026-11-16T01:17:50Z	123	session 4, unit 4bff7833: Llama 3.2 1B full matrix at 2k (24 turns x 9 cells), long-history handoff checks, llama3 RoPE fix confirmed
+4piwk36n8008a	gts10pwifi	2026-11-16T01:18:00Z	2026-11-16T02:55:50Z	98	session 5, unit d6761b43: Qwen3 0.6B full matrix at 2k (split after the guard refused the GPU)
+8ym1luxzvp8ia	gts10pwifi	2026-11-16T02:56:30Z	2026-11-16T05:18:47Z	143	session 6, unit 317808dd: Gemma 3 1B full matrix at 2k (23 turns x 9 cells), then hot.sh (cool/hot probes at 6 and 2 threads; traces lost, see NOTES)
+aj928f8oi3c4a	m2q		2026-11-16T04:10:48Z		the owner's ExecuPhone session (execuphone-9b), per its ledger ~/execuphone/bench/ddp/ledger.tsv: m2q, 131.76 min as of 03:52Z, expires 04:10Z; same project credit
+1xcmtgzgk09g9	gts10pwifi	2026-11-16T03:27:36Z	2026-11-16T05:43:40Z	136	s7, unit d6761b43: queue q-s7.txt (session.sh)
+15f5v8bj83v74	gts10pwifi	2026-11-16T03:33:07Z	2026-11-16T05:53:06Z	140	s8, unit c8340578: queue q-s8.txt (session.sh)
+3qz1y9qimqq7t	gts10pwifi	2026-11-16T03:54:01Z	2026-11-16T06:47:26Z	174	s9, unit e880d908: queue q-s9.txt (session.sh)
+3ndtra8150ox2	gts10pwifi	2026-11-16T04:17:14Z	2026-11-16T06:20:14Z	123	s10, unit 4bff7833: queue q-s10.txt (session.sh)
+2koemtu9hu1a3	gts10pwifi	2026-11-16T04:35:31Z	2026-11-16T07:00:36Z	146	s11, unit 4e2d9065: queue q-s11.txt (session.sh)
+3i3eqfdajpxrt	gts10pwifi	2026-11-16T04:45:00Z			NOT this study but the owner's: OpenWeights cold/warm study session (peer Claude session mobile-inference-b4, port 5612); same project credit
+3cuj3caf1bn8c	gts10pwifi	2026-11-16T15:03:12Z	2026-11-16T16:05:36Z	63	s12, unit 4bff7833: queue q-s12.txt (session.sh)
+31d898zzygj2a	gts10pwifi	2026-11-16T17:22:40Z	2026-11-16T18:31:58Z	70	s13, unit c8340578: queue q-s13.txt (session.sh)
+2qbjgbaa5nlq3	gts10pwifi	2026-11-16T18:33:53Z	2026-11-16T21:23:14Z	170	s14, unit d6761b43: queue q-s14.txt (session.sh)

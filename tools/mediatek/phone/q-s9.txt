@@ -1,0 +1,5 @@
+# Session 9: LFM2.5 2.6B fits with a llama.cpp copy (probe), all nine pairings on conversations-6.jsonl (two per dataset,
+# ~79% of the work: nine cells over every turn were estimated at ~175 min); the NPU+GPU process last; no warm-up (nowarm).
+LFM2.5-2.6B-QAD-Q4_0.gguf npu/lfm25-2.6b-a16w4-2k npu:cpu,npu:npu,cpu:npu,cpu:cpu 150 -c conversations-6.jsonl
+LFM2.5-2.6B-QAD-Q4_0.gguf - gpu:cpu,cpu:gpu 84 -c conversations-6.jsonl
+LFM2.5-2.6B-QAD-Q4_0.gguf npu/lfm25-2.6b-a16w4-2k npu:gpu,gpu:npu,gpu:gpu 50 -c conversations-6.jsonl

@@ -1,0 +1,42 @@
+Read all named files and screenshots. No files changed.
+
+1. **CORRECTNESS:** [page.tsx:699](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:699) says “decode never stalled,” but `noStall` checks only probes. The matrices contain eight slow CPU steps on MediaTek and one on Snapdragon. **Fix:** “Heat probes: lower clock limits, no decode step over half a second.”
+
+2. **CORRECTNESS / DENSITY:** [page.tsx:964](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:964) extends Qwen3 1.7B Q4_0’s 2.2 GiB admission requirement across three different rows in one long bullet. **Fix:** Split into “Qwen3 1.7B Q4_0: a CPU or GPU copy required 2.2 GiB including our margin.” and “Rows with five pairings omit the four handoffs involving the NPU.” Keep the value generated from `mtkMemory`.
+
+3. **CORRECTNESS / STYLE:** [page.tsx:393](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:393), with the legend at line 933: “Distinct” is unexplained, and “Each count is one per turn and per pairing” incorrectly includes this unique-token count. **Fix:** Restore “Distinct first tokens.” Use “Agreement and stop-token counts cover the same turn-pairing observations on both devices.” Add “Distinct counts different first-token IDs.”
+
+4. **CORRECTNESS:** [page.tsx:330](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:330) describes probe bars as rates, but their lengths encode `heated / cool`, separately normalized to each cell’s baseline. Equal lengths can represent different token rates. **Fix, both rate legends:** “Numbers are tokens per second over three turns. Each bar shows heated ÷ cool; the tick marks 1×.”
+
+5. **CORRECTNESS:** [page.tsx:120](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:120) retains `minWidth: "2px"`. Snapdragon LFM2.5 1.2B GPU decode is 1.0033× CPU: its logarithmic width is approximately 0.076 px, rendered as 2 px. **Fix:** Delete `minWidth`. Also hide the bar-specific legend sentence below `sm`, where bars are hidden.
+
+6. **CORRECTNESS:** [page.tsx:484](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:484) calls `startApC` the temperature “as the median turn began.” The generator takes the median of starting temperatures. **Fix:** “Start: median AP temperature at turn start; AP is the main chip’s sensor.”
+
+7. **STYLE:** [page.tsx:273](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:273) labels two groups identically as X4 or A720. The shortened clock strings therefore leave their identities implicit. **Fix:** Label groups by CPU core ranges, derived from `clusters[].cores`; allow individual groups to wrap. No additional table is needed.
+
+8. **CORRECTNESS, conditional:** [page.tsx:686](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:686) still mishandles ties. One win each plus one tie produces “half”; two wins against one plus six ties produces “most.” **Fix:** Require `2 * wins.length > leads.length` for “most”; otherwise use “Finishes were split or tied” and report the tie count. Current rankings are unaffected.
+
+Round-one disposition:
+
+1. Partly fixed: hard-throttle claim removed; new stall headline needs scope.
+2. Fixed.
+3. Fixed.
+4. Not changed; rejection holds. [q-s24l.txt:4](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/queues/q-s24l.txt:4) explicitly sets 768 MiB; the updated notes confirm it.
+5. Partly fixed: memory requirement still needs model-specific scope.
+6. Partly fixed: stop-token correction holds; distinct-count explanation does not.
+7. Fixed.
+8. Fixed.
+9. Fixed in the accepted lighter form.
+10. Fixed: unit identity and second heating restored.
+11. Fixed sufficiently by the visible row-count and shared-export disclosures.
+12. Fixed: the nearby qualification supports retaining “Finished first.”
+13. Fixed sufficiently: phone comparisons fit; remaining tables scroll.
+14. Partly fixed: probe and starting-temperature legends remain inaccurate.
+15. Partly fixed: the memory bullet remains overloaded.
+16. Fixed.
+17. Partly fixed: probe scale and tick work; ratio-bar floor remains.
+18. Partly fixed: empty/subset cases corrected; tie cases remain.
+19. Partly fixed: definitions restored; repeated core-type labels remain ambiguous.
+20. Fixed.
+
+Checked against the supplied snapshot: fastest times, memory/process counts, first-token denominators, 64 shared pairings and 1,450 observations per device agree. All 12 cool probes began with top clock limits. Exclusions and All remain intact. Raw logs were not supplied for regeneration.

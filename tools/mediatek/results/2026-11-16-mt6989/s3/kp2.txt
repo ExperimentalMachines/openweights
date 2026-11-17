@@ -1,0 +1,533 @@
+Drop box contents: 42 entries
+Max entries: 1000
+Low priority rate limit period: 2000 ms
+Low priority tags: {data_app_wtf, keymaster, system_server_wtf, system_app_strictmode, system_app_wtf, system_server_strictmode, data_app_strictmode, netstats}
+Searching for: SYSTEM_LAST_KMSG_2_20261115_133743_KP
+
+========================================
+2026-11-15 13:37:43 SYSTEM_LAST_KMSG_2_20261115_133743_KP (compressed text, 11725 bytes)
+isPrevious: true
+Build: samsung/gts10pwifixx/gts10pwifi:16/BP2A.250605.031.A3/X820XXS7CZB5:user/release-keys
+Hardware: gts10pwifi
+Revision: 5
+Bootloader: X820XXS7CZB5
+Radio: null
+Kernel: Linux version 6.1.134-android14-11-abX820XXS7CZB5 (build-user@build-host) (Android (10087095, +pgo, +bolt, +lto, -mlgo, based on r487747c) clang version 17.0.2 (https://android.googlesource.com/toolchain/llvm-project d9f89f4d16663d5012e5c09495f3b30ece3d2362), LLD 17.0.2) #1 SMP PREEMPT Fri Feb 13 05:54:51 UTC 2026
+
+[[TRUNCATED]]
+f=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:14ce68f7],IDEV_STA=[0x301-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(5):00-00-01-01-AD-33-00-11-AB-53-04-E4-07-02-03-03,T(11):01-6F-FC-06-01-03-02-00-01-01-18-76-20-00-C6-C1],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.280801][ T3101] [btmtk_info] btmtk_uart_fw_own: success, cmd[9] = 0x01, receive_sleep_event = 1.
+[   21.280918][ T3101] [mtk8250_uart_hub_dev0_set_tx_request]: atomic_set wakeup_state 1,rx_state[0]
+[   21.280936][ T3101] [HUB_DBG_SetTX_B] IDBG=[0x4],ISTA0=[0x0],APB=[0x1],HUB_CG=[topck:0x0,peri:0x0,exp:0x0],UART_SRC_CLK=[0x0(26M)],SPM=[0(0x0/0x0/0x0,exp:0x1D/0x17/0x0)],UNIVPLL=[1],UART_MUX=[0x0(26M)],HUB_MUX=[0x0(26M)],sys_timer=[H:0,L:14ce7130],IDEV_STA=[0x0],ISTA0=[0x0],IDBG=[0x4],CHK_DATA_MON[0:15](1)=[R(5):00-00-01-01-AD-33-00-11-AB-53-04-E4-07-02-03-03,T(11):01-6F-FC-06-01-03-02-00-01-01-18-76-20-00-C6-C1],fsm=[hub:WAIT,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.280941][ T3101] [btmtk_uart_unify][btmtk_warn] btmtk_wakeup_uarthub ready_retry[49]
+[   21.283091][ T3101] [HUB_DBG_SetTX_E] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:38-0-0-0-1,T:0-0-0-0-4],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:14cede9c],IDEV_STA=[0x302-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(5):00-00-01-01-AD-33-00-11-AB-53-04-E4-07-02-03-03,T(11):01-6F-FC-06-01-03-02-00-01-01-18-76-20-00-C6-C1],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.305463][ T3101] [btmtk_info] btmtk_uart_driver_own success
+[   21.306626][ T3662] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   21.307917][  T847] apexd: Deleting unused dm device com.android.bt
+[   21.309241][ T3662] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   21.319015][ T1070] ffffff8091e8f000 ffffff8092008000 ffffff8091ecc500 ffffff8092008000
+[   21.321820][ T3662] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   21.326496][ T3101] [HUB_DBG_ClrRX] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:13-0-0-13-60,T:59-0-0-49-43],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:14d77ab8],IDEV_STA=[0x301-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(2):AD-33-FF-00-66-85-04-E4-07-02-03-03-00-00-01-01,T(12):3A-01-6F-FC-06-01-03-02-00-01-01-18-76-26-01-7F],fsm=[hub:READY,tx:IDLE,rx:DEC,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.326527][ T3101] [btmtk_info] btmtk_uart_fw_own: success, cmd[9] = 0x01, receive_sleep_event = 1.
+[   21.339735][  T320] [wakeup_irq_handler_bottom_half]: handler[133000]ns, udelay[80077], bottom_half[98769], rx_state[0]
+[   21.339853][ T3662] [btmtk_info] h4_recv_buf: skip 0xFF pkt
+[   21.339889][ T3101] [HUB_DBG_SetTX_B] IDBG=[0xe],ISTA0=[0x3],APB=[0x1],HUB_CG=[topck:0x0,peri:0x0,exp:0x0],UART_SRC_CLK=[0x1(TOPCK)],SPM=[1],UNIVPLL=[1],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:14da22bf],IDEV_STA=[0x700-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(4):AD-33-FF-FF-F0-85-04-E4-07-02-03-03-00-00-01-01,T(12):3A-01-6F-FC-06-01-03-02-00-01-01-18-76-26-01-7F],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.339921][ T3101] [HUB_DBG_SetTX_E] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:13-0-0-2-61,T:60-0-0-0-43],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:14da2478],IDEV_STA=[0x702-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(4):AD-33-FF-FF-F0-85-04-E4-07-02-03-03-00-00-01-01,T(12):3A-01-6F-FC-06-01-03-02-00-01-01-18-76-26-01-7F],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.345059][ T4071] dev_name = 254:0,total_blks = 393700,skipped_blks = 0,corrupted_blks = 0,fec_correct_blks = 0
+[   21.347716][ T2755] [wlan]prStaRecOfAP is null
+[   21.348068][  T291] [DISP]mtk_disp_set_per_larb_hrt_bw, crtc:0 clear channel BW, bw:0
+[   21.348944][ T3101] [btmtk_info] btmtk_uart_driver_own success
+[   21.350142][ T3662] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   21.352531][ T3101] [HUB_DBG_ClrRX] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:33-0-0-46-32,T:31-0-0-24-63],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:14dca4b4],IDEV_STA=[0x701-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(0):33-00-00-66-85-04-E4-07-02-03-03-00-00-01-01-AD,T(4):00-01-01-18-76-03-01-7A-10-01-6F-FC-06-01-03-02],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.352559][ T3101] [btmtk_info] btmtk_uart_fw_own: success, cmd[9] = 0x01, receive_sleep_event = 1.
+[   21.354421][ T3101] [mtk8250_uart_hub_dev0_set_tx_request]: atomic_set wakeup_state 1,rx_state[0]
+[   21.354447][ T3101] [HUB_DBG_SetTX_B] IDBG=[0x4],ISTA0=[0x0],APB=[0x1],HUB_CG=[topck:0x0,peri:0x0,exp:0x0],UART_SRC_CLK=[0x0(26M)],SPM=[0(0x0/0x0/0x0,exp:0x1D/0x17/0x0)],UNIVPLL=[1],UART_MUX=[0x0(26M)],HUB_MUX=[0x0(26M)],sys_timer=[H:0,L:14dd0617],IDEV_STA=[0x0],ISTA0=[0x0],IDBG=[0x4],CHK_DATA_MON[0:15](1)=[R(0):33-00-00-66-85-04-E4-07-02-03-03-00-00-01-01-AD,T(4):00-01-01-18-76-03-01-7A-10-01-6F-FC-06-01-03-02],fsm=[hub:WAIT,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.354453][ T3101] [btmtk_uart_unify][btmtk_warn] btmtk_wakeup_uarthub ready_retry[49]
+[   21.356162][  T847] apexd: Deleting unused dm device com.android.devicelock
+[   21.356253][ T3101] [HUB_DBG_SetTX_E] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:33-0-0-0-32,T:31-0-0-0-63],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:14dd61d3],IDEV_STA=[0x302-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(0):33-00-00-66-85-04-E4-07-02-03-03-00-00-01-01-AD,T(4):00-01-01-18-76-03-01-7A-10-01-6F-FC-06-01-03-02],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.375806][  T847] apexd: Deleting unused dm device com.android.i18n
+[   21.380759][ T3101] [btmtk_info] btmtk_uart_driver_own success
+[   21.385327][ T3662] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   21.388414][ T1543] [btmtk_info] btmtk_uart_event_filter compare fail
+[   21.388423][ T1543] [btmtk_info] btmtk_uart_event_filter: event_need_compare_len[6] E4 07 02 03 03 00 
+[   21.388428][ T1543] [btmtk_info] btmtk_uart_event_filter: skb->data: 0E 1C 01 53 FD 00 08 00 E0 10 00 01 40 01 00 01 42 00 00 00 00 00 00 00 00 01 00 00 00 00 
+[   21.388491][ T1543] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   21.388523][  T292] [mmdvfs][dbg]mtk_mmdvfs_enable_vcp: ret:0 enable:1 vcp_power:0 idx:14 usage:0
+[   21.389780][ T3101] [HUB_DBG_ClrRX] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:0-0-0-26-43,T:42-0-0-39-30],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:14e40863],IDEV_STA=[0x301-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(10):E4-07-02-03-03-00-00-01-01-AD-33-00-00-66-85-04,T(11):01-6F-FC-06-01-03-02-00-01-01-18-76-FD-00-77-90],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.389804][ T3101] [btmtk_info] btmtk_uart_fw_own: success, cmd[9] = 0x01, receive_sleep_event = 1.
+[   21.391269][  T292] [DISP]mtk_crtc_config_default_path:10727 scaling_en:0 hdisplay:2800 vdisplay:1752 lcm:width:0 lcm_height:0
+[   21.391308][ T3101] [btmtk_warn] Already at fw own state or error state[2], skip
+[   21.391768][  T292] [DISP]RCT_ON = 0x1, num_extra_mux_bits = 246->208, slice_bits = 817600
+[   21.396178][ T3101] [mtk8250_uart_hub_dev0_set_tx_request]: atomic_set wakeup_state 1,rx_state[0]
+[   21.396204][ T3101] [HUB_DBG_SetTX_B] IDBG=[0x4],ISTA0=[0x0],APB=[0x1],HUB_CG=[topck:0x0,peri:0x0,exp:0x0],UART_SRC_CLK=[0x0(26M)],SPM=[0(0x0/0x0/0x0,exp:0x1D/0x17/0x0)],UNIVPLL=[1],UART_MUX=[0x0(26M)],HUB_MUX=[0x0(26M)],sys_timer=[H:0,L:14e54e8b],IDEV_STA=[0x0],ISTA0=[0x0],IDBG=[0x4],CHK_DATA_MON[0:15](1)=[R(10):E4-07-02-03-03-00-00-01-01-AD-33-00-00-66-85-04,T(11):01-6F-FC-06-01-03-02-00-01-01-18-76-FD-00-77-90],fsm=[hub:WAIT,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.396209][ T3101] [btmtk_uart_unify][btmtk_warn] btmtk_wakeup_uarthub ready_retry[49]
+[   21.397552][ T3101] [HUB_DBG_SetTX_E] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:0-0-0-0-43,T:42-0-0-0-30],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:14e5930c],IDEV_STA=[0x302-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(10):E4-07-02-03-03-00-00-01-01-AD-33-00-00-66-85-04,T(11):01-6F-FC-06-01-03-02-00-01-01-18-76-FD-00-77-90],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.419460][ T3101] [btmtk_info] btmtk_uart_driver_own success
+[   21.424700][ T3662] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   21.428636][  T366] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   21.432784][ T3101] [HUB_DBG_ClrRX] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:36-0-0-26-52,T:51-0-0-46-2],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:14ec9024],IDEV_STA=[0x301-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(4):00-01-01-AD-33-00-00-66-85-04-E4-07-02-03-03-00,T(9):FC-06-01-03-02-00-01-01-18-76-10-00-96-6F-01-6F],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.432815][ T3101] [btmtk_info] btmtk_uart_fw_own: success, cmd[9] = 0x01, receive_sleep_event = 1.
+[   21.435942][  T590] servicemanager: Caller(pid=2543,uid=1002,sid=u:r:bluetooth:s0) Could not find android.hardware.bluetooth.ranging.IBluetoothChannelSounding/default in the VINTF manifest. No alternative instances declared in VINTF.
+[   21.437745][ T3101] [mtk8250_uart_hub_dev0_set_tx_request]: atomic_set wakeup_state 1,rx_state[0]
+[   21.437772][ T3101] [HUB_DBG_SetTX_B] IDBG=[0x4],ISTA0=[0x0],APB=[0x1],HUB_CG=[topck:0x0,peri:0x0,exp:0x0],UART_SRC_CLK=[0x0(26M)],SPM=[0(0x0/0x0/0x0,exp:0x1D/0x17/0x0)],UNIVPLL=[1],UART_MUX=[0x0(26M)],HUB_MUX=[0x0(26M)],sys_timer=[H:0,L:14ed8d6c],IDEV_STA=[0x0],ISTA0=[0x0],IDBG=[0x4],CHK_DATA_MON[0:15](1)=[R(4):00-01-01-AD-33-00-00-66-85-04-E4-07-02-03-03-00,T(9):FC-06-01-03-02-00-01-01-18-76-10-00-96-6F-01-6F],fsm=[hub:WAIT,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.437778][ T3101] [btmtk_uart_unify][btmtk_warn] btmtk_wakeup_uarthub ready_retry[49]
+[   21.441431][ T3101] [HUB_DBG_SetTX_E] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:36-0-0-0-52,T:51-0-0-0-2],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:14ee4738],IDEV_STA=[0x302-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(4):00-01-01-AD-33-00-00-66-85-04-E4-07-02-03-03-00,T(9):FC-06-01-03-02-00-01-01-18-76-10-00-96-6F-01-6F],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.447531][  T590] servicemanager: Caller(pid=2543,uid=1002,sid=u:r:bluetooth:s0) Could not find android.hardware.bluetooth.ranging.IBluetoothChannelSounding/default in the VINTF manifest. No alternative instances declared in VINTF.
+[   21.466142][ T3662] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   21.466514][ T3101] [btmtk_info] btmtk_uart_driver_own success
+[   21.470572][ T1543] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   21.479933][ T3101] [HUB_DBG_ClrRX] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:0-0-0-59-34,T:33-0-0-34-30],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:14f5ea67],IDEV_STA=[0x301-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(15):00-00-66-85-04-E4-07-02-03-03-00-00-01-01-AD-33,T(11):01-6F-FC-06-01-03-02-00-01-01-18-76-01-FF-89-13],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.479962][ T3101] [btmtk_info] btmtk_uart_fw_own: success, cmd[9] = 0x01, receive_sleep_event = 1.
+[   21.496753][ T1070] ffffff8091e8f000 ffffff809200c000 ffffff8091f5a800 ffffff809200c000
+[   21.522419][  T847] apexd: Deleting unused dm device com.android.runtime
+[   21.536053][    T1] init: processing action (sys.dexopt.ctrl=true) from (/system/etc/init/hw/init.rc:2332)
+[   21.568717][  T847] apexd: Deleting unused dm device com.android.tzdata
+[   21.599942][ T3548] adsp_core1_suspend(), done elapse 277 us
+[   21.602417][  T250] SW> keymint [WRN] (km_add_tag:528) skip: non repetable tag already exists with different value: 268435458
+[   21.602425][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_begin() returns 0
+[   21.604960][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.608278][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_finish() returns 0
+[   21.611658][  T250] SW> keymint [WRN] (km_add_tag:528) skip: non repetable tag already exists with different value: 268435458
+[   21.611665][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_begin() returns 0
+[   21.613192][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.613925][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_finish() returns 0
+[   21.631785][  T250] SW> keymint [WRN] (km_add_tag:528) skip: non repetable tag already exists with different value: 268435458
+[   21.631792][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_begin() returns 0
+[   21.634598][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.634652][  T847] apexd: Deleting unused dm device com.android.virt
+[   21.635502][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_finish() returns 0
+[   21.650475][ T4165] sm5714_vbatocv_check: mode change to mix RS auto mode
+[   21.654431][ T4165] sm5714_fg_check_reg_init_need: SM5714_REG_FG_SYSTEM_STATUS : 0x1010 , return FALSE NO init need
+[   21.656071][ T4165] sm5714_get_soc: batt_soc = 982, soc = 982, ret = 0x624b
+[   21.656079][ T4165] sm5714_update_all_value: chg_h=0, chg_f=0, chg_s=1, is_chg=0, ta_exist=1
+[   21.656082][ T4165] sm5714_update_all_value: v=4248, v_avg=4247, i=-2384, i_avg=-2672, ocv=4290, fg_t=392, b_t=306, cycle=0, soc=982
+[   21.657951][  T250] SW> keymint [WRN] (km_add_tag:528) skip: non repetable tag already exists with different value: 268435458
+[   21.657958][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_begin() returns 0
+[   21.662457][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.667942][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_finish() returns 0
+[   21.676063][  T847] apexd: Deleting unused dm device com.android.vndk.v34
+[   21.711132][  T847] apexd: Deleting unused dm device com.google.android.widevine
+[   21.715058][ T4165] [sm5714_fg_all_srams_1] 00:624b,01:2253,02:47f6,03:41f3,04:3dca,05:930a,06:93e0,07:1ae0,08:41e0,09:9557,0a:9647,15:0015,16:21ad,17:226d,18:572f,19:6400,1a:879b,1b:8054,1c:801a,20:22a8,21:22a7,22:22a6,23:22a6,24:22a6,25:22a6,26:22a6,27:22a6,28:22a6,29:22a6,2a:22a6,2b:22a6,2c:22a6,2d:22a6,2e:22a6,2f:22a6,
+[   21.721955][ T3948] _set_freq_limit: input: id(0), min(2800000), max(0)
+[   21.721964][ T3948] cpufreq_limit_process_min_freq: little(300000-2000000, set:1100000), mid(set:2800000), big(600000-3400000, set:2800000)
+[   21.721970][ T3948] cpufreq_limit_update_current_freq: current freq: ltl(2000000 ~ 2000000), mid(2800000 ~ 2850000), big(2800000 ~ 3400000)
+[   21.748350][  T250] SW> keymint [WRN] (km_add_tag:528) skip: non repetable tag already exists with different value: 268435458
+[   21.748358][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_begin() returns 0
+[   21.750028][  T847] apexd: Deleting unused dm device com.samsung.android.authfw.ta
+[   21.757228][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.757892][ T3506] panel-drv:I:panel_get_temperature_range: use default temperature range
+[   21.763893][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_finish() returns 0
+[   21.766237][ T1070] ffffff8091e8f000 ffffff8092014000 ffffff8092012200 ffffff8092014000
+[   21.779182][ T3506] sec_bat_show_attrs: Read Prev Battery Info : 0, 0, 0, 0
+[   21.779691][  T847] apexd: Deleting unused dm device com.samsung.android.biometrics.face
+[   21.791515][ T3548] adsp_pd_event() pwr pre off
+[   21.791575][ T3548] adsp_core0_suspend(), done elapse 308 us
+[   21.803492][ T1163] sm5714-charger sm5714-charger: sm5714_chg_get_property: psp=31
+[   21.805720][  T250] SW> keymint [WRN] (km_add_tag:528) skip: non repetable tag already exists with different value: 268435458
+[   21.805727][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_begin() returns 0
+[   21.807462][ T1163] !@ batteryplugType : 2 
+[   21.807475][ T1163] !@ batteryLevel : 99  batteryTemperature : 306  
+[   21.807484][ T1163] !@ Heatmap currtime: 29912975 
+[   21.807491][ T1163] !@ Heatmap prevtime: 29912975 
+[   21.807497][ T1163] !@ Heatmap plugstarttime: 29912975 
+[   21.807504][ T1163] !@ Heatmap prevv_dsoh_update_time: 29912975 
+[   21.807557][ T1163] !@ CAM New BSOH: 100 
+[   21.824565][ T2755] [wlan][SCAN]TRANSITION: [SCANNING] -> [IDLE]
+[   21.824572][ T2755] [wlan]ScanRecover: ScnZeroChCount(0), ResetCount(0)
+[   21.824575][ T2755] [wlan]ScanRecover: Mdrdy(1),BandP(1), Count(1), Conn(1), SER(0), Reset(0)
+[   21.824580][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.824839][ T2755] [wlan][AIS0][0] TRANSITION: [SCAN] -> [IDLE]
+[   21.831641][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.832407][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.836526][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.859885][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.864395][  T250] SW> NOTE: acsd[17]: ACSD_APPDB_UPDATE: access granted (root_task)
+[   21.864402][  T250] SW> NOTE: acsd[17]: [00000000-0000-0000-0000-564c544b5052] no update required
+[   21.864839][  T847] apexd: Deleting unused dm device com.samsung.android.biometrics.fingerprint
+[   21.879991][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.879997][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.879998][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.882012][  T250] SW> [TEEgris:SCrypto_x64] <INFO> SCrypto 2.7 is in FIPS approved mode
+[   21.882018][  T250] SW> VaultKeeper :: TEEgris VaultKeeper App Init
+[   21.884047][  T250] SW> VaultKeeper :: TA_InvokeCommandEntryPoint... paramTypes : 103 (commandID : 0)
+[   21.884054][  T250] SW> VaultKeeper :: TEES_IsREESharedMemory... 
+[   21.884055][  T250] SW> VaultKeeper :: Done TEES_IsREESharedMemory... 
+[   21.884056][  T250] SW> VaultKeeper :: VaultKeeper Processing... v4.4.1 (cmd_no : 2157)
+[   21.884057][  T250] SW> VaultKeeper :: Start AuthenticateCA... 
+[   21.884059][  T250] SW> [PA_TZ_LIB] [INF] [PrintVersion:286] Version: PA_TZ_lib,teegris,version_2.5.4,release,teamcity@nightly:57
+[   21.884060][  T250] SW> [PA_TZ_DRV] [INF] [HandleAuthenticateProcess:86] Start authenticate user process.
+[   21.884061][  T250] SW> [PA_TZ_DRV] [INF] [HandleAuthenticateProcess:111] Authentication finished.
+[   21.884062][  T250] SW> VaultKeeper :: CA authentication success
+[   21.884063][  T250] SW> VaultKeeper :: vk_switcher: CLient name, Client Class [com.android.bluetooth, 3]
+[   21.884064][  T250] SW> VaultKeeper :: vk_switcher: Vault Name, VTAB index [BT, 10]
+[   21.884065][  T250] SW> VaultKeeper :: vk_switcher: Vault Name:(BT) / Client Class:(3)
+[   21.884066][  T250] SW> VaultKeeper ::  Start to get random iv 
+[   21.884067][  T250] SW> VaultKeeper :: vkteegris_get_secure_item
+[   21.884068][  T250] SW> VaultKeeper :: vkteegris_get_secure_item item type: 2
+[   21.884069][  T250] SW> VaultKeeper :: parse_clientreq_create_cmdreq: Done to get random iv(0)
+[   21.885202][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.885206][  T250] SW> Fwk v3.205 Drv> [Driver rpmb_ops:drRpmbGetPartSize]User6 get part size: 131072
+[   21.885208][  T250] SW> 
+[   21.885209][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.885210][  T250] SW> Fwk v3.205 Drv> [Driver rpmb_ops:drRpmbGetPartAddr]User6 get part addr: 384
+[   21.885211][  T250] SW> 
+[   21.885700][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.885841][  T335] [rpmb] rpmb_wait_request Read request
+[   21.894190][ T1070] ffffff8091e8f000 ffffff809201c000 ffffff809201b800 ffffff809201c000
+[   21.895989][  T847] apexd: Deleting unused dm device com.samsung.android.camera.unihal
+[   21.906858][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.906867][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.906870][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.906872][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.906874][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.906876][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.906877][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.906879][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.906880][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.906882][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.906883][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   21.906884][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_finish() returns 0
+[   21.906886][  T250] SW> Fwk v3.205 Drv> [Driver rpmb_ops:drRpmbGetPartSize]User6 get part size: 131072
+[   21.906888][  T250] SW> 
+[   21.906890][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.906891][  T250] SW> Fwk v3.205 Drv> [Driver rpmb_ops:drRpmbGetPartAddr]User6 get part addr: 384
+[   21.906893][  T250] SW> 
+[   21.906894][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.906918][  T335] [rpmb] rpmb_send_reply Sent reply
+[   21.906923][  T335] [rpmb] rpmb_wait_request Read wait
+[   21.906992][  T335] [rpmb] rpmb_wait_request Read request
+[   21.910628][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.910636][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.910638][  T250] SW> VaultKeeper :: Start drv_client_read 
+[   21.910640][  T250] SW> VaultKeeper :: Connecting to VK driver...
+[   21.910642][  T250] SW> VaultKeeper :: Start open VK driver...
+[   21.910644][  T250] SW> VaultKeeper :: Done to VK driver drv_fd = 8...
+[   21.910645][  T250] SW> VaultKeeper :: Start drv read...
+[   21.910647][  T250] SW> VaultKeeper DRV :: Reqeust command ID : d0000003
+[   21.910649][  T250] SW> VaultKeeper DRV :: Successful completion
+[   21.910650][  T250] SW> VaultKeeper :: Done drv read...ret = 0 
+[   21.910652][  T250] SW> VaultKeeper :: Read fuse bit : 00000000
+[   21.910653][  T250] SW> VaultKeeper :: Done drv_client_read 
+[   21.910655][  T250] SW> VaultKeeper :: ======= Device information =======
+[   21.910656][  T250] SW> VaultKeeper :: 46544621ff46464654554531554235404040000000000000000000000000000000
+[   21.910658][  T250] SW> VaultKeeper :: ==================================
+[   21.910659][  T250] SW> VaultKeeper :: [CMD:READ_SHELTERED]
+[   21.910661][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.910662][  T250] SW> Fwk v3.205 Drv> [Driver rpmb_ops:drRpmbGetPartSize]User6 get part size: 131072
+[   21.910664][  T250] SW> 
+[   21.910665][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.910667][  T250] SW> Fwk v3.205 Drv> [Driver rpmb_ops:drRpmbGetPartAddr]User6 get part addr: 384
+[   21.910668][  T250] SW> 
+[   21.910669][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.910679][  T335] [rpmb] rpmb_send_reply Sent reply
+[   21.910683][  T335] [rpmb] rpmb_wait_request Read wait
+[   21.910740][  T335] [rpmb] rpmb_wait_request Read request
+[   21.917049][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.917056][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.918799][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.918807][  T250] SW> Fwk v3.205 Drv> [Driver rpmb_ops:drRpmbGetPartSize]User6 get part size: 131072
+[   21.918809][  T250] SW> 
+[   21.918811][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.918812][  T250] SW> Fwk v3.205 Drv> [Driver rpmb_ops:drRpmbGetPartAddr]User6 get part addr: 384
+[   21.918814][  T250] SW> 
+[   21.918816][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.918843][  T335] [rpmb] rpmb_send_reply Sent reply
+[   21.918847][  T335] [rpmb] rpmb_wait_request Read wait
+[   21.918903][  T335] [rpmb] rpmb_wait_request Read request
+[   21.921591][ T1070] ffffff8091e8f000 ffffff8092021000 ffffff809201bc00 ffffff8092021000
+[   21.925768][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.925779][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   21.925781][  T250] SW> VaultKeeper :: vkteegris_get_secure_item
+[   21.925783][  T250] SW> VaultKeeper :: vkteegris_get_secure_item item type: 1
+[   21.925785][  T250] SW> VaultKeeper :: vkteegris_get_secure_item allocate transientObject
+[   21.925787][  T250] SW> VaultKeeper :: vkteegris_get_secure_item derivekey KDF
+[   21.925788][  T250] SW> VaultKeeper :: vkteegris_get_secure_item get object buffer attribute
+[   21.925790][  T250] SW> VaultKeeper :: vkteegris_get_secure_item close object
+[   21.925792][  T250] SW> VaultKeeper :: vkteegris_get_secure_item exit with result: 0
+[   21.925793][  T250] SW> VaultKeeper :: vk_everyman_read_sheltered: READ (32)
+[   21.925795][  T250] SW> VaultKeeper :: process_vault_cmd: parse_cmdrsp_create_clientrsp
+[   21.925796][  T250] SW> VaultKeeper :: process_vault_cmd: parsing cmd_rsp done(BT/0)
+[   21.925798][  T250] SW> VaultKeeper :: process_vault_cmd: Done with success with ret (2157/0c000c06/0)
+[   21.925800][  T250] SW> VaultKeeper :: Returning [0x00000000]
+[   21.925808][  T335] [rpmb] rpmb_send_reply Sent reply
+[   21.925812][  T335] [rpmb] rpmb_wait_request Read wait
+[   21.928012][  T847] apexd: Deleting unused dm device com.samsung.android.lifeguard
+[   21.933305][ T3101] [mtk8250_uart_hub_dev0_set_tx_request]: atomic_set wakeup_state 1,rx_state[0]
+[   21.933331][ T3101] [HUB_DBG_SetTX_B] IDBG=[0x4],ISTA0=[0x0],APB=[0x1],HUB_CG=[topck:0x0,peri:0x0,exp:0x0],UART_SRC_CLK=[0x0(26M)],SPM=[0(0x0/0x0/0x0,exp:0x1D/0x17/0x0)],UNIVPLL=[1],UART_MUX=[0x0(26M)],HUB_MUX=[0x0(26M)],sys_timer=[H:0,L:154fda8c],IDEV_STA=[0x0],ISTA0=[0x0],IDBG=[0x4],CHK_DATA_MON[0:15](1)=[R(15):00-00-66-85-04-E4-07-02-03-03-00-00-01-01-AD-33,T(11):01-6F-FC-06-01-03-02-00-01-01-18-76-01-FF-89-13],fsm=[hub:WAIT,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.933338][ T3101] [btmtk_uart_unify][btmtk_warn] btmtk_wakeup_uarthub ready_retry[49]
+[   21.934508][ T3101] [HUB_DBG_SetTX_E] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:0-0-0-0-34,T:33-0-0-0-30],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:15501654],IDEV_STA=[0x302-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(15):00-00-66-85-04-E4-07-02-03-03-00-00-01-01-AD-33,T(11):01-6F-FC-06-01-03-02-00-01-01-18-76-01-FF-89-13],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.961616][ T3101] [btmtk_info] btmtk_uart_driver_own success
+[   21.967977][ T1543] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   21.968533][ T3506] sec_bat_show_attrs: CHG_TYPE = USB_CDP
+[   21.972440][ T3662] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   21.972889][ T3101] [HUB_DBG_ClrRX] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:40-0-0-10-27,T:26-0-0-50-6],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:1557b348],IDEV_STA=[0x301-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(9):07-02-03-03-00-00-01-01-AD-33-00-00-66-85-04-E4,T(13):96-0F-01-6F-FC-06-01-03-02-00-01-01-18-76-01-02],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.972919][ T3101] [btmtk_info] btmtk_uart_fw_own: success, cmd[9] = 0x01, receive_sleep_event = 1.
+[   21.973011][ T3101] [mtk8250_uart_hub_dev0_set_tx_request]: atomic_set wakeup_state 1,rx_state[0]
+[   21.973032][ T3101] [HUB_DBG_SetTX_B] IDBG=[0x4],ISTA0=[0x0],APB=[0x1],HUB_CG=[topck:0x0,peri:0x0,exp:0x0],UART_SRC_CLK=[0x0(26M)],SPM=[0(0x0/0x0/0x0,exp:0x1D/0x17/0x0)],UNIVPLL=[1],UART_MUX=[0x0(26M)],HUB_MUX=[0x0(26M)],sys_timer=[H:0,L:1557ba98],IDEV_STA=[0x0],ISTA0=[0x0],IDBG=[0x4],CHK_DATA_MON[0:15](1)=[R(9):07-02-03-03-00-00-01-01-AD-33-00-00-66-85-04-E4,T(13):96-0F-01-6F-FC-06-01-03-02-00-01-01-18-76-01-02],fsm=[hub:WAIT,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.973038][ T3101] [btmtk_uart_unify][btmtk_warn] btmtk_wakeup_uarthub ready_retry[49]
+[   21.974997][ T3101] [HUB_DBG_SetTX_E] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:40-0-0-0-27,T:26-0-0-0-6],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:15581e58],IDEV_STA=[0x302-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(9):07-02-03-03-00-00-01-01-AD-33-00-00-66-85-04-E4,T(13):96-0F-01-6F-FC-06-01-03-02-00-01-01-18-76-01-02],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   21.987236][   T79] [SHUB] light_sensor(5) : 0(18446821348) (200ms, 0ms)
+[   21.987243][   T79] [SHUB] sig_motion_sensor(17) : 1ms, 0ms(0)
+[   21.987245][   T79] [SHUB] device_orientation(27) : 20ms, 0ms(20646807429)
+[   21.987248][   T79] [SHUB] sar_backoff_motion(54) : 1ms, 0ms(0)
+[   21.987252][   T79] [SHUB]      debug_work_func( 132) :  (2026/11/15 21:35:47) FW(0):31547738, Sensor state: 0x7c145cda4f4036, 0x0, En: 0x40000108020020, 0x0, Reset cnt: 0[0 : C 0(0, 0), N 0, 0, 0], Cal result : [M:F, P:N]
+[   21.987381][ T1682] [SEC_PM] Active wake lock:
+[   21.987395][ T1682] bt_drv_trx: active_count(14), active_time(14), total_time(5366)
+[   21.987412][ T1682] sec-battery-vbus: active_count(1), active_time(20510), total_time(20510)
+[   21.987416][ T1682] usb_notify: active_count(2), active_time(2365), total_time(8077)
+[   21.987422][ T1682] 11201000.usb0: active_count(2), active_time(2355), total_time(8066)
+[   21.987426][ T1682] disp_crtc0_wakelock: active_count(1), active_time(21143), total_time(21143)
+[   21.987476][ T1682] tz_print[soc_max:1035][cpu-little-core0:1009][cpu-little-core1:1005][cpu-little-core2:1025][cpu-little-core3:1019][cpu-medium-core4-0:952][cpu-medium-core4-1:911][cpu-medium-core5-0:1005][cpu-medium-core5-1:959][cpu-medium-core6-0:1027][cpu-medium-core6-1:997][cpu-big-core7-0:1032][cpu-big-core7-1:983][gpu0:684][gpu1:632][gpu2:638]
+[   21.991991][  T847] apexd: Deleting unused dm device com.samsung.android.media.extractor
+[   22.002349][ T3662] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   22.002584][ T3101] [btmtk_info] btmtk_uart_driver_own success
+[   22.004695][ T3101] [HUB_DBG_ClrRX] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:4-0-0-37-55,T:54-0-0-34-34],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:155e0280],IDEV_STA=[0x301-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(14):00-66-85-04-E4-07-02-03-03-00-00-01-01-AD-33-00,T(15):01-01-9D-D2-01-6F-FC-06-01-03-02-00-01-01-18-76],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.004721][ T3101] [btmtk_info] btmtk_uart_fw_own: success, cmd[9] = 0x01, receive_sleep_event = 1.
+[   22.009504][  T320] [wakeup_irq_handler_bottom_half]: handler[145154]ns, udelay[80385], bottom_half[99385], rx_state[0]
+[   22.009590][ T3662] [btmtk_info] h4_recv_buf: skip 0xFF pkt
+[   22.009622][ T3101] [HUB_DBG_SetTX_B] IDBG=[0xe],ISTA0=[0x3],APB=[0x1],HUB_CG=[topck:0x0,peri:0x0,exp:0x0],UART_SRC_CLK=[0x1(TOPCK)],SPM=[1],UNIVPLL=[1],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:155efcaf],IDEV_STA=[0x700-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(15):00-66-85-04-E4-07-02-03-03-00-00-01-01-AD-33-F0,T(15):01-01-9D-D2-01-6F-FC-06-01-03-02-00-01-01-18-76],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.009651][ T3101] [HUB_DBG_SetTX_E] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:4-0-0-1-56,T:55-0-0-0-34],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:155efe3b],IDEV_STA=[0x702-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(15):00-66-85-04-E4-07-02-03-03-00-00-01-01-AD-33-F0,T(15):01-01-9D-D2-01-6F-FC-06-01-03-02-00-01-01-18-76],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.015547][ T2807] [wlan]ret(c0010014) time: 20 us
+[   22.015666][ T2755] [wlan][0] EVENT-ABORT: Current State IDLE, ucReasonOfDisconnect:4
+[   22.015684][ T2755] [wlan][0] aisFsmStateAbort DiscReason[4], CurState[0], delayIndi[0]
+[   22.015695][ T2755] [wlan]Skip non alive BSS[0]
+[   22.015729][ T2755] [wlan][0] EVENT-ROAMING ABORT: Current Time = 4294689312
+[   22.015738][ T2755] [wlan][AIS0][0] TRANSITION: [IDLE] -> [IDLE]
+[   22.015748][ T3101] [btmtk_info] btmtk_uart_driver_own success
+[   22.015753][ T2755] [wlan][AIS0][0] TRANSITION: [IDLE] -> [SEARCH]
+[   22.015810][ T2755] [wlan][AIS0][0] TRANSITION: [SEARCH] -> [REQ_CHANNEL_JOIN]
+[   22.020113][ T3662] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   22.024145][ T3662] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   22.024849][ T3101] [HUB_DBG_ClrRX] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:42-0-0-8-49,T:48-0-0-48-8],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:156201dc],IDEV_STA=[0x701-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(6):03-00-00-01-01-AD-33-00-00-66-85-04-E4-07-02-03,T(15):00-28-FF-C9-01-6F-FC-06-01-03-02-00-01-01-18-76],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.024880][ T3101] [btmtk_info] btmtk_uart_fw_own: success, cmd[9] = 0x01, receive_sleep_event = 1.
+[   22.029500][  T320] [wakeup_irq_handler_bottom_half]: handler[136692]ns, udelay[80307], bottom_half[97923], rx_state[0]
+[   22.029572][ T3662] [btmtk_info] h4_recv_buf: skip 0xFF pkt
+[   22.029620][ T3101] [HUB_DBG_SetTX_B] IDBG=[0xe],ISTA0=[0x3],APB=[0x1],HUB_CG=[topck:0x0,peri:0x0,exp:0x0],UART_SRC_CLK=[0x1(TOPCK)],SPM=[1],UNIVPLL=[1],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:1562f42c],IDEV_STA=[0x700-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(7):03-00-00-01-01-AD-33-F0-00-66-85-04-E4-07-02-03,T(15):00-28-FF-C9-01-6F-FC-06-01-03-02-00-01-01-18-76],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.029653][ T3101] [HUB_DBG_SetTX_E] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:42-0-0-1-50,T:49-0-0-0-8],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:1562f5e0],IDEV_STA=[0x702-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(7):03-00-00-01-01-AD-33-F0-00-66-85-04-E4-07-02-03,T(15):00-28-FF-C9-01-6F-FC-06-01-03-02-00-01-01-18-76],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.032028][  T847] apexd: Deleting unused dm device com.samsung.android.media.imagecodec.system
+[   22.035663][ T3101] [btmtk_info] btmtk_uart_driver_own success
+[   22.038001][ T3662] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   22.041318][ T3101] [HUB_DBG_ClrRX] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:62-0-0-45-21,T:20-0-0-24-28],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:1565462c],IDEV_STA=[0x701-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(3):01-01-AD-33-00-00-66-85-04-E4-07-02-03-03-00-00,T(7):01-03-02-00-01-01-18-76-03-01-7A-10-01-6F-FC-06],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.041352][ T3101] [btmtk_info] btmtk_uart_fw_own: success, cmd[9] = 0x01, receive_sleep_event = 1.
+[   22.041481][ T3101] [mtk8250_uart_hub_dev0_set_tx_request]: atomic_set wakeup_state 1,rx_state[0]
+[   22.041505][ T3101] [HUB_DBG_SetTX_B] IDBG=[0x4],ISTA0=[0x0],APB=[0x1],HUB_CG=[topck:0x0,peri:0x0,exp:0x0],UART_SRC_CLK=[0x0(26M)],SPM=[0(0x0/0x0/0x0,exp:0x1D/0x17/0x0)],UNIVPLL=[1],UART_MUX=[0x0(26M)],HUB_MUX=[0x0(26M)],sys_timer=[H:0,L:15654fc3],IDEV_STA=[0x0],ISTA0=[0x0],IDBG=[0x4],CHK_DATA_MON[0:15](1)=[R(3):01-01-AD-33-00-00-66-85-04-E4-07-02-03-03-00-00,T(7):01-03-02-00-01-01-18-76-03-01-7A-10-01-6F-FC-06],fsm=[hub:WAIT,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.041512][ T3101] [btmtk_uart_unify][btmtk_warn] btmtk_wakeup_uarthub ready_retry[49]
+[   22.043011][ T3101] [HUB_DBG_SetTX_E] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:62-0-0-0-21,T:20-0-0-0-28],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:1565997f],IDEV_STA=[0x302-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(3):01-01-AD-33-00-00-66-85-04-E4-07-02-03-03-00-00,T(7):01-03-02-00-01-01-18-76-03-01-7A-10-01-6F-FC-06],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.058114][ T1070] ffffff8091e8f000 ffffff8092025000 ffffff809201b700 ffffff8092025000
+[   22.064950][  T250] SW> keymint [WRN] (km_add_tag:528) skip: non repetable tag already exists with different value: 268435458
+[   22.064962][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_begin() returns 0
+[   22.067159][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   22.068444][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_finish() returns 0
+[   22.068638][ T1543] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   22.068640][ T3101] [btmtk_info] btmtk_uart_driver_own success
+[   22.073623][ T1543] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   22.077516][  T250] SW> keymint [WRN] (km_add_tag:528) skip: non repetable tag already exists with different value: 268435458
+[   22.077525][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_begin() returns 0
+[   22.078507][ T3101] [HUB_DBG_ClrRX] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:30-0-0-1-8,T:7-0-0-40-60],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:156ca6c4],IDEV_STA=[0x301-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(4):01-01-AD-33-FF-00-66-85-04-E4-07-02-03-03-00-00,T(15):01-01-B6-00-01-6F-FC-06-01-03-02-00-01-01-18-76],fsm=[hub:READY,tx:IDLE,rx:DEC,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.078534][ T3101] [btmtk_info] btmtk_uart_fw_own: success, cmd[9] = 0x01, receive_sleep_event = 1.
+[   22.079292][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   22.079636][  T847] apexd: Deleting unused dm device com.samsung.android.shell
+[   22.089759][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_finish() returns 0
+[   22.090904][ T4015] dev_name = 254:0,total_blks = 410085,skipped_blks = 0,corrupted_blks = 0,fec_correct_blks = 0
+[   22.091489][  T320] [wakeup_irq_handler_bottom_half]: handler[131077]ns, udelay[80231], bottom_half[99154], rx_state[0]
+[   22.091674][ T1543] [btmtk_info] h4_recv_buf: skip 0xFF pkt
+[   22.091843][ T3101] [HUB_DBG_SetTX_B] IDBG=[0xe],ISTA0=[0x3],APB=[0x1],HUB_CG=[topck:0x0,peri:0x0,exp:0x0],UART_SRC_CLK=[0x1(TOPCK)],SPM=[1],UNIVPLL=[1],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:156f4be0],IDEV_STA=[0x700-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(6):01-01-AD-33-FF-FF-F0-85-04-E4-07-02-03-03-00-00,T(15):01-01-B6-00-01-6F-FC-06-01-03-02-00-01-01-18-76],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.091877][ T3101] [HUB_DBG_SetTX_E] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:30-0-0-2-9,T:8-0-0-0-60],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:156f4db7],IDEV_STA=[0x702-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(6):01-01-AD-33-FF-FF-F0-85-04-E4-07-02-03-03-00-00,T(15):01-01-B6-00-01-6F-FC-06-01-03-02-00-01-01-18-76],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.098226][ T3101] [btmtk_info] btmtk_uart_driver_own success
+[   22.099913][ T1543] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   22.108044][ T3662] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   22.115586][ T3662] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   22.123122][ T1543] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   22.128084][ T3662] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   22.128880][ T3101] [HUB_DBG_ClrRX] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:39-0-0-7-51,T:50-0-0-23-5],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:1576a4c0],IDEV_STA=[0x701-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(11):04-E4-07-02-03-03-00-00-01-01-AD-33-00-00-66-85,T(6):03-02-00-01-01-18-76-01-00-62-00-01-6F-FC-06-01],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.128901][ T3101] [btmtk_info] btmtk_uart_fw_own: success, cmd[9] = 0x01, receive_sleep_event = 1.
+[   22.129599][  T595] KeyStorage: retrieveKey : /data/misc_ce/0/vold/user_keys/1b89aa98175dcb78d8c03fdda25f3b9682db9d114ff88c50bed8fdf954956bb9/secret
+[   22.133319][ T3101] [mtk8250_uart_hub_dev0_set_tx_request]: atomic_set wakeup_state 1,rx_state[0]
+[   22.133393][ T3101] [HUB_DBG_SetTX_B] IDBG=[0x4],ISTA0=[0x0],APB=[0x1],HUB_CG=[topck:0x0,peri:0x0,exp:0x0],UART_SRC_CLK=[0x0(26M)],SPM=[0(0x0/0x0/0x0,exp:0x1D/0x17/0x0)],UNIVPLL=[1],UART_MUX=[0x0(26M)],HUB_MUX=[0x0(26M)],sys_timer=[H:0,L:15778777],IDEV_STA=[0x0],ISTA0=[0x0],IDBG=[0x4],CHK_DATA_MON[0:15](1)=[R(11):04-E4-07-02-03-03-00-00-01-01-AD-33-00-00-66-85,T(6):03-02-00-01-01-18-76-01-00-62-00-01-6F-FC-06-01],fsm=[hub:WAIT,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.133401][ T3101] [btmtk_uart_unify][btmtk_warn] btmtk_wakeup_uarthub ready_retry[49]
+[   22.134878][ T3101] [HUB_DBG_SetTX_E] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:39-0-0-0-51,T:50-0-0-0-5],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:1577d55b],IDEV_STA=[0x302-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(11):04-E4-07-02-03-03-00-00-01-01-AD-33-00-00-66-85,T(6):03-02-00-01-01-18-76-01-00-62-00-01-6F-FC-06-01],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.138134][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_begin() returns 0
+[   22.138695][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   22.139042][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_finish() returns 0
+[   22.139177][  T595] KeyStorage: retrieveKey success : /data/misc_ce/0/vold/user_keys/1b89aa98175dcb78d8c03fdda25f3b9682db9d114ff88c50bed8fdf954956bb9/secret
+[   22.139320][  T595] KeyStorage: retrieveKey : /data/misc_ce/0/vold/user_keys/1b89aa98175dcb78d8c03fdda25f3b9682db9d114ff88c50bed8fdf954956bb9/current
+[   22.145400][  T595] KeyStorage: retrieveKey success : /data/misc_ce/0/vold/user_keys/1b89aa98175dcb78d8c03fdda25f3b9682db9d114ff88c50bed8fdf954956bb9/current
+[   22.145621][ T2755] [wlan][AIS0][0] TRANSITION: [REQ_CHANNEL_JOIN] -> [JOIN]
+[   22.145649][ T2755] [wlan]NAN unicmd - StaRec[0] WIDX[2] other WIDX[0]
+[   22.145659][ T2755] [wlan]nicTxUpdateStaRecDefaultRate:HE_ER Disable
+[   22.145665][ T2755] [wlan][SWIPS] Dont abort, SWIPS already OFF
+[   22.145669][ T2755] [wlan]NAN unicmd - StaRec[0] WIDX[2] other WIDX[0]
+[   22.145673][ T2755] [wlan]Not supported!
+[   22.145685][ T2755] [wlan][SAA]TRANSITION: [AA_IDLE] -> [SAA_SEND_AUTH1]
+[   22.145690][ T2755] [wlan]NAN unicmd - StaRec[0] WIDX[2] other WIDX[0]
+[   22.159763][ T3101] [btmtk_info] btmtk_uart_driver_own success
+[   22.161204][ T2755] [wlan][SAA]TRANSITION: [SAA_SEND_AUTH1] -> [SAA_WAIT_AUTH2]
+[   22.163659][ T3662] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   22.169159][ T2755] [wlan][SAA]TRANSITION: [SAA_WAIT_AUTH2] -> [SAA_SEND_ASSOC1]
+[   22.171768][ T3662] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   22.178613][ T2755] [wlan][SAA]TRANSITION: [SAA_SEND_ASSOC1] -> [SAA_WAIT_ASSOC2]
+[   22.181932][ T3101] [HUB_DBG_ClrRX] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:7-0-0-1-37,T:36-0-0-40-37],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:15812ab3],IDEV_STA=[0x301-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(12):85-04-E4-07-02-03-03-00-00-01-01-AD-33-00-00-66,T(14):01-43-10-01-6F-FC-06-01-03-02-00-01-01-18-76-01],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.181964][ T3101] [btmtk_info] btmtk_uart_fw_own: success, cmd[9] = 0x01, receive_sleep_event = 1.
+[   22.183933][  T847] apexd: Deleting unused dm device com.samsung.android.spqr
+[   22.183985][ T2755] [wlan][SAA]TRANSITION: [SAA_WAIT_ASSOC2] -> [AA_IDLE]
+[   22.183996][ T2755] [wlan]nicTxUpdateBssDefaultRate:HE_ER Disable
+[   22.184059][ T2755] [wlan]NAN unicmd - StaRec[0] WIDX[2] other WIDX[0]
+[   22.184091][ T2755] [wlan][0] EVENT-ROAMING START: Current Time = 4294689480
+[   22.184098][ T2755] [wlan][ROAMING0] TRANSITION: [IDLE] -> [DECISION]
+[   22.184105][ T2755] [wlan][Roam][Common]MinRoamDelta:15 Delta:20 [Idle]Delta:0 [BeaconLost/Emergency]MinRssi:-75 [BTM]Delta:0 [WTC]ScanMode:1 RssiTH:-70 2GRssiTH:-70 5GRssiTH:-70 6GRssiTH:-70 [RBTC]ScoreWeight:70 ETPWeight:70 MinRssi:-75 Delta:10 [AP Scoring]RssiWeight:70 CUWeight:30 Band1-Rssi-Factor-Val-Score(1/2/3/4/5): -55/-60/-70/-80/-90-90/80/50/20/0 Band2-Rssi-Factor-Val-Score(1/2/3/4/5): -55/-60/-70/-80/-90-100/90/60/20/0 Band3-Rssi-Factor-Val-Score(1/2/3/4): -60/-65/-80/-90-120/105/45/0 Band1-CU-Factor-Val-Score(1/2):10/70-100/20 Band2-CU-Factor-Val-Score(1/2):30/80-100/20 Band3-CU-Factor-Val-Score(1/2):40/80-120/20 
+[   22.184117][ T2755] [wlan][AIS0][0] TRANSITION: [JOIN] -> [NORMAL_TR]
+[   22.195383][ T1070] ffffff8091e8f000 ffffff809202a000 ffffff809201bf00 ffffff809202a000
+[   22.229512][ T2755] [MTK-WIFI] get_low_latency_mode[I]: LLM : 0
+[   22.229531][ T2755] [wlan]wlan ret=259
+[   22.244988][ T2755] [wlan]EVENT_ID_TX_DONE WIDX:PID:TID[2:128:0] Status[0:SUCCESS] SN[3]
+[   22.258419][  T250] SW> keymint [WRN] (km_add_tag:528) skip: non repetable tag already exists with different value: 268435458
+[   22.258426][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_begin() returns 0
+[   22.259223][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   22.260422][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_finish() returns 0
+[   22.264264][  T847] apexd: Deleting unused dm device com.samsung.android.vital
+[   22.326318][  T250] SW> keymint [WRN] (km_add_tag:528) skip: non repetable tag already exists with different value: 268435458
+[   22.326326][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_begin() returns 0
+[   22.327091][  T590] servicemanager: Caller(pid=2543,uid=1002,sid=u:r:bluetooth:s0) Found vendor.samsung.hardware.bluetooth.audio.ISehBluetoothAudioProviderFactory/default in device VINTF manifest.
+[   22.330236][  T590] servicemanager: Caller(pid=2543,uid=1002,sid=u:r:bluetooth:s0) Found vendor.samsung.hardware.bluetooth.audio.ISehBluetoothAudioProviderFactory/default in device VINTF manifest.
+[   22.330536][  T590] servicemanager: Caller(pid=2543,uid=1002,sid=u:r:bluetooth:s0) Found vendor.samsung.hardware.bluetooth.audio.ISehBluetoothAudioProviderFactory/default in device VINTF manifest.
+[   22.332746][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   22.333340][  T590] servicemanager: Caller(pid=2543,uid=1002,sid=u:r:bluetooth:s0) Found vendor.samsung.hardware.bluetooth.audio.ISehBluetoothAudioProviderFactory/default in device VINTF manifest.
+[   22.334328][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_finish() returns 0
+[   22.337148][ T3101] [mtk8250_uart_hub_dev0_set_tx_request]: atomic_set wakeup_state 1,rx_state[0]
+[   22.337179][ T3101] [HUB_DBG_SetTX_B] IDBG=[0x4],ISTA0=[0x0],APB=[0x1],HUB_CG=[topck:0x0,peri:0x0,exp:0x0],UART_SRC_CLK=[0x0(26M)],SPM=[0(0x0/0x0/0x0,exp:0x1D/0x17/0x0)],UNIVPLL=[1],UART_MUX=[0x0(26M)],HUB_MUX=[0x0(26M)],sys_timer=[H:0,L:159ff663],IDEV_STA=[0x0],ISTA0=[0x0],IDBG=[0x4],CHK_DATA_MON[0:15](1)=[R(12):85-04-E4-07-02-03-03-00-00-01-01-AD-33-00-00-66,T(14):01-43-10-01-6F-FC-06-01-03-02-00-01-01-18-76-01],fsm=[hub:WAIT,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.337187][ T3101] [btmtk_uart_unify][btmtk_warn] btmtk_wakeup_uarthub ready_retry[49]
+[   22.338376][ T3101] [HUB_DBG_SetTX_E] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:7-0-0-0-37,T:36-0-0-0-37],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:15a0332b],IDEV_STA=[0x302-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(12):85-04-E4-07-02-03-03-00-00-01-01-AD-33-00-00-66,T(14):01-43-10-01-6F-FC-06-01-03-02-00-01-01-18-76-01],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.359575][ T3101] [btmtk_info] btmtk_uart_driver_own success
+[   22.362984][  T366] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   22.372586][ T3101] [HUB_DBG_ClrRX] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:19-0-0-46-8,T:7-0-0-18-49],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:15a6fc58],IDEV_STA=[0x301-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(10):E4-07-02-03-03-00-00-01-01-AD-33-00-00-66-85-04,T(0):76-00-00-FA-F2-01-6F-FC-06-01-03-02-00-01-01-18],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.372633][ T3101] [btmtk_info] btmtk_uart_fw_own: success, cmd[9] = 0x01, receive_sleep_event = 1.
+[   22.418452][  T250] SW> keymint [WRN] (km_add_tag:528) skip: non repetable tag already exists with different value: 268435458
+[   22.418459][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_begin() returns 0
+[   22.420287][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   22.426976][ T1070] ffffff8091e8f000 ffffff809202f000 ffffff8091ebee00 ffffff809202f000
+[   22.428178][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_finish() returns 0
+[   22.474696][  T250] SW> keymint [WRN] (km_add_tag:528) skip: non repetable tag already exists with different value: 268435458
+[   22.474702][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_begin() returns 0
+[   22.478134][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   22.481891][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_finish() returns 0
+[   22.513768][  T250] SW> keymint [WRN] (km_add_tag:528) skip: non repetable tag already exists with different value: 268435458
+[   22.513775][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_begin() returns 0
+[   22.518643][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   22.522307][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_finish() returns 0
+[   22.536794][ T1070] ffffff8091e8f000 ffffff8092032000 ffffff8092015700 ffffff8092032000
+[   22.576411][ T3101] [mtk8250_uart_hub_dev0_set_tx_request]: atomic_set wakeup_state 1,rx_state[0]
+[   22.576444][ T3101] [HUB_DBG_SetTX_B] IDBG=[0x4],ISTA0=[0x0],APB=[0x1],HUB_CG=[topck:0x0,peri:0x0,exp:0x0],UART_SRC_CLK=[0x0(26M)],SPM=[0(0x0/0x0/0x0,exp:0x1D/0x17/0x0)],UNIVPLL=[1],UART_MUX=[0x0(26M)],HUB_MUX=[0x0(26M)],sys_timer=[H:0,L:15cf6c90],IDEV_STA=[0x0],ISTA0=[0x0],IDBG=[0x4],CHK_DATA_MON[0:15](1)=[R(10):E4-07-02-03-03-00-00-01-01-AD-33-00-00-66-85-04,T(0):76-00-00-FA-F2-01-6F-FC-06-01-03-02-00-01-01-18],fsm=[hub:WAIT,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.576451][ T3101] [btmtk_uart_unify][btmtk_warn] btmtk_wakeup_uarthub ready_retry[49]
+[   22.577917][ T3101] [HUB_DBG_SetTX_E] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:19-0-0-0-8,T:7-0-0-0-49],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:15cfb757],IDEV_STA=[0x302-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(10):E4-07-02-03-03-00-00-01-01-AD-33-00-00-66-85-04,T(0):76-00-00-FA-F2-01-6F-FC-06-01-03-02-00-01-01-18],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.584792][  T250] SW> keymint [WRN] (km_add_tag:528) skip: non repetable tag already exists with different value: 268435458
+[   22.584800][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_begin() returns 0
+[   22.593261][ T1287] [mml][drm]kt_setsched set kt done priority 99 ret 0
+[   22.593272][ T1287] [mml]in:(1760, 2800)[7040 0] 0x20202022 C2sc P0 plane:1 alpha:false fence job:1 mode:3 cmd acttime 0
+[   22.593278][ T1287] [mml]out 0:(2800, 1752)[11200 0] 0x00202022 C2s P0 plane:1 r:3
+[   22.593281][ T1287] [mml]crop 0:(0, 0, 1752, 2800) compose:(0, 0, 2800, 1752)
+[   22.593288][ T1287] [mml][topology]engines: 1 2 3 9 22
+[   22.594140][ T1287] [mmdvfs][dbg]mtk_mmdvfs_enable_vcp: ret:0 enable:1 vcp_power:0 idx:16 usage:0
+[   22.595563][ T1253] [mmdvfs][dbg]mtk_mmdvfs_enable_vcp: ret:0 enable:1 vcp_power:0 idx:15 usage:0
+[   22.596393][ T1251] [mmdvfs][dbg]mtk_mmdvfs_enable_vcp: ret:0 enable:1 vcp_power:0 idx:15 usage:0
+[   22.597975][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   22.599122][ T1253] [mmdvfs][dbg]mtk_mmdvfs_enable_vcp: ret:0 enable:1 vcp_power:0 idx:15 usage:0
+[   22.599195][ T3101] [btmtk_info] btmtk_uart_driver_own success
+[   22.599910][ T1251] [mmdvfs][dbg]mtk_mmdvfs_enable_vcp: ret:0 enable:1 vcp_power:0 idx:15 usage:0
+[   22.600303][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   22.602914][ T1543] [mmdvfs][dbg]mtk_mmdvfs_enable_vcp: ret:0 enable:1 vcp_power:0 idx:16 usage:0
+[   22.603004][ T1287] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   22.603266][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   22.606814][ T1253] [mmdvfs][dbg]mtk_mmdvfs_enable_vcp: ret:0 enable:1 vcp_power:0 idx:15 usage:0
+[   22.607320][ T3662] [btmtk_info] btmtk_dispatch_fwlog: fw_sleep_event len[8] 04 E4 05 02 56 01 00 00 
+[   22.607583][ T1251] [mmdvfs][dbg]mtk_mmdvfs_enable_vcp: ret:0 enable:1 vcp_power:0 idx:15 usage:0
+[   22.608967][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   22.611158][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_update() returns 0
+[   22.611931][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_finish() returns 0
+[   22.613426][ T1070] ffffff8091e8f000 ffffff8092034000 ffffff8092015c00 ffffff8092034000
+[   22.616643][ T3101] [HUB_DBG_ClrRX] IDBG=[0xe],ISTA0=[0x3],bcnt=[R:20-0-0-1-58,T:57-0-0-9-50],fifo_woffset=[R:0-0-0-0-0,T:0-0-0-0-0],fifo_tx_roffset=[0-0-0-0-0],offset_dma=[R:0-0-0-0-0,T:0-0-0-0-0],wsend_xoff=[1-1-1-1-1],det_xoff=[0-0-0-0-0],UNIVPLL=[1],UART_SRC_CLK=[0x1(TOPCK)],UART_MUX=[0x2(104M)],HUB_MUX=[0x1(104M)],sys_timer=[H:0,L:15d765e7],IDEV_STA=[0x301-0x300-0x300],ISTA0=[0x3],IDBG=[0xe],CHK_DATA_MON[0:15](1)=[R(11):04-E4-07-02-03-03-00-00-01-01-AD-33-00-00-66-85,T(9):FC-06-01-03-02-00-01-01-18-76-00-00-6C-96-01-6F],fsm=[hub:READY,tx:IDLE,rx:IDLE,d0_rx:IDLE,d1_rx:IDLE,d2_rx:IDLE,dbg:0x0]
+[   22.616691][ T3101] [btmtk_info] btmtk_uart_fw_own: success, cmd[9] = 0x01, receive_sleep_event = 1.
+[   22.655200][  T590] servicemanager: Caller(pid=1550,uid=1000,sid=u:r:system_server:s0) Found vendor.samsung.hardware.tlc.kg.ISehKg/default in device VINTF manifest.
+[   22.664348][  T250] SW> NOTE: acsd[17]: ACSD_APPDB_UPDATE: access granted (root_task)
+[   22.664358][  T250] SW> NOTE: acsd[17]: [00000000-0000-0000-0000-6b6e78677564] no update required
+[   22.665670][ T3920] _set_freq_limit: input: id(0), min(-1), max(0)
+[   22.665678][ T3920] cpufreq_limit_process_min_freq: id(0) min_lock_freq(-1)
+[   22.665695][ T3920] cpufreq_limit_update_current_freq: current freq: ltl(2000000 ~ 2000000), mid(2000000 ~ 2850000), big(2000000 ~ 3400000)
+[   22.669875][ T1070] ffffff8091e8f000 ffffff8092036000 ffffff8092015100 ffffff8092036000
+[   22.686974][  T250] SW> [TEEgris:SCrypto_x64] <INFO> SCrypto 2.7 is in FIPS approved mode
+[   22.686981][  T250] SW> KG_TA : CreateEntryPoint for KG
+[   22.686982][  T250] SW> 
+[   22.686983][  T250] SW> KG_TA : Open session for KG is success
+[   22.686984][  T250] SW> 
+[   22.695128][  T250] SW> KG_TA : InvokeCommandEntryPoint for KG is success
+[   22.695137][  T250] SW> 
+[   22.695140][  T250] SW> [PA_TZ_LIB] [INF] [PrintVersion:286] Version: PA_TZ_lib,teegris,version_2.5.4,release,teamcity@nightly:57
+[   22.695142][  T250] SW> [PA_TZ_DRV] [INF] [HandleAuthenticateProcess:86] Start authenticate user process.
+[   22.695144][  T250] SW> [PA_TZ_DRV] [INF] [HandleAuthenticateProcess:111] Authentication finished.
+[   22.695739][  T250] SW> KG_TA : KG PROCA Authentication success
+[   22.695744][  T250] SW> 
+[   22.695746][  T250] SW> KG_TA : process_cmd()
+[   22.695747][  T250] SW> KG_TA : [TRACE] KG_get_ta_info start
+[   22.695749][  T250] SW> 
+[   22.695751][  T250] SW> KG_TA : KG_get_ta_info - ta version
+[   22.695753][  T250] SW> 
+[   22.695754][  T250] SW> KG_TA : read_info_object
+[   22.695756][  T250] SW> 
+[   22.695757][  T250] SW> KG_TA : read_block start block index : 0, data_len : 256
+[   22.695759][  T250] SW> 
+[   22.696395][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   22.696551][  T250] SW> KG_TA : read_loop_count : 1
+[   22.696555][  T250] SW> 
+[   22.698454][  T250] SW> Fwk v3.205 Drv> [Driver rpmb_ops:drRpmbGetPartSize]User11 get part size: 131072
+[   22.698462][  T250] SW> 
+[   22.698464][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   22.698465][  T250] SW> Fwk v3.205 Drv> [Driver rpmb_ops:drRpmbGetPartAddr]User11 get part addr: 1600
+[   22.698467][  T250] SW> 
+[   22.698468][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   22.698662][  T335] [rpmb] rpmb_wait_request Read request
+[   22.704309][  T250] SW> KG_TA : CloseSeesionEntryPoint for KG is success
+[   22.704351][  T250] SW> 
+[   22.704353][  T250] SW> KG_TA : DestoryEntryPoint for KG
+[   22.704355][  T250] SW> 
+[   22.704356][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   22.704358][  T250] SW> Fwk v3.205 Drv> [tdrv_rpmb][drv_close]
+[   22.704360][  T250] SW> KG_TA : KG_get_ta_info - ta version - end
+[   22.704361][  T250] SW> 
+[   22.704363][  T250] SW> KG_TA : Returning = 0x00000000
+[   22.704390][  T335] [rpmb] rpmb_send_reply Sent reply
+[   22.704394][  T335] [rpmb] rpmb_wait_request Read wait
+[   22.803595][ T1163] sm5714-charger sm5714-charger: sm5714_chg_get_property: psp=31
+[   22.804057][ T1163] !@ batteryplugType : 2 
+[   22.804070][ T1163] !@ batteryLevel : 99  batteryTemperature : 306  
+[   22.804078][ T1163] !@ Heatmap currtime: 29912975 
+[   22.804085][ T1163] !@ Heatmap prevtime: 29912975 
+[   22.804092][ T1163] !@ Heatmap plugstarttime: 29912975 
+[   22.804100][ T1163] !@ Heatmap prevv_dsoh_update_time: 29912975 
+[   22.804151][ T1163] !@ CAM New BSOH: 100 
+[   22.813951][ T1070] ffffff8091e8f000 ffffff809203c000 ffffff8092015000 ffffff809203c000
+[   22.821964][ T1087] [SHUB]    comm_to_sensorhub( 128) : cmd 3 type 5 subcmd 47 send_buf_len 4 ts 22818759770
+[   22.822535][ T1087] [SHUB] set_light_brightness( 122) : 10
+[   22.826010][ T1087] [SHUB] shub_scontext_write(4): 0xb1, 0x3e, 0x0, 0x0
+[   22.826019][ T1087] [SHUB] shub_scontext_send_instruction( 322) : ADD LIB free fall detection, type 190
+[   22.826025][ T1087] [SHUB] ADD scontext : free fall detection, type 190
+[   22.826028][ T1087] [SHUB]    comm_to_sensorhub( 128) : cmd 0 type 190 subcmd 0 send_buf_len 2 ts 22822824077
+[   22.828344][    T1] init: starting service 'resetreason'...
+[   22.829438][    T1] ffffff8091e3e000 ffffff8092040000 ffffff8091fa0700 ffffff8092040000
+[   22.830145][    T1] init: ... started service 'resetreason' has pid 4917
+[   22.830159][    T1] init: Control message: Processed ctl.restart for 'resetreason' from pid: 1550 (system_server)
+[   22.835171][ T1070] ffffff8091e8f000 ffffff8092041000 ffffff809203ac00 ffffff8092041000
+[   22.881691][    T1] init: Service 'resetreason' (pid 4917) exited with status 0 oneshot service took 0.052000 seconds in background
+[   22.881707][    T1] init: Sending signal 9 to service 'resetreason' (pid 4917) process group...
+[   22.881839][    T1] libprocessgroup: Removed cgroup /sys/fs/cgroup/system/uid_1000/pid_4917
+[   22.887840][ T1550] usb_notify: read disable_state OFF
+[   22.893501][    T1] init: Service 'nvram_daemon' (pid 1175) exited with status 0 oneshot service took 10.091000 seconds in background
+[   22.893515][    T1] init: Sending signal 9 to service 'nvram_daemon' (pid 1175) process group...
+[   22.893638][    T1] libprocessgroup: Removed cgroup /sys/fs/cgroup/system/uid_0/pid_1175
+[   22.896362][  T250] SW> keymint [WRN] (km_add_tag:528) skip: non repetable tag already exists with different value: 268435458
+[   22.896372][  T250] SW> keymint [WRN] (swd_run_cb:267) swd_begin() returns 0
+[   22.898265][  T572] servicemanager: Notifying apexservice they don't (previously: do) have clients when we now have no record of a client
+[   22.898394][  T847] AidlLazyServiceRegistrar: Process has 0 (of 1 available) client(s) in use after notification apexservice has clients: 0
+[   22.898405][  T847] AidlLazyServiceRegistrar: Trying to shut down the service. No clients in use for any service in process.
+[   2   �Q LOGM
+Boot info:
+Last boot reason: reboot
+

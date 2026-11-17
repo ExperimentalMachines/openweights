@@ -1,0 +1,6 @@
+# Session 8: Qwen3 1.7B's NPU export takes ~6.4 GB, so no llama.cpp copy fits beside it (1,463 MB left, 2,232 needed):
+# only the five pairings without a handoff run. Q8_0 shares the NPU export; its npu:npu repeats Q4_0's as a check.
+Qwen3-1.7B-Q4_0.gguf - cpu:cpu,gpu:gpu,gpu:cpu,cpu:gpu 75
+Qwen3-1.7B-Q4_0.gguf npu/qwen3-1.7b-a16w4-2k npu:npu 25
+Qwen3-1.7B-Q8_0.gguf - cpu:cpu,gpu:gpu,cpu:gpu,gpu:cpu 85
+Qwen3-1.7B-Q8_0.gguf npu/qwen3-1.7b-a16w4-2k npu:npu 25

@@ -1,0 +1,96 @@
+== soc
+Google
+Tensor G6
+Pixel 11
+17
+uid=2000(shell) gid=2000(shell) groups=2000(shell),1004(input),1007(log),1011(adb),1015(sdcard_rw),1028(sdcard_r),1078(ext_data_rw),1079(ext_obb_rw),3001(net_bt_admin),3002(net_bt),3003(inet),3006(net_bw_stats),3009(readproc),3011(uhid),3012(readtracefs) context=u:r:shell:s0
+== nodes
+crw-rw----  1 system         audio          u:object_r:aoc_device:s0               496,  32 2026-11-16 11:13 acd-audio_input_bulk_rx
+crw-rw----  1 system         audio          u:object_r:aoc_device:s0               496,  31 2026-11-16 11:13 acd-audio_input_bulk_tx
+crw-rw----  1 system         audio          u:object_r:aoc_device:s0               496,   3 2026-11-16 11:13 acd-audio_input_tuning
+crw-rw----  1 system         audio          u:object_r:aoc_device:s0               496,   1 2026-11-16 11:13 acd-audio_output_tuning
+crw-------  1 root           root           u:object_r:device:s0                   496,   2 2026-11-16 11:13 acd-audio_output_tuning_ext
+lrwxrwxrwx  1 root           root           u:object_r:device:s0                         16 2026-11-16 11:13 edgetpu -> /dev/edgetpu-soc
+crw-rw----  1 system         system         u:object_r:edgetpu_device:s0           487,   2 2026-11-16 11:13 edgetpu-limited
+crw-rw----  1 system         system         u:object_r:edgetpu_device:s0           487,   1 2026-11-16 11:13 edgetpu-soc
+crw-rw-rw-  1 system         camera         u:object_r:gxp_device:s0               486,   0 2026-11-16 11:13 gxp
+drwxr-xr-x  2 root           root           u:object_r:input_device:s0                  100 2026-11-16 11:13 input
+crw-------  1 root           root           u:object_r:sscoredump_device:s0        504,   3 2026-11-16 11:13 sscd_gxp_metis
+crw-------  1 root           root           u:object_r:sscoredump_device:s0        504,   5 2026-11-16 11:13 sscd_vpu-core
+crw-rw----  1 system         input          u:object_r:touch_offload_device:s0     476,   0 2026-11-16 11:13 touch_offload
+crw-rw----  1 uhid           uhid           u:object_r:uhid_device:s0               10, 223 2026-11-16 11:13 uinput
+crw-rw----  1 root           input          u:object_r:input_device:s0              81,   0 2026-11-16 11:13 v4l-touch0
+crw-rw----  1 mediacodec     mediadrm       u:object_r:video_device:s0             482,   0 2026-11-16 11:13 vpu
+== open
+acd-audio_input_bulk_rx: denied
+acd-audio_input_bulk_tx: denied
+acd-audio_input_tuning: denied
+acd-audio_output_tuning: denied
+acd-audio_output_tuning_ext: denied
+edgetpu: denied
+edgetpu-limited: denied
+edgetpu-soc: denied
+gxp: denied
+input: opened
+sscd_gxp_metis: denied
+uinput: opened
+== services
+46	android.hardware.input.processor.IInputProcessor/default: []
+51	android.hardware.neuralnetworks.IDevice/google-edgetpu: [android.hardware.neuralnetworks.IDevice]
+53	android.hardware.npu.IScheduling/default: [android.hardware.npu.IScheduling]
+54	android.hardware.oemlock.IOemLock/default: []
+114	android.security.identity: [android.security.identity.ICredentialStoreFactory]
+158	com.google.edgetpu.IEdgeTpuAppService/default: [com.google.edgetpu.IEdgeTpuAppService]
+159	com.google.edgetpu.tachyon.IComputeService/default: [com.google.edgetpu.tachyon.IComputeService]
+163	com.google.input.ITouchContextService/default: []
+164	com.google.input.ITwoshayFileDumpService/touchflow_default: []
+165	com.google.input.ITwoshayFileDumpService/twoshay: []
+166	com.google.input.ITwoshayNotificationService/default: []
+167	com.google.input.algos.gril.IGrilAntennaTuningService/default: []
+168	com.google.input.algos.spd.IScreenProtectorDetectorService/default: []
+169	com.google.input.gia.core.IGiaService/default: []
+173	com.google.pixel.modem_logging.IVendorModemLogging/default: []
+174	com.google.pixel.modem_logging.alcedo_t900.IAlcedoT900ModemLogging/default: []
+175	com.google.pixel.modem_logging.log_files.IVendorModemLogFiles/default: []
+190	credential: [android.credentials.ICredentialManager]
+236	input: [android.hardware.input.IInputManager]
+237	input_method: [com.android.internal.view.IInputMethodManager]
+== vendor libs
+android.hardware.input.common-V1-ndk.so
+android.hardware.input.processor-V1-ndk.so
+android.hardware.neuralnetworks-V4-ndk.so
+android.hardware.neuralnetworks@1.0.so
+android.hardware.neuralnetworks@1.1.so
+android.hardware.neuralnetworks@1.2.so
+android.hardware.neuralnetworks@1.3.so
+android.hardware.npu-V1-ndk.so
+com.google.edgetpu.tachyon-ndk.so
+com.google.edgetpu_app_service-V10-ndk.so
+com.google.edgetpu_vendor_service-V2-ndk.so
+com.google.input-V8-ndk.so
+fake_gxp_telemetry_reader.so
+gxp_metrics_logger.so
+gxp_telemetry_reader.so
+libdarwinn_hal.so
+libdisplay_tflite.so
+libedgetpu_client.google.so
+libedgetpu_litert.so
+libedgetpu_tachyon.google.so
+libedgetpu_tflite_compiler.so
+libedgetpu_util.so
+libgxp.so
+libphone_booth_model_darwinn.so
+libthermal_tflite_wrapper.so
+== vendor lib access
+android.hardware.input.common-V1-ndk.so: not readable
+android.hardware.input.processor-V1-ndk.so: not readable
+android.hardware.npu-V1-ndk.so: not readable
+com.google.edgetpu.tachyon-ndk.so: not readable
+com.google.edgetpu_app_service-V10-ndk.so: readable
+== nnapi
+android.hardware.edgetpu.logging@service-edgetpu-logging
+android.hardware.input.processor-service
+android.hardware.neuralnetworks@service-darwinn-aidl
+com.google.edgetpu.tachyon-service
+vendor.google.edgetpu_vendor_service@1.0-service
+1

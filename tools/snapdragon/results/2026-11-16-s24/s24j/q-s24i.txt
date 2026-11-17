@@ -1,0 +1,8 @@
+# Session s24i (Galaxy S24 Ultra): Qwen3-4B-Q4_0.gguf again, after s24h's memory guard let only the CPU's copy load
+# (one copy left 3,669 MB free against 3,742 needed for a second). Split into processes of two copies each, as the
+# tablet ran its larger models (CPU with GPU first: the four pairings the tablet ran; then NPU with CPU, NPU with
+# GPU), each group in the tablet's seeded order, with the load margin at 768 MB instead of 1,024 (memguard.sh still
+# kills a process under 600 MB free). One conversation per dataset, as s24h.
+Qwen3-4B-Q4_0.gguf htp cpu:gpu,cpu:cpu,gpu:cpu,gpu:gpu 100 -c conversations-3.jsonl --mem-margin-mb 768
+Qwen3-4B-Q4_0.gguf htp npu:npu,npu:cpu,cpu:npu 1 -c conversations-3.jsonl --mem-margin-mb 768
+Qwen3-4B-Q4_0.gguf htp npu:gpu,gpu:npu 1 -c conversations-3.jsonl --mem-margin-mb 768

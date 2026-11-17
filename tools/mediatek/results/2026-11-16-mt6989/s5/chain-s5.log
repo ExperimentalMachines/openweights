@@ -1,0 +1,7 @@
+17:28:04 soc MT6989 model SM-X820 bin e4f0316f70645351
+17:28:04 start s5warm Qwen3-0.6B-Q4_0.gguf - cpu:cpu gguf=33bcc57074ec7b6e bin=e4f0316f70645351 libs=e5df00f8eefaee63 npu=- window=2048
+17:30:51 end s5warm Qwen3-0.6B-Q4_0.gguf rc 0
+17:30:51 start s5 Qwen3-0.6B-Q4_0.gguf npu/qwen3-0.6b-a16w8-2k cpu:gpu,cpu:cpu,gpu:npu,npu:cpu,gpu:gpu,npu:npu,npu:gpu,cpu:npu,gpu:cpu gguf=33bcc57074ec7b6e bin=e4f0316f70645351 libs=e5df00f8eefaee63 npu=e8baa696293e9c0f window=2048
+18:16:25 end s5 Qwen3-0.6B-Q4_0.gguf rc 1
+18:16:25 start s5 google_gemma-3-1b-it-Q4_0.gguf npu/gemma3-1b-a16w8-2k npu:gpu,npu:npu,gpu:gpu,cpu:cpu,gpu:npu,cpu:npu,cpu:gpu,gpu:cpu,npu:cpu gguf=4c62ce8950bc6d5b bin=e4f0316f70645351 libs=e5df00f8eefaee63 npu=b78462a7deb3f7d0 window=2048
+18:16:29 stopped after Qwen3 0.6B: its GPU cells did not fit beside the NPU and CPU; continuing in s5b

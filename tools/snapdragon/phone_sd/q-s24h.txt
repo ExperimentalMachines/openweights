@@ -1,0 +1,4 @@
+# Session s24h (Galaxy S24 Ultra): Qwen3-4B-Q4_0.gguf, all nine pairings in the tablet's seeded order (cell-orders.txt).
+# One unit per model, six sessions at once (owner, 2026-11-16). One conversation per dataset: the six-conversation subset would take about 165 min, past the session.
+# One conversation per dataset (~91 min; the 150-min estimate would have been refused after a ~20-min warm-up).
+Qwen3-4B-Q4_0.gguf htp npu:gpu,npu:npu,cpu:gpu,gpu:npu,cpu:cpu,npu:cpu,gpu:cpu,cpu:npu,gpu:gpu 105 -c conversations-3.jsonl

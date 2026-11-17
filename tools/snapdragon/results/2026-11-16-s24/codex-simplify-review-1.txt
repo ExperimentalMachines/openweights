@@ -1,0 +1,131 @@
+Read every named file and all six screenshots. No files changed.
+
+1. **CORRECTNESS: “No hard throttle” exceeds the measurements.** [page.tsx:548](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:548)
+
+   `softOnly` checks lower clock limits and cores reported online. That cannot exclude core pauses; the tablet notes explicitly describe paused cores still reporting online.
+
+   **Fix:** Replace the headline with **“Heat: lower CPU clock limits, with all cores reported online.”** Replace “No core went offline” with **“All eight cores were reported online in the sampled heating window.”** Keep the limitation about unreadable pause switches beside this claim.
+
+2. **LOST / FAIRNESS: The fixed-work protocol disappeared.** [page.tsx:870](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:870)
+
+   The old method explained that generation continues to the dataset’s reply length and that subsequent turns use dataset history. Without this, “finished first” sounds like ordinary completed replies. The tablet’s Qwen3 0.6B winner actually starts every reply with a stop token.
+
+   **Fix:** Restore a visible `Row label="Fixed work"` with two bullets: **“Each reply runs for the dataset’s token count, even after a stop token.”** **“Each next turn starts from the dataset’s history.”** Mark the affected fastest-table cell **“Starts with a stop token.”** Restore **“Answer quality beyond first-token checks was not measured”** under Limits.
+
+3. **CORRECTNESS: Heat summaries silently mix different cohorts.** [page.tsx:551](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:551)
+
+   The stated losses use only probes after a matrix, while the next sentence cites the longer probes. The longer tablet probe gained about 4% at six threads; the longer S24 probe lost about 15%. Likewise, line 767’s baseline status range excludes the long S24 probe, whose two-thread baseline was status 1.
+
+   **Fix:** Prefix both summaries with **“In the probes after a matrix…”** Label the loss ranges **“Critical-status probes after a matrix, 2 and 6 threads.”** Keep the longer attempts as a separately labelled group. Do not apply the shorter cohort’s loss or baseline ranges to every displayed probe.
+
+4. **CORRECTNESS: The 768 MiB annotation is unsupported for the displayed run.** [page.tsx:905](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:905)
+
+   [s24-NOTES.md:167](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/notes/s24-NOTES.md:167) documents that margin for **s24i**, the replaced subset run. The current Qwen3 4B row is **s24l**, with four pairings in one process. The supplied notes do not establish s24l’s margin.
+
+   **Fix:** Delete this bullet. Do not substitute an assumed default margin. The existing explanation that s24l matched the tablet’s tested pairings is sufficient.
+
+5. **CORRECTNESS: Memory wording confuses omitted NPU handoffs, admission decisions and actual capacity.** [page.tsx:825](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:825)
+
+   Five-pairing rows still include CPU → GPU and GPU → CPU, so “no handoff pairings” is false. Qwen3 4B’s tablet NPU load was refused by the memory guard before loading. Meanwhile, [DuoViews.tsx:93](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/DuoViews.tsx:93) calls the S24’s deliberately restricted pairings “the pairings that fit.”
+
+   **Fix:** Use **“omitted the four handoffs involving the NPU.”** Replace tablet “NPU refused to load” labels with **“Load skipped by memory guard.”** For restricted S24 captions, use **“pairings selected to match the tablet.”** At line 828, change **“as a separate process”** to **“in additional processes on the same unit.”** Preserve the distinction that S24 Llama 3.2 3B split by plan.
+
+6. **CORRECTNESS: “Ended the reply” labels the wrong event.** [page.tsx:780](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:780)
+
+   The numerator is `eogFirst`, not all replies containing an end token. For example, tablet Llama 3.2 1B shows zero here, although 21 NPU-prefill observations contain a later stop token. The benchmark also continues generating after that token.
+
+   **Fix:** Rename the column **“First token was a stop token.”** Add **“Denominators count one observation per turn and tested pairing with NPU prefill.”** At line 695, replace “replies that ended” with **“Turns containing a stop token; ‘first’ counts those that began with one.”**
+
+7. **FAIRNESS / LOST: The rewrite removes a measurement difference while claiming identical measurement.** [page.tsx:32](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:32)
+
+   The old page disclosed that the S24 queried Android’s thermal service after each turn, outside timing; the tablet checked clocks there. That affects the intervals between timed work. “The same CPU build” at line 863 is also stronger than the notes’ evidence of the same revision and CPU target.
+
+   **Fix:** Replace **“measured the same way”** with **“compared on matching turns.”** Use **“the same llama.cpp revision and CPU target.”** Restore a visible method row: **“After each turn, the S24 also queried Android’s thermal service outside timing. The tablet checked CPU clocks.”**
+
+8. **FAIRNESS: Several descriptions turn context into unsupported general claims.** [page.tsx:896](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:896)
+
+   “A tablet sheds heat a phone cannot” asserts a cooling advantage this experiment does not isolate. “The same core designs” at line 566 overlooks the S24’s additional Cortex-A520 cores. “Firebase offers no…” at line 923 generalizes an account-specific catalog observation.
+
+   **Fix:** Use **“The devices differ in form factor and cooling conditions.”** Use **“Both use Cortex-X4 and Cortex-A720; Snapdragon also has Cortex-A520 cores.”** Scope availability to **“The Firebase catalog available to this account during testing…”**
+
+9. **LOST / FAIRNESS: Heat cards discard the evidence needed to interpret clock reductions.** [page.tsx:434](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:434)
+
+   Selecting the smallest absolute clock and its first matching index hides other groups. For default Llama 1B, the tablet shows **1.60 of 2.00 GHz**, concealing that its top Cortex-X4 group also reached **1.60 of 3.40 GHz**. The rewrite also removes sample counts, critical-status detail, SKIN temperature and the CPU-step denominator.
+
+   **Fix:** Restore a compact, visible **“Core group | Minimum / top GHz”** table inside each card. Add **“Timed minutes / clock samples / status samples”** beneath the device label. Show **“Severe or worse”** and **“Critical”** separately, restore **“AP / SKIN maximum”**, and label the last row **“CPU decode steps over 0.5 s: count / total.”** These are measurements omitted from the new presentation, not duplicate views.
+
+10. **LOST: The heat-probe table loses unit identity and the second heating period.** [page.tsx:742](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:742)
+
+    The two-thread probe followed the six-thread probe and another 6.2 minutes of heating. “Heated” currently looks like the complete exposure for both columns. Removing unit identifiers also conceals that the S24’s 15-minute and 41-minute runs used the same unit.
+
+    **Fix:** Rename **“Heated”** to **“Initial heating.”** Put `unit` and `session` under each device name. Add **“The two-thread probe followed the six-thread probe and another {heat2Minutes} minutes of heating.”** In the limits view, add **“Temperatures and clock limits are snapshots at the first turn; rates cover all three turns.”**
+
+11. **CORRECTNESS / FAIRNESS: Counts describe configurations as independent models.** [page.tsx:517](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:517)
+
+    There are eight model names and nine configurations. Qwen3 1.7B appears twice; its two tablet NPU runs reuse the same A16W4 export. “Seven of nine models” and the banner’s “median across models” obscure that weighting.
+
+    **Fix:** Use **“configurations”** for row-based counts and medians. Restore **“Eight models in nine configurations; Qwen3 1.7B also uses Q8_0.”** Generate those counts from the names and array length. Add **“The tablet’s two Qwen3 1.7B configurations reuse the same NPU export.”**
+
+12. **LOST / FAIRNESS: Small winning margins lost their qualification.** [page.tsx:609](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:609)
+
+    The S24’s cross-device Llama 3B lead is 1.29%; its LFM2.5 2.6B winner leads its next pairing by 0.85%. The old page explicitly bounded small gaps by one order on one unit. “One run per pairing” much later does not adequately qualify the winner presentation.
+
+    **Fix:** Rename **“Finished first”** to **“Shorter measured time.”** Add beneath the fastest table: **“One timed run per pairing; small gaps may reflect run order or unit differences.”** Keep the measured rankings and numbers.
+
+13. **DENSITY: Phone tables conceal the comparison at their initial scroll position.** [page.tsx:363](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:363)
+
+    In m1, the S24 and winner columns disappear from the fastest table, the ratio table initially shows only Dimensity, and the probe table loses the two-thread result. Pairing tables require 45 or 57 rem; the phone has roughly 358 px of content width. Horizontal scrolling exists, but readers cannot see both sides together.
+
+    **Fix:** Below `md`, render cards with a model or pairing heading and labelled device rows containing every selected measurement. Use `md:hidden` for that layout and `hidden md:block` for desktop tables. Keep the short charts visible. For the first-token desktop table, use eight model rows with grouped device headers instead of repeating each model across sixteen rows.
+
+14. **DENSITY: Legends explain inactive views.** [page.tsx:690](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:690)
+
+    The default handoff view carries definitions for stop tokens, temperature, cooling waits and capped turns that are absent from its table. The probe figure similarly explains bars and policy order regardless of the selected view.
+
+    **Fix:** Move each legend into its corresponding `views` entry: handoff definitions with `handoff`, step/token definitions with `steps`, and temperature/gate definitions with `heat`. Do the same for probe views. Split the pairing caption into **“Work per pairing”** and a separate short unit line.
+
+15. **DENSITY: Several bullets remain compressed paragraphs.** [page.tsx:662](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:662)
+
+    The pooling explanation, memory notes and process-name lists still approach or exceed 25 words. The process bullet at line 902 is especially difficult to scan.
+
+    **Fix:** Split line 662 into **“A token is a word or part of one.”** and **“Rates pool the same pairings on both devices.”** Split line 824 into **“Qwen3 1.7B left {value} GiB free beside the tablet’s NPU copy.”** and **“The CPU/GPU admission check required {value} GiB, including its margin.”** Move per-model process counts into the memory cells, for example **“5/9 pairings · 2 processes.”** Replace the long process lists with **“Splitting processes changes run order and which model copies are loaded together.”**
+
+16. **DUPLICATION: Repeated details still consume rows and notes.** [page.tsx:348](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:348)
+
+    Run order already appears in every time matrix. GPU API names recur in the ratio notes and Methods. Gate totals recur as passed counts under Heat and failed counts under Limits. “CPU only is fastest” repeats the pairing directly above it.
+
+    **Fix:** Set `handoff: ["Decoding", "Handoff"]` and rename its switch **“Decode share and handoff.”** Keep GPU APIs in Methods and gate totals beside Heat. In `CpuOnly`, return `null` when CPU → CPU is fastest. Findings summarizing detailed figures can remain.
+
+17. **CORRECTNESS: Mini-bars distort increases and near-equality.** [page.tsx:308](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:308)
+
+    `Math.min(100, 100 * f)` clips the tablet’s 4% improvement to the same length as no change, despite describing the fill as the heated/cool ratio. Ratio bars also impose a 6% minimum width, so values near 1 do not follow the stated logarithmic scale.
+
+    **Fix:** For probe bars, calculate a common `scale = Math.max(1, ...displayedRatios)`, place the cool reference at `100 / scale`, and draw heated width as `100 * f / scale`. For ratio bars, remove the minimum-width floor and draw width as `100 * w`.
+
+18. **CORRECTNESS: Some computed captions fail for other supported data states.** [page.tsx:486](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:486)
+
+    These do not change today’s displayed numbers, but they are regressions: finished CPU/GPU-only comparisons trigger “No model has finished”; a tie plus one-sided wins can produce “finished every model first”; and every `convs < 9` row is described as two conversations per dataset.
+
+    **Fix:** Reserve the empty-comparison message for `both.length === 0`; handle unavailable NPU comparisons separately. Require `wins.length === leads.length` for “every.” Replace the subset sentence with **“{model}: {s.convs} conversations on each device.”**
+
+19. **STYLE / LOST: Definitions were removed while jargon remains.** [page.tsx:696](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:696)
+
+    AP and “policy order” are unexplained. The model tables also introduce Q4_0, Q8_0 and hybrid without the reference post’s definitions.
+
+    **Fix:** At first use, add **“AP is the processor temperature sensor; SKIN is the casing sensor.”** Replace policy-order strings with labelled core groups. Under the first model table, add short definitions: **“Q4_0 and Q8_0 store GGUF weights at four and eight bits.”** **“Hybrid models mix attention with other layer types.”** Clarify that these GGUF labels do not specify the tablet NPU export’s precision.
+
+20. **STYLE: One prohibited en dash remains in a non-default view.** [page.tsx:169](/private/tmp/claude-501/-Users-alpha-mobile-inference/4f6e0161-05e2-42cd-beac-ee96f21f3667/scratchpad/codex-simplify/site/page.tsx:169)
+
+    The missing-rate placeholder is U+2013. It violates the standing rule even though the default screenshots do not show it.
+
+    **Fix:** Replace the return with `return r ? tok(r.tokS) : "not measured";`.
+
+Checked and found correct:
+
+- The cover’s **8.6× / 0.9×**, displayed ratio ranges, all fastest-pairing times, CPU baselines and finish percentages reproduce from the generated data.
+- All **16 numeric memory entries** and **16 first-token agreement counts** match the selected data. The first-token denominators correctly use the shared pairings.
+- The comparison contains **64 shared pairings and 1,450 turn observations per device**. Generated turn keys and token totals match; the generator also checks per-turn work.
+- `sdExtra` and `sdDropped` do not enter displayed comparisons. Pending long probes require `HOT_DONE`; the current selected long probes are s12 and s24m.
+- All nine result figures and the matrix **All** option remain. Pooled-rate tables and per-pairing rate matrices represent different aggregations.
+
+The numerical checks used the supplied generated snapshot; raw JSONL logs were not included for regeneration.

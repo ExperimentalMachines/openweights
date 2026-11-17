@@ -1,0 +1,88 @@
+I tokenizers:regex.cpp:40] Registering override fallback regex
+ggml_vulkan: Found 1 Vulkan devices:
+ggml_vulkan: 0 = Mali-G720-Immortalis MC12 (Mali-G720-Immortalis MC12) | uma: 1 | fp16: 1 | bf16: 0 | fp4: 0 | warp size: 16 | shared memory: 32768 | int dot: 0 | matrix cores: none
+llama_model_loader: loaded meta data with 42 key-value pairs and 340 tensors from gguf/google_gemma-3-1b-it-Q4_0.gguf (version GGUF V3 (latest))
+llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+llama_model_loader: - kv   0:                       general.architecture str              = gemma3
+llama_model_loader: - kv   1:                               general.type str              = model
+llama_model_loader: - kv   2:                               general.name str              = Gemma 3 1b It
+llama_model_loader: - kv   3:                           general.finetune str              = it
+llama_model_loader: - kv   4:                           general.basename str              = gemma-3
+llama_model_loader: - kv   5:                         general.size_label str              = 1B
+llama_model_loader: - kv   6:                            general.license str              = gemma
+llama_model_loader: - kv   7:                   general.base_model.count u32              = 1
+llama_model_loader: - kv   8:                  general.base_model.0.name str              = Gemma 3 1b Pt
+llama_model_loader: - kv   9:          general.base_model.0.organization str              = Google
+llama_model_loader: - kv  10:              general.base_model.0.repo_url str              = https://huggingface.co/google/gemma-3...
+llama_model_loader: - kv  11:                               general.tags arr[str,1]       = ["text-generation"]
+llama_model_loader: - kv  12:                      gemma3.context_length u32              = 32768
+llama_model_loader: - kv  13:                    gemma3.embedding_length u32              = 1152
+llama_model_loader: - kv  14:                         gemma3.block_count u32              = 26
+llama_model_loader: - kv  15:                 gemma3.feed_forward_length u32              = 6912
+llama_model_loader: - kv  16:                gemma3.attention.head_count u32              = 4
+llama_model_loader: - kv  17:    gemma3.attention.layer_norm_rms_epsilon f32              = 0.000001
+llama_model_loader: - kv  18:                gemma3.attention.key_length u32              = 256
+llama_model_loader: - kv  19:              gemma3.attention.value_length u32              = 256
+llama_model_loader: - kv  20:                      gemma3.rope.freq_base f32              = 1000000.000000
+llama_model_loader: - kv  21:            gemma3.attention.sliding_window u32              = 512
+llama_model_loader: - kv  22:             gemma3.attention.head_count_kv u32              = 1
+llama_model_loader: - kv  23:                       tokenizer.ggml.model str              = llama
+llama_model_loader: - kv  24:                         tokenizer.ggml.pre str              = default
+llama_model_loader: - kv  25:                      tokenizer.ggml.tokens arr[str,262144]  = ["<pad>", "<eos>", "<bos>", "<unk>", ...
+llama_model_loader: - kv  26:                      tokenizer.ggml.scores arr[f32,262144]  = [-1000.000000, -1000.000000, -1000.00...
+llama_model_loader: - kv  27:                  tokenizer.ggml.token_type arr[i32,262144]  = [3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 3, 3, ...
+llama_model_loader: - kv  28:                tokenizer.ggml.bos_token_id u32              = 2
+llama_model_loader: - kv  29:                tokenizer.ggml.eos_token_id u32              = 1
+llama_model_loader: - kv  30:            tokenizer.ggml.unknown_token_id u32              = 3
+llama_model_loader: - kv  31:            tokenizer.ggml.padding_token_id u32              = 0
+llama_model_loader: - kv  32:               tokenizer.ggml.add_bos_token bool             = true
+llama_model_loader: - kv  33:               tokenizer.ggml.add_eos_token bool             = false
+llama_model_loader: - kv  34:                    tokenizer.chat_template str              = {{ bos_token }}\n{%- if messages[0]['r...
+llama_model_loader: - kv  35:            tokenizer.ggml.add_space_prefix bool             = false
+llama_model_loader: - kv  36:               general.quantization_version u32              = 2
+llama_model_loader: - kv  37:                          general.file_type u32              = 2
+llama_model_loader: - kv  38:                      quantize.imatrix.file str              = /models_out/gemma-3-1b-it-GGUF/google...
+llama_model_loader: - kv  39:                   quantize.imatrix.dataset str              = /training_dir/calibration_datav3.txt
+llama_model_loader: - kv  40:             quantize.imatrix.entries_count i32              = 182
+llama_model_loader: - kv  41:              quantize.imatrix.chunks_count i32              = 129
+llama_model_loader: - type  f32:  157 tensors
+llama_model_loader: - type q4_0:  179 tensors
+llama_model_loader: - type q4_1:    3 tensors
+llama_model_loader: - type q8_0:    1 tensors
+print_info: file format = GGUF V3 (latest)
+print_info: file type   = Q4_0
+print_info: file size   = 682.24 MiB (5.72 BPW) 
+llama_prepare_model_devices: using device Vulkan0 (Mali-G720-Immortalis MC12) (unknown id) - 11070 MiB free
+init_tokenizer: initializing tokenizer for type 1
+load: 6242 unused tokens
+load: control token:      2 '<bos>' is not marked as EOG
+load: control token:      3 '<unk>' is not marked as EOG
+load: control-looking token:    212 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+load: control token: 255999 '<start_of_image>' is not marked as EOG
+load: control token: 256000 '<end_of_image>' is not marked as EOG
+load: control token:      4 '<mask>' is not marked as EOG
+load: control token:    105 '<start_of_turn>' is not marked as EOG
+load: control token:      0 '<pad>' is not marked as EOG
+load: printing all EOG tokens:
+load:   - 1 ('<eos>')
+load:   - 106 ('<end_of_turn>')
+load:   - 212 ('</s>')
+load: special tokens cache size = 6414
+load: token to piece cache size = 1.9446 MB
+print_info: arch                  = gemma3
+print_info: vocab_only            = 1
+print_info: no_alloc              = 0
+print_info: vocab type            = SPM
+print_info: n_vocab               = 262144
+print_info: n_merges              = 0
+print_info: BOS token             = 2 '<bos>'
+print_info: EOS token             = 1 '<eos>'
+print_info: EOT token             = 106 '<end_of_turn>'
+print_info: UNK token             = 3 '<unk>'
+print_info: PAD token             = 0 '<pad>'
+print_info: LF token              = 248 '<0x0A>'
+print_info: EOG token             = 1 '<eos>'
+print_info: EOG token             = 106 '<end_of_turn>'
+print_info: EOG token             = 212 '</s>'
+print_info: max token length      = 48
+llama_model_load: vocab only - skipping tensors

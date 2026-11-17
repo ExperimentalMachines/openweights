@@ -1,0 +1,5 @@
+# Session s24k (Galaxy S24 Ultra): Llama 3.2 3B on every turn the tablet read (24), the five pairings the tablet ran
+# (session 11), for turn parity (s24g ran all nine on one conversation per dataset). Two processes: CPU with GPU,
+# then NPU alone, in the tablet's seeded order.
+Llama-3.2-3B-Instruct-Q4_0.gguf htp gpu:cpu,cpu:cpu,cpu:gpu,gpu:gpu 100
+Llama-3.2-3B-Instruct-Q4_0.gguf htp npu:npu 1
