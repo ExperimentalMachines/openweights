@@ -62,6 +62,11 @@ import java.io.File
  * What it buys is the only path to an accelerator that has no ggml backend. See
  * `docs/research/mediatek-npu.md` for what that is measured to be worth.
  */
+// 702 lines against detekt's 600. The reasoning budget is what crossed it, and cutting the
+// engine in two is a change of its own: the pieces here share the module handle, the reuse
+// record and the token callback, and a split that hid that would be harder to follow than a
+// long file. Raised here and not in the shared config, so the next class that grows fails.
+@Suppress("LargeClass")
 class ExecuTorchEngine(
     private val bridge: ExecuTorchBridge,
     /** How a picture on disk becomes the encoder's square; swapped out in tests. */
@@ -454,12 +459,18 @@ class ExecuTorchEngine(
         // describe, so the next turn re-feeds them rather than trusting a prefix match.
 
         val reply = StreamedReply(rendering)
-        var firstTokenAt = 0L
 
-        // Zero means no caller-imposed output budget. Use the exported window as an
-        // upper bound on callbacks; the native runner still owns its remaining capacity.
-        // The AAR ignores maxNewTokens, so StopDiscipline enforces a positive budget here.
-        val budget = params.maxTokens.takeIf { it > 0 } ?: contextSize
+        // Zero means no caller-imposed output budget, so the window is the bound. Not the
+        // whole window: the room it has left. The native runner does not stop at the edge by
+        // itself, and asked for more tokens than are left it raises "Error 0x12: start_pos: N
+        // must be less than cache size at dim 1: M" from inside its own loop, which reaches
+        // the user as a runtime failure on a turn that had a better answer available: a full
+        // context is something the turn loop can act on, an error is not. The AAR ignores
+        // maxNewTokens as well, so the budget is enforced by [discipline] counting callbacks,
+        // and this clamp is what keeps that count inside the window.
+        val room = passRoom(contextSize, heldTokens, fresh.length)
+        if (room <= 0) throw nothingLeft(fresh.length)
+        val budget = (params.maxTokens.takeIf { it > 0 } ?: contextSize).coerceAtMost(room)
 
         // Anything thrown below leaves the runtime's position advanced by however much it
         // managed to prefill and decode, which no longer matches anything recorded. The
@@ -473,26 +484,20 @@ class ExecuTorchEngine(
         // callback reads it on the first token and re-issues the stop. It is cleared at
         // the start of the turn instead, before anything a Stop could be aimed at.
         tailChars = fresh.length
-        val outcome = try {
-            moduleHasRun = true
-            pass.ran()
-            gpuChecked {
-                bridge.generate(fresh, budget) { fragment ->
-                    if (firstTokenAt == 0L) firstTokenAt = System.currentTimeMillis()
-                    live.token()
-                    reply.accept(fragment)?.let { trySend(GenerationEvent.Token(it)) }
-                    // Asked on every token rather than once from cancel(), because the
-                    // runtime clears its stop flag when the token loop starts: a Stop that
-                    // lands during the prefill ahead of it is erased, and a collector that
-                    // has gone away has nobody left to call cancel() at all. Left running,
-                    // the loop holds the module's lock until the window fills, and the next
-                    // turn or a model switch waits behind it.
-                    if (stopNow(discipline, fragment, reply, isClosedForSend)) bridge.stop()
-                }
-            }
-        } catch (failure: Throwable) {
-            abandonRun(failure)
-        }
+
+        // The reasoning budget, which this runtime has no notion of: see [ThinkingGate] and
+        // [closeThinkingBlock]. A template that ends its assistant opener inside an open block
+        // (Qwen3.5 writes the tag and a newline, LFM3 1.7B writes the tag alone) has spent
+        // nothing of the allowance, so the gate opens with the turn; one that closes an empty
+        // block there (Qwen3 with reasoning switched off, LFM3 with thinking off) starts
+        // outside it, and so does a template whose opener holds no tag at all.
+        val gate = ThinkingGate(
+            budget = params.reasoningBudget,
+            openTag = THINK_OPEN,
+            closeTag = THINK_CLOSE,
+            openedByTemplate = prompt.trimEnd('\n').endsWith(THINK_OPEN),
+        )
+        val run = runPasses(params, fresh, budget, reply, gate, discipline, live)
 
         // Whatever was held back in case it grew into a marker still belongs to the reply
         // when nothing came of it. Without this flush the caller's streamed text ends short
@@ -511,10 +516,22 @@ class ExecuTorchEngine(
         // token is ordinary text this code cannot identify by character position. So that
         // case gives up reuse entirely rather than guess: an empty record forces the next
         // turn to start over, which is slow and correct.
+        //
+        // A turn whose thinking block this engine closed is the case worth keeping, and the
+        // close is what makes it keepable: those few tokens are in the cache (they were the
+        // next call's prompt) and in [StreamedReply.answer] (they were streamed with the rest),
+        // so a turn that closed its block and then finished describes the cache as exactly as
+        // an uncapped reply does. That matters because it is every tool pass: a pass stopped
+        // for budget never emits its end marker, and losing the record costs a full re-prefill
+        // of the whole conversation on the pass after it, eleven to nineteen seconds on a
+        // hybrid model (see GenerationStats.thinkingPrefilled), which is most of a capped pass.
+        // What is still given up is a reply the budget cut *after* the close: its last token is
+        // uncommitted like any other cap hit.
+        //
         // The MediaTek runtime writes the reply on the CPU and reads prompts on the NPU, whose
         // cache never saw it: recorded as held without that, the next turn appended to a
         // conversation missing the last answer (codex QA). commitReply feeds it to the NPU.
-        val whole = reply.endedWhole(outcome, cancelRequested) && pictures.isEmpty()
+        val whole = reply.endedWhole(run.outcome, cancelRequested) && pictures.isEmpty()
         fedText =
             if (whole && bridge.commitReply(reply.answer)) {
                 prompt + reply.answer
@@ -525,15 +542,22 @@ class ExecuTorchEngine(
         // and headroom decisions until the next turn actually resets the runtime.
         // The multimodal runner reports its full prompt position, including text prefills
         // and pictures; the text runner reports only the current generate call's tail.
-        heldTokens = outcome.promptTokens + outcome.generatedTokens +
-            if (multimodal) 0 else reused + fedAheadTokens(outcome)
+        heldTokens = run.outcome.promptTokens + run.outcome.generatedTokens +
+            if (multimodal) 0 else reused + fedAheadTokens(run.outcome)
 
         val raw = reply.answer
         val parsed = ToolCallParser.parse(raw)
         send(
             GenerationEvent.Completed(
-                reason = reasonFor(reply, discipline, outcome.reason),
-                stats = statsFor(outcome, started, firstTokenAt, reused, prompt).metered(),
+                reason = reasonFor(reply, discipline, run.outcome.reason, run.ended),
+                stats = statsFor(
+                    run.outcome,
+                    started,
+                    run.firstTokenAt,
+                    reused,
+                    prompt,
+                    run.passes,
+                ).metered(),
                 content = parsed.text.underOpener(prompt).withoutReasoning(),
                 reasoning = raw.underOpener(prompt).reasoning(),
                 toolCalls = parsed.calls,
@@ -581,16 +605,215 @@ class ExecuTorchEngine(
      * bridge can only pass that on. A pass cut for budget, caught in a rut, or stopped by
      * the user therefore read as a finished one, so a tool call sitting in a truncated
      * reply ran and the turn loop kept a stopped turn's history as if it were whole.
+     *
+     * [ended] is the turn's own verdict where it has one, which the last pass cannot give:
+     * closing a thinking block ends a pass without ending the turn, and a turn that stopped
+     * because the block had spent the whole output budget is a deliberate close rather than
+     * the cap hit [StopReason.MAX_TOKENS] reports.
      */
     private fun reasonFor(
         reply: StreamedReply,
         discipline: StopDiscipline,
         runtime: StopReason,
+        ended: StopReason?,
     ): StopReason = when {
         cancelRequested -> StopReason.CANCELLED
+        ended != null -> ended
         reply.endedCleanly -> StopReason.END_OF_TURN
         discipline.cut -> StopReason.MAX_TOKENS
         else -> runtime
+    }
+
+    /**
+     * The turn's error when the window has no room left before it writes anything.
+     *
+     * A full context is a state the turn loop acts on and an error it does not: the runner
+     * raises "start_pos: N must be less than cache size at dim 1: M" from inside its own loop,
+     * which reaches the user as a failure on a turn that had a better answer available.
+     */
+    private fun nothingLeft(tailChars: Int): Nothing = throw ContextWindowExceededException(
+        "This turn needs more than this model's $contextSize position window: $heldTokens are " +
+            "already held and the last $tailChars characters of the prompt are still to read. " +
+            "Start a new chat, or use a model with a larger window.",
+    )
+
+    /** What a turn's passes came to, once a thinking block may have split it in two. */
+    private class TurnRun(
+        val outcome: ExecuTorchOutcome,
+        val passes: Int,
+        val firstTokenAt: Long,
+        val ended: StopReason?,
+    )
+
+    /** One generation call of a turn: what the runtime reported, and whether it wrote at all. */
+    private class Passed(
+        val outcome: ExecuTorchOutcome,
+        val wrote: Boolean,
+        val firstTokenAt: Long,
+    )
+
+    /** What the passes of one turn add up to, counted as they land. */
+    private class Tally {
+        var passes = 0
+        var closes = 0
+        var firstTokenAt = 0L
+        var merged: ExecuTorchOutcome? = null
+
+        /** One close this engine wrote. Bounded by [MAX_REASONING_CLOSES] in the caller. */
+        fun note(close: String?) {
+            if (close != null) closes += 1
+        }
+
+        /**
+         * Summed rather than replaced: a turn whose block was closed is two generations, and
+         * only reporting the second would hide the thinking from the row that says what the
+         * turn cost. See [ExecuTorchOutcome.through].
+         */
+        fun add(passed: Passed) {
+            if (passed.wrote) passes += 1
+            if (firstTokenAt == 0L) firstTokenAt = passed.firstTokenAt
+            merged = merged?.through(passed.outcome) ?: passed.outcome
+        }
+    }
+
+    /**
+     * Why a turn stopped on a close it could not have.
+     *
+     * Two ways to run out: the closes it is allowed, or the room in the window. Which one it
+     * was matters to the reader of the row and to the turn loop, which treats a full context
+     * as something to act on and a spent budget as the engine having done its job.
+     */
+    private fun stoppedFor(closes: Int, produced: Int, budget: Int): StopReason =
+        if (closes < MAX_REASONING_CLOSES && produced < budget) {
+            StopReason.CONTEXT_FULL
+        } else {
+            StopReason.REASONING_CLOSED
+        }
+
+    /**
+     * Runs the turn's passes, closing the thinking block whenever its allowance is spent.
+     *
+     * A turn is one generation until the block is closed and two after it: llama.cpp writes the
+     * close into its own token loop and carries on to the answer, and this runtime has no hook
+     * inside a generation, so here the close has to end one call and open the next. The loop
+     * ends on the first pass that leaves no block open.
+     */
+    private suspend fun ProducerScope<GenerationEvent>.runPasses(
+        params: SamplerParams,
+        prompt: String,
+        budget: Int,
+        reply: StreamedReply,
+        gate: ThinkingGate,
+        discipline: StopDiscipline,
+        live: LiveCount,
+    ): TurnRun {
+        var next = prompt
+        var ended: StopReason? = null
+        var done = false
+        val tally = Tally()
+        try {
+            moduleHasRun = true
+            while (!done) {
+                val close = if (gate.tripped) {
+                    closeThinkingBlock(params, reply, gate, discipline, tally.closes, budget)
+                } else {
+                    null
+                }
+                if (gate.tripped && close == null) {
+                    ended = stoppedFor(tally.closes, discipline.produced, budget)
+                    done = true
+                } else {
+                    tally.note(close)
+                    next = close ?: next
+                    tally.add(passOnce(next, budget, reply, gate, discipline, live))
+                    done = !gate.tripped
+                }
+            }
+        } catch (failure: Throwable) {
+            abandonRun(failure)
+        }
+        return TurnRun(
+            outcome = tally.merged ?: ExecuTorchOutcome(StopReason.END_OF_TURN),
+            passes = tally.passes,
+            firstTokenAt = tally.firstTokenAt,
+            ended = ended,
+        )
+    }
+
+    /** One generation call, with the token callback the engine hangs its accounting on. */
+    private suspend fun ProducerScope<GenerationEvent>.passOnce(
+        prompt: String,
+        budget: Int,
+        reply: StreamedReply,
+        gate: ThinkingGate,
+        discipline: StopDiscipline,
+        live: LiveCount,
+    ): Passed {
+        pass.ran()
+        var wrote = false
+        var firstTokenAt = 0L
+        val outcome = gpuChecked {
+            bridge.generate(prompt, (budget - discipline.produced).coerceAtLeast(1)) { fragment ->
+                if (firstTokenAt == 0L) firstTokenAt = System.currentTimeMillis()
+                wrote = true
+                live.token()
+                reply.accept(fragment)?.let { trySend(GenerationEvent.Token(it)) }
+                gate.accept(fragment)
+                // Asked on every token rather than once from cancel(), because the runtime
+                // clears its stop flag when the token loop starts: a Stop that lands during the
+                // prefill ahead of it is erased, and a collector that has gone away has nobody
+                // left to call cancel() at all. Left running, the loop holds the module's lock
+                // until the window fills, and the next turn or a model switch waits behind it.
+                // The block's allowance is the third reason: left running, the model spends the
+                // rest of the output budget thinking and the answer never starts.
+                //
+                // Asked rather than short-circuited behind [ThinkingGate.tripped]: the discipline
+                // is what remembers this fragment, and a close re-feeds the token the cache never
+                // committed, so it has to have seen the one that tripped the gate.
+                val stop = stopNow(discipline, fragment, reply, isClosedForSend)
+                if (gate.tripped || stop) bridge.stop()
+            }
+        }
+        return Passed(outcome, wrote, firstTokenAt)
+    }
+
+    /**
+     * Writes the close into the cache and the reply, and returns what the next call reads.
+     *
+     * Null when the turn cannot have one: it has used every close it is allowed, the output
+     * budget is spent, or the window has no room for the note and the tag.
+     *
+     * The words are the C++ session's, before the tag and not after it, because a model stopped
+     * mid-thought with no explanation goes on reasoning in the part the reader sees: LFM3 1.7B
+     * over 40 public questions after a search result ran to a 600-token cap 1 time without the
+     * note and 0 with it (`docs/research/llama-cpp-v080.md`).
+     *
+     * The text is streamed, not merely recorded, because the app persists what it streamed: a
+     * close in the cache and not in the history breaks the next turn's prefix match. And it goes
+     * in as the next call's prompt rather than as a prefill of its own, because a prompt is
+     * appended at the runtime's position exactly as a prefill is, and the runtime refuses a
+     * prompt that tokenizes to nothing where a prefill can leave the record and the cache
+     * disagreeing about where the turn is.
+     *
+     * The last fragment goes back in front of it. A sampled token only enters the cache when it
+     * is fed back to produce the next one, so the token that ended the pass is in the reply and
+     * not in the cache; llama.cpp has no such gap because it closes before that token is sampled.
+     */
+    private fun ProducerScope<GenerationEvent>.closeThinkingBlock(
+        params: SamplerParams,
+        reply: StreamedReply,
+        gate: ThinkingGate,
+        discipline: StopDiscipline,
+        closes: Int,
+        budget: Int,
+    ): String? {
+        if (closes >= MAX_REASONING_CLOSES || discipline.produced >= budget) return null
+        val close = "\n\n" + (params.reasoningNote ?: DEFAULT_REASONING_NOTE) + THINK_CLOSE + "\n"
+        val cost = tokensForChars(close.length) + 1
+        if (heldTokens + discipline.produced + cost >= contextSize) return null
+        reply.accept(close)?.let { trySend(GenerationEvent.Token(it)) }
+        gate.closedByEngine()
+        return discipline.lastFragment + close
     }
 
     /**
@@ -648,7 +871,14 @@ class ExecuTorchEngine(
         send(
             GenerationEvent.Completed(
                 reason = StopReason.CANCELLED,
-                stats = statsFor(ExecuTorchOutcome(StopReason.CANCELLED), started, 0L, 0, prompt)
+                stats = statsFor(
+                    ExecuTorchOutcome(StopReason.CANCELLED),
+                    started,
+                    0L,
+                    0,
+                    prompt,
+                    passes = 0,
+                )
                     .metered(),
                 content = "",
                 reasoning = "",
@@ -1044,6 +1274,10 @@ class ExecuTorchEngine(
      * under its real rate, and the same reply on llama.cpp, which counts its first token,
      * did not, so the two runtimes disagreed about identical work.
      *
+     * One correction per pass, which is why [passes] is a parameter and not "did a token
+     * arrive": a turn whose thinking block was closed is two generations, and each of them
+     * ends its prompt with a token the runtime does not count.
+     *
      * The pieces fed ahead are prompt, not cache. A prompt longer than one call may carry
      * goes in as prefill pieces first (see [feedAhead]). Their time is measured around
      * each call. The text runner reports only the tail's token count, so the head uses
@@ -1060,6 +1294,7 @@ class ExecuTorchEngine(
         firstTokenAt: Long,
         reused: Int,
         prompt: String,
+        passes: Int,
     ): GenerationStats {
         val finished = System.currentTimeMillis()
         val timeToFirst = if (firstTokenAt > 0) firstTokenAt - started else finished - started
@@ -1070,7 +1305,7 @@ class ExecuTorchEngine(
         }
         return GenerationStats(
             promptTokens = promptTokens,
-            generatedTokens = outcome.generatedTokens + if (firstTokenAt > 0) 1 else 0,
+            generatedTokens = outcome.generatedTokens + passes,
             // The runtime's prefill covers the generate call; the pieces before it were
             // timed here. When the runtime reported nothing, the wait to the first token is
             // the whole prefill, pieces and all.
@@ -1166,6 +1401,24 @@ class ExecuTorchEngine(
         const val THINK_CLOSE = "</think>"
 
         /**
+         * What the model is told just before the block is closed, when the caller gave no
+         * wording of its own. The C++ session's default, character for character: the
+         * measurement that chose it (see [closeThinkingBlock]) was taken with these words, and
+         * a turn that reads the same on both engines is worth more than a second opinion.
+         */
+        const val DEFAULT_REASONING_NOTE =
+            "I have thought enough, so I will act on what I have now."
+
+        /**
+         * How many times one turn will close a thinking block the model reopened.
+         *
+         * A model that keeps reopening spends a close and a pass each time; three of them is
+         * already more than the two the tool loop can ask for, and a turn that keeps doing it
+         * is not going to answer.
+         */
+        const val MAX_REASONING_CLOSES = 3
+
+        /**
          * The text session default, passed through loading and generation. Per-turn
          * [SamplerParams] do not currently change this engine session setting.
          */
@@ -1197,8 +1450,19 @@ private class OpenedExport(
  * model's own.
  */
 private class StopDiscipline(private val budget: Int) {
-    private var produced = 0
-    private var lastFragment = ""
+    /**
+     * Tokens produced this turn, counted across every pass of it.
+     *
+     * The budget is the turn's, not the pass's: a turn whose thinking block was closed is two
+     * generations, and the second one may write only what the first left. Read by the engine
+     * to hand the next pass what remains, and to know when nothing does.
+     */
+    var produced = 0
+        private set
+
+    /** The fragment the last call saw, which is the token this runtime never commits. */
+    var lastFragment = ""
+        private set
     private var repeats = 0
 
     /** True once this cut the generation short: budget spent or a rut, not a clean end. */
@@ -1217,6 +1481,104 @@ private class StopDiscipline(private val budget: Int) {
     private companion object {
         /** Identical consecutive tokens before generation is cut as degenerate. */
         const val MAX_TOKEN_RUT = 32
+    }
+}
+
+/**
+ * This pass's outcome and [next]'s as one turn's.
+ *
+ * A turn whose thinking block was closed is two generations, and the row that reports what the
+ * turn cost has to be both of them: keeping only the second would hide the thinking, and keeping
+ * only the first would hide the answer. Counts and times add; what describes a moment rather
+ * than a total comes from the pass that ended the turn, which is [next]. The same rule
+ * [GenerationStats.through] follows for the turn loop's own passes.
+ */
+private fun ExecuTorchOutcome.through(next: ExecuTorchOutcome): ExecuTorchOutcome =
+    ExecuTorchOutcome(
+        reason = next.reason,
+        promptTokens = promptTokens + next.promptTokens,
+        generatedTokens = generatedTokens + next.generatedTokens,
+        prefillMs = prefillMs + next.prefillMs,
+        decodeMs = decodeMs + next.decodeMs,
+        endedOnStopToken = next.endedOnStopToken,
+    )
+
+/**
+ * The reasoning budget, counted one token at a time while a thinking block is open.
+ *
+ * The ExecuTorch path had none, so a model that opens a block and does not close it wrote its
+ * whole monologue into the answer: a tool pass on the phone is capped at 128 thinking tokens
+ * (`TurnRunner.deciding`), and with nothing to close the block the runtime ran on to the output
+ * cap and every one of those tokens landed where the reader looks for the reply. This is the
+ * same mechanism the llama.cpp session runs (`engine_session.cpp`), which is what makes a
+ * budget mean the same thing on either engine.
+ *
+ * The rules it keeps, and why each one:
+ *
+ * - It starts open when the rendered prompt already opened the block, which is a template's
+ *   doing and not the model's: Qwen3.5 ends its assistant opener with `<think>` and a newline,
+ *   so the first token the model writes is already inside the block. A template that closes an
+ *   empty block there instead (Qwen3 with reasoning switched off) opens nothing, and a reply
+ *   that starts in the answer must not be counted as thought.
+ * - It opens when the model writes the opener itself, matched across fragments: a tag does not
+ *   arrive on a boundary, so `<thi` and `nk>` are one tag and looking for it in a single
+ *   fragment would miss it.
+ * - It closes when the close tag is seen, again across fragments, and the token that bears it
+ *   counts: it is still inside the block when it arrives.
+ * - The count never resets. A model that reopens a block it was shut out of has already spent
+ *   the budget it is given, so it trips on the open tag and is closed again in a token, which
+ *   is what llama.cpp's loop does with the same turn.
+ */
+internal class ThinkingGate(
+    private val budget: Int,
+    openTag: String,
+    closeTag: String,
+    openedByTemplate: Boolean,
+) {
+    private val openTag = openTag
+    private val closeTag = closeTag
+
+    /** Kept so a tag split across two fragments is still one tag. */
+    private val carry = maxOf(openTag.length, closeTag.length) - 1
+    private var tail = ""
+    private var opened = openedByTemplate && budget >= 0
+
+    /** Tokens counted while the block was open, never reset. */
+    var counted = 0
+        private set
+
+    /** True while a thinking block is open, whether the template opened it or the model did. */
+    val open: Boolean get() = opened
+
+    /** True when the allowance is spent with the block still open: a close is owed now. */
+    val tripped: Boolean get() = opened && counted >= budget
+
+    /**
+     * One fragment of the reply, which the runtime delivers a token at a time.
+     *
+     * A negative budget is no budget at all and leaves the block to the model, which is the
+     * default for a turn with no tools.
+     */
+    fun accept(fragment: String) {
+        if (budget < 0) return
+        val wasOpen = opened
+        val text = tail + fragment
+        // Later in this fragment wins: a reply that closes and reopens in one token ends open,
+        // and one that opens and closes ends closed.
+        val closer = text.lastIndexOf(closeTag)
+        val opener = text.lastIndexOf(openTag)
+        if (closer >= 0 && closer > opener) {
+            opened = false
+        } else if (opener >= 0) {
+            opened = true
+        }
+        if (wasOpen) counted += 1
+        tail = if (carry > 0) text.takeLast(carry) else ""
+    }
+
+    /** This engine wrote the close: whatever the model writes next starts outside the block. */
+    fun closedByEngine() {
+        opened = false
     }
 }
 
@@ -1283,6 +1645,26 @@ private const val GENERATE_TAIL_CHARS = 1600
 
 /** Stands in for a picture in the rendered prompt until the picture is fed in its place. */
 private const val PICTURE_MARKER = "\u0000picture\u0000"
+
+/**
+ * How many tokens a pass may still write into the window it was handed.
+ *
+ * [held] is what the cache already holds. The tail is the part of the prompt the generate call
+ * carries rather than one a prefill piece has already read, so it is not in [held] and is
+ * charged here instead: at [WARM_CHARS_PER_TOKEN], the rate every prefill on this path is
+ * counted at, rounded up, and one token on top. That rate is an estimate and the runtime's own
+ * check is exact, so a pass handed the window's last token and one more raises "start_pos: N
+ * must be less than cache size at dim 1" from inside its loop rather than stopping, which is
+ * the failure this whole clamp exists to keep away from the user.
+ *
+ * Zero or less means the turn has no room at all; the caller answers that as a full context.
+ */
+internal fun passRoom(contextSize: Int, held: Int, tailChars: Int): Int =
+    contextSize - held - tokensForChars(tailChars) - 1
+
+/** [chars] as prompt tokens at this engine's rate, rounded up. */
+private fun tokensForChars(chars: Int): Int =
+    (chars + WARM_CHARS_PER_TOKEN - 1) / WARM_CHARS_PER_TOKEN
 
 /** The app-wide rough estimate; the runtime reports no token count for a prefill. */
 private const val WARM_CHARS_PER_TOKEN = 4

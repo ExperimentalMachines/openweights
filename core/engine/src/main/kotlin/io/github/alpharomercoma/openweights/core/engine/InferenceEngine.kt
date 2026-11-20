@@ -44,6 +44,18 @@ enum class StopReason {
     CONTEXT_FULL,
     CANCELLED,
     ERROR,
+
+    /**
+     * The engine ended the pass itself by closing a thinking block, and nothing was written
+     * after it.
+     *
+     * Apart from [MAX_TOKENS], which is the same pass ending for want of output budget: a
+     * deliberate close is the engine acting on the reasoning budget, and a reply cut there has
+     * no answer in it rather than an answer cut in half. Appended rather than placed beside
+     * [MAX_TOKENS], because these ordinals are the JNI layer's and moving one would rename
+     * every reason the native engine reports.
+     */
+    REASONING_CLOSED,
 }
 
 /**

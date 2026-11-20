@@ -4527,7 +4527,14 @@ private fun StopReason.warning(): String? = when (this) {
         "The context window is full. Start a new chat, or raise the context length in " +
             "model settings."
 
-    StopReason.END_OF_TURN, StopReason.MAX_TOKENS, StopReason.CANCELLED, StopReason.ERROR -> null
+    // A block the engine closed on the reasoning budget is the engine working, not a failure
+    // the reader has to act on: the answer follows on the next pass of the same turn.
+    StopReason.END_OF_TURN,
+    StopReason.MAX_TOKENS,
+    StopReason.CANCELLED,
+    StopReason.ERROR,
+    StopReason.REASONING_CLOSED,
+    -> null
 }
 
 /**
